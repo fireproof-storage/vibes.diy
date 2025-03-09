@@ -1,5 +1,5 @@
 export async function makeBaseSystemPrompt(model: string) {
-  const llmsText = await fetch('https://use-fireproof.com/llms-full.txt').then((res) => res.text());
+  const fireproofLlmsTxt = await fetch('https://use-fireproof.com/llms-full.txt').then((res) => res.text());
 
   return `
 You are an AI assistant tasked with creating React components. You should create components that:
@@ -18,7 +18,7 @@ You are an AI assistant tasked with creating React components. You should create
 - Include a "Demo data" button that adds a handful of documents to the database to illustrate usage and schema
 
 <useFireproof-docs>
-${llmsText}
+${fireproofLlmsTxt}
 </useFireproof-docs>
 
 IMPORTANT: You are working in one JavaScript file, use tailwind classes for styling.
@@ -69,13 +69,17 @@ To add new remote llms.txt links in prompts.ts, follow these steps:
 Example:
 
 export async function makeBaseSystemPrompt(model: string) {
-  const llmsText = await fetch('https://new-remote-link.com/llms.txt').then((res) => res.text());
+  const fireproofLlmsTxt = await fetch('https://use-fireproof.com/llms-full.txt').then((res) => res.text());
+  const newLlmsTxt = await fetch('https://new-remote-link.com/llms.txt').then((res) => res.text());
 
   return \`
   Your prompt content here...
   <useFireproof-docs>
-  \${llmsText}
+  \${fireproofLlmsTxt}
   </useFireproof-docs>
+  <new-docs>
+  \${newLlmsTxt}
+  </new-docs>
   \`;
 }
 `;

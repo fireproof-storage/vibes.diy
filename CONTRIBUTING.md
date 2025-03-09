@@ -17,13 +17,17 @@ Example:
 
 ```javascript
 export async function makeBaseSystemPrompt(model: string) {
-  const llmsText = await fetch('https://new-remote-link.com/llms.txt').then((res) => res.text());
+  const fireproofLlmsTxt = await fetch('https://use-fireproof.com/llms-full.txt').then((res) => res.text());
+  const newLlmsTxt = await fetch('https://new-remote-link.com/llms.txt').then((res) => res.text());
 
   return `
   Your prompt content here...
   <useFireproof-docs>
-  ${llmsText}
+  ${fireproofLlmsTxt}
   </useFireproof-docs>
+  <new-docs>
+  ${newLlmsTxt}
+  </new-docs>
   `;
 }
 ```
