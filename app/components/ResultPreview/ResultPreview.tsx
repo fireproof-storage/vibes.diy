@@ -124,6 +124,27 @@ function ResultPreview({
     },
   });
 
+  // Store streaming values in refs to reduce parent rerenders
+  const streamingCodeRef = useRef(streamingCode);
+  const isStreamingRef = useRef(isStreaming);
+  const currentStreamContentRef = useRef(currentStreamContent);
+  
+  // Local state for UI updates
+  const [localStreamingCode, setLocalStreamingCode] = useState(streamingCode);
+  const [localIsStreaming, setLocalIsStreaming] = useState(isStreaming);
+  const [localStreamContent, setLocalStreamContent] = useState(currentStreamContent);
+
+  // Update refs and local state when props change
+  useEffect(() => {
+    streamingCodeRef.current = streamingCode;
+    isStreamingRef.current = isStreaming;
+    currentStreamContentRef.current = currentStreamContent;
+    
+    setLocalStreamingCode(streamingCode);
+    setLocalIsStreaming(isStreaming);
+    setLocalStreamContent(currentStreamContent);
+  }, [streamingCode, isStreaming, currentStreamContent]);
+
   useEffect(() => {
     const prefersDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches;
     setIsDarkMode(prefersDarkMode);
@@ -154,7 +175,7 @@ function ResultPreview({
   }, [onScreenshotCaptured]);
 
   useEffect(() => {
-    if (!isStreaming) {
+    if (!localIsStreaming) {
       const codeWithWhitespace =
         cleanCodeBeforeImport(code || defaultCode) +
         '\n\n\n\n\n\n\n\n\n\n' +
@@ -179,12 +200,12 @@ function ResultPreview({
 
       console.log('ResultPreview: Updated files with new code, length:', (code || '').length);
     }
-  }, [code, isStreaming, sessionId]);
+  }, [code, localIsStreaming, sessionId]);
 
   useEffect(() => {
-    if (isStreaming) {
-      if (streamingCode) {
-        const codeWithWhitespace = cleanCodeBeforeImport(streamingCode) + '\n\n\n\n\n\n\n\n\n\n';
+    if (localIsStreaming) {
+      if (localStreamingCode) {
+        const codeWithWhitespace = cleanCodeBeforeImport(localStreamingCode) + '\n\n\n\n\n\n\n\n\n\n';
         setDisplayCode(codeWithWhitespace);
 
         filesRef.current = {
@@ -200,19 +221,19 @@ function ResultPreview({
         setLockCodeView(true);
       }
     }
-  }, [streamingCode, isStreaming]);
+  }, [localStreamingCode, localIsStreaming]);
 
   useEffect(() => {
-    if (!isStreaming) {
+    if (!localIsStreaming) {
       setLockCodeView(false);
     }
-  }, [isStreaming]);
+  }, [localIsStreaming]);
 
   useEffect(() => {
-    if (isStreaming && streamingCode) {
+    if (localIsStreaming && localStreamingCode) {
       justFinishedStreamingRef.current = true;
     }
-  }, [isStreaming, streamingCode]);
+  }, [localIsStreaming, localStreamingCode]);
 
   useEffect(() => {
     if (bundlingComplete) {
@@ -220,7 +241,7 @@ function ResultPreview({
     }
   }, [bundlingComplete]);
 
-  const shouldSpin = !isStreaming && justFinishedStreamingRef.current && !bundlingComplete;
+  const shouldSpin = !localIsStreaming && justFinishedStreamingRef.current && !bundlingComplete;
 
   const spinningIconClass = shouldSpin ? 'animate-spin-slow' : '';
 
@@ -239,10 +260,10 @@ function ResultPreview({
   const sandpackKey = useMemo(() => {
     // Using Date.now() causes unnecessary remounts on every render
     // Instead, use the actual content that should trigger a remount
-    const key = `${sessionId || 'default'}-${isStreaming ? 'streaming' : 'static'}-${code.length}`;
+    const key = `${sessionId || 'default'}-${localIsStreaming ? 'streaming' : 'static'}-${code.length}`;
     console.log('ResultPreview: Generated new sandpackKey:', key, 'for sessionId:', sessionId);
     return key;
-  }, [sessionId, isStreaming, code]);
+  }, [sessionId, localIsStreaming, code]);
 
   // Log when sessionId changes
   useEffect(() => {
@@ -340,9 +361,9 @@ function ResultPreview({
           <div className="h-10"></div>
         )}
 
-        {isStreaming && (
+        {localIsStreaming && (
           <div className="text-accent-03-light dark:text-accent-03-dark ml-2 w-10 animate-pulse text-sm">
-            {streamingCode.split('\n').length > 2 ? streamingCode.split('\n').length : ''}
+            {localStreamingCode.split('\n').length > 2 ? localStreamingCode.split('\n').length : ''}
           </div>
         )}
 
@@ -410,9 +431,9 @@ function ResultPreview({
                 setActiveView(view);
               }}
               setBundlingComplete={setBundlingComplete}
-              isStreaming={isStreaming}
+              isStreaming={localIsStreaming}
             />
-            {isStreaming && <SandpackScrollController isStreaming={isStreaming} />}
+            {localIsStreaming && <SandpackScrollController isStreaming={localIsStreaming} />}
             <SandpackLayout className="h-full" style={{ height: 'calc(100vh - 49px)' }}>
               <div
                 style={{
@@ -461,8 +482,8 @@ function ResultPreview({
             Copy to Clipboard
           </button>
         )}
-        {streamingCode ? (
-          <div>{currentStreamContent}</div>
+        {localStreamingCode ? (
+          <div>{localStreamContent}</div>
         ) : (
           <div>{completedMessage || currentMessage?.content || ''}</div>
         )}

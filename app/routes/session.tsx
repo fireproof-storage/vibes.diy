@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef, useMemo } from 'react';
 import { useParams } from 'react-router';
 import ChatInterface from '../ChatInterface';
 import { useChat } from '../hooks/useChat';
@@ -24,23 +24,38 @@ export default function Session() {
   });
   const { database } = useFireproof('fireproof-chat-history');
 
+  // Add a ref to track which sessions have been loaded
+  const loadedSessionsRef = useRef<Set<string>>(new Set());
+
   // Handle code generation from chat interface
-  const handleCodeGenerated = (code: string, dependencies: Record<string, string> = {}) => {
+  const handleCodeGenerated = useRef((code: string, dependencies: Record<string, string> = {}) => {
     console.log('Session.handleCodeGenerated called with code length:', code.length);
     setState({
       generatedCode: code,
       dependencies,
     });
-  };
+  }).current;
+
+  // Handle title generation - empty function since we don't need to save titles on session page
+  const handleTitleGenerated = useRef((title: string) => {
+    console.log('Session received generated title:', title);
+    // We don't need to save the title here as this is an existing session
+  }).current;
 
   // Set up chat state with the code generation handler
-  const chatState = useChat(handleCodeGenerated);
+  const chatState = useChat(handleCodeGenerated, handleTitleGenerated);
 
   // Handle session change
   useEffect(() => {
     // Load session data and extract code for the ResultPreview
     const loadSessionData = async () => {
       if (sessionId) {
+        // Skip if we've already loaded this session
+        if (loadedSessionsRef.current.has(sessionId)) {
+          console.log('Session route: Already loaded session:', sessionId);
+          return;
+        }
+
         console.log('Session route: Loading session data for ID:', sessionId);
         try {
           // Load the session document
@@ -81,6 +96,9 @@ export default function Session() {
           } else {
             console.log('Session route: No code found in session:', sessionId.substring(0, 8));
           }
+
+          // Mark this session as loaded
+          loadedSessionsRef.current.add(sessionId);
         } catch (error) {
           console.error('Error loading session:', error);
         }
@@ -88,41 +106,61 @@ export default function Session() {
     };
 
     loadSessionData();
-  }, [sessionId, database, chatState]);
+  }, [sessionId, database]); // Remove chatState from dependency array
+
+  // Memoize the ChatInterface component to prevent remounting during streaming
+  const memoizedChatInterface = useMemo(() => (
+    <ChatProvider
+      initialState={{
+        input: '',
+        isGenerating: false,
+        isSidebarVisible: false,
+      }}
+    >
+      <ChatInterface
+        chatState={chatState}
+        sessionId={sessionId || null}
+        onCodeGenerated={handleCodeGenerated}
+      />
+    </ChatProvider>
+  ), [sessionId, handleCodeGenerated]);
+
+  // Memoize the ResultPreview to prevent unnecessary rerenders
+  const memoizedResultPreview = useMemo(() => (
+    <ResultPreview
+      code={state.generatedCode}
+      dependencies={state.dependencies}
+      streamingCode={chatState.streamingCode}
+      isStreaming={chatState.isStreaming}
+      completedMessage={chatState.completedMessage}
+      currentStreamContent={chatState.currentStreamedText}
+      currentMessage={
+        chatState.messages.length > 0
+          ? { content: chatState.messages[chatState.messages.length - 1].text }
+          : undefined
+      }
+      initialView="code"
+      sessionId={sessionId}
+    />
+  ), [
+    state.generatedCode, 
+    state.dependencies, 
+    sessionId,
+    // Include streamingCode, isStreaming, etc. - ResultPreview will handle them internally with refs
+    chatState.streamingCode,
+    chatState.isStreaming,
+    chatState.completedMessage,
+    chatState.currentStreamedText,
+    chatState.messages
+  ]);
 
   return (
     <div style={{ display: 'flex', height: 'calc(100vh)' }}>
       <div style={{ flex: '0 0 33.333%', overflow: 'hidden', position: 'relative' }}>
-        <ChatProvider
-          initialState={{
-            input: '',
-            isGenerating: false,
-            isSidebarVisible: false,
-          }}
-        >
-          <ChatInterface
-            chatState={chatState}
-            sessionId={sessionId || null}
-            onCodeGenerated={handleCodeGenerated}
-          />
-        </ChatProvider>
+        {memoizedChatInterface}
       </div>
       <div style={{ flex: '0 0 66.667%', overflow: 'hidden', position: 'relative' }}>
-        <ResultPreview
-          code={state.generatedCode}
-          dependencies={state.dependencies}
-          streamingCode={chatState.streamingCode}
-          isStreaming={chatState.isStreaming}
-          completedMessage={chatState.completedMessage}
-          currentStreamContent={chatState.currentStreamedText}
-          currentMessage={
-            chatState.messages.length > 0
-              ? { content: chatState.messages[chatState.messages.length - 1].text }
-              : undefined
-          }
-          initialView="code"
-          sessionId={sessionId}
-        />
+        {memoizedResultPreview}
       </div>
     </div>
   );

@@ -7,7 +7,8 @@ const CHOSEN_MODEL = 'anthropic/claude-3.7-sonnet';
 // const CHOSEN_MODEL = 'qwen/qwq-32b:free';
 
 export function useChat(
-  onCodeGenerated: (code: string, dependencies?: Record<string, string>) => void
+  onCodeGenerated: (code: string, dependencies?: Record<string, string>) => void,
+  onGeneratedTitle?: (title: string) => void
 ) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState<string>('');
@@ -247,11 +248,59 @@ export function useChat(
         // Clean up any extra whitespace at the beginning
         cleanedMessage = cleanedMessage.trimStart();
 
+        // Use parser's displayText property to get the final message
+        const finalMessage =
+          parser.displayText.trim() ||
+          cleanedMessage ||
+          currentStreamedText ||
+          "Here's your generated app:";
+        setCompletedMessage(finalMessage);
+        
+        // Generate a title from the final response
+        if (onGeneratedTitle) {
+          try {
+            const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+              method: 'POST',
+              headers: {
+                Authorization: `Bearer ${import.meta.env.VITE_OPENROUTER_API_KEY}`,
+                'Content-Type': 'application/json',
+                'HTTP-Referer': window.location.origin,
+                'X-Title': 'Fireproof App Builder',
+              },
+              body: JSON.stringify({
+                model: CHOSEN_MODEL,
+                stream: false,
+                messages: [
+                  {
+                    role: 'system',
+                    content: 'You are a helpful assistant that generates short, descriptive titles. Create a concise title (3-5 words) that captures the essence of the content.',
+                  },
+                  {
+                    role: 'user',
+                    content: `Generate a short, descriptive title (3-5 words) for this app:\n\n${finalMessage}`,
+                  },
+                ],
+              }),
+            });
+
+            if (response.ok) {
+              const data = await response.json();
+              const title = data.choices[0]?.message?.content?.trim() || 'New Chat';
+              onGeneratedTitle(title);
+            } else {
+              onGeneratedTitle('New Chat');
+            }
+          } catch (error) {
+            console.error('Error generating title:', error);
+            onGeneratedTitle('New Chat');
+          }
+        }
+
         // Add AI response with code and dependencies
         setMessages((prev) => [
           ...prev,
           {
-            text: cleanedMessage || "Here's your generated app:",
+            text: finalMessage,
             type: 'ai',
             code: completedCode || parser.codeBlockContent,
             dependencies: parser.dependencies,
@@ -270,14 +319,6 @@ export function useChat(
 
         // Add this debug log to confirm parser state
         console.log('Parser state at stream end:', parser);
-
-        // Use parser's displayText property instead of the non-existent fullResponseBuffer
-        const finalMessage =
-          parser.displayText.trim() ||
-          cleanedMessage ||
-          currentStreamedText ||
-          "Here's your generated app:";
-        setCompletedMessage(finalMessage);
 
         // Update the messages array
         setMessages((prevMessages) => {

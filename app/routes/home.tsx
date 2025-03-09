@@ -52,12 +52,38 @@ export default function Home() {
   const navigate = useNavigate();
 
   // Hoist the useChat hook to this component
-  const chatState = useChat((code: string, dependencies?: Record<string, string>) => {
-    setState({
-      generatedCode: code,
-      dependencies: dependencies || {},
-    });
-  });
+  const chatState = useChat(
+    (code: string, dependencies?: Record<string, string>) => {
+      setState({
+        generatedCode: code,
+        dependencies: dependencies || {},
+      });
+    },
+    async (generatedTitle: string) => {
+      // Handle the generated title
+      console.log('Title generated:', generatedTitle);
+      
+      // If we have a session ID, update the title in the database
+      if (sessionId) {
+        try {
+          // Get the current session document
+          const sessionDoc = await database.get(sessionId);
+          
+          // Update the title
+          const updatedDoc = {
+            ...sessionDoc,
+            title: generatedTitle
+          };
+          
+          // Save the updated document
+          await database.put(updatedDoc);
+          console.log('Updated session title to:', generatedTitle);
+        } catch (error) {
+          console.error('Error updating session title:', error);
+        }
+      }
+    }
+  );
 
   // Check for state in URL on component mount
   useEffect(() => {
@@ -90,6 +116,8 @@ export default function Home() {
       dependencies: {},
     });
     chatState.setMessages([]);
+    // navigate to the home page
+    navigate('/');
   };
 
   function handleShare() {
