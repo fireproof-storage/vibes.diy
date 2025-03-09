@@ -284,7 +284,7 @@ function ChatInterface({
     [messages.length, handleSelectSuggestion]
   );
 
-  const chatInput = useMemo(() => <ChatInput inputRef={inputRef} />, [inputRef]);
+  const chatInput = useMemo(() => <ChatInput />, []);
 
   // Sync from context to props when context input changes
   useEffect(() => {

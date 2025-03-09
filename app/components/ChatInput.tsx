@@ -1,35 +1,15 @@
 import type { ChangeEvent, KeyboardEvent } from 'react';
-import { useRef, memo, useEffect } from 'react';
+import { useEffect } from 'react';
 import { useChatContext } from '../context/ChatContext';
 
-// Only keep the inputRef prop which has specific functionality that can't be handled by context
-interface ChatInputProps {
-  inputRef?: React.RefObject<HTMLTextAreaElement | null>;
-}
-
-function ChatInput({ inputRef: externalInputRef }: ChatInputProps = {}) {
+function ChatInput() {
   // Use context directly - we can assume it's available
-  const { input, setInput, isGenerating, handleSendMessage } = useChatContext();
-
-  // Use our own ref if external ref not provided
-  const localInputRef = useRef<HTMLTextAreaElement | null>(null);
-
-  // Use provided input ref or local ref
-  const inputRef = externalInputRef || localInputRef;
-
-  // Function to auto-resize textarea
-  const autoResizeTextarea = () => {
-    const textarea = inputRef.current;
-    if (textarea) {
-      textarea.style.height = 'auto';
-      textarea.style.height = `${textarea.scrollHeight}px`;
-    }
-  };
+  const { input, setInput, isGenerating, handleSendMessage, inputRef, autoResizeTextarea } = useChatContext();
 
   // Initial auto-resize
   useEffect(() => {
     autoResizeTextarea();
-  }, []);
+  }, [autoResizeTextarea]);
 
   // Handler for input changes
   const handleChange = (e: ChangeEvent<HTMLTextAreaElement>) => {
