@@ -5,16 +5,16 @@ interface ChatContextState {
   // Core text state
   input: string;
   setInput: (input: string) => void;
-  
+
   // Generation status
   isGenerating: boolean;
   setIsGenerating: (isGenerating: boolean) => void;
-  
+
   // UI state
   isSidebarVisible: boolean;
   openSidebar: () => void;
   closeSidebar: () => void;
-  
+
   // Core functions
   handleSendMessage: () => void;
   handleNewChat: () => void;
@@ -36,11 +36,11 @@ interface ChatProviderProps {
 }
 
 // Provider component
-export function ChatProvider({ 
-  children, 
+export function ChatProvider({
+  children,
   initialState = {},
   onSendMessage = () => {},
-  onNewChat = () => {}
+  onNewChat = () => {},
 }: ChatProviderProps) {
   // Core state with optional initial values
   const [input, setInput] = useState(initialState.input || '');
@@ -60,7 +60,7 @@ export function ChatProvider({
   const handleNewChat = useCallback(() => {
     setInput('');
     setIsGenerating(false);
-    
+
     // Call the external handler (guaranteed to exist with default)
     onNewChat();
   }, [onNewChat]);
@@ -68,13 +68,13 @@ export function ChatProvider({
   // Send message handler
   const handleSendMessage = useCallback(() => {
     if (!input.trim() || isGenerating) return;
-    
+
     // Set generating state
     setIsGenerating(true);
-    
+
     // Call external handler (guaranteed to exist with default)
     onSendMessage(input);
-    
+
     // Clear input
     setInput('');
   }, [input, isGenerating, onSendMessage]);
@@ -89,21 +89,19 @@ export function ChatProvider({
     openSidebar,
     closeSidebar,
     handleSendMessage,
-    handleNewChat
+    handleNewChat,
   };
 
-  return (
-    <ChatContext.Provider value={contextValue}>
-      {children}
-    </ChatContext.Provider>
-  );
+  return <ChatContext.Provider value={contextValue}>{children}</ChatContext.Provider>;
 }
 
 // Hook to use the chat context
 export function useChatContext() {
   const context = useContext(ChatContext);
   if (context === undefined) {
-    throw new Error('useChatContext must be used within a ChatProvider. Ensure this component is a child of ChatProvider.');
+    throw new Error(
+      'useChatContext must be used within a ChatProvider. Ensure this component is a child of ChatProvider.'
+    );
   }
   return context;
-} 
+}

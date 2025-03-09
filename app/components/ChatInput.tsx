@@ -10,13 +10,13 @@ interface ChatInputProps {
 function ChatInput({ inputRef: externalInputRef }: ChatInputProps = {}) {
   // Use context directly - we can assume it's available
   const { input, setInput, isGenerating, handleSendMessage } = useChatContext();
-  
+
   // Use our own ref if external ref not provided
   const localInputRef = useRef<HTMLTextAreaElement | null>(null);
-  
+
   // Use provided input ref or local ref
   const inputRef = externalInputRef || localInputRef;
-  
+
   // Function to auto-resize textarea
   const autoResizeTextarea = () => {
     const textarea = inputRef.current;
@@ -25,12 +25,12 @@ function ChatInput({ inputRef: externalInputRef }: ChatInputProps = {}) {
       textarea.style.height = `${textarea.scrollHeight}px`;
     }
   };
-  
+
   // Initial auto-resize
   useEffect(() => {
     autoResizeTextarea();
   }, []);
-  
+
   // Handler for input changes
   const handleChange = (e: ChangeEvent<HTMLTextAreaElement>) => {
     setInput(e.target.value);

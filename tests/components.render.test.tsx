@@ -27,8 +27,8 @@ vi.mock('../app/context/ChatContext', () => ({
     isGenerating: isGeneratingValue,
     openSidebar,
     closeSidebar: vi.fn(),
-    handleNewChat
-  })
+    handleNewChat,
+  }),
 }));
 
 describe('Component Rendering', () => {

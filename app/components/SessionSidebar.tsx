@@ -155,12 +155,10 @@ function SessionSidebar({ isVisible, onClose, onSelectSession }: SessionSidebarP
     <div
       ref={sidebarRef}
       className={`transition-all duration-300 ease-in-out ${
-        isVisible
-          ? 'translate-x-0 opacity-100'
-          : '-translate-x-full opacity-0 pointer-events-none'
+        isVisible ? 'translate-x-0 opacity-100' : 'pointer-events-none -translate-x-full opacity-0'
       } absolute inset-y-0 left-0 z-10 flex w-80 flex-col border-r border-gray-200 bg-white shadow-md dark:border-gray-700 dark:bg-gray-800`}
     >
-      <div className="flex flex-col h-full overflow-hidden">
+      <div className="flex h-full flex-col overflow-hidden">
         <div className="flex items-center justify-between border-b border-gray-200 p-4 dark:border-gray-700">
           <h2 className="text-light-primary dark:text-dark-primary text-lg font-semibold">
             App History
@@ -200,9 +198,7 @@ function SessionSidebar({ isVisible, onClose, onSelectSession }: SessionSidebarP
                 <li
                   key={session._id}
                   onClick={() => handleSelectSession(session)}
-                  onKeyDown={(e) =>
-                    e.key === 'Enter' && handleSelectSession(session)
-                  }
+                  onKeyDown={(e) => e.key === 'Enter' && handleSelectSession(session)}
                   className="hover:bg-light-decorative-00 dark:hover:bg-dark-decorative-00 w-full cursor-pointer rounded p-3 text-left transition-colors"
                   role="button"
                   tabIndex={0}

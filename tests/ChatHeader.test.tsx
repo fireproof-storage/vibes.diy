@@ -13,8 +13,8 @@ vi.mock('../app/context/ChatContext', () => ({
     isGenerating: isGeneratingValue,
     openSidebar,
     closeSidebar: vi.fn(),
-    handleNewChat
-  })
+    handleNewChat,
+  }),
 }));
 
 describe('ChatHeader', () => {
@@ -23,7 +23,7 @@ describe('ChatHeader', () => {
     vi.resetAllMocks();
     isGeneratingValue = false;
   });
-  
+
   it('renders correctly', () => {
     render(<ChatHeader />);
 
@@ -52,7 +52,7 @@ describe('ChatHeader', () => {
   it('disables the new chat button when isGenerating is true', () => {
     // Set isGenerating to true for this test
     isGeneratingValue = true;
-    
+
     render(<ChatHeader />);
 
     const newChatButton = screen.getByLabelText('New Chat');

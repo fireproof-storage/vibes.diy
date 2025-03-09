@@ -7,9 +7,7 @@ describe('SessionSidebar', () => {
     const onClose = vi.fn();
     const onSelectSession = vi.fn();
 
-    render(
-      <SessionSidebar isVisible={true} onClose={onClose} onSelectSession={onSelectSession} />
-    );
+    render(<SessionSidebar isVisible={true} onClose={onClose} onSelectSession={onSelectSession} />);
 
     expect(screen.getByText('App History')).toBeDefined();
   });
@@ -18,9 +16,7 @@ describe('SessionSidebar', () => {
     const onClose = vi.fn();
     const onSelectSession = vi.fn();
 
-    render(
-      <SessionSidebar isVisible={true} onClose={onClose} onSelectSession={onSelectSession} />
-    );
+    render(<SessionSidebar isVisible={true} onClose={onClose} onSelectSession={onSelectSession} />);
 
     const closeButton = screen.getByLabelText('Close sidebar');
     fireEvent.click(closeButton);

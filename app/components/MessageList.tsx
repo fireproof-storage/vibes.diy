@@ -142,11 +142,11 @@ function MessageList({
 // Export a memoized version of the component to prevent unnecessary re-renders
 export default memo(MessageList, (prevProps, nextProps) => {
   // Simplified equality check focusing on the essential changed values
-  const messagesEqual = 
-    prevProps.messages === nextProps.messages || 
+  const messagesEqual =
+    prevProps.messages === nextProps.messages ||
     (prevProps.messages.length === nextProps.messages.length &&
-     JSON.stringify(prevProps.messages) === JSON.stringify(nextProps.messages));
-  
+      JSON.stringify(prevProps.messages) === JSON.stringify(nextProps.messages));
+
   return (
     messagesEqual &&
     prevProps.isGenerating === nextProps.isGenerating &&

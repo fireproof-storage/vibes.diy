@@ -219,12 +219,12 @@ function ResultPreview({
 
   // Memoize the dependencies for Sandpack
   const depsString = useMemo(() => JSON.stringify(dependencies), [dependencies]);
-  
+
   const sandpackDependencies = useMemo(() => {
     // Ensure use-fireproof is included in the dependencies
     return {
-      "use-fireproof": "0.20.0-dev-preview-52",
-      ...dependencies
+      'use-fireproof': '0.20.0-dev-preview-52',
+      ...dependencies,
     };
   }, [depsString]);
 
@@ -313,8 +313,7 @@ function ResultPreview({
             </button>
           </div>
         ) : (
-          <div className="h-10">
-          </div>
+          <div className="h-10"></div>
         )}
 
         {isStreaming && (
@@ -359,8 +358,7 @@ function ResultPreview({
             </div>
           )
         ) : (
-          <div className="h-10 w-10">
-          </div>
+          <div className="h-10 w-10"></div>
         )}
       </div>
 

@@ -162,11 +162,11 @@ export default function Home() {
   return (
     <div style={{ display: 'flex', height: 'calc(100vh)' }}>
       <div style={{ flex: '0 0 33.333%', overflow: 'hidden', position: 'relative' }}>
-        <ChatProvider 
+        <ChatProvider
           initialState={{
             input: chatState.input,
             isGenerating: chatState.isGenerating,
-            isSidebarVisible: false
+            isSidebarVisible: false,
           }}
           onSendMessage={(input) => {
             chatState.setInput(input);

@@ -37,7 +37,7 @@ vi.mock('use-fireproof', () => ({
 vi.mock('../app/ChatInterface', () => {
   // Import the actual component to detect errors
   const actualComponent = vi.importActual('../app/ChatInterface');
-  
+
   return {
     __esModule: true,
     default: (props: any) => {
@@ -57,12 +57,12 @@ describe('Home Route', () => {
   it('should properly provide ChatContext to child components', () => {
     // Render the home component
     render(<Home />);
-    
+
     // If the context is missing, we'll see the error message
     const contextError = screen.queryByTestId('context-error');
-    
+
     // This test should initially fail, showing that ChatContext is missing
     expect(contextError).toBeNull();
     expect(screen.getByTestId('chat-interface')).toBeInTheDocument();
   });
-}); 
+});

@@ -80,7 +80,7 @@ function ChatInterface({
 
   // Create a ref to store setMessages function to avoid dependency cycles
   const setMessagesRef = useRef(setMessages);
-  
+
   // Keep the ref updated with the latest setMessages function
   useEffect(() => {
     setMessagesRef.current = setMessages;
@@ -92,7 +92,7 @@ function ChatInterface({
       // Update both the local state and ChatContext state
       setInput(suggestion);
       chatContext.setInput(suggestion);
-      
+
       // Focus the input after setting the value
       setTimeout(() => {
         if (inputRef.current) {
@@ -122,7 +122,7 @@ function ChatInterface({
     async function loadSessionData() {
       if (sessionId) {
         try {
-          const sessionData = await database.get(sessionId) as SessionDocument;
+          const sessionData = (await database.get(sessionId)) as SessionDocument;
           // Normalize session data to guarantee messages array exists
           const messages = Array.isArray(sessionData.messages) ? sessionData.messages : [];
           // Use the ref to access the latest setMessages function
@@ -184,9 +184,9 @@ function ChatInterface({
     async (session: SessionDocument) => {
       // Ensure session has an _id - this is guaranteed by the component API
       const sessionId = session._id;
-      
+
       try {
-        const sessionData = await database.get(sessionId) as SessionDocument;
+        const sessionData = (await database.get(sessionId)) as SessionDocument;
         // Normalize session data to guarantee messages array exists
         const messages = Array.isArray(sessionData.messages) ? sessionData.messages : [];
         // Use the ref to access the latest setMessages function
@@ -236,7 +236,7 @@ function ChatInterface({
       () => {
         // Use parent's onNewChat if provided, with optional chaining
         onNewChat?.();
-        
+
         // Always reset local state
         setMessagesRef.current([]);
         setInput('');
@@ -264,12 +264,7 @@ function ChatInterface({
     [chatContext.isSidebarVisible, chatContext.closeSidebar, handleLoadSession]
   );
 
-  const chatHeader = useMemo(
-    () => (
-      <ChatHeader />
-    ),
-    []
-  );
+  const chatHeader = useMemo(() => <ChatHeader />, []);
 
   const messageList = useMemo(
     () => (
@@ -289,14 +284,7 @@ function ChatInterface({
     [messages.length, handleSelectSuggestion]
   );
 
-  const chatInput = useMemo(
-    () => (
-      <ChatInput
-        inputRef={inputRef}
-      />
-    ),
-    [inputRef]
-  );
+  const chatInput = useMemo(() => <ChatInput inputRef={inputRef} />, [inputRef]);
 
   // Sync from context to props when context input changes
   useEffect(() => {
@@ -311,7 +299,7 @@ function ChatInterface({
     if (chatState.input !== chatContext.input) {
       chatContext.setInput(chatState.input);
     }
-    
+
     if (chatState.isGenerating !== chatContext.isGenerating) {
       chatContext.setIsGenerating(chatState.isGenerating);
     }

@@ -3,7 +3,7 @@ import { render, act, screen } from '@testing-library/react';
 import React from 'react';
 
 // Create a controlled context for testing
-const TestContext = React.createContext<{isGenerating: boolean}>({ isGenerating: false });
+const TestContext = React.createContext<{ isGenerating: boolean }>({ isGenerating: false });
 
 // Mock the context module before imports
 vi.mock('../app/context/ChatContext', () => {
@@ -20,7 +20,7 @@ vi.mock('../app/context/ChatContext', () => {
       handleSendMessage: vi.fn(),
     })),
     // We need to pass through the real ChatProvider for other tests
-    ChatProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>
+    ChatProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>,
   };
 });
 
@@ -71,7 +71,7 @@ describe('Component Memoization', () => {
   describe('ChatHeader Memoization', () => {
     beforeEach(() => {
       vi.resetAllMocks();
-      
+
       // Reset the mock implementation for each test
       vi.mocked(useChatContext).mockImplementation(() => ({
         isGenerating: false,
@@ -85,7 +85,7 @@ describe('Component Memoization', () => {
         handleSendMessage: vi.fn(),
       }));
     });
-    
+
     it('does not re-render when props are unchanged', async () => {
       // Create a wrapper component for testing
       const { Component: TrackedHeader, getRenderCount } = createRenderTracker(ChatHeader);
@@ -125,10 +125,10 @@ describe('Component Memoization', () => {
         // Get count of renders
         const renderCountRef = React.useRef(0);
         renderCountRef.current += 1;
-        
+
         // Use our mocked context
         const { isGenerating } = useChatContext();
-        
+
         return (
           <div data-testid="test-component">
             <span data-testid="render-count">{renderCountRef.current}</span>
@@ -136,17 +136,17 @@ describe('Component Memoization', () => {
           </div>
         );
       }
-      
+
       // Reference to the mock
       const mockContext = vi.mocked(useChatContext);
-      
+
       // Render our test component
       const { getByTestId, rerender } = render(<TestComponent />);
-      
+
       // Check initial render
       expect(getByTestId('render-count').textContent).toBe('1');
       expect(getByTestId('is-generating').textContent).toBe('false');
-      
+
       // Update context mock to simulate a context change
       mockContext.mockImplementation(() => ({
         isGenerating: true, // Changed value
@@ -159,25 +159,25 @@ describe('Component Memoization', () => {
         isSidebarVisible: false,
         handleSendMessage: vi.fn(),
       }));
-      
+
       // Force a re-render
       rerender(<TestComponent />);
-      
+
       // Component should have re-rendered with new context
       expect(getByTestId('render-count').textContent).toBe('2');
       expect(getByTestId('is-generating').textContent).toBe('true');
     });
-    
+
     it('memoized component re-renders when relevant context changes', async () => {
       // Skip the complex mocked context approach and just use a real context
       // with a simple test component to verify the behavior
-      
+
       // Create a simple component that uses context and is memoized
       const MemoizedComponent = React.memo(function TestMemoComponent() {
         const context = React.useContext(TestContext);
         const renderCount = React.useRef(0);
         renderCount.current++;
-        
+
         return (
           <div data-testid="memo-test">
             <div data-testid="render-count">{renderCount.current}</div>
@@ -185,40 +185,37 @@ describe('Component Memoization', () => {
           </div>
         );
       });
-      
+
       // Create a wrapper that provides the context
       function ContextWrapper({ children }: { children: React.ReactNode }) {
         const [isGenerating, setIsGenerating] = React.useState(false);
-        
+
         return (
           <TestContext.Provider value={{ isGenerating }}>
-            <button 
-              data-testid="toggle-button"
-              onClick={() => setIsGenerating(prev => !prev)}
-            >
+            <button data-testid="toggle-button" onClick={() => setIsGenerating((prev) => !prev)}>
               Toggle
             </button>
             {children}
           </TestContext.Provider>
         );
       }
-      
+
       // Render the test setup
       render(
         <ContextWrapper>
           <MemoizedComponent />
         </ContextWrapper>
       );
-      
+
       // Check initial state
       expect(screen.getByTestId('render-count').textContent).toBe('1');
       expect(screen.getByTestId('is-generating').textContent).toBe('false');
-      
+
       // Change the context value
       await act(async () => {
         screen.getByTestId('toggle-button').click();
       });
-      
+
       // The memoized component should re-render when context changes
       expect(screen.getByTestId('render-count').textContent).toBe('2');
       expect(screen.getByTestId('is-generating').textContent).toBe('true');
@@ -242,11 +239,7 @@ describe('Component Memoization', () => {
             <button data-testid="rerender-trigger" onClick={triggerRerender}>
               Force Re-render
             </button>
-            <TrackedSidebar
-              isVisible={true}
-              onClose={onClose}
-              onSelectSession={onSelectSession}
-            />
+            <TrackedSidebar isVisible={true} onClose={onClose} onSelectSession={onSelectSession} />
           </div>
         );
       }
