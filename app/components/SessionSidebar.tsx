@@ -94,17 +94,20 @@ function SessionSidebar({ isVisible, onClose, onSelectSession }: SessionSidebarP
       if ('type' in doc && doc.type === 'screenshot') {
         // Handle screenshot
         const sessionId = doc.session_id;
-        if (!groups.has(sessionId)) {
-          // Initialize with empty ScreenshotDocument array
-          groups.set(sessionId, { session: undefined, screenshots: [] });
+        let group = groups.get(sessionId);
+        if (!group) {
+          group = { session: undefined, screenshots: [] };
+          groups.set(sessionId, group);
         }
-        groups.get(sessionId)!.screenshots.push(doc as ScreenshotDocument);
+        group.screenshots.push(doc as ScreenshotDocument);
       } else {
         // Handle session
-        if (!groups.has(doc._id)) {
-          groups.set(doc._id, { session: undefined, screenshots: [] });
+        let group = groups.get(doc._id);
+        if (!group) {
+          group = { session: undefined, screenshots: [] };
+          groups.set(doc._id, group);
         }
-        groups.get(doc._id)!.session = doc as SessionDocument;
+        group.session = doc as SessionDocument;
       }
     });
 
@@ -135,11 +138,9 @@ function SessionSidebar({ isVisible, onClose, onSelectSession }: SessionSidebarP
 
   // Select a session and notify parent component
   const handleSelectSession = (session: SessionDocument) => {
-    if (onSelectSession) {
-      onSelectSession(session);
-      // Close sidebar after selection regardless of screen size
-      onClose();
-    }
+    onSelectSession(session);
+    // Close sidebar after selection regardless of screen size
+    onClose();
   };
 
   // Memoize the sidebar classes to prevent recalculations on every render
@@ -198,21 +199,21 @@ function SessionSidebar({ isVisible, onClose, onSelectSession }: SessionSidebarP
               {groupedSessions.map(({ session, screenshots }) => (
                 <li
                   key={session._id}
-                  onClick={() => handleSelectSession(session as SessionDocument)}
+                  onClick={() => handleSelectSession(session)}
                   onKeyDown={(e) =>
-                    e.key === 'Enter' && handleSelectSession(session as SessionDocument)
+                    e.key === 'Enter' && handleSelectSession(session)
                   }
                   className="hover:bg-light-decorative-00 dark:hover:bg-dark-decorative-00 w-full cursor-pointer rounded p-3 text-left transition-colors"
                   role="button"
                   tabIndex={0}
-                  aria-label={`Select session: ${(session as SessionDocument).title || 'Untitled Chat'}`}
+                  aria-label={`Select session: ${session.title || 'Untitled Chat'}`}
                 >
                   <div className="text-light-primary dark:text-dark-primary truncate text-sm font-medium">
-                    {(session as SessionDocument).title || 'Untitled SessionDocument'}
+                    {session.title || 'Untitled Session'}
                   </div>
                   <div className="text-light-secondary dark:text-dark-secondary text-xs">
-                    {new Date((session as SessionDocument).timestamp).toLocaleDateString()} -
-                    {new Date((session as SessionDocument).timestamp).toLocaleTimeString()}
+                    {new Date(session.timestamp).toLocaleDateString()} -
+                    {new Date(session.timestamp).toLocaleTimeString()}
                   </div>
                   {screenshots.map(
                     (screenshot) =>
