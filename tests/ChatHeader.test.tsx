@@ -8,7 +8,7 @@ describe('ChatHeader', () => {
     const onNewChat = vi.fn();
 
     render(
-      <ChatHeader onToggleSidebar={onToggleSidebar} onNewChat={onNewChat} isGenerating={false} />
+      <ChatHeader onToggleSidebar={onToggleSidebar} onNewChat={onNewChat} isGenerating={false} isExpanding={false} setIsExpanding={vi.fn()} />
     );
 
     expect(screen.getByLabelText('Toggle chat history')).toBeDefined();
@@ -20,7 +20,7 @@ describe('ChatHeader', () => {
     const onNewChat = vi.fn();
 
     render(
-      <ChatHeader onToggleSidebar={onToggleSidebar} onNewChat={onNewChat} isGenerating={false} />
+      <ChatHeader onToggleSidebar={onToggleSidebar} onNewChat={onNewChat} isGenerating={false} isExpanding={false} setIsExpanding={vi.fn()} />
     );
 
     const toggleButton = screen.getByLabelText('Toggle chat history');
@@ -34,7 +34,7 @@ describe('ChatHeader', () => {
     const onNewChat = vi.fn();
 
     render(
-      <ChatHeader onToggleSidebar={onToggleSidebar} onNewChat={onNewChat} isGenerating={false} />
+      <ChatHeader onToggleSidebar={onToggleSidebar} onNewChat={onNewChat} isGenerating={false} isExpanding={false} setIsExpanding={vi.fn()} />
     );
 
     const newChatButton = screen.getByLabelText('New Chat');
@@ -48,7 +48,7 @@ describe('ChatHeader', () => {
     const onNewChat = vi.fn();
 
     render(
-      <ChatHeader onToggleSidebar={onToggleSidebar} onNewChat={onNewChat} isGenerating={true} />
+      <ChatHeader onToggleSidebar={onToggleSidebar} onNewChat={onNewChat} isGenerating={true} isExpanding={false} setIsExpanding={vi.fn()} />
     );
 
     const newChatButton = screen.getByLabelText('New Chat');
