@@ -46,14 +46,14 @@ function ChatInput({ inputRef: externalInputRef }: ChatInputProps = {}) {
   };
 
   return (
-    <div className="input-area border-light-decorative-00 dark:border-dark-decorative-00 bg-light-background-00 dark:bg-dark-background-00 border-t px-4 py-3">
-      <div className="relative flex items-start">
+    <div className="border-t border-light-decorative-00 dark:border-dark-decorative-00 bg-light-background-00 dark:bg-dark-background-00 px-4 py-3">
+      <div className="relative">
         <textarea
           ref={inputRef}
           value={input}
           onChange={handleChange}
           onKeyDown={handleKeyDown}
-          className="border-light-decorative-00 dark:border-dark-decorative-00 text-light-primary dark:text-dark-primary bg-light-background-00 dark:bg-dark-background-00 focus:ring-accent-01-light dark:focus:ring-accent-01-dark max-h-[200px] min-h-[90px] w-full flex-1 resize-y rounded-xl border p-2.5 pr-12 text-sm transition-all focus:border-transparent focus:ring-2 focus:outline-none"
+          className="w-full min-h-[90px] max-h-[200px] resize-y rounded-xl border border-light-decorative-00 dark:border-dark-decorative-00 p-2.5 pr-32 text-sm text-light-primary dark:text-dark-primary bg-light-background-00 dark:bg-dark-background-00 focus:outline-none focus:ring-2 focus:ring-accent-01-light dark:focus:ring-accent-01-dark focus:border-transparent"
           placeholder="Describe the app you want to create..."
           disabled={isGenerating}
           rows={2}
@@ -62,12 +62,7 @@ function ChatInput({ inputRef: externalInputRef }: ChatInputProps = {}) {
           type="button"
           onClick={handleSendMessage}
           disabled={isGenerating}
-          className={`absolute right-2 bottom-2 flex items-center justify-center rounded-full p-2 text-sm font-medium transition-colors duration-200 ${
-            isGenerating
-              ? 'bg-light-decorative-01 dark:bg-dark-decorative-01 text-light-primary dark:text-dark-primary cursor-not-allowed opacity-50'
-              : 'bg-accent-01-light dark:bg-accent-01-dark hover:bg-accent-02-light dark:hover:bg-accent-02-dark cursor-pointer text-white'
-          }`}
-          aria-label={isGenerating ? 'Generating' : 'Send message'}
+          className="absolute right-2 bottom-2 flex items-center justify-center rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-black py-2 px-4 shadow-sm w-[115px]"
         >
           {isGenerating ? (
             <svg
@@ -77,7 +72,6 @@ function ChatInput({ inputRef: externalInputRef }: ChatInputProps = {}) {
               viewBox="0 0 24 24"
               stroke="currentColor"
             >
-              <title>Generating message</title>
               <path
                 strokeLinecap="round"
                 strokeLinejoin="round"
@@ -86,21 +80,18 @@ function ChatInput({ inputRef: externalInputRef }: ChatInputProps = {}) {
               />
             </svg>
           ) : (
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="h-5 w-5"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <title>Send message</title>
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M12 5l0 14M12 5l-4 4M12 5l4 4"
+            <>
+              <img 
+                src="/fp-logo.svg" 
+                alt="Fireproof" 
+                className="block dark:hidden h-6" 
               />
-            </svg>
+              <img 
+                src="/fp-logo-white.svg" 
+                alt="Fireproof" 
+                className="hidden dark:block h-6" 
+              />
+            </>
           )}
         </button>
       </div>
