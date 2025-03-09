@@ -2,53 +2,34 @@ import type { ChangeEvent, KeyboardEvent } from 'react';
 import { useRef, memo, useEffect } from 'react';
 import { useChatContext } from '../context/ChatContext';
 
-// Define props for backward compatibility
+// Only keep the inputRef prop which has specific functionality that can't be handled by context
 interface ChatInputProps {
-  input?: string;
-  setInput?: (input: string) => void;
-  isGenerating?: boolean;
-  onSend?: () => void;
-  autoResizeTextarea?: () => void;
   inputRef?: React.RefObject<HTMLTextAreaElement | null>;
 }
 
-function ChatInput({
-  input: propsInput,
-  setInput: propsSetInput,
-  isGenerating: propsIsGenerating,
-  onSend: propsSend,
-  autoResizeTextarea: propsAutoResize,
-  inputRef: propsInputRef
-}: ChatInputProps = {}) {
+function ChatInput({ inputRef: externalInputRef }: ChatInputProps = {}) {
   // Use context directly - we can assume it's available
-  const contextValues = useChatContext();
+  const { input, setInput, isGenerating, handleSendMessage } = useChatContext();
   
-  // Use our own ref if props don't provide one
+  // Use our own ref if external ref not provided
   const localInputRef = useRef<HTMLTextAreaElement | null>(null);
   
   // Use provided input ref or local ref
-  const inputRef = propsInputRef || localInputRef;
+  const inputRef = externalInputRef || localInputRef;
   
-  // Use values directly from context or props
-  const input = contextValues.input ?? propsInput ?? '';
-  const isGenerating = contextValues.isGenerating ?? propsIsGenerating ?? false;
-  const setInput = contextValues.setInput || propsSetInput || (() => {});
-  const handleSendMessage = contextValues.handleSendMessage || propsSend || (() => {});
-  
-  // Function to auto-resize textarea - inputRef is guaranteed to exist by the time we call this
-  const autoResizeTextarea = propsAutoResize || (() => {
+  // Function to auto-resize textarea
+  const autoResizeTextarea = () => {
     const textarea = inputRef.current;
     if (textarea) {
       textarea.style.height = 'auto';
       textarea.style.height = `${textarea.scrollHeight}px`;
     }
-  });
+  };
   
-  // Ensure we always have a valid autoResizeTextarea function
+  // Initial auto-resize
   useEffect(() => {
-    // Initial auto-resize
     autoResizeTextarea();
-  }, [autoResizeTextarea]);
+  }, []);
   
   // Handler for input changes
   const handleChange = (e: ChangeEvent<HTMLTextAreaElement>) => {

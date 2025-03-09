@@ -263,13 +263,9 @@ function ChatInterface({
 
   const chatHeader = useMemo(
     () => (
-      <ChatHeader
-        onToggleSidebar={chatContext.openSidebar}
-        onNewChat={handleNewChat}
-        isGenerating={isGenerating}
-      />
+      <ChatHeader />
     ),
-    [chatContext.openSidebar, handleNewChat, isGenerating]
+    []
   );
 
   const messageList = useMemo(
@@ -293,15 +289,10 @@ function ChatInterface({
   const chatInput = useMemo(
     () => (
       <ChatInput
-        input={input}
-        setInput={setInput}
-        isGenerating={isGenerating}
-        onSend={sendMessage}
-        autoResizeTextarea={autoResizeTextarea}
         inputRef={inputRef}
       />
     ),
-    [input, setInput, isGenerating, sendMessage, autoResizeTextarea, inputRef]
+    [inputRef]
   );
 
   // Sync from props to context only on initial mount and when context changes

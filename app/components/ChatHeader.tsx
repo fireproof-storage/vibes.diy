@@ -1,28 +1,16 @@
 import { memo } from 'react';
 import { useChatContext } from '../context/ChatContext';
 
-// Define props for backward compatibility
-interface ChatHeaderProps {
-  onToggleSidebar?: () => void;
-  onNewChat?: () => void;
-  isGenerating?: boolean;
-}
-
-function ChatHeader({ onToggleSidebar, onNewChat, isGenerating: propsIsGenerating }: ChatHeaderProps = {}) {
+function ChatHeader() {
   // Use context directly - we can assume it's available
-  const contextValues = useChatContext();
-
-  // Simplified handlers that use either context or props directly
-  const toggleSidebar = contextValues.openSidebar || onToggleSidebar;
-  const handleNewChat = contextValues.handleNewChat || onNewChat;
-  const isGenerating = contextValues.isGenerating ?? propsIsGenerating ?? false;
+  const { openSidebar, handleNewChat, isGenerating } = useChatContext();
 
   return (
     <div className="border-light-decorative-00 dark:border-dark-decorative-00 bg-light-background-00 dark:bg-dark-background-00 flex min-h-[4rem] items-center justify-between border-b px-6 py-4">
       <div className="flex items-center">
         <button
           type="button"
-          onClick={toggleSidebar}
+          onClick={openSidebar}
           className="text-light-primary dark:text-dark-primary hover:text-accent-02-light dark:hover:text-accent-02-dark mr-3"
           aria-label="Toggle chat history"
         >
