@@ -1,12 +1,24 @@
-import { memo } from 'react';
+import { memo, useState } from 'react';
 
 interface ChatHeaderProps {
   onToggleSidebar: () => void;
   onNewChat: () => void;
   isGenerating: boolean;
+  isExpanding: boolean;
+  setIsExpanding: (isExpanding: boolean) => void;
 }
 
-function ChatHeader({ onToggleSidebar, onNewChat, isGenerating }: ChatHeaderProps) {
+function ChatHeader({ onToggleSidebar, onNewChat, isGenerating, isExpanding, setIsExpanding }: ChatHeaderProps) {
+  const [isExpandingState, setIsExpandingState] = useState(isExpanding);
+
+  const handleNewChat = () => {
+    setIsExpandingState(true);
+    setTimeout(() => {
+      onNewChat();
+      setIsExpandingState(false);
+    }, 300);
+  };
+
   return (
     <div className="border-light-decorative-00 dark:border-dark-decorative-00 bg-light-background-00 dark:bg-dark-background-00 flex min-h-[4rem] items-center justify-between border-b px-6 py-4">
       <div className="flex items-center">
@@ -44,8 +56,8 @@ function ChatHeader({ onToggleSidebar, onNewChat, isGenerating }: ChatHeaderProp
       <div className="relative">
         <button
           type="button"
-          onClick={onNewChat}
-          className="peer bg-accent-02-light dark:bg-accent-02-dark hover:bg-accent-03-light dark:hover:bg-accent-03-dark flex cursor-pointer items-center justify-center rounded-full p-2.5 text-white transition-colors"
+          onClick={handleNewChat}
+          className={`peer bg-accent-02-light dark:bg-accent-02-dark hover:bg-accent-03-light dark:hover:bg-accent-03-dark flex cursor-pointer items-center justify-center rounded-full p-2.5 text-white transition-colors ${isExpandingState ? 'animate-bounce' : ''}`}
           disabled={isGenerating}
           aria-label="New Chat"
           title="New Chat"
@@ -77,10 +89,11 @@ function ChatHeader({ onToggleSidebar, onNewChat, isGenerating }: ChatHeaderProp
 // Use React.memo with a custom comparison function to ensure the component only
 // re-renders when its props actually change
 export default memo(ChatHeader, (prevProps, nextProps) => {
-  // Only re-render if isGenerating changes
+  // Only re-render if isGenerating or isExpanding changes
   // Note: Functions should be memoized by parent components
   return (
     prevProps.isGenerating === nextProps.isGenerating &&
+    prevProps.isExpanding === nextProps.isExpanding &&
     prevProps.onNewChat === nextProps.onNewChat &&
     prevProps.onToggleSidebar === nextProps.onToggleSidebar
   );

@@ -50,9 +50,6 @@ function ChatInterface({
   onNewChat,
   onCodeGenerated,
 }: ChatInterfaceProps) {
-  const [isSidebarVisible, setIsSidebarVisible] = useState(false);
-  const [isShrinking, setIsShrinking] = useState(false);
-  const [isExpanding, setIsExpanding] = useState(false);
   const { database, useLiveQuery } = useFireproof('fireproof-chat-history');
 
   const {
@@ -60,12 +57,9 @@ function ChatInterface({
     setMessages,
     input,
     setInput,
-    isGenerating,
     currentStreamedText,
     inputRef,
-    messagesEndRef,
     autoResizeTextarea,
-    scrollToBottom,
     sendMessage,
     completedMessage,
   } = chatState;
@@ -92,10 +86,6 @@ function ChatInterface({
     },
     [inputRef, setInput]
   );
-
-  const toggleSidebar = useCallback(() => {
-    setIsSidebarVisible((prev) => !prev);
-  }, []);
 
   // Focus input on mount
   useEffect(() => {
@@ -126,13 +116,13 @@ function ChatInterface({
   }, [sessionId, database, setMessages]);
 
   // Track streaming state to detect when streaming completes
-  const wasGeneratingRef = useRef(isGenerating);
+  const wasGeneratingRef = useRef(chatState.isGenerating);
 
   // Save messages to Fireproof ONLY when streaming completes or on message count change
   useEffect(() => {
     async function saveSessionData() {
       // Only save when streaming just completed (wasGenerating was true, but isGenerating is now false)
-      const streamingJustCompleted = wasGeneratingRef.current && !isGenerating;
+      const streamingJustCompleted = wasGeneratingRef.current && !chatState.isGenerating;
 
       if (messages.length > 0 && streamingJustCompleted) {
         console.log('Saving completed session to Fireproof - streaming completed');
@@ -164,11 +154,11 @@ function ChatInterface({
       }
 
       // Update ref for next comparison
-      wasGeneratingRef.current = isGenerating;
+      wasGeneratingRef.current = chatState.isGenerating;
     }
 
     saveSessionData();
-  }, [isGenerating, messages, sessionId, database, onSessionCreated]);
+  }, [chatState.isGenerating, messages, sessionId, database, onSessionCreated]);
 
   // Load a session from the sidebar
   const handleLoadSession = useCallback(
@@ -222,7 +212,7 @@ function ChatInterface({
   // Function to handle starting a new chat
   const handleNewChat = useCallback(() => {
     // Start the shrinking animation
-    setIsShrinking(true);
+    chatState.setIsShrinking(true);
 
     // After animation completes, reset the state
     setTimeout(
@@ -235,52 +225,54 @@ function ChatInterface({
           setInput('');
         }
 
-        setIsShrinking(false);
+        chatState.setIsShrinking(false);
 
         // Add a small bounce effect when the new chat appears
-        setIsExpanding(true);
+        chatState.setIsExpanding(true);
         setTimeout(() => {
-          setIsExpanding(false);
+          chatState.setIsExpanding(false);
         }, 300);
       },
       500 + messages.length * 50
     ); // Account for staggered animation of messages
-  }, [onNewChat, messages.length, setInput, setMessages, setIsShrinking, setIsExpanding]);
+  }, [onNewChat, messages.length, setInput, setMessages, chatState]);
 
   // Memoize child components to prevent unnecessary re-renders
   const sessionSidebar = useMemo(
     () => (
       <SessionSidebar
-        isVisible={isSidebarVisible}
-        onToggle={toggleSidebar}
+        isVisible={chatState.isSidebarVisible}
+        onToggle={chatState.setIsSidebarVisible}
         onSelectSession={handleLoadSession}
       />
     ),
-    [isSidebarVisible, toggleSidebar, handleLoadSession]
+    [chatState.isSidebarVisible, chatState.setIsSidebarVisible, handleLoadSession]
   );
 
   const chatHeader = useMemo(
     () => (
       <ChatHeader
-        onToggleSidebar={toggleSidebar}
+        onToggleSidebar={chatState.setIsSidebarVisible}
         onNewChat={handleNewChat}
-        isGenerating={isGenerating}
+        isGenerating={chatState.isGenerating}
+        isExpanding={chatState.isExpanding}
+        setIsExpanding={chatState.setIsExpanding}
       />
     ),
-    [toggleSidebar, handleNewChat, isGenerating]
+    [chatState.setIsSidebarVisible, handleNewChat, chatState.isGenerating, chatState.isExpanding, chatState.setIsExpanding]
   );
 
   const messageList = useMemo(
     () => (
       <MessageList
         messages={messages}
-        isGenerating={isGenerating}
+        isGenerating={chatState.isGenerating}
         currentStreamedText={currentStreamedText}
-        isShrinking={isShrinking}
-        isExpanding={isExpanding}
+        isShrinking={chatState.isShrinking}
+        isExpanding={chatState.isExpanding}
       />
     ),
-    [messages, isGenerating, currentStreamedText, isShrinking, isExpanding]
+    [messages, chatState.isGenerating, currentStreamedText, chatState.isShrinking, chatState.isExpanding]
   );
 
   const quickSuggestions = useMemo(
@@ -293,13 +285,14 @@ function ChatInterface({
       <ChatInput
         input={input}
         setInput={setInput}
-        isGenerating={isGenerating}
+        isGenerating={chatState.isGenerating}
         onSend={sendMessage}
         autoResizeTextarea={autoResizeTextarea}
         inputRef={inputRef}
+        setIsGenerating={chatState.setIsGenerating}
       />
     ),
-    [input, setInput, isGenerating, sendMessage, autoResizeTextarea, inputRef]
+    [input, setInput, chatState.isGenerating, sendMessage, autoResizeTextarea, inputRef, chatState.setIsGenerating]
   );
 
   return (

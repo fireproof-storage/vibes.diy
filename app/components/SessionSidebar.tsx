@@ -67,6 +67,8 @@ function SessionSidebar({ isVisible, onToggle, onSelectSession }: SessionSidebar
   const { database, useLiveQuery } = useFireproof('fireproof-chat-history');
   const sidebarRef = useRef<HTMLDivElement>(null);
 
+  const [isSidebarVisible, setIsSidebarVisible] = useState(false);
+
   // // Query chat sessions ordered by timestamp (newest first)
   // const { docs: sessions } = useLiveQuery('type', {
   //   key: 'session',
