@@ -83,6 +83,7 @@ export default function Home() {
     setSessionId(null);
     setState({ generatedCode: '', dependencies: {} });
     chatState.setMessages([]);
+    window.location.href = '/';
   };
 
   function handleShare() {
