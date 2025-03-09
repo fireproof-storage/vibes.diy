@@ -163,3 +163,47 @@ a,
 .bg-tertiary {
   @apply bg-light-background-02 dark:bg-dark-background-02;
 }
+
+/* Button glimmer animation */
+@keyframes buttonGlimmer {
+  0% { background-position: -100% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.glimmer-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    120deg, 
+    transparent 0%,
+    rgba(255, 255, 255, 0.2) 10%, 
+    rgba(255, 255, 255, 0.2) 15%, 
+    rgba(255, 216, 107, 0.2) 25%, 
+    rgba(255, 216, 107, 0.3) 35%, 
+    rgba(255, 255, 255, 0.2) 48%, 
+    rgba(255, 255, 255, 0.2) 60%, 
+    transparent 80%
+  );
+  background-size: 200% 100%;
+  background-repeat: no-repeat;
+  background-position: -100% 0;
+  animation: buttonGlimmer 2.5s infinite;
+  animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Dark mode adjustment */
+@media (prefers-color-scheme: dark) {
+  .glimmer-overlay {
+    background: linear-gradient(
+      90deg, 
+      transparent 0%,
+      rgba(255, 255, 255, 0.1) 10%, 
+      rgba(255, 255, 255, 0.2) 18%, 
+      rgba(255, 216, 107, 0.6) 20%, 
+      rgba(255, 216, 107, 0.7) 22%, 
+      rgba(255, 255, 255, 0.2) 24%, 
+      rgba(255, 255, 255, 0.1) 30%, 
+      transparent 40%
+    );
+  }
+}

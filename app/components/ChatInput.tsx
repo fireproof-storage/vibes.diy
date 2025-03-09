@@ -54,7 +54,7 @@ function ChatInput({ inputRef: externalInputRef }: ChatInputProps = {}) {
           onChange={handleChange}
           onKeyDown={handleKeyDown}
           className="w-full min-h-[90px] max-h-[200px] resize-y rounded-xl border border-light-decorative-00 dark:border-dark-decorative-00 p-2.5 pr-32 text-sm text-light-primary dark:text-dark-primary bg-light-background-00 dark:bg-dark-background-00 focus:outline-none focus:ring-2 focus:ring-accent-01-light dark:focus:ring-accent-01-dark focus:border-transparent"
-          placeholder="Describe the app you want to create..."
+          placeholder="Fireproof your app idea..."
           disabled={isGenerating}
           rows={2}
         />
@@ -62,37 +62,25 @@ function ChatInput({ inputRef: externalInputRef }: ChatInputProps = {}) {
           type="button"
           onClick={handleSendMessage}
           disabled={isGenerating}
-          className="absolute right-2 bottom-2 flex items-center justify-center rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-black py-2 px-4 shadow-sm w-[115px]"
+          className={`absolute right-0 bottom-0 -mr-1 flex items-center justify-center rounded-lg border py-2 px-1 shadow-sm w-[110px] transition-all duration-300 hover:shadow-md hover:border-gray-300 dark:hover:border-gray-600 active:shadow-inner overflow-hidden ${
+            isGenerating 
+              ? 'border-gray-300 dark:border-gray-500 bg-white dark:bg-black' 
+              : 'border-gray-200 dark:border-gray-700 bg-white dark:bg-black'
+          }`}
         >
-          {isGenerating ? (
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="h-5 w-5 animate-spin"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
-              />
-            </svg>
-          ) : (
-            <>
-              <img 
-                src="/fp-logo.svg" 
-                alt="Fireproof" 
-                className="block dark:hidden h-6" 
-              />
-              <img 
-                src="/fp-logo-white.svg" 
-                alt="Fireproof" 
-                className="hidden dark:block h-6" 
-              />
-            </>
-          )}
+          {isGenerating && <div className="glimmer-overlay" />}
+          <div className="relative z-10">
+            <img 
+              src="/fp-logo.svg" 
+              alt="Fireproof" 
+              className="block dark:hidden h-5 transition-all hover:brightness-110 active:brightness-125" 
+            />
+            <img 
+              src="/fp-logo-white.svg" 
+              alt="Fireproof" 
+              className="hidden dark:block h-5 transition-all hover:brightness-110 active:brightness-125" 
+            />
+          </div>
         </button>
       </div>
     </div>
