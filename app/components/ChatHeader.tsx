@@ -1,4 +1,4 @@
-import { memo } from 'react';
+import { memo, useCallback } from 'react';
 import { useChatContext } from '../context/ChatContext';
 
 // Define props for backward compatibility
@@ -18,7 +18,7 @@ function ChatHeader({ onToggleSidebar, onNewChat, isGenerating: propsIsGeneratin
     contextValues = null;
   }
 
-  // Use context values if available, otherwise use props
+  // Simplified handlers that use either context or props directly
   const toggleSidebar = contextValues?.toggleSidebar || onToggleSidebar;
   const handleNewChat = contextValues?.handleNewChat || onNewChat;
   const isGenerating = contextValues?.isGenerating ?? propsIsGenerating ?? false;

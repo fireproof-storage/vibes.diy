@@ -56,14 +56,14 @@ type SessionOrScreenshot = SessionDocument | ScreenshotDocument;
 
 interface SessionSidebarProps {
   isVisible: boolean;
-  onToggle: () => void;
+  onClose: () => void;
   onSelectSession: (session: SessionDocument) => void;
 }
 
 /**
  * Component that displays a collapsible sidebar with chat session history
  */
-function SessionSidebar({ isVisible, onToggle, onSelectSession }: SessionSidebarProps) {
+function SessionSidebar({ isVisible, onClose, onSelectSession }: SessionSidebarProps) {
   const { database, useLiveQuery } = useFireproof('fireproof-chat-history');
   const sidebarRef = useRef<HTMLDivElement>(null);
 
@@ -116,12 +116,11 @@ function SessionSidebar({ isVisible, onToggle, onSelectSession }: SessionSidebar
 
   // Handle clicks outside the sidebar to close it
   useEffect(() => {
-    // Only add listener if sidebar is visible
     if (!isVisible) return;
 
     function handleClickOutside(event: MouseEvent) {
       if (sidebarRef.current && !sidebarRef.current.contains(event.target as Node)) {
-        onToggle();
+        onClose();
       }
     }
 
@@ -132,14 +131,14 @@ function SessionSidebar({ isVisible, onToggle, onSelectSession }: SessionSidebar
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, [isVisible, onToggle]);
+  }, [isVisible, onClose]);
 
   // Select a session and notify parent component
   const handleSelectSession = (session: SessionDocument) => {
     if (onSelectSession) {
       onSelectSession(session);
       // Close sidebar after selection regardless of screen size
-      onToggle();
+      onClose();
     }
   };
 
@@ -152,82 +151,86 @@ function SessionSidebar({ isVisible, onToggle, onSelectSession }: SessionSidebar
 
   // Conditionally render content but keep animation classes
   return (
-    <div ref={sidebarRef} className={sidebarClasses}>
-      {/* Only render content when sidebar is visible to save resources */}
-      {isVisible && (
-        <div className="h-full overflow-y-auto">
-          <div className="border-light-decorative-00 dark:border-dark-decorative-00 flex items-center justify-between border-b p-4">
-            <h2 className="text-light-primary dark:text-dark-primary text-lg font-semibold">
-              App History
-            </h2>
-            <button
-              type="button"
-              onClick={onToggle}
-              className="text-light-primary dark:text-dark-primary hover:text-accent-02-light dark:hover:text-accent-02-dark"
-              aria-label="Close sidebar"
+    <div
+      ref={sidebarRef}
+      className={`transition-all duration-300 ease-in-out ${
+        isVisible
+          ? 'translate-x-0 opacity-100'
+          : '-translate-x-full opacity-0 pointer-events-none'
+      } absolute inset-y-0 left-0 z-10 flex w-80 flex-col border-r border-gray-200 bg-white shadow-md dark:border-gray-700 dark:bg-gray-800`}
+    >
+      <div className="flex flex-col h-full overflow-hidden">
+        <div className="flex items-center justify-between border-b border-gray-200 p-4 dark:border-gray-700">
+          <h2 className="text-light-primary dark:text-dark-primary text-lg font-semibold">
+            App History
+          </h2>
+          <button
+            type="button"
+            onClick={onClose}
+            className="text-light-primary dark:text-dark-primary hover:text-accent-02-light dark:hover:text-accent-02-dark"
+            aria-label="Close sidebar"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="h-5 w-5"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              aria-hidden="true"
             >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="h-5 w-5"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                aria-hidden="true"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M6 18L18 6M6 6l12 12"
-                />
-              </svg>
-            </button>
-          </div>
-
-          <div className="p-2">
-            {groupedSessions.length === 0 ? (
-              <p className="text-light-secondary dark:text-dark-secondary p-2 text-sm">
-                No saved sessions yet
-              </p>
-            ) : (
-              <ul className="space-y-2">
-                {groupedSessions.map(({ session, screenshots }) => (
-                  <li
-                    key={session._id}
-                    onClick={() => handleSelectSession(session as SessionDocument)}
-                    onKeyDown={(e) =>
-                      e.key === 'Enter' && handleSelectSession(session as SessionDocument)
-                    }
-                    className="hover:bg-light-decorative-00 dark:hover:bg-dark-decorative-00 w-full cursor-pointer rounded p-3 text-left transition-colors"
-                    role="button"
-                    tabIndex={0}
-                    aria-label={`Select session: ${(session as SessionDocument).title || 'Untitled Chat'}`}
-                  >
-                    <div className="text-light-primary dark:text-dark-primary truncate text-sm font-medium">
-                      {(session as SessionDocument).title || 'Untitled SessionDocument'}
-                    </div>
-                    <div className="text-light-secondary dark:text-dark-secondary text-xs">
-                      {new Date((session as SessionDocument).timestamp).toLocaleDateString()} -
-                      {new Date((session as SessionDocument).timestamp).toLocaleTimeString()}
-                    </div>
-                    {screenshots.map(
-                      (screenshot) =>
-                        screenshot._files?.screenshot && (
-                          <ImgFile
-                            key={screenshot._id}
-                            file={screenshot._files?.screenshot}
-                            alt={`Screenshot from ${session.title}`}
-                            className="max-h-60 max-w-full object-contain"
-                          />
-                        )
-                    )}
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M6 18L18 6M6 6l12 12"
+              />
+            </svg>
+          </button>
         </div>
-      )}
+
+        <div className="p-2">
+          {groupedSessions.length === 0 ? (
+            <p className="text-light-secondary dark:text-dark-secondary p-2 text-sm">
+              No saved sessions yet
+            </p>
+          ) : (
+            <ul className="space-y-2">
+              {groupedSessions.map(({ session, screenshots }) => (
+                <li
+                  key={session._id}
+                  onClick={() => handleSelectSession(session as SessionDocument)}
+                  onKeyDown={(e) =>
+                    e.key === 'Enter' && handleSelectSession(session as SessionDocument)
+                  }
+                  className="hover:bg-light-decorative-00 dark:hover:bg-dark-decorative-00 w-full cursor-pointer rounded p-3 text-left transition-colors"
+                  role="button"
+                  tabIndex={0}
+                  aria-label={`Select session: ${(session as SessionDocument).title || 'Untitled Chat'}`}
+                >
+                  <div className="text-light-primary dark:text-dark-primary truncate text-sm font-medium">
+                    {(session as SessionDocument).title || 'Untitled SessionDocument'}
+                  </div>
+                  <div className="text-light-secondary dark:text-dark-secondary text-xs">
+                    {new Date((session as SessionDocument).timestamp).toLocaleDateString()} -
+                    {new Date((session as SessionDocument).timestamp).toLocaleTimeString()}
+                  </div>
+                  {screenshots.map(
+                    (screenshot) =>
+                      screenshot._files?.screenshot && (
+                        <ImgFile
+                          key={screenshot._id}
+                          file={screenshot._files?.screenshot}
+                          alt={`Screenshot from ${session.title}`}
+                          className="max-h-60 max-w-full object-contain"
+                        />
+                      )
+                  )}
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      </div>
     </div>
   );
 }
@@ -238,7 +241,7 @@ export default memo(SessionSidebar, (prevProps, nextProps) => {
   // Note: Functions should be memoized by parent components
   return (
     prevProps.isVisible === nextProps.isVisible &&
-    prevProps.onToggle === nextProps.onToggle &&
+    prevProps.onClose === nextProps.onClose &&
     prevProps.onSelectSession === nextProps.onSelectSession
   );
 });

@@ -228,7 +228,7 @@ describe('Component Memoization', () => {
 
       function TestWrapper() {
         const [, forceUpdate] = React.useState({});
-        const onToggle = React.useCallback(() => {}, []);
+        const onClose = React.useCallback(() => {}, []);
         const onSelectSession = React.useCallback(() => {}, []);
 
         // Force parent re-render without changing props
@@ -241,7 +241,7 @@ describe('Component Memoization', () => {
             </button>
             <TrackedSidebar
               isVisible={true}
-              onToggle={onToggle}
+              onClose={onClose}
               onSelectSession={onSelectSession}
             />
           </div>

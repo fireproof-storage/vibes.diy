@@ -51,7 +51,6 @@ function ChatInterface({
   onNewChat,
   onCodeGenerated,
 }: ChatInterfaceProps) {
-  const [isSidebarVisible, setIsSidebarVisible] = useState(false);
   const [isShrinking, setIsShrinking] = useState(false);
   const [isExpanding, setIsExpanding] = useState(false);
   const { database, useLiveQuery } = useFireproof('fireproof-chat-history');
@@ -97,22 +96,18 @@ function ChatInterface({
     [inputRef, setInput]
   );
 
-  // Set up local toggleSidebar function that will be provided by the context
-  const toggleSidebar = useCallback(() => {
-    setIsSidebarVisible((prev) => !prev);
-    // If we're using the ChatContext, update its state too
-    if (chatContext) {
-      // Sync with context if it exists
+  // Set up sidebar functions for direct open/close
+  const openSidebar = useCallback(() => {
+    if (chatContext && !chatContext.isSidebarVisible) {
       chatContext.toggleSidebar();
     }
   }, [chatContext]);
 
-  // Sync sidebar state with context when it changes
-  useEffect(() => {
-    if (chatContext && chatContext.isSidebarVisible !== isSidebarVisible) {
-      setIsSidebarVisible(chatContext.isSidebarVisible);
+  const closeSidebar = useCallback(() => {
+    if (chatContext && chatContext.isSidebarVisible) {
+      chatContext.toggleSidebar();
     }
-  }, [chatContext, chatContext?.isSidebarVisible]);
+  }, [chatContext]);
 
   // Focus input on mount
   useEffect(() => {
@@ -268,23 +263,23 @@ function ChatInterface({
   const sessionSidebar = useMemo(
     () => (
       <SessionSidebar
-        isVisible={isSidebarVisible}
-        onToggle={toggleSidebar}
+        isVisible={chatContext?.isSidebarVisible}
+        onClose={closeSidebar}
         onSelectSession={handleLoadSession}
       />
     ),
-    [isSidebarVisible, toggleSidebar, handleLoadSession]
+    [chatContext?.isSidebarVisible, closeSidebar, handleLoadSession]
   );
 
   const chatHeader = useMemo(
     () => (
       <ChatHeader
-        onToggleSidebar={toggleSidebar}
+        onToggleSidebar={openSidebar}
         onNewChat={handleNewChat}
         isGenerating={isGenerating}
       />
     ),
-    [toggleSidebar, handleNewChat, isGenerating]
+    [openSidebar, handleNewChat, isGenerating]
   );
 
   const messageList = useMemo(
@@ -319,16 +314,18 @@ function ChatInterface({
     [input, setInput, isGenerating, sendMessage, autoResizeTextarea, inputRef]
   );
 
-  // Use local or context state based on availability
+  // Sync from props to context only on initial mount and when context changes
   useEffect(() => {
-    // If context is providing input state, keep local state in sync
     if (chatContext) {
-      chatContext.setInput(chatState.input);
-      if (chatState.isGenerating !== chatContext.isGenerating) {
+      // Only set initial values from props to context once
+      if (chatContext.input === '' && chatState.input !== '') {
+        chatContext.setInput(chatState.input);
+      }
+      if (chatContext.isGenerating !== chatState.isGenerating) {
         chatContext.setIsGenerating(chatState.isGenerating);
       }
     }
-  }, [chatState.input, chatState.isGenerating, chatContext]);
+  }, [chatContext]); // Only run when context changes or on mount
 
   return (
     <div className="flex h-full flex-col" style={{ overflow: 'hidden' }}>
