@@ -1,9 +1,46 @@
-import { useEffect, useRef, memo, useMemo } from 'react';
+import { useEffect, useRef, memo, useMemo, useState } from 'react';
 import { useFireproof } from 'use-fireproof';
 
-// Define the session type
-interface SessionDocument {
+function ImgFile({
+  file,
+  alt,
+  className,
+}: {
+  file: { file: () => Promise<File>; type: string };
+  alt: string;
+  className: string;
+}) {
+  const [imgDataUrl, setImgDataUrl] = useState('');
+  useEffect(() => {
+    if (file.type && /image/.test(file.type)) {
+      file.file().then((file: File) => {
+        const src = URL.createObjectURL(file);
+        setImgDataUrl(src);
+        return () => URL.revokeObjectURL(src);
+      });
+    }
+  }, [file]);
+  return imgDataUrl ? (
+    <img className={`${className} max-h-60 max-w-full object-contain`} alt={alt} src={imgDataUrl} />
+  ) : null;
+}
+
+// Add these type definitions at the top of the file
+interface DocBase {
   _id: string;
+}
+
+interface ScreenshotDocument extends DocBase {
+  type: 'screenshot';
+  session_id: string;
+  _files?: {
+    screenshot: { file: () => Promise<File>; type: string };
+  };
+}
+
+// Modify SessionDocument to include optional type
+interface SessionDocument extends DocBase {
+  type?: 'session'; // Make it optional since existing docs might not have it
   title?: string;
   timestamp: number;
   messages?: Array<{
@@ -13,6 +50,9 @@ interface SessionDocument {
     dependencies?: Record<string, string>;
   }>;
 }
+
+// Union type for documents returned by query
+type SessionOrScreenshot = SessionDocument | ScreenshotDocument;
 
 interface SessionSidebarProps {
   isVisible: boolean;
@@ -27,10 +67,52 @@ function SessionSidebar({ isVisible, onToggle, onSelectSession }: SessionSidebar
   const { database, useLiveQuery } = useFireproof('fireproof-chat-history');
   const sidebarRef = useRef<HTMLDivElement>(null);
 
-  // Query chat sessions ordered by timestamp (newest first)
-  const { docs: sessions } = useLiveQuery('timestamp', {
-    descending: true,
-  });
+  // // Query chat sessions ordered by timestamp (newest first)
+  // const { docs: sessions } = useLiveQuery('type', {
+  //   key: 'session',
+  //   descending: true,
+  // });
+
+  // // Query chat sessions ordered by timestamp (newest first)
+  // const { docs: screenshots } = useLiveQuery('type', {
+  //   key: 'screenshot',
+  //   descending: true,
+  // });
+
+  const { docs: sessionAndScreenshots } = useLiveQuery<SessionOrScreenshot>((doc) =>
+    doc.type && doc.type === 'screenshot' ? doc.session_id : doc._id
+  );
+
+  // Group sessions and screenshots together
+  const groupedSessions = useMemo(() => {
+    const groups = new Map<
+      string,
+      { session?: SessionDocument; screenshots: ScreenshotDocument[] }
+    >();
+
+    sessionAndScreenshots.forEach((doc) => {
+      if ('type' in doc && doc.type === 'screenshot') {
+        // Handle screenshot
+        const sessionId = doc.session_id;
+        if (!groups.has(sessionId)) {
+          // Initialize with empty ScreenshotDocument array
+          groups.set(sessionId, { session: undefined, screenshots: [] });
+        }
+        groups.get(sessionId)!.screenshots.push(doc as ScreenshotDocument);
+      } else {
+        // Handle session
+        if (!groups.has(doc._id)) {
+          groups.set(doc._id, { session: undefined, screenshots: [] });
+        }
+        groups.get(doc._id)!.session = doc as SessionDocument;
+      }
+    });
+
+    // Convert map to array and sort by session timestamp
+    return Array.from(groups.values())
+      .filter((group) => group.session) // Only include groups with sessions
+      .sort((a, b) => (b.session!.timestamp || 0) - (a.session!.timestamp || 0));
+  }, [sessionAndScreenshots]) as { session: SessionDocument; screenshots: ScreenshotDocument[] }[];
 
   // Handle clicks outside the sidebar to close it
   useEffect(() => {
@@ -76,7 +158,7 @@ function SessionSidebar({ isVisible, onToggle, onSelectSession }: SessionSidebar
         <div className="h-full overflow-y-auto">
           <div className="border-light-decorative-00 dark:border-dark-decorative-00 flex items-center justify-between border-b p-4">
             <h2 className="text-light-primary dark:text-dark-primary text-lg font-semibold">
-              Chat History
+              App History
             </h2>
             <button
               type="button"
@@ -103,31 +185,42 @@ function SessionSidebar({ isVisible, onToggle, onSelectSession }: SessionSidebar
           </div>
 
           <div className="p-2">
-            {sessions.length === 0 ? (
+            {groupedSessions.length === 0 ? (
               <p className="text-light-secondary dark:text-dark-secondary p-2 text-sm">
                 No saved sessions yet
               </p>
             ) : (
               <ul className="space-y-2">
-                {sessions.map((session) => (
-                  <li key={session._id}>
-                    <button
-                      type="button"
-                      onClick={() => handleSelectSession(session as SessionDocument)}
-                      onKeyDown={(e) =>
-                        e.key === 'Enter' && handleSelectSession(session as SessionDocument)
-                      }
-                      className="hover:bg-light-decorative-00 dark:hover:bg-dark-decorative-00 w-full cursor-pointer rounded p-3 text-left transition-colors"
-                      aria-label={`Select session: ${(session as SessionDocument).title || 'Untitled Chat'}`}
-                    >
-                      <div className="text-light-primary dark:text-dark-primary truncate text-sm font-medium">
-                        {(session as SessionDocument).title || 'Untitled Chat'}
-                      </div>
-                      <div className="text-light-secondary dark:text-dark-secondary text-xs">
-                        {new Date((session as SessionDocument).timestamp).toLocaleDateString()} -
-                        {new Date((session as SessionDocument).timestamp).toLocaleTimeString()}
-                      </div>
-                    </button>
+                {groupedSessions.map(({ session, screenshots }) => (
+                  <li
+                    key={session._id}
+                    onClick={() => handleSelectSession(session as SessionDocument)}
+                    onKeyDown={(e) =>
+                      e.key === 'Enter' && handleSelectSession(session as SessionDocument)
+                    }
+                    className="hover:bg-light-decorative-00 dark:hover:bg-dark-decorative-00 w-full cursor-pointer rounded p-3 text-left transition-colors"
+                    role="button"
+                    tabIndex={0}
+                    aria-label={`Select session: ${(session as SessionDocument).title || 'Untitled Chat'}`}
+                  >
+                    <div className="text-light-primary dark:text-dark-primary truncate text-sm font-medium">
+                      {(session as SessionDocument).title || 'Untitled SessionDocument'}
+                    </div>
+                    <div className="text-light-secondary dark:text-dark-secondary text-xs">
+                      {new Date((session as SessionDocument).timestamp).toLocaleDateString()} -
+                      {new Date((session as SessionDocument).timestamp).toLocaleTimeString()}
+                    </div>
+                    {screenshots.map(
+                      (screenshot) =>
+                        screenshot._files?.screenshot && (
+                          <ImgFile
+                            key={screenshot._id}
+                            file={screenshot._files?.screenshot}
+                            alt={`Screenshot from ${session.title}`}
+                            className="max-h-60 max-w-full object-contain"
+                          />
+                        )
+                    )}
                   </li>
                 ))}
               </ul>

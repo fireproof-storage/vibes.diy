@@ -75,7 +75,7 @@ describe('Component Rendering', () => {
       expect(container.firstChild).toHaveClass('translate-x-0');
 
       // Check that content is rendered when visible
-      expect(screen.getByText('Chat History')).toBeInTheDocument();
+      expect(screen.getByText('App History')).toBeInTheDocument();
     });
 
     it('shows empty state when no sessions', () => {

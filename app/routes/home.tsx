@@ -1,7 +1,8 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import ChatInterface from '../ChatInterface';
 import ResultPreview from '../ResultPreview';
 import { useChat } from '../hooks/useChat';
+import { useFireproof } from 'use-fireproof';
 
 export function meta() {
   return [
@@ -45,6 +46,7 @@ export default function Home() {
   const [shareStatus, setShareStatus] = useState<string>('');
   const [isSharedApp, setIsSharedApp] = useState<boolean>(false);
   const [sessionId, setSessionId] = useState<string | null>(null);
+  const { database } = useFireproof('fireproof-chat-history');
 
   // Hoist the useChat hook to this component
   const chatState = useChat((code: string, dependencies?: Record<string, string>) => {
@@ -126,6 +128,31 @@ export default function Home() {
       });
   }
 
+  // Add screenshot handling in home.tsx
+  const handleScreenshotCaptured = useCallback(
+    async (screenshotData: string) => {
+      if (sessionId) {
+        console.log(
+          `Saving screenshot to session: ${sessionId}, screenshot length: ${screenshotData.length}`
+        );
+
+        const response = await fetch(screenshotData);
+        const blob = await response.blob();
+        const file = new File([blob], 'screenshot.png', { type: 'image/png' });
+
+        const ok = await database.put({
+          type: 'screenshot',
+          session_id: sessionId,
+          _files: {
+            screenshot: file,
+          },
+        });
+        console.log('ok', ok);
+      }
+    },
+    [sessionId]
+  );
+
   return (
     <div style={{ display: 'flex', height: '100vh', overflow: 'hidden' }}>
       <div style={{ flex: '0 0 33.333%', overflow: 'hidden', position: 'relative' }}>
@@ -157,6 +184,7 @@ export default function Home() {
               ? { content: chatState.messages[chatState.messages.length - 1].text }
               : undefined
           }
+          onScreenshotCaptured={handleScreenshotCaptured}
         />
       </div>
     </div>

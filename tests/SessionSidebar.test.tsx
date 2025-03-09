@@ -11,7 +11,7 @@ describe('SessionSidebar', () => {
       <SessionSidebar isVisible={true} onToggle={onToggle} onSelectSession={onSelectSession} />
     );
 
-    expect(screen.getByText('Chat History')).toBeDefined();
+    expect(screen.getByText('App History')).toBeDefined();
   });
 
   it('handles toggle button click', () => {
