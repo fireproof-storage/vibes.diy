@@ -78,6 +78,14 @@ function ChatInterface({
   // Get values from context when available
   const chatContext = useChatContext();
 
+  // Create a ref to store setMessages function to avoid dependency cycles
+  const setMessagesRef = useRef(setMessages);
+  
+  // Keep the ref updated with the latest setMessages function
+  useEffect(() => {
+    setMessagesRef.current = setMessages;
+  }, [setMessages]);
+
   // Memoize handler functions to prevent re-renders
   const handleSelectSuggestion = useCallback(
     (suggestion: string) => {
@@ -114,7 +122,8 @@ function ChatInterface({
           const sessionData = await database.get(sessionId) as SessionDocument;
           // Normalize session data to guarantee messages array exists
           const messages = Array.isArray(sessionData.messages) ? sessionData.messages : [];
-          setMessages(messages);
+          // Use the ref to access the latest setMessages function
+          setMessagesRef.current(messages);
         } catch (error) {
           console.error('Error loading session:', error);
         }
@@ -122,7 +131,7 @@ function ChatInterface({
     }
 
     loadSessionData();
-  }, [sessionId, database, setMessages]);
+  }, [sessionId, database]); // Removed setMessages from the dependency array
 
   // Track streaming state to detect when streaming completes
   const wasGeneratingRef = useRef(isGenerating);
@@ -177,7 +186,8 @@ function ChatInterface({
         const sessionData = await database.get(sessionId) as SessionDocument;
         // Normalize session data to guarantee messages array exists
         const messages = Array.isArray(sessionData.messages) ? sessionData.messages : [];
-        setMessages(messages);
+        // Use the ref to access the latest setMessages function
+        setMessagesRef.current(messages);
 
         // Find the last AI message with code to update the editor
         const lastAiMessageWithCode = [...messages]
@@ -210,7 +220,7 @@ function ChatInterface({
         console.error('Error loading session:', error);
       }
     },
-    [database, setMessages, chatState, onCodeGenerated, onSessionCreated]
+    [database, chatState, onCodeGenerated, onSessionCreated]
   );
 
   // Function to handle starting a new chat
@@ -225,7 +235,7 @@ function ChatInterface({
         onNewChat?.();
         
         // Always reset local state
-        setMessages([]);
+        setMessagesRef.current([]);
         setInput('');
         setIsShrinking(false);
 
@@ -237,7 +247,7 @@ function ChatInterface({
       },
       500 + messages.length * 50
     );
-  }, [onNewChat, messages.length, setInput, setMessages, setIsShrinking, setIsExpanding]);
+  }, [onNewChat, messages.length, setInput, setIsShrinking, setIsExpanding]);
 
   // Memoize child components to prevent unnecessary re-renders
   const sessionSidebar = useMemo(

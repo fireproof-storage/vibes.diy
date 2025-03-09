@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useMemo } from 'react';
 import ChatInterface from '../ChatInterface';
 import ResultPreview from '../components/ResultPreview/ResultPreview';
 import { useChat } from '../hooks/useChat';
@@ -154,8 +154,13 @@ export default function Home() {
     [sessionId]
   );
 
+  // Memoize dependencies to prevent unnecessary re-renders
+  const previewDependencies = useMemo(() => {
+    return chatState.parserState?.current?.dependencies || state.dependencies;
+  }, [chatState.parserState?.current?.dependencies, state.dependencies]);
+
   return (
-    <div style={{ display: 'flex', height: '100vh', overflow: 'hidden' }}>
+    <div style={{ display: 'flex', height: 'calc(100vh - 64px)' }}>
       <div style={{ flex: '0 0 33.333%', overflow: 'hidden', position: 'relative' }}>
         <ChatProvider 
           initialState={{
@@ -188,7 +193,7 @@ export default function Home() {
           code={state.generatedCode}
           streamingCode={chatState.streamingCode}
           isStreaming={chatState.isStreaming}
-          dependencies={chatState.parserState?.current?.dependencies || state.dependencies}
+          dependencies={previewDependencies}
           onShare={handleShare}
           shareStatus={shareStatus}
           completedMessage={chatState.completedMessage}

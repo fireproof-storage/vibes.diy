@@ -213,13 +213,20 @@ function ResultPreview({
 
   const shouldSpin = !isStreaming && justFinishedStreamingRef.current && !bundlingComplete;
 
-  useEffect(() => {
-    console.log('dependencies', dependencies);
-  }, [dependencies]);
-
   const spinningIconClass = shouldSpin ? 'animate-spin-slow' : '';
 
   const sandpackKey = useRef('stable-sandpack-key').current;
+
+  // Memoize the dependencies for Sandpack
+  const depsString = useMemo(() => JSON.stringify(dependencies), [dependencies]);
+  
+  const sandpackDependencies = useMemo(() => {
+    // Ensure use-fireproof is included in the dependencies
+    return {
+      "use-fireproof": "0.20.0-dev-preview-52",
+      ...dependencies
+    };
+  }, [depsString]);
 
   return (
     <div className="h-full" style={{ overflow: 'hidden' }}>
@@ -371,10 +378,7 @@ function ResultPreview({
               classes: { 'sp-wrapper': 'h-full' },
             }}
             customSetup={{
-              dependencies: {
-                ...dependencies,
-                ...sandpackDependencies,
-              },
+              dependencies: sandpackDependencies,
             }}
             files={filesRef.current}
             theme={isDarkMode ? 'dark' : 'light'}
