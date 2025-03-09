@@ -1,7 +1,6 @@
 import { useEffect, useState, useMemo, useCallback, useRef } from 'react';
 import type { ChatMessage, SessionDocument } from './types/chat';
 import { useFireproof } from 'use-fireproof';
-import { useNavigate } from 'react-router';
 import SessionSidebar from './components/SessionSidebar';
 import ChatHeader from './components/ChatHeader';
 import MessageList from './components/MessageList';
@@ -60,7 +59,6 @@ function ChatInterface({
   const [isShrinking, setIsShrinking] = useState(false);
   const [isExpanding, setIsExpanding] = useState(false);
   const { database, useLiveQuery } = useFireproof('fireproof-chat-history');
-  const navigate = useNavigate();
 
   const {
     messages,
@@ -119,6 +117,33 @@ function ChatInterface({
     autoResizeTextarea();
   }, [autoResizeTextarea]);
 
+  // Handle browser history navigation (back/forward buttons)
+  useEffect(() => {
+    const handlePopState = (event: PopStateEvent) => {
+      // If there's a sessionId in the state, load that session
+      if (event.state?.sessionId) {
+        // If we have an onSessionCreated callback, call it with the sessionId from state
+        if (onSessionCreated) {
+          onSessionCreated(event.state.sessionId);
+        }
+      } else {
+        // If we're navigating to a page without a sessionId (like the home page)
+        // call onNewChat if available
+        if (onNewChat) {
+          onNewChat();
+        }
+      }
+    };
+
+    // Add event listener for popstate events
+    window.addEventListener('popstate', handlePopState);
+
+    // Clean up the event listener on unmount
+    return () => {
+      window.removeEventListener('popstate', handlePopState);
+    };
+  }, [onSessionCreated, onNewChat]);
+
   // Load session data when sessionId changes
   useEffect(() => {
     async function loadSessionData() {
@@ -167,6 +192,12 @@ function ChatInterface({
 
           // If this was a new session, notify the parent component using optional chaining
           if (!sessionId) {
+            // Update the URL in the browser history without reloading
+            const encodedTitle = encodeTitle(title);
+            const url = `/session/${result.id}/${encodedTitle}`;
+            window.history.pushState({ sessionId: result.id }, '', url);
+            
+            // Notify parent component
             onSessionCreated?.(result.id);
           }
         } catch (error) {
@@ -246,7 +277,7 @@ function ChatInterface({
         setInput('');
         
         // Navigate to the root path
-        navigate('/');
+        window.history.pushState({ sessionId: null }, '', '/');
 
         // Reset animation states
         setIsShrinking(false);
@@ -264,12 +295,20 @@ function ChatInterface({
       },
       500 + messages.length * 50
     );
-  }, [onNewChat, messages.length, navigate, setInput, setMessages, setIsShrinking, setIsExpanding]);
+  }, [onNewChat, messages.length, setInput, setMessages, setIsShrinking, setIsExpanding]);
 
   const handleSelectSession = (session: SessionDocument) => {
     // Navigate to the session route
     const encodedTitle = encodeTitle(session.title || 'Untitled Session');
-    navigate(`/session/${session._id}/${encodedTitle}`);
+    const url = `/session/${session._id}/${encodedTitle}`;
+    
+    // Update URL without reloading by pushing to history state
+    window.history.pushState({ sessionId: session._id }, '', url);
+    
+    // Handle loading session if needed
+    if (onSessionCreated) {
+      onSessionCreated(session._id);
+    }
   };
 
   // This function will be called when a new session is created
@@ -279,8 +318,9 @@ function ChatInterface({
       onSessionCreated(newSessionId);
     }
     
-    // Navigate to the new session
-    navigate(`/session/${newSessionId}/new-session`);
+    // Navigate to the new session without reloading
+    const url = `/session/${newSessionId}/new-session`;
+    window.history.pushState({ sessionId: newSessionId }, '', url);
   };
 
   // Memoize child components to prevent unnecessary re-renders

@@ -22,6 +22,7 @@ interface ResultPreviewProps {
   currentMessage?: { content: string };
   currentStreamContent?: string;
   onScreenshotCaptured?: (screenshotData: string) => void;
+  initialView?: 'code' | 'preview';
 }
 
 const indexHtml = `<!DOCTYPE html>
@@ -99,8 +100,9 @@ function ResultPreview({
   currentMessage,
   currentStreamContent,
   onScreenshotCaptured,
+  initialView = 'preview',
 }: ResultPreviewProps) {
-  const [activeView, setActiveView] = useState<'preview' | 'code'>('preview');
+  const [activeView, setActiveView] = useState<'preview' | 'code'>(initialView);
   const [displayCode, setDisplayCode] = useState(code || defaultCode);
   const [appStartedCount, setAppStartedCount] = useState(0);
   const [bundlingComplete, setBundlingComplete] = useState(true);
