@@ -58,6 +58,7 @@ function ChatInterface({
   const {
     messages,
     setMessages,
+    input,
     setInput,
     isGenerating,
     currentStreamedText,
@@ -240,7 +241,7 @@ function ChatInterface({
         }, 300);
 
         // Refresh the page and navigate to the root URL
-        window.location.href = '/';
+        // window.location.href = '/';
       },
       500 + messages.length * 50
     ); // Account for staggered animation of messages
