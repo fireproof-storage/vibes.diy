@@ -77,31 +77,29 @@ function ChatInterface({
 
   // Create a ref to store setMessages function to avoid dependency cycles
   const setMessagesRef = useRef(setMessages);
-
+  
   // Keep the ref updated with the latest setMessages function
   useEffect(() => {
     setMessagesRef.current = setMessages;
   }, [setMessages]);
 
+  // Track if we are manually setting input to prevent feedback loops
+  const isSettingInput = useRef(false);
+
   // Memoize handler functions to prevent re-renders
   const handleSelectSuggestion = useCallback(
     (suggestion: string) => {
-      // Update both the local state and ChatContext state
+      // Set local state directly
       setInput(suggestion);
-      chatContext.setInput(suggestion);
 
       // Focus the input after setting the value
       setTimeout(() => {
         if (inputRef.current) {
           inputRef.current.focus();
-          // Move cursor to the end
-          const length = suggestion.length;
-          inputRef.current.selectionStart = length;
-          inputRef.current.selectionEnd = length;
         }
       }, 0);
     },
-    [inputRef, setInput, chatContext.setInput]
+    [inputRef, setInput]
   );
 
   // Focus input on mount
@@ -236,7 +234,10 @@ function ChatInterface({
 
         // Always reset local state
         setMessagesRef.current([]);
+        
+        // Only reset input
         setInput('');
+        
         setIsShrinking(false);
 
         // Add a small bounce effect when the new chat appears
@@ -284,26 +285,35 @@ function ChatInterface({
     [messages.length, handleSelectSuggestion]
   );
 
-  const chatInput = useMemo(() => <ChatInput inputRef={inputRef} />, [inputRef]);
-
-  // Sync from context to props when context input changes
+  // Memoize ChatInput with direct props instead of relying on context
+  const chatInput = useMemo(() => {
+    console.log('Rendering ChatInput with props', { input, isGenerating });
+    return (
+      <ChatInput
+        value={input}
+        onChange={(e) => {
+          console.log('ChatInput onChange', e.target.value);
+          setInput(e.target.value);
+        }}
+        onSend={sendMessage}
+        disabled={isGenerating}
+        inputRef={inputRef}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' && !e.shiftKey && !isGenerating) {
+            e.preventDefault();
+            sendMessage();
+          }
+        }}
+      />
+    );
+  }, [input, isGenerating, setInput, sendMessage, inputRef]);
+  
+  // Keep isGenerating in sync with context
   useEffect(() => {
-    if (chatContext.input !== chatState.input) {
-      setInput(chatContext.input);
-    }
-  }, [chatContext.input, chatState.input, setInput]);
-
-  // Sync between props and context bidirectionally
-  useEffect(() => {
-    // Sync from props to context
-    if (chatState.input !== chatContext.input) {
-      chatContext.setInput(chatState.input);
-    }
-
     if (chatState.isGenerating !== chatContext.isGenerating) {
       chatContext.setIsGenerating(chatState.isGenerating);
     }
-  }, [chatContext, chatState.input, chatState.isGenerating]);
+  }, [chatContext, chatState.isGenerating]);
 
   return (
     <div className="flex h-full flex-col" style={{ overflow: 'hidden' }}>

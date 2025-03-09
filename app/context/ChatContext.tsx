@@ -1,4 +1,5 @@
 import { createContext, useContext, useState, useCallback, type ReactNode } from 'react';
+import React from 'react';
 
 // Define the core chat state and functionality
 interface ChatContextState {
@@ -18,6 +19,10 @@ interface ChatContextState {
   // Core functions
   handleSendMessage: () => void;
   handleNewChat: () => void;
+  
+  // Input reference and textarea auto-resize
+  inputRef: React.RefObject<HTMLTextAreaElement | null>;
+  autoResizeTextarea: () => void;
 }
 
 // Create the context with undefined default
@@ -46,6 +51,24 @@ export function ChatProvider({
   const [input, setInput] = useState(initialState.input || '');
   const [isGenerating, setIsGenerating] = useState(initialState.isGenerating || false);
   const [isSidebarVisible, setIsSidebarVisible] = useState(initialState.isSidebarVisible || false);
+  
+  // Wrap setInput with debugging
+  const setInputWithDebug = useCallback((newInput: string) => {
+    console.log('ChatContext.setInput', { oldValue: input, newValue: newInput });
+    setInput(newInput);
+  }, [input]);
+
+  // Create input reference
+  const inputRef = React.useRef<HTMLTextAreaElement | null>(null);
+  
+  // Auto-resize textarea function
+  const autoResizeTextarea = useCallback(() => {
+    const textarea = inputRef.current;
+    if (textarea) {
+      textarea.style.height = 'auto';
+      textarea.style.height = `${Math.max(60, textarea.scrollHeight)}px`;
+    }
+  }, []);
 
   // Sidebar visibility functions
   const openSidebar = useCallback(() => {
@@ -82,7 +105,7 @@ export function ChatProvider({
   // Context value
   const contextValue: ChatContextState = {
     input,
-    setInput,
+    setInput: setInputWithDebug,
     isGenerating,
     setIsGenerating,
     isSidebarVisible,
@@ -90,6 +113,8 @@ export function ChatProvider({
     closeSidebar,
     handleSendMessage,
     handleNewChat,
+    inputRef,
+    autoResizeTextarea,
   };
 
   return <ChatContext.Provider value={contextValue}>{children}</ChatContext.Provider>;

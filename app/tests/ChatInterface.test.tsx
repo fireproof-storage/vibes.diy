@@ -1,7 +1,8 @@
 import React from 'react';
 import { render } from '@testing-library/react';
 import ChatInterface from '../ChatInterface';
-import { vi } from 'vitest';
+import { vi, describe, test, expect } from 'vitest';
+import { ChatProvider } from '../context/ChatContext';
 
 /**
  * Tests for the ChatInterface component
@@ -52,7 +53,11 @@ describe('ChatInterface', () => {
   test('renders without error after fixing input destructuring', () => {
     // This test passes now that we've fixed the 'input is not defined' error
     // by properly destructuring input from chatState
-    const { container } = render(<ChatInterface chatState={mockChatState} />);
+    const { container } = render(
+      <ChatProvider>
+        <ChatInterface chatState={mockChatState} />
+      </ChatProvider>
+    );
     expect(container).toBeDefined();
   });
 }); 
