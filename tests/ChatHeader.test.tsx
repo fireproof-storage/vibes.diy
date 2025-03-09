@@ -6,21 +6,36 @@ describe('ChatHeader', () => {
   it('renders correctly', () => {
     const onToggleSidebar = vi.fn();
     const onNewChat = vi.fn();
+    const onRestart = vi.fn();
 
     render(
-      <ChatHeader onToggleSidebar={onToggleSidebar} onNewChat={onNewChat} isGenerating={false} />
+      <ChatHeader
+        onToggleSidebar={onToggleSidebar}
+        onNewChat={onNewChat}
+        isGenerating={false}
+        restartCount={0}
+        onRestart={onRestart}
+      />
     );
 
     expect(screen.getByLabelText('Toggle chat history')).toBeDefined();
     expect(screen.getByLabelText('New Chat')).toBeDefined();
+    expect(screen.getByLabelText('Restart')).toBeDefined();
   });
 
   it('calls onToggleSidebar when the toggle button is clicked', () => {
     const onToggleSidebar = vi.fn();
     const onNewChat = vi.fn();
+    const onRestart = vi.fn();
 
     render(
-      <ChatHeader onToggleSidebar={onToggleSidebar} onNewChat={onNewChat} isGenerating={false} />
+      <ChatHeader
+        onToggleSidebar={onToggleSidebar}
+        onNewChat={onNewChat}
+        isGenerating={false}
+        restartCount={0}
+        onRestart={onRestart}
+      />
     );
 
     const toggleButton = screen.getByLabelText('Toggle chat history');
@@ -32,9 +47,16 @@ describe('ChatHeader', () => {
   it('calls onNewChat when the new chat button is clicked', () => {
     const onToggleSidebar = vi.fn();
     const onNewChat = vi.fn();
+    const onRestart = vi.fn();
 
     render(
-      <ChatHeader onToggleSidebar={onToggleSidebar} onNewChat={onNewChat} isGenerating={false} />
+      <ChatHeader
+        onToggleSidebar={onToggleSidebar}
+        onNewChat={onNewChat}
+        isGenerating={false}
+        restartCount={0}
+        onRestart={onRestart}
+      />
     );
 
     const newChatButton = screen.getByLabelText('New Chat');
@@ -46,9 +68,16 @@ describe('ChatHeader', () => {
   it('disables the new chat button when isGenerating is true', () => {
     const onToggleSidebar = vi.fn();
     const onNewChat = vi.fn();
+    const onRestart = vi.fn();
 
     render(
-      <ChatHeader onToggleSidebar={onToggleSidebar} onNewChat={onNewChat} isGenerating={true} />
+      <ChatHeader
+        onToggleSidebar={onToggleSidebar}
+        onNewChat={onNewChat}
+        isGenerating={true}
+        restartCount={0}
+        onRestart={onRestart}
+      />
     );
 
     const newChatButton = screen.getByLabelText('New Chat');
@@ -56,5 +85,26 @@ describe('ChatHeader', () => {
 
     fireEvent.click(newChatButton);
     expect(onNewChat).not.toHaveBeenCalled();
+  });
+
+  it('calls onRestart when the restart button is clicked', () => {
+    const onToggleSidebar = vi.fn();
+    const onNewChat = vi.fn();
+    const onRestart = vi.fn();
+
+    render(
+      <ChatHeader
+        onToggleSidebar={onToggleSidebar}
+        onNewChat={onNewChat}
+        isGenerating={false}
+        restartCount={0}
+        onRestart={onRestart}
+      />
+    );
+
+    const restartButton = screen.getByLabelText('Restart');
+    fireEvent.click(restartButton);
+
+    expect(onRestart).toHaveBeenCalledTimes(1);
   });
 });

@@ -121,4 +121,16 @@ describe('ResultPreview', () => {
     // And the share button should also be visible
     expect(screen.getByLabelText('Share app')).toBeDefined();
   });
+
+  it('appends restartCount to the non-streaming key for Sandpack', () => {
+    const code = 'const test = "Hello";';
+    const restartCount = 1;
+
+    render(<ResultPreview code={code} restartCount={restartCount} />);
+
+    // Check if the SandpackProvider key includes the restartCount
+    const sandpackProvider = screen.getByTestId('sandpack-provider');
+    expect(sandpackProvider).toBeDefined();
+    expect(sandpackProvider.getAttribute('key')).toContain(`${restartCount}`);
+  });
 });

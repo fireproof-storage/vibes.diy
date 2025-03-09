@@ -54,20 +54,17 @@ function ChatInterface({
   const [isShrinking, setIsShrinking] = useState(false);
   const [isExpanding, setIsExpanding] = useState(false);
   const { database, useLiveQuery } = useFireproof('fireproof-chat-history');
+  const [restartCount, setRestartCount] = useState(0); // P9013
 
   const {
     messages,
     setMessages,
-    input,
     setInput,
     isGenerating,
     currentStreamedText,
     inputRef,
-    messagesEndRef,
     autoResizeTextarea,
-    scrollToBottom,
     sendMessage,
-    completedMessage,
   } = chatState;
 
   // Query chat sessions ordered by timestamp (newest first)
@@ -247,6 +244,11 @@ function ChatInterface({
     ); // Account for staggered animation of messages
   }, [onNewChat, messages.length, setInput, setMessages, setIsShrinking, setIsExpanding]);
 
+  // Function to handle restarting the app
+  const handleRestart = useCallback(() => {
+    setRestartCount((prevCount) => prevCount + 1);
+  }, []); // P22c7
+
   // Memoize child components to prevent unnecessary re-renders
   const sessionSidebar = useMemo(
     () => (
@@ -265,9 +267,11 @@ function ChatInterface({
         onToggleSidebar={toggleSidebar}
         onNewChat={handleNewChat}
         isGenerating={isGenerating}
+        restartCount={restartCount} // P80b5
+        onRestart={handleRestart} // P80b5
       />
     ),
-    [toggleSidebar, handleNewChat, isGenerating]
+    [toggleSidebar, handleNewChat, isGenerating, restartCount, handleRestart]
   );
 
   const messageList = useMemo(

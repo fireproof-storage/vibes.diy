@@ -18,6 +18,7 @@ interface ResultPreviewProps {
   completedMessage?: string;
   currentMessage?: { content: string };
   currentStreamContent?: string;
+  restartCount?: number; // P005e
 }
 
 const indexHtml = `<!DOCTYPE html>
@@ -402,6 +403,7 @@ function ResultPreview({
   completedMessage,
   currentMessage,
   currentStreamContent,
+  restartCount = 0, // P005e
 }: ResultPreviewProps) {
   const [activeView, setActiveView] = useState<'preview' | 'code'>('preview');
   const [displayCode, setDisplayCode] = useState(code || defaultCode);
@@ -682,7 +684,7 @@ function ResultPreview({
         // Show sandbox
         <div data-testid="sandpack-provider">
           <SandpackProvider
-            key={isStreaming ? 'streaming' : displayCode}
+            key={isStreaming ? 'streaming' : `${displayCode}-${restartCount}`} // P7bfe
             template="vite-react"
             options={{
               externalResources: ['https://cdn.tailwindcss.com'],
