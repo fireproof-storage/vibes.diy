@@ -35,9 +35,11 @@ vi.mock('react-router', () => ({
   ScrollRestoration: () =>
     React.createElement('div', { 'data-testid': 'scroll-restoration' }, 'Scroll Restoration'),
   isRouteErrorResponse: vi.fn().mockReturnValue(false),
-  useNavigate: vi.fn(),
+  useNavigate: () => vi.fn(),
   useLocation: () => ({ pathname: '/' }),
   useParams: () => ({}),
+  Link: ({ children, to, ...props }: any) =>
+    React.createElement('a', { href: to, ...props }, children),
 }));
 
 vi.mock('react-router-dom', () => ({

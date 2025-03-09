@@ -89,6 +89,7 @@ export default function Home() {
       generatedCode: '',
       dependencies: {},
     });
+    chatState.setMessages([]);
   };
 
   function handleShare() {
@@ -165,31 +166,31 @@ export default function Home() {
   }, [chatState.parserState?.current?.dependencies, state.dependencies]);
 
   return (
-    <div className="flex h-[calc(100vh-2rem)] flex-col md:flex-row md:overflow-hidden">
-      <ChatProvider
-        initialState={{
-          input: '',
-          isGenerating: false,
-          isSidebarVisible: false,
-        }}
-        onSendMessage={(input) => {
-          if (input.trim()) {
-            if (!sessionId) {
-              // If no session exists, create one
-              const newSession = {
-                timestamp: Date.now(),
-                title: input.length > 50 ? `${input.substring(0, 50)}...` : input,
-              };
-              
-              database.put(newSession).then((doc) => {
-                handleSessionCreated(doc.id);
-              });
+    <div style={{ display: 'flex', height: 'calc(100vh)' }}>
+      <div style={{ flex: '0 0 33.333%', overflow: 'hidden', position: 'relative' }}>
+        <ChatProvider
+          initialState={{
+            input: '',
+            isGenerating: false,
+            isSidebarVisible: false,
+          }}
+          onSendMessage={(input) => {
+            if (input.trim()) {
+              if (!sessionId) {
+                // If no session exists, create one
+                const newSession = {
+                  timestamp: Date.now(),
+                  title: input.length > 50 ? `${input.substring(0, 50)}...` : input,
+                };
+                
+                database.put(newSession).then((doc) => {
+                  handleSessionCreated(doc.id);
+                });
+              }
             }
-          }
-        }}
-        onNewChat={handleNewChat}
-      >
-        <div className="w-full md:h-full md:w-1/2">
+          }}
+          onNewChat={handleNewChat}
+        >
           <ChatInterface
             chatState={chatState}
             sessionId={sessionId}
@@ -202,26 +203,26 @@ export default function Home() {
               });
             }}
           />
-        </div>
-        <div style={{ flex: '0 0 66.667%', overflow: 'hidden', position: 'relative' }}>
-          <ResultPreview
-            code={state.generatedCode}
-            streamingCode={chatState.streamingCode}
-            isStreaming={chatState.isStreaming}
-            dependencies={previewDependencies}
-            onShare={handleShare}
-            shareStatus={shareStatus}
-            completedMessage={chatState.completedMessage}
-            currentStreamContent={chatState.currentStreamedText}
-            currentMessage={
-              chatState.messages.length > 0
-                ? { content: chatState.messages[chatState.messages.length - 1].text }
-                : undefined
-            }
-            onScreenshotCaptured={handleScreenshotCaptured}
-          />
-        </div>
-      </ChatProvider>
+        </ChatProvider>
+      </div>
+      <div style={{ flex: '0 0 66.667%', overflow: 'hidden', position: 'relative' }}>
+        <ResultPreview
+          code={state.generatedCode}
+          streamingCode={chatState.streamingCode}
+          isStreaming={chatState.isStreaming}
+          dependencies={previewDependencies}
+          onShare={handleShare}
+          shareStatus={shareStatus}
+          completedMessage={chatState.completedMessage}
+          currentStreamContent={chatState.currentStreamedText}
+          currentMessage={
+            chatState.messages.length > 0
+              ? { content: chatState.messages[chatState.messages.length - 1].text }
+              : undefined
+          }
+          onScreenshotCaptured={handleScreenshotCaptured}
+        />
+      </div>
     </div>
   );
 }

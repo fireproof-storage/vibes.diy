@@ -44,37 +44,37 @@ export default function Session() {
   }, [sessionId, chatState.setMessages]);
 
   return (
-    <div className="flex h-[calc(100vh-2rem)] flex-col md:flex-row md:overflow-hidden">
-      <ChatProvider
-        initialState={{
-          input: '',
-          isGenerating: false,
-          isSidebarVisible: false,
-        }}
-      >
-        <div className="w-full md:h-full md:w-1/2">
+    <div style={{ display: 'flex', height: 'calc(100vh)' }}>
+      <div style={{ flex: '0 0 33.333%', overflow: 'hidden', position: 'relative' }}>
+        <ChatProvider
+          initialState={{
+            input: '',
+            isGenerating: false,
+            isSidebarVisible: false,
+          }}
+        >
           <ChatInterface
             chatState={chatState}
             sessionId={sessionId || null}
             onCodeGenerated={handleCodeGenerated}
           />
-        </div>
-        <div className="w-full md:h-full md:w-1/2 md:overflow-auto">
-          <ResultPreview
-            code={state.generatedCode}
-            dependencies={state.dependencies}
-            streamingCode={chatState.streamingCode}
-            isStreaming={chatState.isStreaming}
-            completedMessage={chatState.completedMessage}
-            currentStreamContent={chatState.currentStreamedText}
-            currentMessage={
-              chatState.messages.length > 0
-                ? { content: chatState.messages[chatState.messages.length - 1].text }
-                : undefined
-            }
-          />
-        </div>
-      </ChatProvider>
+        </ChatProvider>
+      </div>
+      <div style={{ flex: '0 0 66.667%', overflow: 'hidden', position: 'relative' }}>
+        <ResultPreview
+          code={state.generatedCode}
+          dependencies={state.dependencies}
+          streamingCode={chatState.streamingCode}
+          isStreaming={chatState.isStreaming}
+          completedMessage={chatState.completedMessage}
+          currentStreamContent={chatState.currentStreamedText}
+          currentMessage={
+            chatState.messages.length > 0
+              ? { content: chatState.messages[chatState.messages.length - 1].text }
+              : undefined
+          }
+        />
+      </div>
     </div>
   );
 } 

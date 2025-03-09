@@ -228,23 +228,27 @@ function ChatInterface({
     [database, chatState, onCodeGenerated, onSessionCreated]
   );
 
-  // Function to handle starting a new chat
-  const handleNewChat = useCallback(() => {
+  // Handle the "New Chat" button click
+  const handleNewChatButtonClick = useCallback(() => {
     // Start the shrinking animation
     setIsShrinking(true);
+    setIsExpanding(false);
 
     // After animation completes, reset the state
     setTimeout(
       () => {
-        // Use parent's onNewChat if provided, with optional chaining
-        onNewChat?.();
+        // If onNewChat callback is provided, call it
+        if (onNewChat) {
+          onNewChat();
+        }
 
-        // Always reset local state
-        setMessagesRef.current([]);
-
-        // Only reset input
+        // Clear the UI without clearing saved messages yet
         setInput('');
+        
+        // Navigate to the root path
+        navigate('/');
 
+        // Reset animation states
         setIsShrinking(false);
 
         // Add a small bounce effect when the new chat appears
@@ -252,13 +256,15 @@ function ChatInterface({
         setTimeout(() => {
           setIsExpanding(false);
         }, 300);
-
-        // Refresh the page and navigate to the root URL
-        // window.location.href = '/';
+        
+        // Clear messages once animation is complete and navigation happened
+        setTimeout(() => {
+          setMessages([]);
+        }, 100);
       },
       500 + messages.length * 50
     );
-  }, [onNewChat, messages.length, setInput, setIsShrinking, setIsExpanding]);
+  }, [onNewChat, messages.length, navigate, setInput, setMessages, setIsShrinking, setIsExpanding]);
 
   const handleSelectSession = (session: SessionDocument) => {
     // Navigate to the session route
@@ -282,11 +288,11 @@ function ChatInterface({
     () => (
       <ChatHeader
         onOpenSidebar={chatContext.openSidebar}
-        onNewChat={chatContext.handleNewChat}
+        onNewChat={handleNewChatButtonClick}
         isGenerating={isGenerating}
       />
     ),
-    [chatContext.openSidebar, chatContext.handleNewChat, isGenerating]
+    [chatContext.openSidebar, handleNewChatButtonClick, isGenerating]
   );
 
   const sessionSidebar = useMemo(
@@ -349,32 +355,22 @@ function ChatInterface({
   }, [chatContext, chatState.isGenerating]);
 
   return (
-    <div className="border-light-divider dark:border-dark-divider relative flex h-full w-full flex-col overflow-hidden border-r">
-      <ChatHeader
-        onOpenSidebar={chatContext.openSidebar}
-        onNewChat={chatContext.handleNewChat}
-        isGenerating={isGenerating}
-      />
+    <div className="relative flex h-full w-full flex-col overflow-hidden">
+      {chatHeader}
       <SessionSidebar
         isVisible={chatContext.isSidebarVisible}
         onClose={chatContext.closeSidebar}
         onSelectSession={handleSelectSession}
       />
       
-      <div
-        className="chat-interface bg-light-background-00 dark:bg-dark-background-00 flex h-full flex-col"
-        style={{ overflow: 'hidden' }}
-      >
-        {/* Header */}
-        {chatHeader}
-
-        {/* Messages */}
+      <div className="relative flex flex-col overflow-y-auto" style={{ flexGrow: 1 }}>
+        {/* Message list */}
         {messageList}
-
+        
         {/* Quick access buttons */}
         {quickSuggestions}
 
-        {/* Input area */}
+        {/* Chat input */}
         {chatInput}
       </div>
     </div>
