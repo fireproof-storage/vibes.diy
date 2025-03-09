@@ -17,22 +17,25 @@ vi.mock('use-fireproof', () => ({
   }),
 }));
 
-// Mock functions for ChatHeader tests
+// Create mock functions we can control
+const onOpenSidebar = vi.fn();
 const onToggleSidebar = vi.fn();
 const onNewChat = vi.fn();
+const onClose = vi.fn();
+const onSelectSession = vi.fn();
 let isGeneratingValue = false;
 
 describe('Component Rendering', () => {
-  describe('ChatHeader', () => {
-    beforeEach(() => {
-      vi.resetAllMocks();
-      isGeneratingValue = false;
-    });
+  beforeEach(() => {
+    vi.resetAllMocks();
+    isGeneratingValue = false;
+  });
 
+  describe('ChatHeader', () => {
     it('renders without crashing', () => {
       render(
         <ChatHeader
-          onToggleSidebar={onToggleSidebar}
+          onOpenSidebar={onOpenSidebar}
           onNewChat={onNewChat}
           isGenerating={isGeneratingValue}
         />
@@ -43,7 +46,7 @@ describe('Component Rendering', () => {
     it('applies tooltip classes correctly', () => {
       const { container } = render(
         <ChatHeader
-          onToggleSidebar={onToggleSidebar}
+          onOpenSidebar={onOpenSidebar}
           onNewChat={onNewChat}
           isGenerating={isGeneratingValue}
         />
@@ -62,7 +65,7 @@ describe('Component Rendering', () => {
       isGeneratingValue = true;
       render(
         <ChatHeader
-          onToggleSidebar={onToggleSidebar}
+          onOpenSidebar={onOpenSidebar}
           onNewChat={onNewChat}
           isGenerating={isGeneratingValue}
         />
@@ -73,8 +76,6 @@ describe('Component Rendering', () => {
 
   describe('SessionSidebar', () => {
     it('renders in hidden state', () => {
-      const onClose = vi.fn();
-      const onSelectSession = vi.fn();
       const { container } = render(
         <SessionSidebar isVisible={false} onClose={onClose} onSelectSession={onSelectSession} />
       );
@@ -83,8 +84,6 @@ describe('Component Rendering', () => {
     });
 
     it('renders in visible state', () => {
-      const onClose = vi.fn();
-      const onSelectSession = vi.fn();
       const { container } = render(
         <SessionSidebar isVisible={true} onClose={onClose} onSelectSession={onSelectSession} />
       );
@@ -95,8 +94,6 @@ describe('Component Rendering', () => {
     });
 
     it('shows empty state when no sessions', () => {
-      const onClose = vi.fn();
-      const onSelectSession = vi.fn();
       render(
         <SessionSidebar isVisible={true} onClose={onClose} onSelectSession={onSelectSession} />
       );
