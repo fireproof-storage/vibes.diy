@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import ChatHeader from '../app/components/ChatHeader';
 import SessionSidebar from '../app/components/SessionSidebar';
@@ -17,23 +17,33 @@ vi.mock('use-fireproof', () => ({
   }),
 }));
 
+// Mock the ChatContext for ChatHeader tests
+const toggleSidebar = vi.fn();
+const handleNewChat = vi.fn();
+let isGeneratingValue = false;
+
+vi.mock('../app/context/ChatContext', () => ({
+  useChatContext: () => ({
+    isGenerating: isGeneratingValue,
+    toggleSidebar,
+    handleNewChat
+  })
+}));
+
 describe('Component Rendering', () => {
   describe('ChatHeader', () => {
+    beforeEach(() => {
+      vi.resetAllMocks();
+      isGeneratingValue = false;
+    });
+
     it('renders without crashing', () => {
-      const onToggleSidebar = vi.fn();
-      const onNewChat = vi.fn();
-      render(
-        <ChatHeader onToggleSidebar={onToggleSidebar} onNewChat={onNewChat} isGenerating={false} />
-      );
+      render(<ChatHeader />);
       expect(screen.getByLabelText('New Chat')).toBeInTheDocument();
     });
 
     it('applies tooltip classes correctly', () => {
-      const onToggleSidebar = vi.fn();
-      const onNewChat = vi.fn();
-      const { container } = render(
-        <ChatHeader onToggleSidebar={onToggleSidebar} onNewChat={onNewChat} isGenerating={false} />
-      );
+      const { container } = render(<ChatHeader />);
 
       // Check if the button has the peer class
       const button = screen.getByLabelText('New Chat');
@@ -45,12 +55,8 @@ describe('Component Rendering', () => {
     });
 
     it('disables new chat button when generating', () => {
-      const onToggleSidebar = vi.fn();
-      const onNewChat = vi.fn();
-      render(
-        <ChatHeader onToggleSidebar={onToggleSidebar} onNewChat={onNewChat} isGenerating={true} />
-      );
-
+      isGeneratingValue = true;
+      render(<ChatHeader />);
       expect(screen.getByLabelText('New Chat')).toBeDisabled();
     });
   });

@@ -1,31 +1,37 @@
 import type { ChangeEvent, KeyboardEvent } from 'react';
+import { useRef, memo } from 'react';
+import { useChatContext } from '../context/ChatContext';
 
-interface ChatInputProps {
-  input: string;
-  setInput: (input: string) => void;
-  isGenerating: boolean;
-  onSend: () => void;
-  autoResizeTextarea: () => void;
-  inputRef: React.RefObject<HTMLTextAreaElement | null>;
-}
-
-function ChatInput({
-  input,
-  setInput,
-  isGenerating,
-  onSend,
-  autoResizeTextarea,
-  inputRef,
-}: ChatInputProps) {
+function ChatInput() {
+  const { 
+    input, 
+    setInput, 
+    isGenerating, 
+    handleSendMessage 
+  } = useChatContext();
+  
+  // Create a ref for the textarea
+  const inputRef = useRef<HTMLTextAreaElement | null>(null);
+  
+  // Function to auto-resize textarea
+  const autoResizeTextarea = () => {
+    if (inputRef.current) {
+      inputRef.current.style.height = 'auto';
+      inputRef.current.style.height = `${inputRef.current.scrollHeight}px`;
+    }
+  };
+  
+  // Handler for input changes
   const handleChange = (e: ChangeEvent<HTMLTextAreaElement>) => {
     setInput(e.target.value);
     autoResizeTextarea();
   };
 
+  // Handler for key presses
   const handleKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === 'Enter' && !e.shiftKey && !isGenerating) {
       e.preventDefault();
-      onSend();
+      handleSendMessage();
     }
   };
 
@@ -44,7 +50,7 @@ function ChatInput({
         />
         <button
           type="button"
-          onClick={onSend}
+          onClick={handleSendMessage}
           disabled={isGenerating}
           className={`absolute right-2 bottom-2 flex items-center justify-center rounded-full p-2 text-sm font-medium transition-colors duration-200 ${
             isGenerating
@@ -92,4 +98,5 @@ function ChatInput({
   );
 }
 
-export default ChatInput;
+// Use memo to optimize rendering
+export default memo(ChatInput);

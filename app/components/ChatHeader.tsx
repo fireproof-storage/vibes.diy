@@ -1,18 +1,15 @@
 import { memo } from 'react';
+import { useChatContext } from '../context/ChatContext';
 
-interface ChatHeaderProps {
-  onToggleSidebar: () => void;
-  onNewChat: () => void;
-  isGenerating: boolean;
-}
+function ChatHeader() {
+  const { isGenerating, toggleSidebar, handleNewChat } = useChatContext();
 
-function ChatHeader({ onToggleSidebar, onNewChat, isGenerating }: ChatHeaderProps) {
   return (
     <div className="border-light-decorative-00 dark:border-dark-decorative-00 bg-light-background-00 dark:bg-dark-background-00 flex min-h-[4rem] items-center justify-between border-b px-6 py-4">
       <div className="flex items-center">
         <button
           type="button"
-          onClick={onToggleSidebar}
+          onClick={toggleSidebar}
           className="text-light-primary dark:text-dark-primary hover:text-accent-02-light dark:hover:text-accent-02-dark mr-3"
           aria-label="Toggle chat history"
         >
@@ -44,7 +41,7 @@ function ChatHeader({ onToggleSidebar, onNewChat, isGenerating }: ChatHeaderProp
       <div className="relative">
         <button
           type="button"
-          onClick={onNewChat}
+          onClick={handleNewChat}
           className="peer bg-accent-02-light dark:bg-accent-02-dark hover:bg-accent-03-light dark:hover:bg-accent-03-dark flex cursor-pointer items-center justify-center rounded-full p-2.5 text-white transition-colors"
           disabled={isGenerating}
           aria-label="New Chat"
@@ -74,14 +71,5 @@ function ChatHeader({ onToggleSidebar, onNewChat, isGenerating }: ChatHeaderProp
   );
 }
 
-// Use React.memo with a custom comparison function to ensure the component only
-// re-renders when its props actually change
-export default memo(ChatHeader, (prevProps, nextProps) => {
-  // Only re-render if isGenerating changes
-  // Note: Functions should be memoized by parent components
-  return (
-    prevProps.isGenerating === nextProps.isGenerating &&
-    prevProps.onNewChat === nextProps.onNewChat &&
-    prevProps.onToggleSidebar === nextProps.onToggleSidebar
-  );
-});
+// Use React.memo to optimize rendering
+export default memo(ChatHeader);

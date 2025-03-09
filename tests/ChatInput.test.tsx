@@ -1,50 +1,84 @@
-import { vi, describe, it, expect } from 'vitest';
+import { vi, describe, it, expect, beforeEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import ChatInput from '../app/components/ChatInput';
-import React from 'react';
+
+// Create mock state and functions we can control
+let inputValue = '';
+let isGeneratingValue = false;
+const setInput = vi.fn((value) => { inputValue = value; });
+const handleSendMessage = vi.fn();
+
+// Setup a more appropriate mock for the context
+vi.mock('../app/context/ChatContext', () => ({
+  useChatContext: () => ({
+    input: inputValue,
+    setInput,
+    isGenerating: isGeneratingValue,
+    handleSendMessage
+  })
+}));
 
 describe('ChatInput', () => {
-  it('renders input correctly', () => {
-    const setInput = vi.fn();
-    const onSend = vi.fn();
-    const autoResizeTextarea = vi.fn();
-    const inputRef = React.createRef<HTMLTextAreaElement>();
-
-    render(
-      <ChatInput
-        input="Test input"
-        setInput={setInput}
-        isGenerating={false}
-        onSend={onSend}
-        autoResizeTextarea={autoResizeTextarea}
-        inputRef={inputRef}
-      />
-    );
-
+  beforeEach(() => {
+    // Reset mocks and values before each test
+    vi.resetAllMocks();
+    inputValue = '';
+    isGeneratingValue = false;
+  });
+  
+  it('renders correctly', () => {
+    render(<ChatInput />);
     expect(screen.getByPlaceholderText('Describe the app you want to create...')).toBeDefined();
   });
 
-  it('handles input change', () => {
-    const setInput = vi.fn();
-    const onSend = vi.fn();
-    const autoResizeTextarea = vi.fn();
-    const inputRef = React.createRef<HTMLTextAreaElement>();
+  it('calls setInput when text is entered', () => {
+    render(<ChatInput />);
+    
+    const textArea = screen.getByPlaceholderText('Describe the app you want to create...');
+    fireEvent.change(textArea, { target: { value: 'Hello world' } });
+    
+    expect(setInput).toHaveBeenCalledWith('Hello world');
+  });
 
-    render(
-      <ChatInput
-        input=""
-        setInput={setInput}
-        isGenerating={false}
-        onSend={onSend}
-        autoResizeTextarea={autoResizeTextarea}
-        inputRef={inputRef}
-      />
-    );
+  it('calls handleSendMessage when send button is clicked', () => {
+    render(<ChatInput />);
+    
+    const sendButton = screen.getByLabelText('Send message');
+    fireEvent.click(sendButton);
+    
+    expect(handleSendMessage).toHaveBeenCalledTimes(1);
+  });
 
-    const textarea = screen.getByPlaceholderText('Describe the app you want to create...');
-    fireEvent.change(textarea, { target: { value: 'New input' } });
+  it('disables the text area and send button when isGenerating is true', () => {
+    isGeneratingValue = true;
+    
+    render(<ChatInput />);
+    
+    const textArea = screen.getByPlaceholderText('Describe the app you want to create...');
+    const sendButton = screen.getByLabelText('Generating');
+    
+    expect(textArea).toBeDisabled();
+    expect(sendButton).toBeDisabled();
+    
+    fireEvent.click(sendButton);
+    expect(handleSendMessage).not.toHaveBeenCalled();
+  });
 
-    expect(setInput).toHaveBeenCalledWith('New input');
-    expect(autoResizeTextarea).toHaveBeenCalled();
+  it('calls handleSendMessage when Enter is pressed', () => {
+    render(<ChatInput />);
+    
+    const textArea = screen.getByPlaceholderText('Describe the app you want to create...');
+    fireEvent.keyDown(textArea, { key: 'Enter', shiftKey: false });
+    
+    expect(handleSendMessage).toHaveBeenCalledTimes(1);
+  });
+
+  it('does not call handleSendMessage when Enter is pressed with Shift', () => {
+    render(<ChatInput />);
+    
+    const textArea = screen.getByPlaceholderText('Describe the app you want to create...');
+    fireEvent.keyDown(textArea, { key: 'Enter', shiftKey: true });
+    
+    expect(handleSendMessage).not.toHaveBeenCalled();
   });
 });

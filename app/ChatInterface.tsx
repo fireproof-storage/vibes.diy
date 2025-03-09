@@ -6,6 +6,7 @@ import ChatHeader from './components/ChatHeader';
 import MessageList from './components/MessageList';
 import ChatInput from './components/ChatInput';
 import QuickSuggestions from './components/QuickSuggestions';
+import { ChatProvider } from './context/ChatContext';
 
 interface ChatInterfaceProps {
   chatState: {
@@ -261,13 +262,21 @@ function ChatInterface({
 
   const chatHeader = useMemo(
     () => (
-      <ChatHeader
-        onToggleSidebar={toggleSidebar}
+      <ChatProvider
+        initialState={{
+          input,
+          isGenerating,
+          isSidebarVisible
+        }}
+        onSendMessage={(inputValue: string) => {
+          // Handle send logic
+        }}
         onNewChat={handleNewChat}
-        isGenerating={isGenerating}
-      />
+      >
+        <ChatHeader />
+      </ChatProvider>
     ),
-    [toggleSidebar, handleNewChat, isGenerating]
+    [input, isGenerating, isSidebarVisible, handleNewChat]
   );
 
   const messageList = useMemo(
@@ -290,16 +299,9 @@ function ChatInterface({
 
   const chatInput = useMemo(
     () => (
-      <ChatInput
-        input={input}
-        setInput={setInput}
-        isGenerating={isGenerating}
-        onSend={sendMessage}
-        autoResizeTextarea={autoResizeTextarea}
-        inputRef={inputRef}
-      />
+      <ChatInput />
     ),
-    [input, setInput, isGenerating, sendMessage, autoResizeTextarea, inputRef]
+    []
   );
 
   return (
