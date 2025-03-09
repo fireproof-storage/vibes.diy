@@ -39,8 +39,8 @@ interface ChatProviderProps {
 export function ChatProvider({ 
   children, 
   initialState = {},
-  onSendMessage,
-  onNewChat
+  onSendMessage = () => {},
+  onNewChat = () => {}
 }: ChatProviderProps) {
   // Core state with optional initial values
   const [input, setInput] = useState(initialState.input || '');
@@ -61,10 +61,8 @@ export function ChatProvider({
     setInput('');
     setIsGenerating(false);
     
-    // Call the external handler if provided
-    if (onNewChat) {
-      onNewChat();
-    }
+    // Call the external handler (guaranteed to exist with default)
+    onNewChat();
   }, [onNewChat]);
 
   // Send message handler
@@ -74,21 +72,11 @@ export function ChatProvider({
     // Set generating state
     setIsGenerating(true);
     
-    // Call external handler if provided
-    if (onSendMessage) {
-      onSendMessage(input);
-    }
+    // Call external handler (guaranteed to exist with default)
+    onSendMessage(input);
     
     // Clear input
     setInput('');
-    
-    // If no external handler, simulate response
-    if (!onSendMessage) {
-      // Simulate async behavior
-      setTimeout(() => {
-        setIsGenerating(false);
-      }, 1000);
-    }
   }, [input, isGenerating, onSendMessage]);
 
   // Context value
@@ -115,7 +103,7 @@ export function ChatProvider({
 export function useChatContext() {
   const context = useContext(ChatContext);
   if (context === undefined) {
-    throw new Error('useChatContext must be used within a ChatProvider');
+    throw new Error('useChatContext must be used within a ChatProvider. Ensure this component is a child of ChatProvider.');
   }
   return context;
 } 

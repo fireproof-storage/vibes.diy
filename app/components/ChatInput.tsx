@@ -1,5 +1,5 @@
 import type { ChangeEvent, KeyboardEvent } from 'react';
-import { useRef, memo } from 'react';
+import { useRef, memo, useEffect } from 'react';
 import { useChatContext } from '../context/ChatContext';
 
 // Define props for backward compatibility
@@ -35,13 +35,20 @@ function ChatInput({
   const setInput = contextValues.setInput || propsSetInput || (() => {});
   const handleSendMessage = contextValues.handleSendMessage || propsSend || (() => {});
   
-  // Function to auto-resize textarea
+  // Function to auto-resize textarea - inputRef is guaranteed to exist by the time we call this
   const autoResizeTextarea = propsAutoResize || (() => {
-    if (inputRef.current) {
-      inputRef.current.style.height = 'auto';
-      inputRef.current.style.height = `${inputRef.current.scrollHeight}px`;
+    const textarea = inputRef.current;
+    if (textarea) {
+      textarea.style.height = 'auto';
+      textarea.style.height = `${textarea.scrollHeight}px`;
     }
   });
+  
+  // Ensure we always have a valid autoResizeTextarea function
+  useEffect(() => {
+    // Initial auto-resize
+    autoResizeTextarea();
+  }, [autoResizeTextarea]);
   
   // Handler for input changes
   const handleChange = (e: ChangeEvent<HTMLTextAreaElement>) => {

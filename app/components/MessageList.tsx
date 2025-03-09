@@ -141,19 +141,14 @@ function MessageList({
 
 // Export a memoized version of the component to prevent unnecessary re-renders
 export default memo(MessageList, (prevProps, nextProps) => {
-  // Check if arrays have the same length and references
-  const areMessagesEqual =
-    prevProps.messages === nextProps.messages ||
+  // Simplified equality check focusing on the essential changed values
+  const messagesEqual = 
+    prevProps.messages === nextProps.messages || 
     (prevProps.messages.length === nextProps.messages.length &&
-      prevProps.messages.every(
-        (msg, i) =>
-          msg === nextProps.messages[i] ||
-          (msg.text === nextProps.messages[i].text && msg.type === nextProps.messages[i].type)
-      ));
-
-  // Return true if nothing changed to prevent re-render
+     JSON.stringify(prevProps.messages) === JSON.stringify(nextProps.messages));
+  
   return (
-    areMessagesEqual &&
+    messagesEqual &&
     prevProps.isGenerating === nextProps.isGenerating &&
     prevProps.currentStreamedText === nextProps.currentStreamedText &&
     prevProps.isShrinking === nextProps.isShrinking &&
