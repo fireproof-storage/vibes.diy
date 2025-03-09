@@ -59,6 +59,7 @@ function ChatInterface({
   const {
     messages,
     setMessages,
+    input,
     setInput,
     isGenerating,
     currentStreamedText,

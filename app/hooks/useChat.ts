@@ -4,7 +4,11 @@ import { makeBaseSystemPrompt } from '../prompts';
 import { RegexParser } from '../../RegexParser';
 
 const CHOSEN_MODEL = 'anthropic/claude-3.7-sonnet';
-// const CHOSEN_MODEL = 'qwen/qwq-32b:free';
+// const CHOSEN_MODEL = 'meta-llama/llama-3.3-70b-instruct';
+
+// const CHOSEN_MODEL = 'mistralai/codestral-2501';
+// const CHOSEN_MODEL = 'google/gemini-2.0-flash-thinking-exp:free';
+
 
 export function useChat(
   onCodeGenerated: (code: string, dependencies?: Record<string, string>) => void
