@@ -161,6 +161,7 @@ export default function Home() {
           initialState={{
             input: chatState.input,
             isGenerating: chatState.isGenerating,
+            isSidebarVisible: false
           }}
           onSendMessage={(input) => {
             chatState.setInput(input);

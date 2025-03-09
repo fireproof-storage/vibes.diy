@@ -6,7 +6,7 @@ import ChatHeader from './components/ChatHeader';
 import MessageList from './components/MessageList';
 import ChatInput from './components/ChatInput';
 import QuickSuggestions from './components/QuickSuggestions';
-import { ChatProvider } from './context/ChatContext';
+import { useChatContext } from './context/ChatContext';
 
 interface ChatInterfaceProps {
   chatState: {
@@ -76,6 +76,9 @@ function ChatInterface({
     descending: true,
   });
 
+  // Get values from context when available
+  const chatContext = useChatContext();
+
   // Memoize handler functions to prevent re-renders
   const handleSelectSuggestion = useCallback(
     (suggestion: string) => {
@@ -94,9 +97,22 @@ function ChatInterface({
     [inputRef, setInput]
   );
 
+  // Set up local toggleSidebar function that will be provided by the context
   const toggleSidebar = useCallback(() => {
     setIsSidebarVisible((prev) => !prev);
-  }, []);
+    // If we're using the ChatContext, update its state too
+    if (chatContext) {
+      // Sync with context if it exists
+      chatContext.toggleSidebar();
+    }
+  }, [chatContext]);
+
+  // Sync sidebar state with context when it changes
+  useEffect(() => {
+    if (chatContext && chatContext.isSidebarVisible !== isSidebarVisible) {
+      setIsSidebarVisible(chatContext.isSidebarVisible);
+    }
+  }, [chatContext, chatContext?.isSidebarVisible]);
 
   // Focus input on mount
   useEffect(() => {
@@ -262,21 +278,13 @@ function ChatInterface({
 
   const chatHeader = useMemo(
     () => (
-      <ChatProvider
-        initialState={{
-          input,
-          isGenerating,
-          isSidebarVisible
-        }}
-        onSendMessage={(inputValue: string) => {
-          // Handle send logic
-        }}
+      <ChatHeader
+        onToggleSidebar={toggleSidebar}
         onNewChat={handleNewChat}
-      >
-        <ChatHeader />
-      </ChatProvider>
+        isGenerating={isGenerating}
+      />
     ),
-    [input, isGenerating, isSidebarVisible, handleNewChat]
+    [toggleSidebar, handleNewChat, isGenerating]
   );
 
   const messageList = useMemo(
@@ -299,10 +307,28 @@ function ChatInterface({
 
   const chatInput = useMemo(
     () => (
-      <ChatInput />
+      <ChatInput
+        input={input}
+        setInput={setInput}
+        isGenerating={isGenerating}
+        onSend={sendMessage}
+        autoResizeTextarea={autoResizeTextarea}
+        inputRef={inputRef}
+      />
     ),
-    []
+    [input, setInput, isGenerating, sendMessage, autoResizeTextarea, inputRef]
   );
+
+  // Use local or context state based on availability
+  useEffect(() => {
+    // If context is providing input state, keep local state in sync
+    if (chatContext) {
+      chatContext.setInput(chatState.input);
+      if (chatState.isGenerating !== chatContext.isGenerating) {
+        chatContext.setIsGenerating(chatState.isGenerating);
+      }
+    }
+  }, [chatState.input, chatState.isGenerating, chatContext]);
 
   return (
     <div className="flex h-full flex-col" style={{ overflow: 'hidden' }}>

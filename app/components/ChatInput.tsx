@@ -2,24 +2,52 @@ import type { ChangeEvent, KeyboardEvent } from 'react';
 import { useRef, memo } from 'react';
 import { useChatContext } from '../context/ChatContext';
 
-function ChatInput() {
-  const { 
-    input, 
-    setInput, 
-    isGenerating, 
-    handleSendMessage 
-  } = useChatContext();
+// Define props for backward compatibility
+interface ChatInputProps {
+  input?: string;
+  setInput?: (input: string) => void;
+  isGenerating?: boolean;
+  onSend?: () => void;
+  autoResizeTextarea?: () => void;
+  inputRef?: React.RefObject<HTMLTextAreaElement | null>;
+}
+
+function ChatInput({
+  input: propsInput,
+  setInput: propsSetInput,
+  isGenerating: propsIsGenerating,
+  onSend: propsSend,
+  autoResizeTextarea: propsAutoResize,
+  inputRef: propsInputRef
+}: ChatInputProps = {}) {
+  // Try to use context, fall back to props if not available
+  let contextValues;
+  try {
+    contextValues = useChatContext();
+  } catch (error) {
+    // Context not available, will use props
+    contextValues = null;
+  }
   
-  // Create a ref for the textarea
-  const inputRef = useRef<HTMLTextAreaElement | null>(null);
+  // Use our own ref if props don't provide one
+  const localInputRef = useRef<HTMLTextAreaElement | null>(null);
+  
+  // Use context values if available, otherwise use props
+  const input = contextValues?.input ?? propsInput ?? '';
+  const setInput = contextValues?.setInput || propsSetInput || (() => {});
+  const isGenerating = contextValues?.isGenerating ?? propsIsGenerating ?? false;
+  const handleSendMessage = contextValues?.handleSendMessage || propsSend || (() => {});
+  
+  // Use provided input ref or local ref
+  const inputRef = propsInputRef || localInputRef;
   
   // Function to auto-resize textarea
-  const autoResizeTextarea = () => {
+  const autoResizeTextarea = propsAutoResize || (() => {
     if (inputRef.current) {
       inputRef.current.style.height = 'auto';
       inputRef.current.style.height = `${inputRef.current.scrollHeight}px`;
     }
-  };
+  });
   
   // Handler for input changes
   const handleChange = (e: ChangeEvent<HTMLTextAreaElement>) => {
