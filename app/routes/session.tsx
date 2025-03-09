@@ -14,9 +14,18 @@ export function meta() {
   ];
 }
 
+// Add helper for debugging
+const DEBUG = true;
+const debugLog = (...args: any[]) => DEBUG && console.log('[DEBUG Session]', ...args);
+
 export default function Session() {
   const { sessionId, title } = useParams();
-  console.log('Session component rendering with sessionId:', sessionId);
+  debugLog('Session component rendering with sessionId:', sessionId);
+
+  // Track render count for debugging
+  const renderCountRef = useRef(0);
+  renderCountRef.current++;
+  debugLog(`Render #${renderCountRef.current}`);
 
   const [state, setState] = useState({
     generatedCode: '',
@@ -44,6 +53,19 @@ export default function Session() {
 
   // Set up chat state with the code generation handler
   const chatState = useChat(handleCodeGenerated, handleTitleGenerated);
+
+  // Debug log any changes to chatState properties that might cause rerenders
+  useEffect(() => {
+    debugLog('chatState.messages changed:', chatState.messages.length);
+  }, [chatState.messages]);
+  
+  useEffect(() => {
+    debugLog('chatState.isStreaming changed:', chatState.isStreaming);
+  }, [chatState.isStreaming]);
+  
+  useEffect(() => {
+    debugLog('chatState.streamingCode changed, length:', chatState.streamingCode.length);
+  }, [chatState.streamingCode]);
 
   // Handle session change
   useEffect(() => {
