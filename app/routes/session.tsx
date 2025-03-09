@@ -17,13 +17,13 @@ export function meta() {
 export default function Session() {
   const { sessionId, title } = useParams();
   console.log('Session component rendering with sessionId:', sessionId);
-  
+
   const [state, setState] = useState({
     generatedCode: '',
     dependencies: {} as Record<string, string>,
   });
   const { database } = useFireproof('fireproof-chat-history');
-  
+
   // Handle code generation from chat interface
   const handleCodeGenerated = (code: string, dependencies: Record<string, string> = {}) => {
     console.log('Session.handleCodeGenerated called with code length:', code.length);
@@ -32,10 +32,10 @@ export default function Session() {
       dependencies,
     });
   };
-  
+
   // Set up chat state with the code generation handler
   const chatState = useChat(handleCodeGenerated);
-  
+
   // Handle session change
   useEffect(() => {
     // Load session data and extract code for the ResultPreview
@@ -44,31 +44,36 @@ export default function Session() {
         console.log('Session route: Loading session data for ID:', sessionId);
         try {
           // Load the session document
-          const sessionData = await database.get(sessionId) as SessionDocument;
+          const sessionData = (await database.get(sessionId)) as SessionDocument;
           console.log('Session route: Successfully loaded data for session:', sessionId);
-          
+
           // Normalize session data to guarantee messages array exists
           const messages = Array.isArray(sessionData.messages) ? sessionData.messages : [];
-          
+
           // Clear current messages and set the loaded ones
           chatState.setMessages(messages);
-          
+
           // Find the last AI message with code to update the ResultPreview
           const lastAiMessageWithCode = [...messages]
             .reverse()
             .find((msg: ChatMessage) => msg.type === 'ai' && msg.code);
-            
+
           // If we found an AI message with code, update the code view
           if (lastAiMessageWithCode?.code) {
             const dependencies = lastAiMessageWithCode.dependencies || {};
-            console.log('Session route: Found code in session:', sessionId.substring(0, 8), 'code length:', lastAiMessageWithCode.code.length);
-            
+            console.log(
+              'Session route: Found code in session:',
+              sessionId.substring(0, 8),
+              'code length:',
+              lastAiMessageWithCode.code.length
+            );
+
             // Update state for ResultPreview
             setState({
               generatedCode: lastAiMessageWithCode.code,
               dependencies: dependencies,
             });
-            
+
             // Also update the chat state for consistency
             chatState.completedCode = lastAiMessageWithCode.code;
             chatState.streamingCode = lastAiMessageWithCode.code;
@@ -81,7 +86,7 @@ export default function Session() {
         }
       }
     };
-    
+
     loadSessionData();
   }, [sessionId, database, chatState]);
 
@@ -121,4 +126,4 @@ export default function Session() {
       </div>
     </div>
   );
-} 
+}

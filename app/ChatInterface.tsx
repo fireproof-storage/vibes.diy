@@ -45,7 +45,9 @@ interface ChatInterfaceProps {
 
 // Helper function to encode titles for URLs
 function encodeTitle(title: string): string {
-  return encodeURIComponent(title || 'untitled-session').toLowerCase().replace(/%20/g, '-');
+  return encodeURIComponent(title || 'untitled-session')
+    .toLowerCase()
+    .replace(/%20/g, '-');
 }
 
 // ChatInterface component handles user input and displays chat messages
@@ -123,10 +125,16 @@ function ChatInterface({
       console.log('ChatInterface.handlePopState: Navigation event detected', event.state);
       // If there's a sessionId in the state, load that session
       if (event.state?.sessionId) {
-        console.log('ChatInterface.handlePopState: Session ID found in state:', event.state.sessionId);
+        console.log(
+          'ChatInterface.handlePopState: Session ID found in state:',
+          event.state.sessionId
+        );
         // If we have an onSessionCreated callback, call it with the sessionId from state
         if (onSessionCreated) {
-          console.log('ChatInterface.handlePopState: Calling onSessionCreated with ID:', event.state.sessionId);
+          console.log(
+            'ChatInterface.handlePopState: Calling onSessionCreated with ID:',
+            event.state.sessionId
+          );
           onSessionCreated(event.state.sessionId);
         }
       } else {
@@ -205,7 +213,7 @@ function ChatInterface({
             const encodedTitle = encodeTitle(title);
             const url = `/session/${result.id}/${encodedTitle}`;
             window.history.pushState({ sessionId: result.id }, '', url);
-            
+
             // Notify parent component
             onSessionCreated?.(result.id);
           }
@@ -230,7 +238,10 @@ function ChatInterface({
 
       try {
         const sessionData = (await database.get(sessionId)) as SessionDocument;
-        console.log('ChatInterface.handleLoadSession: Successfully loaded session data for ID:', sessionId);
+        console.log(
+          'ChatInterface.handleLoadSession: Successfully loaded session data for ID:',
+          sessionId
+        );
         // Normalize session data to guarantee messages array exists
         const messages = Array.isArray(sessionData.messages) ? sessionData.messages : [];
         console.log('ChatInterface.handleLoadSession: Messages count:', messages.length);
@@ -245,7 +256,10 @@ function ChatInterface({
         // If we found an AI message with code, update the code view
         if (lastAiMessageWithCode?.code) {
           const dependencies = lastAiMessageWithCode.dependencies || {};
-          console.log('ChatInterface.handleLoadSession: Found code in session, length:', lastAiMessageWithCode.code.length);
+          console.log(
+            'ChatInterface.handleLoadSession: Found code in session, length:',
+            lastAiMessageWithCode.code.length
+          );
 
           // 1. Update local chatState
           chatState.streamingCode = lastAiMessageWithCode.code;
@@ -259,14 +273,19 @@ function ChatInterface({
 
           // 2. Call the onCodeGenerated callback to update parent state
           onCodeGenerated?.(lastAiMessageWithCode.code, dependencies);
-          console.log('ChatInterface.handleLoadSession: Called onCodeGenerated to update parent component');
+          console.log(
+            'ChatInterface.handleLoadSession: Called onCodeGenerated to update parent component'
+          );
         } else {
           console.log('ChatInterface.handleLoadSession: No code found in session:', sessionId);
         }
 
         // Notify parent component of session change
         onSessionCreated?.(sessionId);
-        console.log('ChatInterface.handleLoadSession: Notified parent of session change:', sessionId);
+        console.log(
+          'ChatInterface.handleLoadSession: Notified parent of session change:',
+          sessionId
+        );
       } catch (error) {
         console.error('ChatInterface.handleLoadSession: Error loading session:', error);
       }
@@ -290,7 +309,7 @@ function ChatInterface({
 
         // Clear the UI without clearing saved messages yet
         setInput('');
-        
+
         // Navigate to the root path
         window.history.pushState({ sessionId: null }, '', '/');
 
@@ -302,7 +321,7 @@ function ChatInterface({
         setTimeout(() => {
           setIsExpanding(false);
         }, 300);
-        
+
         // Clear messages once animation is complete and navigation happened
         setTimeout(() => {
           setMessages([]);
@@ -316,10 +335,10 @@ function ChatInterface({
     // Navigate to the session route
     const encodedTitle = encodeTitle(session.title || 'Untitled Session');
     const url = `/session/${session._id}/${encodedTitle}`;
-    
+
     // Use window.location.href to force a full page reload to the new URL
     window.location.href = url;
-    
+
     // No need to call onSessionCreated since the page will reload
     // and the Session component will handle initializing with the new sessionId
   };
@@ -330,7 +349,7 @@ function ChatInterface({
     if (onSessionCreated) {
       onSessionCreated(newSessionId);
     }
-    
+
     // Navigate to the new session without reloading by pushing to history state
     // This allows for a seamless experience when creating a new session during streaming
     const url = `/session/${newSessionId}/new-session`;
@@ -414,11 +433,11 @@ function ChatInterface({
         onClose={chatContext.closeSidebar}
         onSelectSession={handleSelectSession}
       />
-      
+
       <div className="relative flex flex-col overflow-y-auto" style={{ flexGrow: 1 }}>
         {/* Message list */}
         {messageList}
-        
+
         {/* Quick access buttons */}
         {quickSuggestions}
 

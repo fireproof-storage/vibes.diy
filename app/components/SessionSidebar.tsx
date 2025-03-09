@@ -57,7 +57,9 @@ type SessionOrScreenshot = SessionDocument | ScreenshotDocument;
 
 // Helper function to encode titles for URLs
 function encodeTitle(title: string): string {
-  return encodeURIComponent(title || 'untitled-session').toLowerCase().replace(/%20/g, '-');
+  return encodeURIComponent(title || 'untitled-session')
+    .toLowerCase()
+    .replace(/%20/g, '-');
 }
 
 interface SessionSidebarProps {
@@ -161,53 +163,53 @@ function SessionSidebar({ isVisible, onClose, onSelectSession }: SessionSidebarP
 
   // Render session items with Link components
   const renderSessionItems = () => {
-    return groupedSessions.map(({ session, screenshots }) => {
-      // Skip if this isn't a session document
-      if (!session || !('_id' in session)) {
-        return null;
-      }
+    return groupedSessions
+      .map(({ session, screenshots }) => {
+        // Skip if this isn't a session document
+        if (!session || !('_id' in session)) {
+          return null;
+        }
 
-      // Cast to SessionDocument to access title
-      const sessionDoc = session as SessionDocument;
-      const title = sessionDoc.title || 'New Chat';
-      const encodedTitle = encodeTitle(title);
-      
-      return (
-        <li
-          key={sessionDoc._id}
-          className="cursor-pointer border-b border-gray-200 p-3 hover:bg-gray-100 dark:border-gray-700 dark:hover:bg-gray-800"
-          data-testid="session-item"
-        >
-          <Link
-            to={`/session/${sessionDoc._id}/${encodedTitle}`}
-            className="block"
-            onClick={(e) => {
-              // Don't navigate, just use the handler
-              e.preventDefault();
-              handleSelectSession(sessionDoc);
-            }}
+        // Cast to SessionDocument to access title
+        const sessionDoc = session as SessionDocument;
+        const title = sessionDoc.title || 'New Chat';
+        const encodedTitle = encodeTitle(title);
+
+        return (
+          <li
+            key={sessionDoc._id}
+            className="cursor-pointer border-b border-gray-200 p-3 hover:bg-gray-100 dark:border-gray-700 dark:hover:bg-gray-800"
+            data-testid="session-item"
           >
-            <div className="text-sm font-semibold text-gray-900 dark:text-white">
-              {title}
-            </div>
-            <div className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-              {new Date(sessionDoc.timestamp).toLocaleString()}
-            </div>
-            {screenshots.map(
-              (screenshot) =>
-                screenshot._files?.screenshot && (
-                  <ImgFile
-                    key={screenshot._id}
-                    file={screenshot._files.screenshot}
-                    alt={`Screenshot from ${title}`}
-                    className="mt-2"
-                  />
-                )
-            )}
-          </Link>
-        </li>
-      );
-    }).filter(Boolean);
+            <Link
+              to={`/session/${sessionDoc._id}/${encodedTitle}`}
+              className="block"
+              onClick={(e) => {
+                // Don't navigate, just use the handler
+                e.preventDefault();
+                handleSelectSession(sessionDoc);
+              }}
+            >
+              <div className="text-sm font-semibold text-gray-900 dark:text-white">{title}</div>
+              <div className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                {new Date(sessionDoc.timestamp).toLocaleString()}
+              </div>
+              {screenshots.map(
+                (screenshot) =>
+                  screenshot._files?.screenshot && (
+                    <ImgFile
+                      key={screenshot._id}
+                      file={screenshot._files.screenshot}
+                      alt={`Screenshot from ${title}`}
+                      className="mt-2"
+                    />
+                  )
+              )}
+            </Link>
+          </li>
+        );
+      })
+      .filter(Boolean);
   };
 
   // Conditionally render content but keep animation classes
@@ -253,9 +255,7 @@ function SessionSidebar({ isVisible, onClose, onSelectSession }: SessionSidebarP
               No saved sessions yet
             </p>
           ) : (
-            <ul className="space-y-2">
-              {renderSessionItems()}
-            </ul>
+            <ul className="space-y-2">{renderSessionItems()}</ul>
           )}
         </div>
       </div>

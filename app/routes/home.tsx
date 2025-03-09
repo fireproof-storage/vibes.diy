@@ -182,7 +182,7 @@ export default function Home() {
                   timestamp: Date.now(),
                   title: input.length > 50 ? `${input.substring(0, 50)}...` : input,
                 };
-                
+
                 database.put(newSession).then((doc) => {
                   handleSessionCreated(doc.id);
                 });

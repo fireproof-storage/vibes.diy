@@ -9,13 +9,13 @@ interface ChatHeaderProps {
 
 function ChatHeader({ onOpenSidebar, onNewChat, isGenerating }: ChatHeaderProps) {
   const navigate = useNavigate();
-  
+
   const handleNewChat = (e: React.MouseEvent) => {
     e.preventDefault();
     onNewChat();
     // Navigation will happen in the onNewChat callback
   };
-  
+
   return (
     <div className="border-light-decorative-00 dark:border-dark-decorative-00 bg-light-background-00 dark:bg-dark-background-00 flex min-h-[4rem] items-center justify-between border-b px-6 py-4">
       <div className="flex items-center">
