@@ -3,7 +3,7 @@ import { render, screen, fireEvent } from '@testing-library/react';
 import ChatHeader from '../app/components/ChatHeader';
 
 // Create mock functions we can control
-const onToggleSidebar = vi.fn();
+const onOpenSidebar = vi.fn();
 const onNewChat = vi.fn();
 let isGeneratingValue = false;
 
@@ -17,35 +17,35 @@ describe('ChatHeader', () => {
   it('renders correctly', () => {
     render(
       <ChatHeader
-        onToggleSidebar={onToggleSidebar}
+        onOpenSidebar={onOpenSidebar}
         onNewChat={onNewChat}
         isGenerating={isGeneratingValue}
       />
     );
 
-    expect(screen.getByLabelText('Toggle chat history')).toBeDefined();
+    expect(screen.getByLabelText('Open chat history')).toBeDefined();
     expect(screen.getByLabelText('New Chat')).toBeDefined();
   });
 
-  it('calls openSidebar when the toggle button is clicked', () => {
+  it('calls openSidebar when the sidebar button is clicked', () => {
     render(
       <ChatHeader
-        onToggleSidebar={onToggleSidebar}
+        onOpenSidebar={onOpenSidebar}
         onNewChat={onNewChat}
         isGenerating={isGeneratingValue}
       />
     );
 
-    const toggleButton = screen.getByLabelText('Toggle chat history');
-    fireEvent.click(toggleButton);
+    const openButton = screen.getByLabelText('Open chat history');
+    fireEvent.click(openButton);
 
-    expect(onToggleSidebar).toHaveBeenCalledTimes(1);
+    expect(onOpenSidebar).toHaveBeenCalledTimes(1);
   });
 
   it('calls handleNewChat when the new chat button is clicked', () => {
     render(
       <ChatHeader
-        onToggleSidebar={onToggleSidebar}
+        onOpenSidebar={onOpenSidebar}
         onNewChat={onNewChat}
         isGenerating={isGeneratingValue}
       />
@@ -63,7 +63,7 @@ describe('ChatHeader', () => {
 
     render(
       <ChatHeader
-        onToggleSidebar={onToggleSidebar}
+        onOpenSidebar={onOpenSidebar}
         onNewChat={onNewChat}
         isGenerating={isGeneratingValue}
       />

@@ -1,20 +1,20 @@
 import { memo } from 'react';
 
 interface ChatHeaderProps {
-  onToggleSidebar: () => void;
+  onOpenSidebar: () => void;
   onNewChat: () => void;
   isGenerating: boolean;
 }
 
-function ChatHeader({ onToggleSidebar, onNewChat, isGenerating }: ChatHeaderProps) {
+function ChatHeader({ onOpenSidebar, onNewChat, isGenerating }: ChatHeaderProps) {
   return (
     <div className="border-light-decorative-00 dark:border-dark-decorative-00 bg-light-background-00 dark:bg-dark-background-00 flex min-h-[4rem] items-center justify-between border-b px-6 py-4">
       <div className="flex items-center">
         <button
           type="button"
-          onClick={onToggleSidebar}
+          onClick={onOpenSidebar}
           className="text-light-primary dark:text-dark-primary hover:text-accent-02-light dark:hover:text-accent-02-dark mr-3"
-          aria-label="Toggle chat history"
+          aria-label="Open chat history"
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -74,6 +74,6 @@ export default memo(ChatHeader, (prevProps, nextProps) => {
   return (
     prevProps.isGenerating === nextProps.isGenerating &&
     prevProps.onNewChat === nextProps.onNewChat &&
-    prevProps.onToggleSidebar === nextProps.onToggleSidebar
+    prevProps.onOpenSidebar === nextProps.onOpenSidebar
   );
 });

@@ -1,4 +1,5 @@
 import { useEffect, useState, useCallback, useMemo } from 'react';
+import { useNavigate } from 'react-router';
 import ChatInterface from '../ChatInterface';
 import ResultPreview from '../components/ResultPreview/ResultPreview';
 import { useChat } from '../hooks/useChat';
@@ -48,6 +49,7 @@ export default function Home() {
   const [isSharedApp, setIsSharedApp] = useState<boolean>(false);
   const [sessionId, setSessionId] = useState<string | null>(null);
   const { database } = useFireproof('fireproof-chat-history');
+  const navigate = useNavigate();
 
   // Hoist the useChat hook to this component
   const chatState = useChat((code: string, dependencies?: Record<string, string>) => {
@@ -76,15 +78,17 @@ export default function Home() {
   // Handle new session creation
   const handleSessionCreated = (newSessionId: string) => {
     setSessionId(newSessionId);
-    console.log('New session created:', newSessionId);
+    // We don't need to navigate here, as the ChatInterface will do that
   };
 
   // Handle new chat (reset session)
   const handleNewChat = () => {
     setSessionId(null);
-    setState({ generatedCode: '', dependencies: {} });
-    chatState.setMessages([]);
-    window.location.href = '/';
+    setShareStatus('');
+    setState({
+      generatedCode: '',
+      dependencies: {},
+    });
   };
 
   function handleShare() {
@@ -161,20 +165,31 @@ export default function Home() {
   }, [chatState.parserState?.current?.dependencies, state.dependencies]);
 
   return (
-    <div style={{ display: 'flex', height: 'calc(100vh)' }}>
-      <div style={{ flex: '0 0 33.333%', overflow: 'hidden', position: 'relative' }}>
-        <ChatProvider
-          initialState={{
-            input: chatState.input,
-            isGenerating: chatState.isGenerating,
-            isSidebarVisible: false,
-          }}
-          onSendMessage={(input) => {
-            chatState.setInput(input);
-            chatState.sendMessage();
-          }}
-          onNewChat={handleNewChat}
-        >
+    <div className="flex h-[calc(100vh-2rem)] flex-col md:flex-row md:overflow-hidden">
+      <ChatProvider
+        initialState={{
+          input: '',
+          isGenerating: false,
+          isSidebarVisible: false,
+        }}
+        onSendMessage={(input) => {
+          if (input.trim()) {
+            if (!sessionId) {
+              // If no session exists, create one
+              const newSession = {
+                timestamp: Date.now(),
+                title: input.length > 50 ? `${input.substring(0, 50)}...` : input,
+              };
+              
+              database.put(newSession).then((doc) => {
+                handleSessionCreated(doc.id);
+              });
+            }
+          }
+        }}
+        onNewChat={handleNewChat}
+      >
+        <div className="w-full md:h-full md:w-1/2">
           <ChatInterface
             chatState={chatState}
             sessionId={sessionId}
@@ -187,26 +202,26 @@ export default function Home() {
               });
             }}
           />
-        </ChatProvider>
-      </div>
-      <div style={{ flex: '0 0 66.667%', overflow: 'hidden', position: 'relative' }}>
-        <ResultPreview
-          code={state.generatedCode}
-          streamingCode={chatState.streamingCode}
-          isStreaming={chatState.isStreaming}
-          dependencies={previewDependencies}
-          onShare={handleShare}
-          shareStatus={shareStatus}
-          completedMessage={chatState.completedMessage}
-          currentStreamContent={chatState.currentStreamedText}
-          currentMessage={
-            chatState.messages.length > 0
-              ? { content: chatState.messages[chatState.messages.length - 1].text }
-              : undefined
-          }
-          onScreenshotCaptured={handleScreenshotCaptured}
-        />
-      </div>
+        </div>
+        <div style={{ flex: '0 0 66.667%', overflow: 'hidden', position: 'relative' }}>
+          <ResultPreview
+            code={state.generatedCode}
+            streamingCode={chatState.streamingCode}
+            isStreaming={chatState.isStreaming}
+            dependencies={previewDependencies}
+            onShare={handleShare}
+            shareStatus={shareStatus}
+            completedMessage={chatState.completedMessage}
+            currentStreamContent={chatState.currentStreamedText}
+            currentMessage={
+              chatState.messages.length > 0
+                ? { content: chatState.messages[chatState.messages.length - 1].text }
+                : undefined
+            }
+            onScreenshotCaptured={handleScreenshotCaptured}
+          />
+        </div>
+      </ChatProvider>
     </div>
   );
 }

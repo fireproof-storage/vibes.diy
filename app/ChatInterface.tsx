@@ -1,6 +1,7 @@
 import { useEffect, useState, useMemo, useCallback, useRef } from 'react';
 import type { ChatMessage, SessionDocument } from './types/chat';
 import { useFireproof } from 'use-fireproof';
+import { useNavigate } from 'react-router';
 import SessionSidebar from './components/SessionSidebar';
 import ChatHeader from './components/ChatHeader';
 import MessageList from './components/MessageList';
@@ -43,6 +44,11 @@ interface ChatInterfaceProps {
   onCodeGenerated?: (code: string, dependencies?: Record<string, string>) => void;
 }
 
+// Helper function to encode titles for URLs
+function encodeTitle(title: string): string {
+  return encodeURIComponent(title || 'untitled-session').toLowerCase().replace(/%20/g, '-');
+}
+
 // ChatInterface component handles user input and displays chat messages
 function ChatInterface({
   chatState,
@@ -54,6 +60,7 @@ function ChatInterface({
   const [isShrinking, setIsShrinking] = useState(false);
   const [isExpanding, setIsExpanding] = useState(false);
   const { database, useLiveQuery } = useFireproof('fireproof-chat-history');
+  const navigate = useNavigate();
 
   const {
     messages,
@@ -253,27 +260,44 @@ function ChatInterface({
     );
   }, [onNewChat, messages.length, setInput, setIsShrinking, setIsExpanding]);
 
-  // Memoize child components to prevent unnecessary re-renders
-  const sessionSidebar = useMemo(
-    () => (
-      <SessionSidebar
-        isVisible={chatContext.isSidebarVisible}
-        onClose={chatContext.closeSidebar}
-        onSelectSession={handleLoadSession}
-      />
-    ),
-    [chatContext.isSidebarVisible, chatContext.closeSidebar, handleLoadSession]
-  );
+  const handleSelectSession = (session: SessionDocument) => {
+    // Navigate to the session route
+    const encodedTitle = encodeTitle(session.title || 'Untitled Session');
+    navigate(`/session/${session._id}/${encodedTitle}`);
+  };
 
+  // This function will be called when a new session is created
+  const handleSessionCreated = (newSessionId: string) => {
+    // If there's a provided callback, call it
+    if (onSessionCreated) {
+      onSessionCreated(newSessionId);
+    }
+    
+    // Navigate to the new session
+    navigate(`/session/${newSessionId}/new-session`);
+  };
+
+  // Memoize child components to prevent unnecessary re-renders
   const chatHeader = useMemo(
     () => (
       <ChatHeader
-        onToggleSidebar={chatContext.openSidebar}
+        onOpenSidebar={chatContext.openSidebar}
         onNewChat={chatContext.handleNewChat}
         isGenerating={isGenerating}
       />
     ),
     [chatContext.openSidebar, chatContext.handleNewChat, isGenerating]
+  );
+
+  const sessionSidebar = useMemo(
+    () => (
+      <SessionSidebar
+        isVisible={chatContext.isSidebarVisible}
+        onClose={chatContext.closeSidebar}
+        onSelectSession={handleSelectSession}
+      />
+    ),
+    [chatContext.isSidebarVisible, chatContext.closeSidebar, handleSelectSession]
   );
 
   const messageList = useMemo(
@@ -325,10 +349,18 @@ function ChatInterface({
   }, [chatContext, chatState.isGenerating]);
 
   return (
-    <div className="flex h-full flex-col" style={{ overflow: 'hidden' }}>
-      {/* SessionSidebar component */}
-      {sessionSidebar}
-
+    <div className="border-light-divider dark:border-dark-divider relative flex h-full w-full flex-col overflow-hidden border-r">
+      <ChatHeader
+        onOpenSidebar={chatContext.openSidebar}
+        onNewChat={chatContext.handleNewChat}
+        isGenerating={isGenerating}
+      />
+      <SessionSidebar
+        isVisible={chatContext.isSidebarVisible}
+        onClose={chatContext.closeSidebar}
+        onSelectSession={handleSelectSession}
+      />
+      
       <div
         className="chat-interface bg-light-background-00 dark:bg-dark-background-00 flex h-full flex-col"
         style={{ overflow: 'hidden' }}

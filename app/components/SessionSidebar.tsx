@@ -1,5 +1,6 @@
 import { useEffect, useRef, memo, useMemo, useState } from 'react';
 import { useFireproof } from 'use-fireproof';
+import { Link } from 'react-router';
 
 function ImgFile({
   file,
@@ -53,6 +54,11 @@ interface SessionDocument extends DocBase {
 
 // Union type for documents returned by query
 type SessionOrScreenshot = SessionDocument | ScreenshotDocument;
+
+// Helper function to encode titles for URLs
+function encodeTitle(title: string): string {
+  return encodeURIComponent(title || 'untitled-session').toLowerCase().replace(/%20/g, '-');
+}
 
 interface SessionSidebarProps {
   isVisible: boolean;
@@ -138,9 +144,12 @@ function SessionSidebar({ isVisible, onClose, onSelectSession }: SessionSidebarP
 
   // Select a session and notify parent component
   const handleSelectSession = (session: SessionDocument) => {
+    // Call the provided onSelectSession handler
     onSelectSession(session);
-    // Close sidebar after selection regardless of screen size
-    onClose();
+    // Close the sidebar on mobile
+    if (window.innerWidth < 768) {
+      onClose();
+    }
   };
 
   // Memoize the sidebar classes to prevent recalculations on every render
@@ -149,6 +158,57 @@ function SessionSidebar({ isVisible, onClose, onSelectSession }: SessionSidebarP
       isVisible ? 'w-64 translate-x-0' : 'w-0 -translate-x-full'
     }`;
   }, [isVisible]);
+
+  // Render session items with Link components
+  const renderSessionItems = () => {
+    return groupedSessions.map(({ session, screenshots }) => {
+      // Skip if this isn't a session document
+      if (!session || !('_id' in session)) {
+        return null;
+      }
+
+      // Cast to SessionDocument to access title
+      const sessionDoc = session as SessionDocument;
+      const title = sessionDoc.title || 'New Chat';
+      const encodedTitle = encodeTitle(title);
+      
+      return (
+        <li
+          key={sessionDoc._id}
+          className="cursor-pointer border-b border-gray-200 p-3 hover:bg-gray-100 dark:border-gray-700 dark:hover:bg-gray-800"
+          data-testid="session-item"
+        >
+          <Link
+            to={`/session/${sessionDoc._id}/${encodedTitle}`}
+            className="block"
+            onClick={(e) => {
+              // Don't navigate, just use the handler
+              e.preventDefault();
+              handleSelectSession(sessionDoc);
+            }}
+          >
+            <div className="text-sm font-semibold text-gray-900 dark:text-white">
+              {title}
+            </div>
+            <div className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+              {new Date(sessionDoc.timestamp).toLocaleString()}
+            </div>
+            {screenshots.map(
+              (screenshot) =>
+                screenshot._files?.screenshot && (
+                  <ImgFile
+                    key={screenshot._id}
+                    file={screenshot._files.screenshot}
+                    alt={`Screenshot from ${title}`}
+                    className="mt-2"
+                  />
+                )
+            )}
+          </Link>
+        </li>
+      );
+    }).filter(Boolean);
+  };
 
   // Conditionally render content but keep animation classes
   return (
@@ -194,36 +254,7 @@ function SessionSidebar({ isVisible, onClose, onSelectSession }: SessionSidebarP
             </p>
           ) : (
             <ul className="space-y-2">
-              {groupedSessions.map(({ session, screenshots }) => (
-                <li
-                  key={session._id}
-                  onClick={() => handleSelectSession(session)}
-                  onKeyDown={(e) => e.key === 'Enter' && handleSelectSession(session)}
-                  className="hover:bg-light-decorative-00 dark:hover:bg-dark-decorative-00 w-full cursor-pointer rounded p-3 text-left transition-colors"
-                  role="button"
-                  tabIndex={0}
-                  aria-label={`Select session: ${session.title || 'Untitled Chat'}`}
-                >
-                  <div className="text-light-primary dark:text-dark-primary truncate text-sm font-medium">
-                    {session.title || 'Untitled Session'}
-                  </div>
-                  <div className="text-light-secondary dark:text-dark-secondary text-xs">
-                    {new Date(session.timestamp).toLocaleDateString()} -
-                    {new Date(session.timestamp).toLocaleTimeString()}
-                  </div>
-                  {screenshots.map(
-                    (screenshot) =>
-                      screenshot._files?.screenshot && (
-                        <ImgFile
-                          key={screenshot._id}
-                          file={screenshot._files?.screenshot}
-                          alt={`Screenshot from ${session.title}`}
-                          className="max-h-60 max-w-full object-contain"
-                        />
-                      )
-                  )}
-                </li>
-              ))}
+              {renderSessionItems()}
             </ul>
           )}
         </div>
