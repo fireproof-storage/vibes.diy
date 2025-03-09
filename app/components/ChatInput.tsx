@@ -20,14 +20,8 @@ function ChatInput({
   autoResizeTextarea: propsAutoResize,
   inputRef: propsInputRef
 }: ChatInputProps = {}) {
-  // Try to use context, fall back to props if not available
-  let contextValues;
-  try {
-    contextValues = useChatContext();
-  } catch (error) {
-    // Context not available, will use props
-    contextValues = null;
-  }
+  // Use context directly - we can assume it's available
+  const contextValues = useChatContext();
   
   // Use our own ref if props don't provide one
   const localInputRef = useRef<HTMLTextAreaElement | null>(null);
@@ -36,10 +30,10 @@ function ChatInput({
   const inputRef = propsInputRef || localInputRef;
   
   // Use values directly from context or props
-  const input = contextValues?.input ?? propsInput ?? '';
-  const isGenerating = contextValues?.isGenerating ?? propsIsGenerating ?? false;
-  const setInput = contextValues?.setInput || propsSetInput || (() => {});
-  const handleSendMessage = contextValues?.handleSendMessage || propsSend || (() => {});
+  const input = contextValues.input ?? propsInput ?? '';
+  const isGenerating = contextValues.isGenerating ?? propsIsGenerating ?? false;
+  const setInput = contextValues.setInput || propsSetInput || (() => {});
+  const handleSendMessage = contextValues.handleSendMessage || propsSend || (() => {});
   
   // Function to auto-resize textarea
   const autoResizeTextarea = propsAutoResize || (() => {

@@ -96,19 +96,6 @@ function ChatInterface({
     [inputRef, setInput]
   );
 
-  // Set up sidebar functions for direct open/close
-  const openSidebar = useCallback(() => {
-    if (chatContext) {
-      chatContext.openSidebar();
-    }
-  }, [chatContext]);
-
-  const closeSidebar = useCallback(() => {
-    if (chatContext) {
-      chatContext.closeSidebar();
-    }
-  }, [chatContext]);
-
   // Focus input on mount
   useEffect(() => {
     inputRef.current?.focus();
@@ -263,23 +250,23 @@ function ChatInterface({
   const sessionSidebar = useMemo(
     () => (
       <SessionSidebar
-        isVisible={chatContext?.isSidebarVisible}
-        onClose={closeSidebar}
+        isVisible={chatContext.isSidebarVisible}
+        onClose={chatContext.closeSidebar}
         onSelectSession={handleLoadSession}
       />
     ),
-    [chatContext?.isSidebarVisible, closeSidebar, handleLoadSession]
+    [chatContext.isSidebarVisible, chatContext.closeSidebar, handleLoadSession]
   );
 
   const chatHeader = useMemo(
     () => (
       <ChatHeader
-        onToggleSidebar={openSidebar}
+        onToggleSidebar={chatContext.openSidebar}
         onNewChat={handleNewChat}
         isGenerating={isGenerating}
       />
     ),
-    [openSidebar, handleNewChat, isGenerating]
+    [chatContext.openSidebar, handleNewChat, isGenerating]
   );
 
   const messageList = useMemo(

@@ -1,4 +1,4 @@
-import { memo, useCallback } from 'react';
+import { memo } from 'react';
 import { useChatContext } from '../context/ChatContext';
 
 // Define props for backward compatibility
@@ -9,19 +9,13 @@ interface ChatHeaderProps {
 }
 
 function ChatHeader({ onToggleSidebar, onNewChat, isGenerating: propsIsGenerating }: ChatHeaderProps = {}) {
-  // Try to use context, fall back to props if not available
-  let contextValues;
-  try {
-    contextValues = useChatContext();
-  } catch (error) {
-    // Context not available, will use props
-    contextValues = null;
-  }
+  // Use context directly - we can assume it's available
+  const contextValues = useChatContext();
 
   // Simplified handlers that use either context or props directly
-  const toggleSidebar = contextValues?.openSidebar || onToggleSidebar;
-  const handleNewChat = contextValues?.handleNewChat || onNewChat;
-  const isGenerating = contextValues?.isGenerating ?? propsIsGenerating ?? false;
+  const toggleSidebar = contextValues.openSidebar || onToggleSidebar;
+  const handleNewChat = contextValues.handleNewChat || onNewChat;
+  const isGenerating = contextValues.isGenerating ?? propsIsGenerating ?? false;
 
   return (
     <div className="border-light-decorative-00 dark:border-dark-decorative-00 bg-light-background-00 dark:bg-dark-background-00 flex min-h-[4rem] items-center justify-between border-b px-6 py-4">
