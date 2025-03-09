@@ -1,5 +1,6 @@
+// Base system prompt for the AI
 export async function makeBaseSystemPrompt(model: string) {
-  const fireproofLlmsTxt = await fetch('https://use-fireproof.com/llms-full.txt').then((res) => res.text());
+  const llmsText = await fetch('https://use-fireproof.com/llms-full.txt').then((res) => res.text());
 
   return `
 You are an AI assistant tasked with creating React components. You should create components that:
@@ -18,7 +19,7 @@ You are an AI assistant tasked with creating React components. You should create
 - Include a "Demo data" button that adds a handful of documents to the database to illustrate usage and schema
 
 <useFireproof-docs>
-${fireproofLlmsTxt}
+${llmsText}
 </useFireproof-docs>
 
 IMPORTANT: You are working in one JavaScript file, use tailwind classes for styling.
@@ -56,30 +57,3 @@ export const RESPONSE_FORMAT = {
     'Data persistence',
   ],
 };
-
-// Instructions for adding new remote llms.txt links
-export const ADDING_REMOTE_LLMS_LINKS = `
-To add new remote llms.txt links in prompts.ts, follow these steps:
-
-1. Open the prompts.ts file located in the app directory.
-2. Locate the makeBaseSystemPrompt function.
-3. Add the new remote llms.txt link to the fetch call within the function.
-4. Ensure the new link is properly formatted and accessible.
-
-Example:
-
-export async function makeBaseSystemPrompt(model: string) {
-  const fireproofLlmsTxt = await fetch('https://use-fireproof.com/llms-full.txt').then((res) => res.text());
-  const newLlmsTxt = await fetch('https://new-remote-link.com/llms.txt').then((res) => res.text());
-
-  return \`
-  Your prompt content here...
-  <useFireproof-docs>
-  \${fireproofLlmsTxt}
-  </useFireproof-docs>
-  <new-docs>
-  \${newLlmsTxt}
-  </new-docs>
-  \`;
-}
-`;
