@@ -124,22 +124,22 @@ function ResultPreview({
     },
   });
 
-  // Store streaming values in refs to reduce parent rerenders
+  // Keep the refs for streaming values to reduce parent rerenders
   const streamingCodeRef = useRef(streamingCode);
   const isStreamingRef = useRef(isStreaming);
   const currentStreamContentRef = useRef(currentStreamContent);
-  
-  // Local state for UI updates
+
+  // Keep the local state for UI updates
   const [localStreamingCode, setLocalStreamingCode] = useState(streamingCode);
   const [localIsStreaming, setLocalIsStreaming] = useState(isStreaming);
   const [localStreamContent, setLocalStreamContent] = useState(currentStreamContent);
 
-  // Update refs and local state when props change
+  // Keep the effect that updates refs and local state
   useEffect(() => {
     streamingCodeRef.current = streamingCode;
     isStreamingRef.current = isStreaming;
     currentStreamContentRef.current = currentStreamContent;
-    
+
     setLocalStreamingCode(streamingCode);
     setLocalIsStreaming(isStreaming);
     setLocalStreamContent(currentStreamContent);
@@ -205,7 +205,8 @@ function ResultPreview({
   useEffect(() => {
     if (localIsStreaming) {
       if (localStreamingCode) {
-        const codeWithWhitespace = cleanCodeBeforeImport(localStreamingCode) + '\n\n\n\n\n\n\n\n\n\n';
+        const codeWithWhitespace =
+          cleanCodeBeforeImport(localStreamingCode) + '\n\n\n\n\n\n\n\n\n\n';
         setDisplayCode(codeWithWhitespace);
 
         filesRef.current = {

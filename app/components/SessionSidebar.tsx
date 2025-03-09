@@ -249,7 +249,7 @@ function SessionSidebar({ isVisible, onClose, onSelectSession }: SessionSidebarP
           </button>
         </div>
 
-        <div className="p-2 overflow-y-auto flex-grow">
+        <div className="flex-grow overflow-y-auto p-2">
           {groupedSessions.length === 0 ? (
             <p className="text-light-secondary dark:text-dark-secondary p-2 text-sm">
               No saved sessions yet

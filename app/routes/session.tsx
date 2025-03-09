@@ -14,18 +14,9 @@ export function meta() {
   ];
 }
 
-// Add helper for debugging
-const DEBUG = true;
-const debugLog = (...args: any[]) => DEBUG && console.log('[DEBUG Session]', ...args);
-
 export default function Session() {
   const { sessionId, title } = useParams();
-  debugLog('Session component rendering with sessionId:', sessionId);
-
-  // Track render count for debugging
-  const renderCountRef = useRef(0);
-  renderCountRef.current++;
-  debugLog(`Render #${renderCountRef.current}`);
+  console.log('Session component rendering with sessionId:', sessionId);
 
   const [state, setState] = useState({
     generatedCode: '',
@@ -33,10 +24,8 @@ export default function Session() {
   });
   const { database } = useFireproof('fireproof-chat-history');
 
-  // Add a ref to track which sessions have been loaded
   const loadedSessionsRef = useRef<Set<string>>(new Set());
 
-  // Handle code generation from chat interface
   const handleCodeGenerated = useRef((code: string, dependencies: Record<string, string> = {}) => {
     console.log('Session.handleCodeGenerated called with code length:', code.length);
     setState({
@@ -45,29 +34,13 @@ export default function Session() {
     });
   }).current;
 
-  // Handle title generation - empty function since we don't need to save titles on session page
   const handleTitleGenerated = useRef((title: string) => {
     console.log('Session received generated title:', title);
     // We don't need to save the title here as this is an existing session
   }).current;
 
-  // Set up chat state with the code generation handler
   const chatState = useChat(handleCodeGenerated, handleTitleGenerated);
 
-  // Debug log any changes to chatState properties that might cause rerenders
-  useEffect(() => {
-    debugLog('chatState.messages changed:', chatState.messages.length);
-  }, [chatState.messages]);
-  
-  useEffect(() => {
-    debugLog('chatState.isStreaming changed:', chatState.isStreaming);
-  }, [chatState.isStreaming]);
-  
-  useEffect(() => {
-    debugLog('chatState.streamingCode changed, length:', chatState.streamingCode.length);
-  }, [chatState.streamingCode]);
-
-  // Handle session change
   useEffect(() => {
     // Load session data and extract code for the ResultPreview
     const loadSessionData = async () => {
@@ -128,53 +101,56 @@ export default function Session() {
     };
 
     loadSessionData();
-  }, [sessionId, database]); // Remove chatState from dependency array
+  }, [sessionId, database]);
 
-  // Memoize the ChatInterface component to prevent remounting during streaming
-  const memoizedChatInterface = useMemo(() => (
-    <ChatProvider
-      initialState={{
-        input: '',
-        isGenerating: false,
-        isSidebarVisible: false,
-      }}
-    >
-      <ChatInterface
-        chatState={chatState}
-        sessionId={sessionId || null}
-        onCodeGenerated={handleCodeGenerated}
+  const memoizedChatInterface = useMemo(
+    () => (
+      <ChatProvider
+        initialState={{
+          input: '',
+          isGenerating: false,
+          isSidebarVisible: false,
+        }}
+      >
+        <ChatInterface
+          chatState={chatState}
+          sessionId={sessionId || null}
+          onCodeGenerated={handleCodeGenerated}
+        />
+      </ChatProvider>
+    ),
+    [sessionId, handleCodeGenerated]
+  );
+
+  const memoizedResultPreview = useMemo(
+    () => (
+      <ResultPreview
+        code={state.generatedCode}
+        dependencies={state.dependencies}
+        streamingCode={chatState.streamingCode}
+        isStreaming={chatState.isStreaming}
+        completedMessage={chatState.completedMessage}
+        currentStreamContent={chatState.currentStreamedText}
+        currentMessage={
+          chatState.messages.length > 0
+            ? { content: chatState.messages[chatState.messages.length - 1].text }
+            : undefined
+        }
+        initialView="code"
+        sessionId={sessionId}
       />
-    </ChatProvider>
-  ), [sessionId, handleCodeGenerated]);
-
-  // Memoize the ResultPreview to prevent unnecessary rerenders
-  const memoizedResultPreview = useMemo(() => (
-    <ResultPreview
-      code={state.generatedCode}
-      dependencies={state.dependencies}
-      streamingCode={chatState.streamingCode}
-      isStreaming={chatState.isStreaming}
-      completedMessage={chatState.completedMessage}
-      currentStreamContent={chatState.currentStreamedText}
-      currentMessage={
-        chatState.messages.length > 0
-          ? { content: chatState.messages[chatState.messages.length - 1].text }
-          : undefined
-      }
-      initialView="code"
-      sessionId={sessionId}
-    />
-  ), [
-    state.generatedCode, 
-    state.dependencies, 
-    sessionId,
-    // Include streamingCode, isStreaming, etc. - ResultPreview will handle them internally with refs
-    chatState.streamingCode,
-    chatState.isStreaming,
-    chatState.completedMessage,
-    chatState.currentStreamedText,
-    chatState.messages
-  ]);
+    ),
+    [
+      state.generatedCode,
+      state.dependencies,
+      sessionId,
+      chatState.streamingCode,
+      chatState.isStreaming,
+      chatState.completedMessage,
+      chatState.currentStreamedText,
+      chatState.messages,
+    ]
+  );
 
   return (
     <div style={{ display: 'flex', height: 'calc(100vh)' }}>

@@ -43,10 +43,6 @@ interface ChatInterfaceProps {
   onCodeGenerated?: (code: string, dependencies?: Record<string, string>) => void;
 }
 
-// Add near the top of the file after imports
-const DEBUG = true;
-const debugLog = (...args: any[]) => DEBUG && console.log('[DEBUG ChatInterface]', ...args);
-
 // Helper function to encode titles for URLs
 function encodeTitle(title: string): string {
   return encodeURIComponent(title || 'untitled-session')
@@ -58,16 +54,16 @@ function encodeTitle(title: string): string {
 function shallowEqual(obj1: any, obj2: any): boolean {
   if (obj1 === obj2) return true;
   if (!obj1 || !obj2) return false;
-  
+
   const keys1 = Object.keys(obj1);
   const keys2 = Object.keys(obj2);
-  
+
   if (keys1.length !== keys2.length) return false;
-  
+
   for (let key of keys1) {
     if (obj1[key] !== obj2[key]) return false;
   }
-  
+
   return true;
 }
 
@@ -140,7 +136,7 @@ function ChatInterface({
     autoResizeTextarea();
   }, [autoResizeTextarea]);
 
-  // Add a throttling mechanism to prevent excessive re-renders
+  // Keep the optimization for preventing unnecessary rerenders
   const prevPropsRef = useRef<{
     sessionId?: string | null;
     messages: ChatMessage[];
@@ -150,7 +146,7 @@ function ChatInterface({
     messages: chatState.messages,
     isGenerating: chatState.isGenerating,
   });
-  
+
   // Compare current props with previous
   const shouldRerender = !shallowEqual(
     {
@@ -160,7 +156,7 @@ function ChatInterface({
     },
     prevPropsRef.current
   );
-  
+
   // Update the ref with current values
   useEffect(() => {
     if (shouldRerender) {
@@ -171,46 +167,16 @@ function ChatInterface({
       };
     }
   });
-  
-  // Log whether component should meaningfully rerender
-  useEffect(() => {
-    if (shouldRerender) {
-      debugLog('ChatInterface meaningful rerender triggered by prop changes');
-    }
-  }, [shouldRerender]);
 
-  // Track mount/unmount for debugging
-  useEffect(() => {
-    debugLog('ChatInterface MOUNTED');
-    return () => {
-      debugLog('ChatInterface UNMOUNTED');
-    };
-  }, []);
-
-  // Add component version for tracking rerenders vs remounts
-  const componentVersionRef = useRef(Math.random().toString(36).substring(2, 8));
-  debugLog(`Component instance ${componentVersionRef.current} rendering`);
-
-  // Handle browser history navigation (back/forward buttons)
+  // Fixed popstate event listener to avoid repeated add/remove
   useEffect(() => {
     const handlePopState = (event: PopStateEvent) => {
-      debugLog('PopState event fired', event.state);
       // If there's a sessionId in the state, load that session
       if (event.state?.sessionId) {
-        debugLog(
-          'ChatInterface.handlePopState: Session ID found in state:',
-          event.state.sessionId
-        );
-        // If we have an onSessionCreated callback, call it with the sessionId from state
         if (onSessionCreated) {
-          debugLog(
-            'ChatInterface.handlePopState: Calling onSessionCreated with ID:',
-            event.state.sessionId
-          );
           onSessionCreated(event.state.sessionId);
         }
       } else {
-        debugLog('ChatInterface.handlePopState: No session ID in state, treating as new chat');
         // If we're navigating to a page without a sessionId (like the home page)
         // call onNewChat if available
         if (onNewChat) {
@@ -219,43 +185,37 @@ function ChatInterface({
       }
     };
 
-    // Create a stable reference to callbacks for the cleanup function
+    // Create stable reference to callbacks
     const stableOnSessionCreated = onSessionCreated;
     const stableOnNewChat = onNewChat;
-    
+
     // Add event listener for popstate events
     window.addEventListener('popstate', handlePopState);
-    debugLog(`Added popstate event listener (instance ${componentVersionRef.current})`);
 
     // Clean up the event listener on unmount
     return () => {
       window.removeEventListener('popstate', handlePopState);
-      debugLog(`Removed popstate event listener (instance ${componentVersionRef.current})`);
     };
   }, []); // Empty dependency array - this will only run once on mount and cleanup on unmount
 
-  // Add a separate effect to handle callback changes if needed
+  // Keep the separate effect to handle callback changes
   useEffect(() => {
     // This effect runs whenever onSessionCreated or onNewChat change
     // We don't need to do anything here, but could update any refs if needed
-    debugLog('onSessionCreated or onNewChat props changed');
   }, [onSessionCreated, onNewChat]);
 
   // Load session data when sessionId changes
   useEffect(() => {
     async function loadSessionData() {
       if (sessionId) {
-        debugLog(`Loading session data for ID: ${sessionId} (instance ${componentVersionRef.current})`);
         try {
           const sessionData = (await database.get(sessionId)) as SessionDocument;
-          debugLog('ChatInterface: Successfully loaded session data for ID:', sessionId);
           // Normalize session data to guarantee messages array exists
           const messages = Array.isArray(sessionData.messages) ? sessionData.messages : [];
-          debugLog('ChatInterface: Loaded messages count:', messages.length);
           // Use the ref to access the latest setMessages function
           setMessagesRef.current(messages);
         } catch (error) {
-          debugLog('ChatInterface: Error loading session:', error);
+          console.error('Error loading session:', error);
         }
       }
     }
@@ -273,8 +233,6 @@ function ChatInterface({
       const streamingJustCompleted = wasGeneratingRef.current && !isGenerating;
 
       if (messages.length > 0 && streamingJustCompleted) {
-        debugLog('Saving completed session to Fireproof - streaming completed');
-
         // Extract title from first user message
         const firstUserMessage = messages.find((msg) => msg.type === 'user');
         const title = firstUserMessage?.text || 'Untitled Chat';
@@ -301,7 +259,7 @@ function ChatInterface({
             onSessionCreated?.(result.id);
           }
         } catch (error) {
-          debugLog('Error saving session to Fireproof:', error);
+          console.error('Error saving session to Fireproof:', error);
         }
       }
 
@@ -317,17 +275,11 @@ function ChatInterface({
     async (session: SessionDocument) => {
       // Ensure session has an _id - this is guaranteed by the component API
       const sessionId = session._id;
-      debugLog(`ChatInterface.handleLoadSession: Loading session ID: ${sessionId} (instance ${componentVersionRef.current})`);
 
       try {
         const sessionData = (await database.get(sessionId)) as SessionDocument;
-        debugLog(
-          'ChatInterface.handleLoadSession: Successfully loaded session data for ID:',
-          sessionId
-        );
         // Normalize session data to guarantee messages array exists
         const messages = Array.isArray(sessionData.messages) ? sessionData.messages : [];
-        debugLog('ChatInterface.handleLoadSession: Messages count:', messages.length);
         // Use the ref to access the latest setMessages function
         setMessagesRef.current(messages);
 
@@ -339,10 +291,6 @@ function ChatInterface({
         // If we found an AI message with code, update the code view
         if (lastAiMessageWithCode?.code) {
           const dependencies = lastAiMessageWithCode.dependencies || {};
-          debugLog(
-            'ChatInterface.handleLoadSession: Found code in session, length:',
-            lastAiMessageWithCode.code.length
-          );
 
           // 1. Update local chatState
           chatState.streamingCode = lastAiMessageWithCode.code;
@@ -356,21 +304,14 @@ function ChatInterface({
 
           // 2. Call the onCodeGenerated callback to update parent state
           onCodeGenerated?.(lastAiMessageWithCode.code, dependencies);
-          debugLog(
-            'ChatInterface.handleLoadSession: Called onCodeGenerated to update parent component'
-          );
         } else {
-          debugLog('ChatInterface.handleLoadSession: No code found in session:', sessionId);
+          console.log('No code found in session:', sessionId);
         }
 
         // Notify parent component of session change
         onSessionCreated?.(sessionId);
-        debugLog(
-          'ChatInterface.handleLoadSession: Notified parent of session change:',
-          sessionId
-        );
       } catch (error) {
-        debugLog('ChatInterface.handleLoadSession: Error loading session:', error);
+        console.error('Error loading session:', error);
       }
     },
     [database, chatState, onCodeGenerated, onSessionCreated]

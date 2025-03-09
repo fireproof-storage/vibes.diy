@@ -255,7 +255,7 @@ export function useChat(
           currentStreamedText ||
           "Here's your generated app:";
         setCompletedMessage(finalMessage);
-        
+
         // Generate a title from the final response
         if (onGeneratedTitle) {
           try {
@@ -273,7 +273,8 @@ export function useChat(
                 messages: [
                   {
                     role: 'system',
-                    content: 'You are a helpful assistant that generates short, descriptive titles. Create a concise title (3-5 words) that captures the essence of the content.',
+                    content:
+                      'You are a helpful assistant that generates short, descriptive titles. Create a concise title (3-5 words) that captures the essence of the content.',
                   },
                   {
                     role: 'user',
