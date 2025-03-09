@@ -3,6 +3,7 @@ import ChatInterface from '../ChatInterface';
 import ResultPreview from '../components/ResultPreview/ResultPreview';
 import { useChat } from '../hooks/useChat';
 import { useFireproof } from 'use-fireproof';
+import { ChatProvider } from '../context/ChatContext';
 
 export function meta() {
   return [
@@ -156,18 +157,30 @@ export default function Home() {
   return (
     <div style={{ display: 'flex', height: '100vh', overflow: 'hidden' }}>
       <div style={{ flex: '0 0 33.333%', overflow: 'hidden', position: 'relative' }}>
-        <ChatInterface
-          chatState={chatState}
-          sessionId={sessionId}
-          onSessionCreated={handleSessionCreated}
-          onNewChat={handleNewChat}
-          onCodeGenerated={(code, dependencies) => {
-            setState({
-              generatedCode: code,
-              dependencies: dependencies || {},
-            });
+        <ChatProvider 
+          initialState={{
+            input: chatState.input,
+            isGenerating: chatState.isGenerating,
           }}
-        />
+          onSendMessage={(input) => {
+            chatState.setInput(input);
+            chatState.sendMessage();
+          }}
+          onNewChat={handleNewChat}
+        >
+          <ChatInterface
+            chatState={chatState}
+            sessionId={sessionId}
+            onSessionCreated={handleSessionCreated}
+            onNewChat={handleNewChat}
+            onCodeGenerated={(code, dependencies) => {
+              setState({
+                generatedCode: code,
+                dependencies: dependencies || {},
+              });
+            }}
+          />
+        </ChatProvider>
       </div>
       <div style={{ flex: '0 0 66.667%', overflow: 'hidden', position: 'relative' }}>
         <ResultPreview
