@@ -16,6 +16,8 @@ export function meta() {
 
 export default function Session() {
   const { sessionId, title } = useParams();
+  console.log('Session component rendering with sessionId:', sessionId);
+  
   const [state, setState] = useState({
     generatedCode: '',
     dependencies: {} as Record<string, string>,
@@ -24,6 +26,7 @@ export default function Session() {
   
   // Handle code generation from chat interface
   const handleCodeGenerated = (code: string, dependencies: Record<string, string> = {}) => {
+    console.log('Session.handleCodeGenerated called with code length:', code.length);
     setState({
       generatedCode: code,
       dependencies,
@@ -38,9 +41,11 @@ export default function Session() {
     // Load session data and extract code for the ResultPreview
     const loadSessionData = async () => {
       if (sessionId) {
+        console.log('Session route: Loading session data for ID:', sessionId);
         try {
           // Load the session document
           const sessionData = await database.get(sessionId) as SessionDocument;
+          console.log('Session route: Successfully loaded data for session:', sessionId);
           
           // Normalize session data to guarantee messages array exists
           const messages = Array.isArray(sessionData.messages) ? sessionData.messages : [];
@@ -56,6 +61,7 @@ export default function Session() {
           // If we found an AI message with code, update the code view
           if (lastAiMessageWithCode?.code) {
             const dependencies = lastAiMessageWithCode.dependencies || {};
+            console.log('Session route: Found code in session:', sessionId.substring(0, 8), 'code length:', lastAiMessageWithCode.code.length);
             
             // Update state for ResultPreview
             setState({
@@ -67,6 +73,8 @@ export default function Session() {
             chatState.completedCode = lastAiMessageWithCode.code;
             chatState.streamingCode = lastAiMessageWithCode.code;
             chatState.completedMessage = lastAiMessageWithCode.text || "Here's your app:";
+          } else {
+            console.log('Session route: No code found in session:', sessionId.substring(0, 8));
           }
         } catch (error) {
           console.error('Error loading session:', error);
@@ -108,6 +116,7 @@ export default function Session() {
               : undefined
           }
           initialView="code"
+          sessionId={sessionId}
         />
       </div>
     </div>

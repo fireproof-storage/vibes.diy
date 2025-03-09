@@ -23,6 +23,7 @@ interface ResultPreviewProps {
   currentStreamContent?: string;
   onScreenshotCaptured?: (screenshotData: string) => void;
   initialView?: 'code' | 'preview';
+  sessionId?: string;
 }
 
 const indexHtml = `<!DOCTYPE html>
@@ -101,6 +102,7 @@ function ResultPreview({
   currentStreamContent,
   onScreenshotCaptured,
   initialView = 'preview',
+  sessionId,
 }: ResultPreviewProps) {
   const [activeView, setActiveView] = useState<'preview' | 'code'>(initialView);
   const [displayCode, setDisplayCode] = useState(code || defaultCode);
@@ -161,7 +163,10 @@ function ResultPreview({
       setDisplayCode(codeWithWhitespace);
 
       filesRef.current = {
-        ...filesRef.current,
+        '/index.html': {
+          code: indexHtml,
+          hidden: true,
+        },
         '/App.jsx': {
           code: codeWithWhitespace,
           active: true,
@@ -171,8 +176,10 @@ function ResultPreview({
       if (code) {
         setShowWelcome(false);
       }
+
+      console.log('ResultPreview: Updated files with new code, length:', (code || '').length);
     }
-  }, [code, isStreaming]);
+  }, [code, isStreaming, sessionId]);
 
   useEffect(() => {
     if (isStreaming) {
@@ -217,8 +224,6 @@ function ResultPreview({
 
   const spinningIconClass = shouldSpin ? 'animate-spin-slow' : '';
 
-  const sandpackKey = useRef('stable-sandpack-key').current;
-
   // Memoize the dependencies for Sandpack
   const depsString = useMemo(() => JSON.stringify(dependencies), [dependencies]);
 
@@ -229,6 +234,23 @@ function ResultPreview({
       ...dependencies,
     };
   }, [depsString]);
+
+  // Create a unique key for SandpackProvider that changes when sessionId or code changes
+  const sandpackKey = useMemo(() => {
+    // Using Date.now() causes unnecessary remounts on every render
+    // Instead, use the actual content that should trigger a remount
+    const key = `${sessionId || 'default'}-${isStreaming ? 'streaming' : 'static'}-${code.length}`;
+    console.log('ResultPreview: Generated new sandpackKey:', key, 'for sessionId:', sessionId);
+    return key;
+  }, [sessionId, isStreaming, code]);
+
+  // Log when sessionId changes
+  useEffect(() => {
+    if (sessionId) {
+      console.log('ResultPreview: sessionId changed to:', sessionId);
+      console.log('ResultPreview: current code length:', (code || '').length);
+    }
+  }, [sessionId, code]);
 
   return (
     <div className="h-full" style={{ overflow: 'hidden' }}>
@@ -371,7 +393,7 @@ function ResultPreview({
       ) : (
         <div data-testid="sandpack-provider">
           <SandpackProvider
-            key={isStreaming ? 'streaming' : displayCode}
+            key={sandpackKey}
             template="vite-react"
             options={{
               externalResources: ['https://cdn.tailwindcss.com'],

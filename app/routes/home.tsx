@@ -221,6 +221,7 @@ export default function Home() {
               : undefined
           }
           onScreenshotCaptured={handleScreenshotCaptured}
+          {...(sessionId ? { sessionId } : {})}
         />
       </div>
     </div>

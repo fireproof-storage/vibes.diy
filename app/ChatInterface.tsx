@@ -120,13 +120,17 @@ function ChatInterface({
   // Handle browser history navigation (back/forward buttons)
   useEffect(() => {
     const handlePopState = (event: PopStateEvent) => {
+      console.log('ChatInterface.handlePopState: Navigation event detected', event.state);
       // If there's a sessionId in the state, load that session
       if (event.state?.sessionId) {
+        console.log('ChatInterface.handlePopState: Session ID found in state:', event.state.sessionId);
         // If we have an onSessionCreated callback, call it with the sessionId from state
         if (onSessionCreated) {
+          console.log('ChatInterface.handlePopState: Calling onSessionCreated with ID:', event.state.sessionId);
           onSessionCreated(event.state.sessionId);
         }
       } else {
+        console.log('ChatInterface.handlePopState: No session ID in state, treating as new chat');
         // If we're navigating to a page without a sessionId (like the home page)
         // call onNewChat if available
         if (onNewChat) {
@@ -137,10 +141,12 @@ function ChatInterface({
 
     // Add event listener for popstate events
     window.addEventListener('popstate', handlePopState);
+    console.log('ChatInterface: Added popstate event listener');
 
     // Clean up the event listener on unmount
     return () => {
       window.removeEventListener('popstate', handlePopState);
+      console.log('ChatInterface: Removed popstate event listener');
     };
   }, [onSessionCreated, onNewChat]);
 
@@ -148,14 +154,17 @@ function ChatInterface({
   useEffect(() => {
     async function loadSessionData() {
       if (sessionId) {
+        console.log('ChatInterface: Loading session data for ID:', sessionId);
         try {
           const sessionData = (await database.get(sessionId)) as SessionDocument;
+          console.log('ChatInterface: Successfully loaded session data for ID:', sessionId);
           // Normalize session data to guarantee messages array exists
           const messages = Array.isArray(sessionData.messages) ? sessionData.messages : [];
+          console.log('ChatInterface: Loaded messages count:', messages.length);
           // Use the ref to access the latest setMessages function
           setMessagesRef.current(messages);
         } catch (error) {
-          console.error('Error loading session:', error);
+          console.error('ChatInterface: Error loading session:', error);
         }
       }
     }
@@ -217,11 +226,14 @@ function ChatInterface({
     async (session: SessionDocument) => {
       // Ensure session has an _id - this is guaranteed by the component API
       const sessionId = session._id;
+      console.log('ChatInterface.handleLoadSession: Loading session ID:', sessionId);
 
       try {
         const sessionData = (await database.get(sessionId)) as SessionDocument;
+        console.log('ChatInterface.handleLoadSession: Successfully loaded session data for ID:', sessionId);
         // Normalize session data to guarantee messages array exists
         const messages = Array.isArray(sessionData.messages) ? sessionData.messages : [];
+        console.log('ChatInterface.handleLoadSession: Messages count:', messages.length);
         // Use the ref to access the latest setMessages function
         setMessagesRef.current(messages);
 
@@ -233,7 +245,7 @@ function ChatInterface({
         // If we found an AI message with code, update the code view
         if (lastAiMessageWithCode?.code) {
           const dependencies = lastAiMessageWithCode.dependencies || {};
-          console.log('Loading code from session:', lastAiMessageWithCode.code);
+          console.log('ChatInterface.handleLoadSession: Found code in session, length:', lastAiMessageWithCode.code.length);
 
           // 1. Update local chatState
           chatState.streamingCode = lastAiMessageWithCode.code;
@@ -247,13 +259,16 @@ function ChatInterface({
 
           // 2. Call the onCodeGenerated callback to update parent state
           onCodeGenerated?.(lastAiMessageWithCode.code, dependencies);
-          console.log('Called onCodeGenerated to update parent component');
+          console.log('ChatInterface.handleLoadSession: Called onCodeGenerated to update parent component');
+        } else {
+          console.log('ChatInterface.handleLoadSession: No code found in session:', sessionId);
         }
 
         // Notify parent component of session change
         onSessionCreated?.(sessionId);
+        console.log('ChatInterface.handleLoadSession: Notified parent of session change:', sessionId);
       } catch (error) {
-        console.error('Error loading session:', error);
+        console.error('ChatInterface.handleLoadSession: Error loading session:', error);
       }
     },
     [database, chatState, onCodeGenerated, onSessionCreated]
@@ -302,13 +317,11 @@ function ChatInterface({
     const encodedTitle = encodeTitle(session.title || 'Untitled Session');
     const url = `/session/${session._id}/${encodedTitle}`;
     
-    // Update URL without reloading by pushing to history state
-    window.history.pushState({ sessionId: session._id }, '', url);
+    // Use window.location.href to force a full page reload to the new URL
+    window.location.href = url;
     
-    // Handle loading session if needed
-    if (onSessionCreated) {
-      onSessionCreated(session._id);
-    }
+    // No need to call onSessionCreated since the page will reload
+    // and the Session component will handle initializing with the new sessionId
   };
 
   // This function will be called when a new session is created
@@ -318,7 +331,8 @@ function ChatInterface({
       onSessionCreated(newSessionId);
     }
     
-    // Navigate to the new session without reloading
+    // Navigate to the new session without reloading by pushing to history state
+    // This allows for a seamless experience when creating a new session during streaming
     const url = `/session/${newSessionId}/new-session`;
     window.history.pushState({ sessionId: newSessionId }, '', url);
   };
@@ -366,12 +380,10 @@ function ChatInterface({
 
   // Memoize ChatInput with direct props instead of relying on context
   const chatInput = useMemo(() => {
-    console.log('Rendering ChatInput with props', { input, isGenerating });
     return (
       <ChatInput
         value={input}
         onChange={(e) => {
-          console.log('ChatInput onChange', e.target.value);
           setInput(e.target.value);
         }}
         onSend={sendMessage}
