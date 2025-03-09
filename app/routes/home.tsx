@@ -160,7 +160,7 @@ export default function Home() {
   }, [chatState.parserState?.current?.dependencies, state.dependencies]);
 
   return (
-    <div style={{ display: 'flex', height: 'calc(100vh - 64px)' }}>
+    <div style={{ display: 'flex', height: 'calc(100vh)' }}>
       <div style={{ flex: '0 0 33.333%', overflow: 'hidden', position: 'relative' }}>
         <ChatProvider 
           initialState={{
