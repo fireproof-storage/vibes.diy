@@ -43,10 +43,10 @@ const mockChatState = {
       removeAllListeners: vi.fn(),
       write: vi.fn(),
       end: vi.fn(),
-      reset: vi.fn()
-    }
+      reset: vi.fn(),
+    },
   },
-  completedMessage: ''
+  completedMessage: '',
 };
 
 describe('ChatInterface', () => {
@@ -60,4 +60,4 @@ describe('ChatInterface', () => {
     );
     expect(container).toBeDefined();
   });
-}); 
+});

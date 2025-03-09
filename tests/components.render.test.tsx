@@ -17,19 +17,10 @@ vi.mock('use-fireproof', () => ({
   }),
 }));
 
-// Mock the ChatContext for ChatHeader tests
-const openSidebar = vi.fn();
-const handleNewChat = vi.fn();
+// Mock functions for ChatHeader tests
+const onToggleSidebar = vi.fn();
+const onNewChat = vi.fn();
 let isGeneratingValue = false;
-
-vi.mock('../app/context/ChatContext', () => ({
-  useChatContext: () => ({
-    isGenerating: isGeneratingValue,
-    openSidebar,
-    closeSidebar: vi.fn(),
-    handleNewChat,
-  }),
-}));
 
 describe('Component Rendering', () => {
   describe('ChatHeader', () => {
@@ -39,12 +30,24 @@ describe('Component Rendering', () => {
     });
 
     it('renders without crashing', () => {
-      render(<ChatHeader />);
+      render(
+        <ChatHeader
+          onToggleSidebar={onToggleSidebar}
+          onNewChat={onNewChat}
+          isGenerating={isGeneratingValue}
+        />
+      );
       expect(screen.getByLabelText('New Chat')).toBeInTheDocument();
     });
 
     it('applies tooltip classes correctly', () => {
-      const { container } = render(<ChatHeader />);
+      const { container } = render(
+        <ChatHeader
+          onToggleSidebar={onToggleSidebar}
+          onNewChat={onNewChat}
+          isGenerating={isGeneratingValue}
+        />
+      );
 
       // Check if the button has the peer class
       const button = screen.getByLabelText('New Chat');
@@ -57,7 +60,13 @@ describe('Component Rendering', () => {
 
     it('disables new chat button when generating', () => {
       isGeneratingValue = true;
-      render(<ChatHeader />);
+      render(
+        <ChatHeader
+          onToggleSidebar={onToggleSidebar}
+          onNewChat={onNewChat}
+          isGenerating={isGeneratingValue}
+        />
+      );
       expect(screen.getByLabelText('New Chat')).toBeDisabled();
     });
   });

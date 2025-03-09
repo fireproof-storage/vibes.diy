@@ -19,7 +19,7 @@ interface ChatContextState {
   // Core functions
   handleSendMessage: () => void;
   handleNewChat: () => void;
-  
+
   // Input reference and textarea auto-resize
   inputRef: React.RefObject<HTMLTextAreaElement | null>;
   autoResizeTextarea: () => void;
@@ -51,16 +51,19 @@ export function ChatProvider({
   const [input, setInput] = useState(initialState.input || '');
   const [isGenerating, setIsGenerating] = useState(initialState.isGenerating || false);
   const [isSidebarVisible, setIsSidebarVisible] = useState(initialState.isSidebarVisible || false);
-  
+
   // Wrap setInput with debugging
-  const setInputWithDebug = useCallback((newInput: string) => {
-    console.log('ChatContext.setInput', { oldValue: input, newValue: newInput });
-    setInput(newInput);
-  }, [input]);
+  const setInputWithDebug = useCallback(
+    (newInput: string) => {
+      console.log('ChatContext.setInput', { oldValue: input, newValue: newInput });
+      setInput(newInput);
+    },
+    [input]
+  );
 
   // Create input reference
   const inputRef = React.useRef<HTMLTextAreaElement | null>(null);
-  
+
   // Auto-resize textarea function
   const autoResizeTextarea = useCallback(() => {
     const textarea = inputRef.current;

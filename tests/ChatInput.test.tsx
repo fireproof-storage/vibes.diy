@@ -34,7 +34,7 @@ describe('ChatInput', () => {
         inputRef={inputRef}
       />
     );
-    expect(screen.getByPlaceholderText('Describe the app you want to create...')).toBeDefined();
+    expect(screen.getByPlaceholderText('Vibe coding? Just Fireproof it.')).toBeDefined();
   });
 
   it('calls onChange when text is entered', () => {
@@ -49,7 +49,7 @@ describe('ChatInput', () => {
       />
     );
 
-    const textArea = screen.getByPlaceholderText('Describe the app you want to create...');
+    const textArea = screen.getByPlaceholderText('Vibe coding? Just Fireproof it.');
     fireEvent.change(textArea, { target: { value: 'Hello world' } });
 
     expect(onChange).toHaveBeenCalled();
@@ -85,7 +85,7 @@ describe('ChatInput', () => {
       />
     );
 
-    const textArea = screen.getByPlaceholderText('Describe the app you want to create...');
+    const textArea = screen.getByPlaceholderText('Vibe coding? Just Fireproof it.');
     const sendButton = screen.getByLabelText('Generating');
 
     expect(textArea).toBeDisabled();
@@ -107,7 +107,7 @@ describe('ChatInput', () => {
       />
     );
 
-    const textArea = screen.getByPlaceholderText('Describe the app you want to create...');
+    const textArea = screen.getByPlaceholderText('Vibe coding? Just Fireproof it.');
     fireEvent.keyDown(textArea, { key: 'Enter', shiftKey: false });
 
     expect(onKeyDown).toHaveBeenCalled();

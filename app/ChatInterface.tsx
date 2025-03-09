@@ -77,7 +77,7 @@ function ChatInterface({
 
   // Create a ref to store setMessages function to avoid dependency cycles
   const setMessagesRef = useRef(setMessages);
-  
+
   // Keep the ref updated with the latest setMessages function
   useEffect(() => {
     setMessagesRef.current = setMessages;
@@ -234,10 +234,10 @@ function ChatInterface({
 
         // Always reset local state
         setMessagesRef.current([]);
-        
+
         // Only reset input
         setInput('');
-        
+
         setIsShrinking(false);
 
         // Add a small bounce effect when the new chat appears
@@ -265,7 +265,16 @@ function ChatInterface({
     [chatContext.isSidebarVisible, chatContext.closeSidebar, handleLoadSession]
   );
 
-  const chatHeader = useMemo(() => <ChatHeader />, []);
+  const chatHeader = useMemo(
+    () => (
+      <ChatHeader
+        onToggleSidebar={chatContext.openSidebar}
+        onNewChat={chatContext.handleNewChat}
+        isGenerating={isGenerating}
+      />
+    ),
+    [chatContext.openSidebar, chatContext.handleNewChat, isGenerating]
+  );
 
   const messageList = useMemo(
     () => (
@@ -307,7 +316,7 @@ function ChatInterface({
       />
     );
   }, [input, isGenerating, setInput, sendMessage, inputRef]);
-  
+
   // Keep isGenerating in sync with context
   useEffect(() => {
     if (chatState.isGenerating !== chatContext.isGenerating) {
