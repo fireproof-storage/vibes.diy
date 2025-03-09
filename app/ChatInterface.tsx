@@ -89,7 +89,10 @@ function ChatInterface({
   // Memoize handler functions to prevent re-renders
   const handleSelectSuggestion = useCallback(
     (suggestion: string) => {
+      // Update both the local state and ChatContext state
       setInput(suggestion);
+      chatContext.setInput(suggestion);
+      
       // Focus the input after setting the value
       setTimeout(() => {
         if (inputRef.current) {
@@ -101,7 +104,7 @@ function ChatInterface({
         }
       }, 0);
     },
-    [inputRef, setInput]
+    [inputRef, setInput, chatContext.setInput]
   );
 
   // Focus input on mount
@@ -295,18 +298,24 @@ function ChatInterface({
     [inputRef]
   );
 
-  // Sync from props to context only on initial mount and when context changes
+  // Sync from context to props when context input changes
   useEffect(() => {
+    if (chatContext.input !== chatState.input) {
+      setInput(chatContext.input);
+    }
+  }, [chatContext.input, chatState.input, setInput]);
+
+  // Sync between props and context bidirectionally
+  useEffect(() => {
+    // Sync from props to context
+    if (chatState.input !== chatContext.input) {
+      chatContext.setInput(chatState.input);
+    }
     
-      // Only set initial values from props to context once
-      if (chatContext.input === '' && chatState.input !== '') {
-        chatContext.setInput(chatState.input);
-      }
-      if (chatContext.isGenerating !== chatState.isGenerating) {
-        chatContext.setIsGenerating(chatState.isGenerating);
-      }
-    
-  }, [chatContext]); // Only run when context changes or on mount
+    if (chatState.isGenerating !== chatContext.isGenerating) {
+      chatContext.setIsGenerating(chatState.isGenerating);
+    }
+  }, [chatContext, chatState.input, chatState.isGenerating]);
 
   return (
     <div className="flex h-full flex-col" style={{ overflow: 'hidden' }}>
