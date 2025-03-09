@@ -19,7 +19,7 @@ function ChatHeader({ onToggleSidebar, onNewChat, isGenerating: propsIsGeneratin
   }
 
   // Simplified handlers that use either context or props directly
-  const toggleSidebar = contextValues?.toggleSidebar || onToggleSidebar;
+  const toggleSidebar = contextValues?.openSidebar || onToggleSidebar;
   const handleNewChat = contextValues?.handleNewChat || onNewChat;
   const isGenerating = contextValues?.isGenerating ?? propsIsGenerating ?? false;
 

@@ -18,14 +18,15 @@ vi.mock('use-fireproof', () => ({
 }));
 
 // Mock the ChatContext for ChatHeader tests
-const toggleSidebar = vi.fn();
+const openSidebar = vi.fn();
 const handleNewChat = vi.fn();
 let isGeneratingValue = false;
 
 vi.mock('../app/context/ChatContext', () => ({
   useChatContext: () => ({
     isGenerating: isGeneratingValue,
-    toggleSidebar,
+    openSidebar,
+    closeSidebar: vi.fn(),
     handleNewChat
   })
 }));

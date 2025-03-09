@@ -3,7 +3,7 @@ import { render, screen, fireEvent } from '@testing-library/react';
 import ChatHeader from '../app/components/ChatHeader';
 
 // Create mock functions we can control
-const toggleSidebar = vi.fn();
+const openSidebar = vi.fn();
 const handleNewChat = vi.fn();
 let isGeneratingValue = false;
 
@@ -11,7 +11,8 @@ let isGeneratingValue = false;
 vi.mock('../app/context/ChatContext', () => ({
   useChatContext: () => ({
     isGenerating: isGeneratingValue,
-    toggleSidebar,
+    openSidebar,
+    closeSidebar: vi.fn(),
     handleNewChat
   })
 }));
@@ -30,13 +31,13 @@ describe('ChatHeader', () => {
     expect(screen.getByLabelText('New Chat')).toBeDefined();
   });
 
-  it('calls toggleSidebar when the toggle button is clicked', () => {
+  it('calls openSidebar when the toggle button is clicked', () => {
     render(<ChatHeader />);
 
     const toggleButton = screen.getByLabelText('Toggle chat history');
     fireEvent.click(toggleButton);
 
-    expect(toggleSidebar).toHaveBeenCalledTimes(1);
+    expect(openSidebar).toHaveBeenCalledTimes(1);
   });
 
   it('calls handleNewChat when the new chat button is clicked', () => {

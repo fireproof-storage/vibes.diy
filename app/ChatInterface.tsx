@@ -98,14 +98,14 @@ function ChatInterface({
 
   // Set up sidebar functions for direct open/close
   const openSidebar = useCallback(() => {
-    if (chatContext && !chatContext.isSidebarVisible) {
-      chatContext.toggleSidebar();
+    if (chatContext) {
+      chatContext.openSidebar();
     }
   }, [chatContext]);
 
   const closeSidebar = useCallback(() => {
-    if (chatContext && chatContext.isSidebarVisible) {
-      chatContext.toggleSidebar();
+    if (chatContext) {
+      chatContext.closeSidebar();
     }
   }, [chatContext]);
 

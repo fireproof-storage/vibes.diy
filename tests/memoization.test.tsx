@@ -10,7 +10,8 @@ vi.mock('../app/context/ChatContext', () => {
   return {
     useChatContext: vi.fn().mockImplementation(() => ({
       isGenerating: false,
-      toggleSidebar: vi.fn(),
+      openSidebar: vi.fn(),
+      closeSidebar: vi.fn(),
       handleNewChat: vi.fn(),
       input: '',
       setInput: vi.fn(),
@@ -74,7 +75,8 @@ describe('Component Memoization', () => {
       // Reset the mock implementation for each test
       vi.mocked(useChatContext).mockImplementation(() => ({
         isGenerating: false,
-        toggleSidebar: vi.fn(),
+        openSidebar: vi.fn(),
+        closeSidebar: vi.fn(),
         handleNewChat: vi.fn(),
         input: '',
         setInput: vi.fn(),
@@ -148,7 +150,8 @@ describe('Component Memoization', () => {
       // Update context mock to simulate a context change
       mockContext.mockImplementation(() => ({
         isGenerating: true, // Changed value
-        toggleSidebar: vi.fn(),
+        openSidebar: vi.fn(),
+        closeSidebar: vi.fn(),
         handleNewChat: vi.fn(),
         input: '',
         setInput: vi.fn(),

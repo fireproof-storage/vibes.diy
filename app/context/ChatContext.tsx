@@ -12,7 +12,8 @@ interface ChatContextState {
   
   // UI state
   isSidebarVisible: boolean;
-  toggleSidebar: () => void;
+  openSidebar: () => void;
+  closeSidebar: () => void;
   
   // Core functions
   handleSendMessage: () => void;
@@ -46,9 +47,13 @@ export function ChatProvider({
   const [isGenerating, setIsGenerating] = useState(initialState.isGenerating || false);
   const [isSidebarVisible, setIsSidebarVisible] = useState(initialState.isSidebarVisible || false);
 
-  // Simple sidebar toggle
-  const toggleSidebar = useCallback(() => {
-    setIsSidebarVisible(prev => !prev);
+  // Sidebar visibility functions
+  const openSidebar = useCallback(() => {
+    setIsSidebarVisible(true);
+  }, []);
+
+  const closeSidebar = useCallback(() => {
+    setIsSidebarVisible(false);
   }, []);
 
   // Start a new chat
@@ -93,7 +98,8 @@ export function ChatProvider({
     isGenerating,
     setIsGenerating,
     isSidebarVisible,
-    toggleSidebar,
+    openSidebar,
+    closeSidebar,
     handleSendMessage,
     handleNewChat
   };
