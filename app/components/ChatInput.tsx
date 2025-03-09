@@ -1,55 +1,51 @@
-import type { ChangeEvent, KeyboardEvent } from 'react';
-import { useEffect } from 'react';
-import { useChatContext } from '../context/ChatContext';
+import type { ChangeEvent, KeyboardEvent, RefObject } from 'react';
+import { useEffect, memo } from 'react';
 
-function ChatInput() {
-  // Use context directly - we can assume it's available
-  const { input, setInput, isGenerating, handleSendMessage, inputRef, autoResizeTextarea } = useChatContext();
+interface ChatInputProps {
+  value: string;
+  onChange: (e: ChangeEvent<HTMLTextAreaElement>) => void;
+  onSend: () => void;
+  onKeyDown: (e: KeyboardEvent<HTMLTextAreaElement>) => void;
+  disabled: boolean;
+  inputRef: RefObject<HTMLTextAreaElement | null>;
+}
 
+function ChatInput({ value, onChange, onSend, onKeyDown, disabled, inputRef }: ChatInputProps) {
   // Initial auto-resize
   useEffect(() => {
-    autoResizeTextarea();
-  }, [autoResizeTextarea]);
-
-  // Handler for input changes
-  const handleChange = (e: ChangeEvent<HTMLTextAreaElement>) => {
-    setInput(e.target.value);
-    autoResizeTextarea();
-  };
-
-  // Handler for key presses
-  const handleKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
-    if (e.key === 'Enter' && !e.shiftKey && !isGenerating) {
-      e.preventDefault();
-      handleSendMessage();
+    // Auto-resize logic
+    const textarea = inputRef.current;
+    if (textarea) {
+      textarea.style.height = 'auto';
+      textarea.style.height = `${Math.max(60, textarea.scrollHeight)}px`;
     }
-  };
+  }, [value, inputRef]);
 
   return (
     <div className="input-area border-light-decorative-00 dark:border-dark-decorative-00 bg-light-background-00 dark:bg-dark-background-00 border-t px-4 py-3">
       <div className="relative flex items-start">
         <textarea
           ref={inputRef}
-          value={input}
-          onChange={handleChange}
-          onKeyDown={handleKeyDown}
+          value={value}
+          onChange={onChange}
+          onKeyDown={onKeyDown}
           className="border-light-decorative-00 dark:border-dark-decorative-00 text-light-primary dark:text-dark-primary bg-light-background-00 dark:bg-dark-background-00 focus:ring-accent-01-light dark:focus:ring-accent-01-dark max-h-[200px] min-h-[90px] w-full flex-1 resize-y rounded-xl border p-2.5 pr-12 text-sm transition-all focus:border-transparent focus:ring-2 focus:outline-none"
           placeholder="Describe the app you want to create..."
-          disabled={isGenerating}
+          disabled={disabled}
           rows={2}
         />
         <button
           type="button"
-          onClick={handleSendMessage}
-          disabled={isGenerating}
+          onClick={onSend}
+          disabled={disabled}
           className={`absolute right-2 bottom-2 flex items-center justify-center rounded-full p-2 text-sm font-medium transition-colors duration-200 ${
-            isGenerating
+            disabled
               ? 'bg-light-decorative-01 dark:bg-dark-decorative-01 text-light-primary dark:text-dark-primary cursor-not-allowed opacity-50'
               : 'bg-accent-01-light dark:bg-accent-01-dark hover:bg-accent-02-light dark:hover:bg-accent-02-dark cursor-pointer text-white'
           }`}
-          aria-label={isGenerating ? 'Generating' : 'Send message'}
+          aria-label={disabled ? 'Generating' : 'Send message'}
         >
-          {isGenerating ? (
+          {disabled ? (
             <svg
               xmlns="http://www.w3.org/2000/svg"
               className="h-5 w-5 animate-spin"

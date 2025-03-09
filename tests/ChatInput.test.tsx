@@ -4,57 +4,86 @@ import ChatInput from '../app/components/ChatInput';
 
 // Create mock state and functions we can control
 let inputValue = '';
-let isGeneratingValue = false;
-const setInput = vi.fn((value) => {
-  inputValue = value;
+const onChange = vi.fn((e) => {
+  inputValue = e.target.value;
 });
-const handleSendMessage = vi.fn();
-
-// Setup a more appropriate mock for the context
-vi.mock('../app/context/ChatContext', () => ({
-  useChatContext: () => ({
-    input: inputValue,
-    setInput,
-    isGenerating: isGeneratingValue,
-    handleSendMessage,
-  }),
-}));
+const onSend = vi.fn();
+const onKeyDown = vi.fn((e) => {
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
+    onSend();
+  }
+});
+const inputRef = { current: null };
 
 describe('ChatInput', () => {
   beforeEach(() => {
     // Reset mocks and values before each test
     vi.resetAllMocks();
     inputValue = '';
-    isGeneratingValue = false;
   });
 
   it('renders correctly', () => {
-    render(<ChatInput />);
+    render(
+      <ChatInput
+        value=""
+        onChange={onChange}
+        onSend={onSend}
+        onKeyDown={onKeyDown}
+        disabled={false}
+        inputRef={inputRef}
+      />
+    );
     expect(screen.getByPlaceholderText('Describe the app you want to create...')).toBeDefined();
   });
 
-  it('calls setInput when text is entered', () => {
-    render(<ChatInput />);
+  it('calls onChange when text is entered', () => {
+    render(
+      <ChatInput
+        value=""
+        onChange={onChange}
+        onSend={onSend}
+        onKeyDown={onKeyDown}
+        disabled={false}
+        inputRef={inputRef}
+      />
+    );
 
     const textArea = screen.getByPlaceholderText('Describe the app you want to create...');
     fireEvent.change(textArea, { target: { value: 'Hello world' } });
 
-    expect(setInput).toHaveBeenCalledWith('Hello world');
+    expect(onChange).toHaveBeenCalled();
   });
 
-  it('calls handleSendMessage when send button is clicked', () => {
-    render(<ChatInput />);
+  it('calls onSend when send button is clicked', () => {
+    render(
+      <ChatInput
+        value=""
+        onChange={onChange}
+        onSend={onSend}
+        onKeyDown={onKeyDown}
+        disabled={false}
+        inputRef={inputRef}
+      />
+    );
 
     const sendButton = screen.getByLabelText('Send message');
     fireEvent.click(sendButton);
 
-    expect(handleSendMessage).toHaveBeenCalledTimes(1);
+    expect(onSend).toHaveBeenCalledTimes(1);
   });
 
-  it('disables the text area and send button when isGenerating is true', () => {
-    isGeneratingValue = true;
-
-    render(<ChatInput />);
+  it('disables the text area and send button when disabled is true', () => {
+    render(
+      <ChatInput
+        value=""
+        onChange={onChange}
+        onSend={onSend}
+        onKeyDown={onKeyDown}
+        disabled={true}
+        inputRef={inputRef}
+      />
+    );
 
     const textArea = screen.getByPlaceholderText('Describe the app you want to create...');
     const sendButton = screen.getByLabelText('Generating');
@@ -63,24 +92,24 @@ describe('ChatInput', () => {
     expect(sendButton).toBeDisabled();
 
     fireEvent.click(sendButton);
-    expect(handleSendMessage).not.toHaveBeenCalled();
+    expect(onSend).not.toHaveBeenCalled();
   });
 
-  it('calls handleSendMessage when Enter is pressed', () => {
-    render(<ChatInput />);
+  it('calls onKeyDown when Enter is pressed', () => {
+    render(
+      <ChatInput
+        value=""
+        onChange={onChange}
+        onSend={onSend}
+        onKeyDown={onKeyDown}
+        disabled={false}
+        inputRef={inputRef}
+      />
+    );
 
     const textArea = screen.getByPlaceholderText('Describe the app you want to create...');
     fireEvent.keyDown(textArea, { key: 'Enter', shiftKey: false });
 
-    expect(handleSendMessage).toHaveBeenCalledTimes(1);
-  });
-
-  it('does not call handleSendMessage when Enter is pressed with Shift', () => {
-    render(<ChatInput />);
-
-    const textArea = screen.getByPlaceholderText('Describe the app you want to create...');
-    fireEvent.keyDown(textArea, { key: 'Enter', shiftKey: true });
-
-    expect(handleSendMessage).not.toHaveBeenCalled();
+    expect(onKeyDown).toHaveBeenCalled();
   });
 });

@@ -18,6 +18,8 @@ vi.mock('../app/context/ChatContext', () => {
       setIsGenerating: vi.fn(),
       isSidebarVisible: false,
       handleSendMessage: vi.fn(),
+      inputRef: { current: null },
+      autoResizeTextarea: vi.fn(),
     })),
     // We need to pass through the real ChatProvider for other tests
     ChatProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>,
@@ -83,6 +85,8 @@ describe('Component Memoization', () => {
         setIsGenerating: vi.fn(),
         isSidebarVisible: false,
         handleSendMessage: vi.fn(),
+        inputRef: { current: null },
+        autoResizeTextarea: vi.fn(),
       }));
     });
 
@@ -158,6 +162,8 @@ describe('Component Memoization', () => {
         setIsGenerating: vi.fn(),
         isSidebarVisible: false,
         handleSendMessage: vi.fn(),
+        inputRef: { current: null },
+        autoResizeTextarea: vi.fn(),
       }));
 
       // Force a re-render
