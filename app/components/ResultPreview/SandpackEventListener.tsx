@@ -19,12 +19,18 @@ const SandpackEventListener: React.FC<SandpackEventListenerProps> = ({
 
     const unsubscribe = listen((message) => {
       if (message.type === 'start') {
+        console.log('Sandpack bundling started');
         setBundlingComplete(false);
       } else if (message.type === 'urlchange') {
+        console.log('Sandpack bundling complete, isStreaming:', isStreaming);
         setBundlingComplete(true);
 
+        // Only switch to preview if we're not streaming
         if (!isStreaming) {
-          setActiveView('preview');
+          console.log('Switching to preview view after bundling');
+          setTimeout(() => {
+            setActiveView('preview');
+          }, 100); // Small delay to ensure state updates have propagated
         }
       }
     });

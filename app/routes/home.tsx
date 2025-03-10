@@ -48,8 +48,58 @@ export default function Home() {
   const [shareStatus, setShareStatus] = useState<string>('');
   const [isSharedApp, setIsSharedApp] = useState<boolean>(false);
   const [sessionId, setSessionId] = useState<string | null>(null);
+  const [pendingTitle, setPendingTitle] = useState<string | null>(null);
+  const [isCreatingSession, setIsCreatingSession] = useState(false);
   const { database } = useFireproof('fireproof-chat-history');
   const navigate = useNavigate();
+
+  // Effect to handle updating the title when sessionId becomes available
+  // This needs to run before other effects that might depend on sessionId
+  useEffect(() => {
+    console.log('Title effect running - sessionId:', sessionId, 'pendingTitle:', pendingTitle);
+    
+    if (!sessionId || !pendingTitle) return;
+    
+    // Skip update if we're in the process of creating a session
+    if (isCreatingSession) {
+      console.log('Session creation in progress, title will be set during creation');
+      return;
+    }
+    
+    const updateTitleWhenReady = async () => {
+      console.log('Attempting to update title now that sessionId is available');
+      try {
+        // Get the current session document
+        const sessionDoc = await database.get(sessionId);
+        
+        // Validate sessionDoc before updating
+        if (!sessionDoc) {
+          console.error('Cannot update title: session document is missing');
+          return;
+        }
+
+        // Use proper type assertion for the session document
+        console.log('Found session document:', sessionDoc._id, 'updating with new title:', pendingTitle);
+
+        // Create a safe update object without undefined values
+        const updatedDoc = {
+          ...sessionDoc,
+          title: pendingTitle || 'Untitled Chat', // Ensure title is never undefined
+        };
+
+        // Save the updated document
+        await database.put(updatedDoc);
+        console.log('Successfully updated session title to:', pendingTitle);
+        
+        // Clear the pending title after successful update
+        setPendingTitle(null);
+      } catch (error) {
+        console.error('Error updating session title:', error, 'for sessionId:', sessionId);
+      }
+    };
+
+    updateTitleWhenReady();
+  }, [sessionId, pendingTitle, database, isCreatingSession]);
 
   const chatState = useChat(
     (code: string, dependencies?: Record<string, string>) => {
@@ -60,18 +110,29 @@ export default function Home() {
     },
     async (generatedTitle: string) => {
       // Handle the generated title
-      console.log('Title generated:', sessionId, generatedTitle);
+      console.log('Title generated:', sessionId, generatedTitle, 'isCreatingSession:', isCreatingSession);
 
-      // If we have a session ID, update the title in the database
+      // Safety check - don't proceed if title is undefined
+      if (!generatedTitle) {
+        console.warn('Skipping title update - received undefined title');
+        return;
+      }
+
       if (sessionId) {
         try {
           // Get the current session document
           const sessionDoc = await database.get(sessionId);
+          
+          // Validate sessionDoc before updating
+          if (!sessionDoc) {
+            console.error('Cannot update title: session document is missing');
+            return;
+          }
 
-          // Update the title
+          // Create a safe update object without undefined values
           const updatedDoc = {
             ...sessionDoc,
-            title: generatedTitle,
+            title: generatedTitle || 'Untitled Chat', // Ensure title is never undefined
           };
 
           // Save the updated document
@@ -80,9 +141,47 @@ export default function Home() {
         } catch (error) {
           console.error('Error updating session title:', error);
         }
+      } else {
+        // If session is being created, store title for creation process to use
+        if (isCreatingSession) {
+          console.log('Session creation in progress, storing title to be applied during creation:', generatedTitle);
+        } else {
+          // If sessionId is not available yet and no session is being created, store for later
+          console.log('No sessionId available yet, storing title for later:', generatedTitle);
+        }
+        setPendingTitle(generatedTitle);
       }
     }
   );
+
+  const handleSessionCreated = useCallback((newSessionId: string) => {
+    console.log('Session created with ID:', newSessionId, 'Pending title:', pendingTitle);
+    // Validate sessionId before setting it
+    if (!newSessionId) {
+      console.error('Cannot set session ID: received undefined or empty ID');
+      return;
+    }
+    
+    // Set the session ID and mark creation as complete
+    setSessionId(newSessionId);
+    setIsCreatingSession(false);
+    
+    // Note: pendingTitle will be handled by the useEffect
+  }, [pendingTitle]);
+
+  const handleNewChat = useCallback(() => {
+    console.log('Starting new chat, clearing session');
+    setSessionId(null);
+    setShareStatus('');
+    setPendingTitle(null);
+    setIsCreatingSession(false);
+    setState({
+      generatedCode: '',
+      dependencies: {},
+    });
+    chatState.setMessages([]);
+    navigate('/');
+  }, [navigate, chatState.setMessages]);
 
   // Check for state in URL on component mount
   useEffect(() => {
@@ -99,23 +198,6 @@ export default function Home() {
       }
     }
   }, []);
-
-  const handleSessionCreated = useCallback((newSessionId: string) => {
-    setSessionId(newSessionId);
-    // We don't need to navigate here, as the ChatInterface will do that
-  }, []);
-
-  const handleNewChat = useCallback(() => {
-    setSessionId(null);
-    setShareStatus('');
-    setState({
-      generatedCode: '',
-      dependencies: {},
-    });
-    chatState.setMessages([]);
-    // navigate to the home page
-    navigate('/');
-  }, [navigate, chatState.setMessages]);
 
   const handleCodeGenerated = useCallback(
     (code: string, dependencies: Record<string, string> = {}) => {
@@ -248,16 +330,48 @@ export default function Home() {
         }}
         onSendMessage={(input) => {
           if (input.trim()) {
-            if (!sessionId) {
-              // If no session exists, create one
+            if (!sessionId && !isCreatingSession) {
+              // If no session exists AND we're not in the process of creating one, create one
+              console.log('Creating new session with input:', input.substring(0, 50), 'pendingTitle:', pendingTitle);
+              setIsCreatingSession(true);
+              
               const newSession = {
                 timestamp: Date.now(),
                 title: input.length > 50 ? `${input.substring(0, 50)}...` : input,
+                // Ensure we have a messages array even if empty
+                messages: [],
+                // Add a type for better data structure consistency
+                type: 'session'
               };
 
-              database.put(newSession).then((doc) => {
-                handleSessionCreated(doc.id);
-              });
+              // If we already have a pendingTitle, apply it now
+              if (pendingTitle) {
+                newSession.title = pendingTitle;
+                console.log('Using pending title for new session:', pendingTitle);
+              }
+
+              database.put(newSession)
+                .then((doc) => {
+                  if (doc && doc.id) {
+                    console.log('Created session with ID:', doc.id, 'title:', newSession.title);
+                    handleSessionCreated(doc.id);
+                    
+                    // If we used pendingTitle, clear it
+                    if (pendingTitle) {
+                      setPendingTitle(null);
+                    }
+                  } else {
+                    console.error('Failed to create session: invalid document returned');
+                  }
+                })
+                .catch(error => {
+                  console.error('Error creating new session:', error);
+                })
+                .finally(() => {
+                  setIsCreatingSession(false);
+                });
+            } else if (sessionId) {
+              console.log('Using existing session:', sessionId);
             }
 
             // Set the input directly on chatState
@@ -274,7 +388,15 @@ export default function Home() {
         <ChatInterface
           chatState={chatState}
           sessionId={sessionId}
-          onSessionCreated={handleSessionCreated}
+          onSessionCreated={(newSessionId) => {
+            // Only set the session ID if we don't already have one
+            // This prevents duplicate session creation
+            if (!sessionId && !isCreatingSession) {
+              handleSessionCreated(newSessionId);
+            } else {
+              console.log('Ignoring duplicate session creation, already have sessionId:', sessionId);
+            }
+          }}
           onNewChat={handleNewChat}
           onCodeGenerated={handleCodeGenerated}
         />
@@ -288,6 +410,9 @@ export default function Home() {
     database,
     chatState.setInput,
     chatState.sendMessage,
+    pendingTitle,
+    isCreatingSession,
+    setPendingTitle,
   ]);
 
   // Keep the memoized ResultPreview but remove debug logs

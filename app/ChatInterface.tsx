@@ -225,6 +225,18 @@ function ChatInterface({
 
   // Track streaming state to detect when streaming completes
   const wasGeneratingRef = useRef(isGenerating);
+  // Track if a session is currently being created to prevent duplicates
+  const isCreatingSessionRef = useRef(false);
+
+  // Updated method to handle session creation safely
+  const handleSessionCreatedSafely = useCallback((sessionId: string) => {
+    // Only notify parent if we don't already have a session ID
+    // This adds an extra layer of protection against double creation
+    if (sessionId && onSessionCreated && !isCreatingSessionRef.current) {
+      console.log('Safely creating session with ID:', sessionId);
+      onSessionCreated(sessionId);
+    }
+  }, [onSessionCreated]);
 
   // Save messages to Fireproof ONLY when streaming completes or on message count change
   useEffect(() => {
@@ -238,28 +250,49 @@ function ChatInterface({
         const title = firstUserMessage?.text || 'Untitled Chat';
 
         try {
-          const sessionData = {
+          // Create a safe session data object without undefined values
+          const sessionData: Record<string, any> = {
             type: 'session',
             title,
-            messages,
+            messages: messages.map(msg => ({
+              ...msg,
+              // Ensure no undefined values in message objects
+              text: msg.text || '',
+              type: msg.type || 'unknown',
+              // Only include code and dependencies if they exist
+              ...(msg.code ? { code: msg.code } : {}),
+              ...(msg.dependencies ? { dependencies: msg.dependencies } : {})
+            })),
             timestamp: Date.now(),
-            ...(sessionId ? { _id: sessionId } : {}),
           };
 
-          const result = await database.put(sessionData);
-
-          // If this was a new session, notify the parent component using optional chaining
-          if (!sessionId) {
+          // Only add _id if sessionId exists
+          if (sessionId) {
+            sessionData._id = sessionId;
+            const result = await database.put(sessionData);
+          } else if (!isCreatingSessionRef.current) {
+            // Only create a new session if we don't have a sessionId AND
+            // we're not already in the process of creating one
+            isCreatingSessionRef.current = true;
+            
+            const result = await database.put(sessionData);
+            
+            // If this was a new session, notify the parent component
             // Update the URL in the browser history without reloading
             const encodedTitle = encodeTitle(title);
             const url = `/session/${result.id}/${encodedTitle}`;
             window.history.pushState({ sessionId: result.id }, '', url);
 
-            // Notify parent component
-            onSessionCreated?.(result.id);
+            // Use our safe method to notify parent component
+            handleSessionCreatedSafely(result.id);
+            
+            // Reset the flag after session creation is complete
+            isCreatingSessionRef.current = false;
           }
         } catch (error) {
           console.error('Error saving session to Fireproof:', error);
+          // Reset the flag on error
+          isCreatingSessionRef.current = false;
         }
       }
 
@@ -268,7 +301,7 @@ function ChatInterface({
     }
 
     saveSessionData();
-  }, [isGenerating, messages, sessionId, database, onSessionCreated]);
+  }, [isGenerating, messages, sessionId, database, handleSessionCreatedSafely]);
 
   // Load a session from the sidebar
   const handleLoadSession = useCallback(
@@ -365,19 +398,6 @@ function ChatInterface({
 
     // No need to call onSessionCreated since the page will reload
     // and the Session component will handle initializing with the new sessionId
-  };
-
-  // This function will be called when a new session is created
-  const handleSessionCreated = (newSessionId: string) => {
-    // If there's a provided callback, call it
-    if (onSessionCreated) {
-      onSessionCreated(newSessionId);
-    }
-
-    // Navigate to the new session without reloading by pushing to history state
-    // This allows for a seamless experience when creating a new session during streaming
-    const url = `/session/${newSessionId}/new-session`;
-    window.history.pushState({ sessionId: newSessionId }, '', url);
   };
 
   // Memoize child components to prevent unnecessary re-renders
