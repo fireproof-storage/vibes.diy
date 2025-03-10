@@ -122,6 +122,13 @@ export class RegexParser {
       this.emit('text', this.buffer, this.displayText + this.buffer);
       this.buffer = '';
     }
+
+    // Log final state
+    console.debug('Final state:', {
+      dependencies: this.dependencies,
+      displayText: this.displayText,
+      codeBlockContent: this.codeBlockContent,
+    });
   }
 
   /**
@@ -145,6 +152,9 @@ export class RegexParser {
       // Update buffer to contain only content after this match
       this.buffer = this.buffer.slice(match.index + match[0].length);
     }
+
+    // Log regex matches
+    console.debug('Regex matches:', match);
   }
 
   /**
@@ -152,6 +162,9 @@ export class RegexParser {
    * @private
    */
   private _processChatChunk(chunk: string): void {
+    // Log state changes
+    console.debug('Processing chat chunk:', chunk);
+
     // If in dependency mode, handle specially
     if (this.inDependencyMode) {
       this.dependencyContent += chunk;
@@ -277,6 +290,9 @@ export class RegexParser {
       this.displayText += currentDisplayText;
       this.emit('text', currentDisplayText, this.displayText);
     }
+
+    // Log text processing
+    console.debug('Processed display text:', currentDisplayText);
   }
 
   /**

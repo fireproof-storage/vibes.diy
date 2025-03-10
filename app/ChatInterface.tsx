@@ -360,18 +360,24 @@ function ChatInterface({
         onChange={(e) => {
           setInput(e.target.value);
         }}
-        onSend={sendMessage}
+        onSend={() => {
+          console.debug('Sending message:', input); // Add logging
+          chatState.parserState.current.reset(); // Ensure parser is reset for each new message
+          sendMessage();
+        }}
         disabled={isGenerating}
         inputRef={inputRef}
         onKeyDown={(e) => {
           if (e.key === 'Enter' && !e.shiftKey && !isGenerating) {
             e.preventDefault();
+            console.debug('Sending message:', input); // Add logging
+            chatState.parserState.current.reset(); // Ensure parser is reset for each new message
             sendMessage();
           }
         }}
       />
     );
-  }, [input, isGenerating, setInput, sendMessage, inputRef]);
+  }, [input, isGenerating, setInput, sendMessage, inputRef, chatState.parserState]);
 
   // Keep isGenerating in sync with context
   useEffect(() => {

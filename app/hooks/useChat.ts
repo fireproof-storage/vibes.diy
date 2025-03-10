@@ -67,6 +67,7 @@ export function useChat(
           const result = (newMessages as Function)(prev);
           // Only update if the result is actually different
           if (JSON.stringify(result) !== JSON.stringify(prev)) {
+            console.debug('Updating messages:', result);
             return result;
           }
           return prev;
@@ -75,6 +76,7 @@ export function useChat(
         // Only update if the new messages are different
         setMessages((prev) => {
           if (JSON.stringify(newMessages) !== JSON.stringify(prev)) {
+            console.debug('Updating messages:', newMessages);
             return newMessages;
           }
           return prev;
@@ -86,7 +88,7 @@ export function useChat(
 
   // Function to build conversation history for the prompt
   function buildMessageHistory() {
-    return messages.map((msg) => ({
+    const history = messages.map((msg) => ({
       role: msg.type === 'user' ? ('user' as const) : ('assistant' as const),
       content:
         msg.type === 'user'
@@ -99,6 +101,8 @@ export function useChat(
                 : ''
             }`,
     }));
+    console.debug('Message history:', history);
+    return history;
   }
 
   // Initialize parser with event listeners
@@ -126,6 +130,7 @@ export function useChat(
       // Dependencies detected
     });
 
+    console.debug('Parser initialized with event listeners');
     return parserState.current;
   }, [streamingCode]);
 
