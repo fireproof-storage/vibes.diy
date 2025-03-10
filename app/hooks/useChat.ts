@@ -7,7 +7,8 @@ const CHOSEN_MODEL = 'anthropic/claude-3.7-sonnet';
 // const CHOSEN_MODEL = 'qwen/qwq-32b:free';
 
 export function useChat(
-  onCodeGenerated: (code: string, dependencies?: Record<string, string>) => void
+  onCodeGenerated: (code: string, dependencies?: Record<string, string>) => void,
+  onGeneratedTitle?: (title: string) => void
 ) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState<string>('');
@@ -251,15 +252,61 @@ export function useChat(
         setMessages((prev) => [
           ...prev,
           {
-            text: cleanedMessage || "Here's your generated app:",
+            text: cleanedMessage,
             type: 'ai',
-            code: completedCode || parser.codeBlockContent,
+            code: parser.codeBlockContent,
             dependencies: parser.dependencies,
           },
         ]);
 
-        // Update the editor with code and dependencies
-        onCodeGenerated(completedCode || parser.codeBlockContent, parser.dependencies);
+        // Store the completed message
+        setCompletedMessage(cleanedMessage);
+
+        // Execute callback with generated code if available
+        if (parser.codeBlockContent) {
+          onCodeGenerated(parser.codeBlockContent, parser.dependencies);
+        }
+
+        // Generate a title from the final response
+        if (onGeneratedTitle) {
+          try {
+            const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+              method: 'POST',
+              headers: {
+                Authorization: `Bearer ${import.meta.env.VITE_OPENROUTER_API_KEY}`,
+                'Content-Type': 'application/json',
+                'HTTP-Referer': window.location.origin,
+                'X-Title': 'Fireproof App Builder',
+              },
+              body: JSON.stringify({
+                model: CHOSEN_MODEL,
+                stream: false,
+                messages: [
+                  {
+                    role: 'system',
+                    content:
+                      'You are a helpful assistant that generates short, descriptive titles. Create a concise title (3-5 words) that captures the essence of the content.',
+                  },
+                  {
+                    role: 'user',
+                    content: `Generate a short, descriptive title (3-5 words) for this app:\n\n${cleanedMessage}`,
+                  },
+                ],
+              }),
+            });
+
+            if (response.ok) {
+              const data = await response.json();
+              const title = data.choices[0]?.message?.content?.trim() || 'New Chat';
+              onGeneratedTitle(title);
+            } else {
+              onGeneratedTitle('New Chat');
+            }
+          } catch (error) {
+            console.error('Error generating title:', error);
+            onGeneratedTitle('New Chat');
+          }
+        }
 
         // Add this before setting the final message
         console.log('Debug values:', {

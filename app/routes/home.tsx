@@ -48,16 +48,93 @@ export default function Home() {
   const [shareStatus, setShareStatus] = useState<string>('');
   const [isSharedApp, setIsSharedApp] = useState<boolean>(false);
   const [sessionId, setSessionId] = useState<string | null>(null);
+  const [pendingTitle, setPendingTitle] = useState<string | null>(null);
+  const [isCreatingSession, setIsCreatingSession] = useState(false);
   const { database } = useFireproof('fireproof-chat-history');
   const navigate = useNavigate();
 
   // Hoist the useChat hook to this component
-  const chatState = useChat((code: string, dependencies?: Record<string, string>) => {
-    setState({
-      generatedCode: code,
-      dependencies: dependencies || {},
-    });
-  });
+  const chatState = useChat(
+    (code: string, dependencies?: Record<string, string>) => {
+      setState({
+        generatedCode: code,
+        dependencies: dependencies || {},
+      });
+    },
+    async (generatedTitle: string) => {
+      // Handle the generated title
+      console.log('Title generated:', sessionId, generatedTitle, 'isCreatingSession:', isCreatingSession);
+
+      // Safety check - don't proceed if title is undefined
+      if (!generatedTitle) {
+        console.warn('Skipping title update - received undefined title');
+        return;
+      }
+
+      if (sessionId) {
+        try {
+          // Get the current session document
+          const sessionDoc = await database.get(sessionId);
+          
+          // Validate sessionDoc before updating
+          if (!sessionDoc) {
+            console.error('Cannot update title: session document is missing');
+            return;
+          }
+
+          // Create a safe update object without undefined values
+          const updatedDoc = {
+            ...sessionDoc,
+            title: generatedTitle || 'Untitled Chat', // Ensure title is never undefined
+          };
+
+          // Save the updated document
+          await database.put(updatedDoc);
+          console.log('Updated session title to:', generatedTitle);
+        } catch (error) {
+          console.error('Error updating session title:', error);
+        }
+      } else {
+        // If no sessionId yet, store the title for later use
+        setPendingTitle(generatedTitle);
+      }
+    }
+  );
+
+  // Apply pending title when sessionId becomes available
+  useEffect(() => {
+    if (!sessionId || !pendingTitle) return;
+    
+    // Skip update if we're in the process of creating a session
+    if (isCreatingSession) {
+      console.log('Session creation in progress, title will be set during creation');
+      return;
+    }
+    
+    const updateTitleWhenReady = async () => {
+      try {
+        // Get the current session document
+        const sessionDoc = await database.get(sessionId);
+        
+        // Create a safe update object without undefined values
+        const updatedDoc = {
+          ...sessionDoc,
+          title: pendingTitle || 'Untitled Chat',
+        };
+
+        // Save the updated document
+        await database.put(updatedDoc);
+        console.log('Successfully updated session title to:', pendingTitle);
+        
+        // Clear the pending title after successful update
+        setPendingTitle(null);
+      } catch (error) {
+        console.error('Error updating session title:', error);
+      }
+    };
+
+    updateTitleWhenReady();
+  }, [sessionId, pendingTitle, database, isCreatingSession]);
 
   // Check for state in URL on component mount
   useEffect(() => {
@@ -178,6 +255,7 @@ export default function Home() {
             if (input.trim()) {
               if (!sessionId) {
                 // If no session exists, create one
+                setIsCreatingSession(true);
                 const newSession = {
                   timestamp: Date.now(),
                   title: input.length > 50 ? `${input.substring(0, 50)}...` : input,
@@ -185,6 +263,10 @@ export default function Home() {
 
                 database.put(newSession).then((doc) => {
                   handleSessionCreated(doc.id);
+                  setIsCreatingSession(false);
+                }).catch(err => {
+                  console.error('Error creating session:', err);
+                  setIsCreatingSession(false);
                 });
               }
             }
