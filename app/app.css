@@ -43,6 +43,39 @@
     'Segoe UI Symbol', 'Noto Color Emoji';
 }
 
+/* Enhanced prose styling for structured messages */
+.structured-message .prose ul,
+.structured-message .prose ol {
+  margin-top: 1em;
+  margin-bottom: 1em;
+  padding-left: 1.5em;
+}
+
+.structured-message .prose ul {
+  list-style-type: disc;
+}
+
+.structured-message .prose ol {
+  list-style-type: decimal;
+}
+
+.structured-message .prose li {
+  margin-top: 0.5em;
+  margin-bottom: 0.5em;
+  padding-left: 0.375em;
+}
+
+.structured-message .prose li > p {
+  margin-top: 0.75em;
+  margin-bottom: 0.75em;
+}
+
+.structured-message .prose p {
+  margin-top: 1em;
+  margin-bottom: 1em;
+  line-height: 1.6;
+}
+
 html,
 body {
   @apply bg-light-background-00 dark:bg-dark-background-00 text-light-primary dark:text-dark-primary;

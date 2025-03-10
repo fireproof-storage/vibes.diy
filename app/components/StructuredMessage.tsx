@@ -1,5 +1,15 @@
 import React, { useState } from 'react';
 import type { ChatMessage } from '../types/chat';
+import ReactMarkdown from 'react-markdown';
+
+// Helper function to render markdown content with proper styling
+const renderMarkdownContent = (text: string) => {
+  return (
+    <div className="prose prose-sm dark:prose-invert max-w-none">
+      <ReactMarkdown>{text}</ReactMarkdown>
+    </div>
+  );
+};
 
 // Helper function to parse raw content into segments if segments aren't available
 function parseRawContent(rawContent: string) {
@@ -72,7 +82,9 @@ export default function StructuredMessage({ message }: StructuredMessageProps) {
   if (!segments || segments.length === 0) {
     return (
       <div className="message">
-        <div className="message-text">{message.text}</div>
+        <div className="message-text">
+          {renderMarkdownContent(message.text)}
+        </div>
         {message.code && (
           <div className="message-code">
             <pre className="bg-gray-50 p-4 rounded overflow-auto">
@@ -103,6 +115,9 @@ export default function StructuredMessage({ message }: StructuredMessageProps) {
   postCode = postCode.replace(/^[\s\n]*\);?\s*\}[\s\n]*```[\s\n]*/i, '');
   postCode = postCode.replace(/^[\s\n]*\);[\s\n]*/i, '');
   
+  // Format numbered lists more nicely in postCode
+  postCode = postCode.replace(/(\d+)\.\s+/g, '$1. ');
+  
   // Only render if we have content
   const hasPreCode = !!preCode.trim();
   const hasCode = !!code.trim();
@@ -115,21 +130,21 @@ export default function StructuredMessage({ message }: StructuredMessageProps) {
     <div className="structured-message">
       {/* Pre-code section - optional */}
       {hasPreCode && (
-        <div className="pre-code-section">
-          {preCode}
+        <div className="pre-code-section text-light-primary dark:text-dark-primary mb-4">
+          {renderMarkdownContent(preCode)}
         </div>
       )}
       
       {/* Code section - optional */}
       {hasCode && (
-        <div className="code-section border rounded-lg my-4 overflow-hidden">
-          <div className="code-header bg-gray-100 p-3 flex justify-between items-center">
+        <div className="code-section border rounded-lg my-4 overflow-hidden shadow-sm">
+          <div className="code-header bg-gray-100 dark:bg-gray-700 p-3 flex justify-between items-center">
             <div className="code-info">
               <span className="code-icon mr-2">💻</span>
               <span className="code-stats font-medium">{codeLineCount} lines of code</span>
             </div>
             <button 
-              className="expand-button px-3 py-1 rounded bg-blue-50 hover:bg-blue-100 text-sm"
+              className="expand-button px-3 py-1 rounded bg-blue-50 hover:bg-blue-100 dark:bg-blue-900 dark:hover:bg-blue-800 text-sm transition-colors"
               onClick={() => setIsExpanded(!isExpanded)}
             >
               {isExpanded ? 'Collapse' : 'Expand'}
@@ -138,7 +153,7 @@ export default function StructuredMessage({ message }: StructuredMessageProps) {
           
           {isExpanded && (
             <div className="code-content">
-              <pre className="bg-gray-50 p-4 m-0 overflow-auto">
+              <pre className="bg-gray-50 dark:bg-gray-800 p-4 m-0 overflow-auto">
                 <code>{code}</code>
               </pre>
             </div>
@@ -148,8 +163,8 @@ export default function StructuredMessage({ message }: StructuredMessageProps) {
       
       {/* Post-code section - only shown if we have both code and post-code content */}
       {hasCode && hasPostCode && (
-        <div className="post-code-section">
-          {postCode}
+        <div className="post-code-section text-light-primary dark:text-dark-primary mt-4">
+          {renderMarkdownContent(postCode)}
         </div>
       )}
     </div>
