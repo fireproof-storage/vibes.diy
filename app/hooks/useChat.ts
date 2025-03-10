@@ -19,6 +19,8 @@ export function useChat(
   const [isStreaming, setIsStreaming] = useState(false);
   const [completedCode, setCompletedCode] = useState<string>('');
   const [completedMessage, setCompletedMessage] = useState('');
+  // Track message segments for debugging
+  const segmentTracker = useRef<Array<{type: 'text' | 'code' | 'pre-code' | 'post-code', content: string}>>([]);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const parserState = useRef<RegexParser>(new RegexParser());
@@ -144,6 +146,8 @@ export function useChat(
       setIsGenerating(true);
       // Reset the raw stream buffer
       rawStreamBuffer.current = '';
+      // Reset segment tracker
+      segmentTracker.current = [];
 
       // Add user message
       setMessages((prev) => [...prev, { text: input, type: 'user' }]);
@@ -219,8 +223,38 @@ export function useChat(
                   // Feed the chunk to our parser
                   parser.write(content);
 
+                  // Track content for segment analysis
+                  if (parser.inCodeBlock) {
+                    // We're in code block mode
+                    if (segmentTracker.current.length === 0 || 
+                        segmentTracker.current[segmentTracker.current.length - 1].type !== 'code') {
+                      // Start new code segment
+                      console.debug('🧩 NEW CODE SEGMENT STARTED');
+                      segmentTracker.current.push({type: 'code', content: ''});
+                    }
+                    // Update current code segment
+                    const currentSegment = segmentTracker.current[segmentTracker.current.length - 1];
+                    currentSegment.content = parser.codeBlockContent;
+                  } else {
+                    // We're in text mode
+                    if (segmentTracker.current.length === 0) {
+                      // First segment is pre-code text
+                      console.debug('🧩 NEW PRE-CODE TEXT SEGMENT STARTED');
+                      segmentTracker.current.push({type: 'pre-code', content: content});
+                    } else if (segmentTracker.current[segmentTracker.current.length - 1].type === 'code') {
+                      // After code, this is post-code text
+                      console.debug('🧩 NEW POST-CODE TEXT SEGMENT STARTED');
+                      segmentTracker.current.push({type: 'post-code', content: content});
+                    } else {
+                      // Continue existing text segment
+                      const currentSegment = segmentTracker.current[segmentTracker.current.length - 1];
+                      currentSegment.content += content;
+                    }
+                  }
+
                   // Direct check for code block markers
                   if (!writingCodeMessageAdded && content.includes('```')) {
+                    console.debug('🔍 CODE BLOCK DETECTED:', content);
                     setCurrentStreamedText((prevText) => {
                       const updatedText = prevText + '\n\n> Writing code...\n\n';
                       return updatedText;
@@ -230,6 +264,7 @@ export function useChat(
 
                   // Also update streaming code directly from parser's current state
                   if (parser.inCodeBlock) {
+                    console.debug('📝 UPDATING CODE BLOCK:', parser.codeBlockContent.length, 'chars');
                     setStreamingCode(parser.codeBlockContent);
                   }
                 }
@@ -242,6 +277,19 @@ export function useChat(
 
         // End the parser stream
         parser.end();
+        console.debug('🏁 STREAM ENDED - Parser state:', {
+          inCodeBlock: parser.inCodeBlock,
+          codeLength: parser.codeBlockContent.length,
+          textLength: parser.displayText.length,
+          dependencies: Object.keys(parser.dependencies).length
+        });
+
+        // Log segment structure
+        console.debug('📊 MESSAGE SEGMENTS:', segmentTracker.current.map(segment => ({
+          type: segment.type,
+          length: segment.content.length,
+          preview: segment.content.substring(0, 30).replace(/\n/g, '\\n') + '...'
+        })));
 
         // Clean up the message text - use parser's displayText instead of currentStreamedText
         let cleanedMessage = parser.displayText || currentStreamedText;
@@ -256,12 +304,34 @@ export function useChat(
           .replace(/^\s*""\s*:\s*""[}\s]*/i, '') // Remove artifacts
           .trim();
 
+        console.debug('🧹 CLEANED MESSAGE:', cleanedMessage.substring(0, 100) + '...');
+
         // If cleanedMessage is still empty but we have code, add a default message
         if (!cleanedMessage && parser.codeBlockContent) {
           cleanedMessage = "Here's your code:";
+          console.debug('📌 USING DEFAULT MESSAGE for empty text with code');
         }
 
         // Add AI response with code and dependencies
+        console.debug('💬 FINAL MESSAGE STRUCTURE:', {
+          textLength: cleanedMessage.length,
+          hasCode: !!parser.codeBlockContent,
+          codeLength: parser.codeBlockContent.length,
+          dependenciesCount: Object.keys(parser.dependencies).length
+        });
+        
+        // Demonstrate how a structured message could look
+        const structuredMessageExample = {
+          type: 'ai',
+          segments: segmentTracker.current.map(segment => ({
+            type: segment.type,
+            content: segment.content.length > 50 
+              ? segment.content.substring(0, 50) + '...' 
+              : segment.content
+          }))
+        };
+        console.debug('🔮 POTENTIAL STRUCTURED MESSAGE:', structuredMessageExample);
+        
         setMessages((prev) => [
           ...prev,
           {
