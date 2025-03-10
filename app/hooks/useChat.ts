@@ -400,30 +400,80 @@ export function useChat(
           console.debug('📌 USING DEFAULT MESSAGE for empty text with code');
         }
 
+        // Use the message segments to rebuild a clean final message with indicators
+        let finalMessageText = cleanedMessage;
+        
+        // Add indicators for each code segment
+        const codeSegments = segmentTracker.current.filter(segment => segment.type === 'code');
+        if (codeSegments.length > 0) {
+          // If the message just ends with a code block, add our indicators
+          const codeLines = parser.codeBlockContent.split('\n');
+          const codeLineCount = codeLines.length;
+          
+          // Get the first meaningful line for the preview
+          let firstCodeLine = '';
+          for (let i = 0; i < codeLines.length; i++) {
+            if (i === 0 && codeLines[i].trim().startsWith('```')) continue;
+            const line = codeLines[i].trim();
+            if (line && !line.startsWith('```')) {
+              firstCodeLine = line;
+              break;
+            }
+          }
+          
+          // Create preview snippet
+          const codePreview = firstCodeLine.trim() ? 
+            (firstCodeLine.length > 40 ? firstCodeLine.substring(0, 38) + '...' : firstCodeLine) : '';
+          
+          // Create indicator based on which code block
+          if (codeSegments.length === 1) {
+            // If message has no content, add a nice explanation
+            if (!finalMessageText) {
+              finalMessageText = "I've created your application with the following code:";
+            }
+            
+            // Add indicator for main code block
+            if (codePreview) {
+              finalMessageText += `\n\n> Implementation complete! 💻 (${codeLineCount} lines of code)\n> ${codePreview}`;
+            } else {
+              finalMessageText += `\n\n> Implementation complete! 💻 (${codeLineCount} lines of code)`;
+            }
+          } else {
+            // For multiple code blocks
+            if (!finalMessageText) {
+              finalMessageText = "I've created multiple code components for your application:";
+            }
+            
+            // If user can see text right now, we want to preserve that same text
+            if (currentStreamedText.includes('Implementing solution') || 
+                currentStreamedText.includes('Adding code snippet')) {
+              finalMessageText = currentStreamedText;
+            } else {
+              // Add indicator for multiple code blocks
+              if (codePreview) {
+                finalMessageText += `\n\n> Multiple code components implemented! 💻 (${codeLineCount} lines total)\n> ${codePreview}`;
+              } else {
+                finalMessageText += `\n\n> Multiple code components implemented! 💻 (${codeLineCount} lines total)`;
+              }
+            }
+          }
+        }
+
         // Add AI response with code and dependencies
         console.debug('💬 FINAL MESSAGE STRUCTURE:', {
-          textLength: cleanedMessage.length,
+          textLength: finalMessageText.length,
           hasCode: !!parser.codeBlockContent,
           codeLength: parser.codeBlockContent.length,
           dependenciesCount: Object.keys(parser.dependencies).length
         });
         
-        // Demonstrate how a structured message could look
-        const structuredMessageExample = {
-          type: 'ai',
-          segments: segmentTracker.current.map(segment => ({
-            type: segment.type,
-            content: segment.content.length > 50 
-              ? segment.content.substring(0, 50) + '...' 
-              : segment.content
-          }))
-        };
-        console.debug('🔮 POTENTIAL STRUCTURED MESSAGE:', structuredMessageExample);
+        // Store the original raw content for future rendering approaches
+        const originalRawContent = parser.displayText;
         
         setMessages((prev) => [
           ...prev,
           {
-            text: cleanedMessage,
+            text: finalMessageText,
             type: 'ai',
             code: parser.codeBlockContent,
             dependencies: parser.dependencies,
@@ -431,12 +481,15 @@ export function useChat(
             segments: segmentTracker.current.map(segment => ({
               type: segment.type,
               content: segment.content
-            }))
+            })),
+            // Store the complete raw stream content
+            rawContent: originalRawContent,
+            completed: true
           },
         ]);
 
         // Store the completed message
-        setCompletedMessage(cleanedMessage);
+        setCompletedMessage(finalMessageText);
 
         // Execute callback with generated code if available
         if (parser.codeBlockContent) {

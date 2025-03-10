@@ -5,6 +5,11 @@ export interface ChatMessage {
   dependencies?: Record<string, string>;
   streaming?: boolean;
   completed?: boolean;
+  rawContent?: string;      // Full unprocessed stream content
+  segments?: Array<{        // Pre-processed message segments
+    type: 'text' | 'pre-code' | 'code' | 'post-code';
+    content: string;
+  }>;
 }
 
 export interface SessionDocument {

@@ -1,6 +1,11 @@
 import { useEffect, useRef, memo, useCallback, useMemo } from 'react';
 import type { ChatMessage } from '../types/chat';
 import ReactMarkdown from 'react-markdown';
+import StructuredMessage from './StructuredMessage';
+
+// Feature flag to enable the structured message view
+// Set to true to use the new three-part message display
+const USE_STRUCTURED_MESSAGES = true;
 
 interface MessageListProps {
   messages: ChatMessage[];
@@ -33,6 +38,11 @@ const Message = memo(
     isShrinking: boolean;
     isExpanding: boolean;
   }) => {
+    // For AI messages, decide whether to use the structured or regular view
+    const useStructuredView = USE_STRUCTURED_MESSAGES && 
+      message.type === 'ai' && 
+      (message.rawContent || message.segments);
+    
     return (
       <div
         className={`flex flex-col transition-all duration-500 ${
@@ -50,15 +60,24 @@ const Message = memo(
               </span>
             </div>
           )}
-          <div
-            className={`message rounded-2xl p-3 ${
-              message.type === 'user'
-                ? 'bg-accent-02-light dark:bg-accent-02-dark rounded-tr-sm text-white'
-                : 'bg-light-background-00 dark:bg-dark-decorative-00 text-light-primary dark:text-dark-primary rounded-tl-sm'
-            } max-w-[85%] shadow-sm`}
-          >
-            {renderMarkdownContent(message.text)}
-          </div>
+          
+          {useStructuredView ? (
+            // Use the new structured message component for AI messages with raw content or segments
+            <div className="max-w-[85%]">
+              <StructuredMessage message={message} />
+            </div>
+          ) : (
+            // Use the regular message display for user messages or AI messages without raw content
+            <div
+              className={`message rounded-2xl p-3 ${
+                message.type === 'user'
+                  ? 'bg-accent-02-light dark:bg-accent-02-dark rounded-tr-sm text-white'
+                  : 'bg-light-background-00 dark:bg-dark-decorative-00 text-light-primary dark:text-dark-primary rounded-tl-sm'
+              } max-w-[85%] shadow-sm`}
+            >
+              {renderMarkdownContent(message.text)}
+            </div>
+          )}
         </div>
       </div>
     );
