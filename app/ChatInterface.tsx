@@ -381,7 +381,7 @@ function ChatInterface({
   }, [chatContext, chatState.isGenerating]);
 
   return (
-    <div className="relative flex h-full w-full flex-col overflow-hidden">
+    <div className="relative flex h-full w-full flex-col overflow-hidden mobile-single-column">
       {chatHeader}
       <SessionSidebar
         isVisible={chatContext.isSidebarVisible}
@@ -389,7 +389,7 @@ function ChatInterface({
         onSelectSession={handleSelectSession}
       />
 
-      <div className="relative flex flex-col overflow-y-auto" style={{ flexGrow: 1 }}>
+      <div className="relative flex flex-col overflow-y-auto flex-grow mobile-inline-messages">
         {/* Message list */}
         {messageList}
 

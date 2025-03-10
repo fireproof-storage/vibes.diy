@@ -22,7 +22,7 @@ function ChatInput({ value, onChange, onSend, onKeyDown, disabled, inputRef }: C
   }, [value, inputRef]);
 
   return (
-    <div className="border-light-decorative-00 dark:border-dark-decorative-00 bg-light-background-01 dark:bg-dark-background-01 border-t px-4 py-3">
+    <div className="border-light-decorative-00 dark:border-dark-decorative-00 bg-light-background-01 dark:bg-dark-background-01 border-t px-4 py-3 mobile-form-top">
       <div className="relative">
         <textarea
           ref={inputRef}

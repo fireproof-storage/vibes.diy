@@ -128,7 +128,7 @@ function MessageList({
 
   return (
     <div
-      className="messages bg-light-background-01 dark:bg-dark-background-01 flex-1 space-y-4 overflow-y-auto p-4"
+      className="messages bg-light-background-01 dark:bg-dark-background-01 flex-1 space-y-4 overflow-y-auto p-4 mobile-inline-messages"
       style={{ maxHeight: 'calc(100vh - 140px)' }}
     >
       {messages.length === 0 && !isGenerating ? (

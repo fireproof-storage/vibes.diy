@@ -294,3 +294,28 @@ a,
     transform: rotate(0deg) scale(1);
   }
 }
+
+/* Media queries for mobile layout adjustments */
+@media (max-width: 768px) {
+  .mobile-single-column {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .mobile-form-top {
+    order: -1;
+  }
+
+  .mobile-inline-messages {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .mobile-code-height {
+    height: 75vh;
+  }
+
+  .mobile-sidebar-hidden {
+    display: none;
+  }
+}
