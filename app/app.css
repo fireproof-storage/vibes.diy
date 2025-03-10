@@ -319,3 +319,13 @@ a,
     display: none;
   }
 }
+
+/* Ensure the code window flows like a chat message */
+.code-window {
+  display: flex;
+  flex-direction: column;
+  width: 75%;
+  max-height: 75vh;
+  overflow-y: auto;
+  margin: 0 auto;
+}

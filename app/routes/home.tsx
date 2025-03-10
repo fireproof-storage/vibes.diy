@@ -381,11 +381,11 @@ export default function Home() {
   ]);
 
   return (
-    <div className="mobile-single-column" style={{ display: 'flex', height: 'calc(100vh)' }}>
-      <div className="mobile-form-top" style={{ flex: '0 0 33.333%', overflow: 'hidden', position: 'relative' }}>
+    <div className="flex flex-col h-full w-full overflow-hidden">
+      <div className="flex flex-col flex-grow overflow-y-auto">
         {memoizedChatInterface}
       </div>
-      <div className="mobile-inline-messages" style={{ flex: '0 0 66.667%', overflow: 'hidden', position: 'relative' }}>
+      <div className="flex flex-col flex-grow overflow-y-auto">
         {memoizedResultPreview}
       </div>
     </div>
