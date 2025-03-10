@@ -62,6 +62,14 @@ function ChatInterface({
   const [isExpanding, setIsExpanding] = useState(false);
   const { database, useLiveQuery } = useFireproof('fireproof-chat-history');
 
+  // Maintain a stable ref to the database to prevent re-renders
+  const databaseRef = useRef(database);
+  
+  // Update database ref when it changes
+  useEffect(() => {
+    databaseRef.current = database;
+  }, [database]);
+
   const {
     messages,
     setMessages,
@@ -198,7 +206,7 @@ function ChatInterface({
       if (sessionId) {
         console.log('ChatInterface: Loading session data for ID:', sessionId);
         try {
-          const sessionData = (await database.get(sessionId)) as SessionDocument;
+          const sessionData = (await databaseRef.current.get(sessionId)) as SessionDocument;
           console.log('ChatInterface: Successfully loaded session data for ID:', sessionId);
           // Normalize session data to guarantee messages array exists
           const messages = Array.isArray(sessionData.messages) ? sessionData.messages : [];
@@ -211,8 +219,15 @@ function ChatInterface({
       }
     }
 
-    loadSessionData();
-  }, [sessionId, database]); // Removed setMessages from the dependency array
+    // Only load session data if we have a sessionId and it's not already loading
+    const loadingTimeoutId = setTimeout(() => {
+      loadSessionData();
+    }, 0);
+
+    return () => {
+      clearTimeout(loadingTimeoutId);
+    };
+  }, [sessionId, databaseRef]); // Keep only essential dependencies
 
   // Track streaming state to detect when streaming completes
   const wasGeneratingRef = useRef(isGenerating);
@@ -239,7 +254,7 @@ function ChatInterface({
             ...(sessionId ? { _id: sessionId } : {}),
           };
 
-          const result = await database.put(sessionData);
+          const result = await databaseRef.current.put(sessionData);
 
           // If this was a new session, notify the parent component using optional chaining
           if (!sessionId) {
@@ -261,7 +276,7 @@ function ChatInterface({
     }
 
     saveSessionData();
-  }, [isGenerating, messages, sessionId, database, onSessionCreated]);
+  }, [isGenerating, sessionId]); // Minimize dependencies
 
   // Load a session from the sidebar
   const handleLoadSession = useCallback(
@@ -271,7 +286,7 @@ function ChatInterface({
       console.log('ChatInterface.handleLoadSession: Loading session ID:', sessionId);
 
       try {
-        const sessionData = (await database.get(sessionId)) as SessionDocument;
+        const sessionData = (await databaseRef.current.get(sessionId)) as SessionDocument;
         console.log(
           'ChatInterface.handleLoadSession: Successfully loaded session data for ID:',
           sessionId
@@ -324,7 +339,7 @@ function ChatInterface({
         console.error('ChatInterface.handleLoadSession: Error loading session:', error);
       }
     },
-    [database, chatState, onCodeGenerated, onSessionCreated]
+    [databaseRef, chatState, onCodeGenerated, onSessionCreated]
   );
 
   // Handle the "New Chat" button click
@@ -345,21 +360,23 @@ function ChatInterface({
         setInput('');
 
         // Navigate to the root path
-        window.history.pushState({ sessionId: null }, '', '/');
+        // window.history.pushState({ sessionId: null }, '', '/');
+        window.location.href = '/';
 
-        // Reset animation states
-        setIsShrinking(false);
 
-        // Add a small bounce effect when the new chat appears
-        setIsExpanding(true);
-        setTimeout(() => {
-          setIsExpanding(false);
-        }, 300);
+        // // Reset animation states
+        // setIsShrinking(false);
 
-        // Clear messages once animation is complete and navigation happened
-        setTimeout(() => {
-          setMessages([]);
-        }, 100);
+        // // Add a small bounce effect when the new chat appears
+        // setIsExpanding(true);
+        // setTimeout(() => {
+        //   setIsExpanding(false);
+        // }, 300);
+
+        // // Clear messages once animation is complete and navigation happened
+        // setTimeout(() => {
+        //   setMessages([]);
+        // }, 100);
       },
       500 + messages.length * 50
     );

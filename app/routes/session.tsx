@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef, useCallback } from 'react';
 import { useParams } from 'react-router';
 import ChatInterface from '../ChatInterface';
 import { useChat } from '../hooks/useChat';
@@ -24,17 +24,33 @@ export default function Session() {
   });
   const { database } = useFireproof('fireproof-chat-history');
 
-  // Handle code generation from chat interface
-  const handleCodeGenerated = (code: string, dependencies: Record<string, string> = {}) => {
+  // Maintain a stable ref to the database to prevent re-renders
+  const databaseRef = useRef(database);
+  
+  // Update database ref when it changes
+  useEffect(() => {
+    databaseRef.current = database;
+  }, [database]);
+
+  // Handle code generation from chat interface with stable callback reference
+  const handleCodeGenerated = useCallback((code: string, dependencies: Record<string, string> = {}) => {
     console.log('Session.handleCodeGenerated called with code length:', code.length);
     setState({
       generatedCode: code,
       dependencies,
     });
-  };
+  }, []);
 
   // Set up chat state with the code generation handler
   const chatState = useChat(handleCodeGenerated);
+  
+  // Create a ref to chatState to avoid dependency cycles
+  const chatStateRef = useRef(chatState);
+  
+  // Update the ref when chatState changes
+  useEffect(() => {
+    chatStateRef.current = chatState;
+  }, [chatState]);
 
   // Handle session change
   useEffect(() => {
@@ -44,14 +60,14 @@ export default function Session() {
         console.log('Session route: Loading session data for ID:', sessionId);
         try {
           // Load the session document
-          const sessionData = (await database.get(sessionId)) as SessionDocument;
+          const sessionData = (await databaseRef.current.get(sessionId)) as SessionDocument;
           console.log('Session route: Successfully loaded data for session:', sessionId);
 
           // Normalize session data to guarantee messages array exists
           const messages = Array.isArray(sessionData.messages) ? sessionData.messages : [];
 
           // Clear current messages and set the loaded ones
-          chatState.setMessages(messages);
+          chatStateRef.current.setMessages(messages);
 
           // Find the last AI message with code to update the ResultPreview
           const lastAiMessageWithCode = [...messages]
@@ -74,10 +90,10 @@ export default function Session() {
               dependencies: dependencies,
             });
 
-            // Also update the chat state for consistency
-            chatState.completedCode = lastAiMessageWithCode.code;
-            chatState.streamingCode = lastAiMessageWithCode.code;
-            chatState.completedMessage = lastAiMessageWithCode.text || "Here's your app:";
+            // Use the ref to update chat state properties
+            chatStateRef.current.completedCode = lastAiMessageWithCode.code;
+            chatStateRef.current.streamingCode = lastAiMessageWithCode.code;
+            chatStateRef.current.completedMessage = lastAiMessageWithCode.text || "Here's your app:";
           } else {
             console.log('Session route: No code found in session:', sessionId.substring(0, 8));
           }
@@ -88,7 +104,7 @@ export default function Session() {
     };
 
     loadSessionData();
-  }, [sessionId, database, chatState]);
+  }, [sessionId, databaseRef]); // Removed chatState from dependencies
 
   return (
     <div style={{ display: 'flex', height: 'calc(100vh)' }}>
