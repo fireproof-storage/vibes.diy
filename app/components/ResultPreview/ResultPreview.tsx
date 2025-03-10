@@ -400,7 +400,10 @@ function ResultPreview({
               classes: { 'sp-wrapper': 'h-full' },
             }}
             customSetup={{
-              dependencies: sandpackDependencies,
+              dependencies: {
+                'use-fireproof': '0.20.0-dev-preview-52',
+                ...(dependencies || {}),
+              },
             }}
             files={filesRef.current}
             theme={isDarkMode ? 'dark' : 'light'}
