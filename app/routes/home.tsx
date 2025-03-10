@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback, useMemo } from 'react';
+import { useEffect, useState, useCallback, useMemo, useRef } from 'react';
 import { useNavigate } from 'react-router';
 import ChatInterface from '../ChatInterface';
 import ResultPreview from '../components/ResultPreview/ResultPreview';
@@ -50,14 +50,50 @@ export default function Home() {
   const [sessionId, setSessionId] = useState<string | null>(null);
   const { database } = useFireproof('fireproof-chat-history');
   const navigate = useNavigate();
+  
+  // Keep tracking streaming props with refs to avoid re-renders
+  const streamingPropsRef = useRef({
+    streamingCode: '',
+    isStreaming: false,
+    currentStreamedText: '',
+    messages: [] as any[],
+  });
 
-  // Hoist the useChat hook to this component
-  const chatState = useChat((code: string, dependencies?: Record<string, string>) => {
+  // Maintain a stable ref to the database to prevent re-renders
+  const databaseRef = useRef(database);
+  
+  // Hoist the useChat hook to this component with stable callback reference
+  const handleCodeGenerated = useCallback((code: string, dependencies?: Record<string, string>) => {
     setState({
       generatedCode: code,
       dependencies: dependencies || {},
     });
-  });
+  }, []);
+  
+  const chatState = useChat(handleCodeGenerated);
+
+  // Only update refs when values actually change with deep equality check
+  useEffect(() => {
+    const currentProps = {
+      streamingCode: chatState.streamingCode,
+      isStreaming: chatState.isStreaming,
+      currentStreamedText: chatState.currentStreamedText,
+      messages: chatState.messages,
+    };
+    
+    // Deep comparison to avoid unnecessary updates
+    const hasStreamingChanged = chatState.isStreaming !== streamingPropsRef.current.isStreaming;
+    const hasStreamingCodeChanged = chatState.streamingCode !== streamingPropsRef.current.streamingCode;
+    const hasCurrentStreamedTextChanged = chatState.currentStreamedText !== streamingPropsRef.current.currentStreamedText;
+    const hasMessagesChanged = 
+      chatState.messages.length !== streamingPropsRef.current.messages.length ||
+      JSON.stringify(chatState.messages) !== JSON.stringify(streamingPropsRef.current.messages);
+
+    // Only update if something changed
+    if (hasStreamingChanged || hasStreamingCodeChanged || hasCurrentStreamedTextChanged || hasMessagesChanged) {
+      streamingPropsRef.current = currentProps;
+    }
+  }, [chatState.streamingCode, chatState.isStreaming, chatState.currentStreamedText, chatState.messages]);
 
   // Check for state in URL on component mount
   useEffect(() => {
@@ -76,13 +112,13 @@ export default function Home() {
   }, []);
 
   // Handle new session creation
-  const handleSessionCreated = (newSessionId: string) => {
+  const handleSessionCreated = useCallback((newSessionId: string) => {
     setSessionId(newSessionId);
     // We don't need to navigate here, as the ChatInterface will do that
-  };
+  }, []);
 
   // Handle new chat (reset session)
-  const handleNewChat = () => {
+  const handleNewChat = useCallback(() => {
     setSessionId(null);
     setShareStatus('');
     setState({
@@ -90,7 +126,7 @@ export default function Home() {
       dependencies: {},
     });
     chatState.setMessages([]);
-  };
+  }, [chatState]);
 
   function handleShare() {
     if (!state.generatedCode) {
@@ -147,7 +183,7 @@ export default function Home() {
         const blob = await response.blob();
         const file = new File([blob], 'screenshot.png', { type: 'image/png' });
 
-        const ok = await database.put({
+        const ok = await databaseRef.current.put({
           type: 'screenshot',
           session_id: sessionId,
           _files: {
@@ -157,7 +193,7 @@ export default function Home() {
         console.log('ok', ok);
       }
     },
-    [sessionId]
+    [sessionId, databaseRef]
   );
 
   // Memoize dependencies to prevent unnecessary re-renders
@@ -165,64 +201,91 @@ export default function Home() {
     return chatState.parserState?.current?.dependencies || state.dependencies;
   }, [chatState.parserState?.current?.dependencies, state.dependencies]);
 
+  // Memoized ChatInterface component with refined dependencies
+  const memoizedChatInterface = useMemo(() => {
+    return (
+      <ChatProvider
+        initialState={{
+          input: '',
+          isGenerating: false,
+          isSidebarVisible: false,
+        }}
+        onSendMessage={(input) => {
+          if (input.trim()) {
+            if (!sessionId) {
+              // If no session exists, create one
+              const newSession = {
+                timestamp: Date.now(),
+                title: input.length > 50 ? `${input.substring(0, 50)}...` : input,
+              };
+
+              databaseRef.current.put(newSession).then((doc) => {
+                handleSessionCreated(doc.id);
+              });
+            }
+          }
+        }}
+        onNewChat={handleNewChat}
+      >
+        <ChatInterface
+          chatState={chatState}
+          sessionId={sessionId}
+          onSessionCreated={handleSessionCreated}
+          onNewChat={handleNewChat}
+          onCodeGenerated={handleCodeGenerated}
+        />
+      </ChatProvider>
+    );
+  }, [
+    sessionId,
+    handleSessionCreated,
+    handleNewChat,
+    handleCodeGenerated,
+    // Avoid including the entire chatState to prevent unnecessary re-renders
+    // Only include specific parts that affect the UI
+    chatState.sendMessage,
+    chatState.isGenerating,
+  ]);
+
+  // Memoized ResultPreview component with improved dependency handling
+  const memoizedResultPreview = useMemo(() => {
+    return (
+      <ResultPreview
+        code={state.generatedCode}
+        streamingCode={streamingPropsRef.current.streamingCode}
+        isStreaming={streamingPropsRef.current.isStreaming}
+        dependencies={previewDependencies}
+        onShare={handleShare}
+        shareStatus={shareStatus}
+        completedMessage={chatState.completedMessage}
+        currentStreamContent={streamingPropsRef.current.currentStreamedText}
+        currentMessage={
+          streamingPropsRef.current.messages.length > 0
+            ? { content: streamingPropsRef.current.messages[streamingPropsRef.current.messages.length - 1].text }
+            : undefined
+        }
+        onScreenshotCaptured={handleScreenshotCaptured}
+        {...(sessionId ? { sessionId } : {})}
+      />
+    );
+  }, [
+    state.generatedCode,
+    previewDependencies,
+    sessionId,
+    shareStatus,
+    handleShare,
+    handleScreenshotCaptured,
+    chatState.completedMessage,
+    // Removed streaming-related props since we use the ref versions
+  ]);
+
   return (
     <div style={{ display: 'flex', height: 'calc(100vh)' }}>
       <div style={{ flex: '0 0 33.333%', overflow: 'hidden', position: 'relative' }}>
-        <ChatProvider
-          initialState={{
-            input: '',
-            isGenerating: false,
-            isSidebarVisible: false,
-          }}
-          onSendMessage={(input) => {
-            if (input.trim()) {
-              if (!sessionId) {
-                // If no session exists, create one
-                const newSession = {
-                  timestamp: Date.now(),
-                  title: input.length > 50 ? `${input.substring(0, 50)}...` : input,
-                };
-
-                database.put(newSession).then((doc) => {
-                  handleSessionCreated(doc.id);
-                });
-              }
-            }
-          }}
-          onNewChat={handleNewChat}
-        >
-          <ChatInterface
-            chatState={chatState}
-            sessionId={sessionId}
-            onSessionCreated={handleSessionCreated}
-            onNewChat={handleNewChat}
-            onCodeGenerated={(code, dependencies) => {
-              setState({
-                generatedCode: code,
-                dependencies: dependencies || {},
-              });
-            }}
-          />
-        </ChatProvider>
+        {memoizedChatInterface}
       </div>
       <div style={{ flex: '0 0 66.667%', overflow: 'hidden', position: 'relative' }}>
-        <ResultPreview
-          code={state.generatedCode}
-          streamingCode={chatState.streamingCode}
-          isStreaming={chatState.isStreaming}
-          dependencies={previewDependencies}
-          onShare={handleShare}
-          shareStatus={shareStatus}
-          completedMessage={chatState.completedMessage}
-          currentStreamContent={chatState.currentStreamedText}
-          currentMessage={
-            chatState.messages.length > 0
-              ? { content: chatState.messages[chatState.messages.length - 1].text }
-              : undefined
-          }
-          onScreenshotCaptured={handleScreenshotCaptured}
-          {...(sessionId ? { sessionId } : {})}
-        />
+        {memoizedResultPreview}
       </div>
     </div>
   );

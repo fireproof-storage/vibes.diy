@@ -24,6 +24,14 @@ export function useChat(
   // Add a ref to store the raw stream data for debugging
   const rawStreamBuffer = useRef<string>('');
 
+  // Add debug logging whenever messages change, but with a more descriptive context
+  useEffect(() => {
+    // Only log when there's actually a meaningful change, not on initial render
+    if (messages.length > 0) {
+      console.log('useChat: Messages updated:', messages.length, messages);
+    }
+  }, [messages]);
+
   // Initialize system prompt
   useEffect(() => {
     makeBaseSystemPrompt(CHOSEN_MODEL).then((prompt) => {
@@ -42,6 +50,31 @@ export function useChat(
 
   const scrollToBottom = useCallback(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, []);
+
+  // Create a wrapped setMessages function that includes logging
+  const setMessagesWithLogging = useCallback((newMessages: ChatMessage[] | ((prev: ChatMessage[]) => ChatMessage[])) => {
+    // Only log when there's an actual change
+    if (typeof newMessages === 'function') {
+      console.log('useChat: setMessages called with: function updater');
+      setMessages((prev) => {
+        const result = (newMessages as Function)(prev);
+        // Only update if the result is actually different
+        if (JSON.stringify(result) !== JSON.stringify(prev)) {
+          return result;
+        }
+        return prev;
+      });
+    } else {
+      // Only update if the new messages are different
+      setMessages((prev) => {
+        if (JSON.stringify(newMessages) !== JSON.stringify(prev)) {
+          console.log('useChat: setMessages called with:', `array of ${Array.isArray(newMessages) ? newMessages.length : 'unknown'} messages`);
+          return newMessages;
+        }
+        return prev;
+      });
+    }
   }, []);
 
   // Function to build conversation history for the prompt
@@ -279,21 +312,34 @@ export function useChat(
           "Here's your generated app:";
         setCompletedMessage(finalMessage);
 
-        // Update the messages array
-        setMessages((prevMessages) => {
+        // Update the messages array with more efficient update check
+        setMessagesWithLogging((prevMessages) => {
           const updatedMessages = [...prevMessages];
           const lastMessageIndex = updatedMessages.length - 1;
 
           if (lastMessageIndex >= 0) {
-            updatedMessages[lastMessageIndex] = {
-              ...updatedMessages[lastMessageIndex],
+            // Only update if there's an actual change
+            const currentLastMessage = updatedMessages[lastMessageIndex];
+            const newLastMessage = {
+              ...currentLastMessage,
               text: finalMessage,
               streaming: false,
               completed: true,
             };
+            
+            // Check if the update would actually change anything
+            if (
+              currentLastMessage.text !== newLastMessage.text ||
+              currentLastMessage.streaming !== newLastMessage.streaming ||
+              currentLastMessage.completed !== newLastMessage.completed
+            ) {
+              updatedMessages[lastMessageIndex] = newLastMessage;
+              return updatedMessages;
+            }
           }
 
-          return updatedMessages;
+          // Return unchanged if no modifications needed
+          return prevMessages;
         });
       } catch (error) {
         setMessages((prev) => [
@@ -313,7 +359,7 @@ export function useChat(
 
   return {
     messages,
-    setMessages,
+    setMessages: setMessagesWithLogging,
     input,
     setInput,
     isGenerating,
