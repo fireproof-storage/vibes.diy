@@ -21,6 +21,8 @@ export function useChat(
   const [completedMessage, setCompletedMessage] = useState('');
   // Track message segments for debugging
   const segmentTracker = useRef<Array<{type: 'text' | 'code' | 'pre-code' | 'post-code', content: string}>>([]);
+  // Track current code line count for UI updates
+  const codeLineCount = useRef<number>(0);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const parserState = useRef<RegexParser>(new RegexParser());
@@ -114,7 +116,10 @@ export function useChat(
 
     // Add event listeners
     parserState.current.on('text', (textChunk: string, fullText: string) => {
-      setCurrentStreamedText(fullText); // Update with the full displayText from parser
+      // Only update with text when not in a code block to prevent code duplication
+      if (!parserState.current.inCodeBlock) {
+        setCurrentStreamedText(fullText); // Update with the full displayText from parser
+      }
     });
 
     parserState.current.on('code', (code: string, language: string) => {
@@ -231,6 +236,23 @@ export function useChat(
                       // Start new code segment
                       console.debug('🧩 NEW CODE SEGMENT STARTED');
                       segmentTracker.current.push({type: 'code', content: ''});
+                      
+                      // Only add transition indicator if we haven't already set "Writing code..."
+                      if (!writingCodeMessageAdded) {
+                        setCurrentStreamedText(prevText => prevText.trim() + '\n\n> Implementing solution... 💻\n\n');
+                        writingCodeMessageAdded = true;
+                        codeLineCount.current = 0; // Reset line count for new code block
+                      } else {
+                        // For additional code blocks, add a new indicator with line count
+                        const codeBlockNumber = segmentTracker.current
+                          .filter(segment => segment.type === 'code')
+                          .length;
+                          
+                        setCurrentStreamedText(prevText => 
+                          prevText.trim() + `\n\n> Adding code snippet #${codeBlockNumber}... 📝\n\n`
+                        );
+                        codeLineCount.current = 0; // Reset line count for new code block
+                      }
                     }
                     // Update current code segment
                     const currentSegment = segmentTracker.current[segmentTracker.current.length - 1];
@@ -245,6 +267,15 @@ export function useChat(
                       // After code, this is post-code text
                       console.debug('🧩 NEW POST-CODE TEXT SEGMENT STARTED');
                       segmentTracker.current.push({type: 'post-code', content: content});
+                      
+                      // Add transition indicator for post-code explanation
+                      setCurrentStreamedText(prevText => {
+                        // Only add this marker if we're not showing code
+                        if (!prevText.includes('```')) {
+                          return prevText.trim() + '\n\n> Explaining implementation... 🔍\n\n';
+                        }
+                        return prevText;
+                      });
                     } else {
                       // Continue existing text segment
                       const currentSegment = segmentTracker.current[segmentTracker.current.length - 1];
@@ -252,20 +283,63 @@ export function useChat(
                     }
                   }
 
-                  // Direct check for code block markers
-                  if (!writingCodeMessageAdded && content.includes('```')) {
-                    console.debug('🔍 CODE BLOCK DETECTED:', content);
-                    setCurrentStreamedText((prevText) => {
-                      const updatedText = prevText + '\n\n> Writing code...\n\n';
-                      return updatedText;
-                    });
-                    writingCodeMessageAdded = true;
-                  }
-
                   // Also update streaming code directly from parser's current state
                   if (parser.inCodeBlock) {
                     console.debug('📝 UPDATING CODE BLOCK:', parser.codeBlockContent.length, 'chars');
+                    // Only update the preview code, not the streamed text display
                     setStreamingCode(parser.codeBlockContent);
+                    
+                    // Count lines and update indicator as code grows
+                    const newLineCount = parser.codeBlockContent.split('\n').length;
+                    if (newLineCount !== codeLineCount.current) {
+                      codeLineCount.current = newLineCount;
+                      
+                      // Get the first meaningful line of code for preview
+                      const codeLines = parser.codeBlockContent.split('\n');
+                      let firstCodeLine = '';
+                      
+                      // Find first non-empty line after any language marker
+                      for (let i = 0; i < codeLines.length; i++) {
+                        // Skip the language marker line (if any)
+                        if (i === 0 && codeLines[i].trim().startsWith('```')) continue;
+                        const line = codeLines[i].trim();
+                        if (line && !line.startsWith('```')) {
+                          firstCodeLine = line;
+                          break;
+                        }
+                      }
+                      
+                      // Create a preview snippet (truncate if too long)
+                      const codePreview = firstCodeLine.length > 40 
+                        ? firstCodeLine.substring(0, 38) + '...'
+                        : firstCodeLine;
+                      
+                      // Update the streaming text to show current line count
+                      setCurrentStreamedText(prevText => {
+                        // Find appropriate indicator pattern based on which code block we're in
+                        const codeBlockNumber = segmentTracker.current
+                          .filter(segment => segment.type === 'code')
+                          .length;
+                        
+                        let indicatorRegex;
+                        let replacementText;
+                        
+                        if (codeBlockNumber <= 1) {
+                          // First code block
+                          indicatorRegex = /> Implementing solution... 💻.*/;
+                          replacementText = `> Implementing solution... 💻 (${codeLineCount.current} lines of code)\n> ${codePreview}`;
+                        } else {
+                          // Additional code blocks
+                          indicatorRegex = new RegExp(`> Adding code snippet #${codeBlockNumber}... 📝.*`);
+                          replacementText = `> Adding code snippet #${codeBlockNumber}... 📝 (${codeLineCount.current} lines of code)\n> ${codePreview}`;
+                        }
+                        
+                        if (indicatorRegex && indicatorRegex.test(prevText)) {
+                          return prevText.replace(indicatorRegex, replacementText);
+                        }
+                        return prevText;
+                      });
+                    }
                   }
                 }
               } catch (e) {
@@ -339,6 +413,11 @@ export function useChat(
             type: 'ai',
             code: parser.codeBlockContent,
             dependencies: parser.dependencies,
+            // Include segments in the message structure
+            segments: segmentTracker.current.map(segment => ({
+              type: segment.type,
+              content: segment.content
+            }))
           },
         ]);
 

@@ -44,7 +44,7 @@ const Message = memo(
       >
         <div className={`flex ${message.type === 'user' ? 'justify-end' : 'justify-start'}`}>
           {message.type === 'ai' && (
-            <div className="bg-dark-decorative-00 dark:bg-light-decorative-00 mr-2 flex h-8 w-8 items-center justify-center rounded-full">
+            <div className="bg-light-background-00 dark:bg-dark-background-00 mr-2 flex h-8 w-8 items-center justify-center rounded-full">
               <span className="text-light-primary dark:text-dark-primary text-sm font-medium">
                 AI
               </span>
@@ -54,7 +54,7 @@ const Message = memo(
             className={`message rounded-2xl p-3 ${
               message.type === 'user'
                 ? 'bg-accent-02-light dark:bg-accent-02-dark rounded-tr-sm text-white'
-                : 'bg-light-decorative-00 dark:bg-dark-decorative-00 text-light-primary dark:text-dark-primary rounded-tl-sm'
+                : 'bg-light-background-00 dark:bg-dark-decorative-00 text-light-primary dark:text-dark-primary rounded-tl-sm'
             } max-w-[85%] shadow-sm`}
           >
             {renderMarkdownContent(message.text)}
@@ -72,7 +72,7 @@ const AITyping = memo(({ currentStreamedText }: { currentStreamedText: string })
       <div className="bg-dark-decorative-00 dark:bg-light-decorative-00 mr-2 flex h-8 w-8 items-center justify-center rounded-full">
         <span className="text-light-primary dark:text-dark-primary text-sm font-medium">AI</span>
       </div>
-      <div className="message bg-light-decorative-00 dark:bg-dark-decorative-00 text-light-primary dark:text-dark-primary max-w-[85%] rounded-2xl rounded-tl-sm p-3 shadow-sm">
+      <div className="message bg-light-primary dark:bg-dark-decorative-01 text-light-primary dark:text-dark-primary max-w-[85%] rounded-2xl rounded-tl-sm p-3 shadow-sm">
         {currentStreamedText ? (
           <>
             {renderMarkdownContent(currentStreamedText)}
