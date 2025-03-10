@@ -219,24 +219,25 @@ a,
 @media (prefers-color-scheme: dark) {
   .glimmer-overlay {
     background: linear-gradient(
-      90deg,
+      120deg,
       transparent 0%,
-      rgba(255, 255, 255, 0.1) 10%,
-      rgba(255, 255, 255, 0.2) 18%,
-      rgba(255, 216, 107, 0.6) 20%,
-      rgba(255, 216, 107, 0.7) 22%,
-      rgba(255, 255, 255, 0.2) 24%,
-      rgba(255, 255, 255, 0.1) 30%,
-      transparent 40%
+      rgba(255, 255, 255, 0.1) 10%, 
+      rgba(255, 255, 255, 0.1) 15%,
+      rgba(255, 216, 107, 0.2) 25%,
+      rgba(255, 216, 107, 0.3) 35%,
+      rgba(255, 255, 255, 0.1) 48%,
+      rgba(255, 255, 255, 0.1) 60%,
+      transparent 80%
     );
   }
 }
-
 /* Button gradients for ChatInput */
-.light-gradient {
+.chat-gradient {
   background: linear-gradient(75deg, transparent 0%, rgba(255, 255, 255, 1) 75%);
 }
 
-.dark-gradient {
-  background: linear-gradient(75deg, transparent 0%, rgba(30, 30, 30, 1) 75%);
+@media (prefers-color-scheme: dark) {
+  .chat-gradient {
+    background: linear-gradient(75deg, transparent 0%, rgba(30, 30, 30, 1) 75%);
+  }
 }

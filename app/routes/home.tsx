@@ -56,7 +56,6 @@ export default function Home() {
   // Effect to handle updating the title when sessionId becomes available
   // This needs to run before other effects that might depend on sessionId
   useEffect(() => {
-    console.log('Title effect running - sessionId:', sessionId, 'pendingTitle:', pendingTitle);
     
     if (!sessionId || !pendingTitle) return;
     

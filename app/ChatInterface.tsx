@@ -210,10 +210,28 @@ function ChatInterface({
       if (sessionId) {
         try {
           const sessionData = (await database.get(sessionId)) as SessionDocument;
+          console.log('ChatInterface: Loading sessionId', sessionId);
+          console.log('ChatInterface: Session data messages length:', sessionData.messages?.length || 0);
+          
           // Normalize session data to guarantee messages array exists
           const messages = Array.isArray(sessionData.messages) ? sessionData.messages : [];
+          console.log('ChatInterface: Messages to set:', messages);
+          
           // Use the ref to access the latest setMessages function
           setMessagesRef.current(messages);
+          console.log('ChatInterface: Messages set using ref');
+
+          // Also update the message state directly for safety
+          chatState.setMessages(messages);
+          
+          // Force a refresh of the messages array to ensure components re-render
+          setTimeout(() => {
+            const refreshedMessages = [...messages];
+            chatState.setMessages(refreshedMessages);
+            console.log('ChatInterface: Forced refresh of messages array');
+          }, 100);
+          
+          console.log('ChatInterface: Also set messages directly on chatState');
         } catch (error) {
           console.error('Error loading session:', error);
         }
@@ -311,10 +329,21 @@ function ChatInterface({
 
       try {
         const sessionData = (await database.get(sessionId)) as SessionDocument;
+        console.log('handleLoadSession: Session data loaded:', sessionId);
+        
         // Normalize session data to guarantee messages array exists
         const messages = Array.isArray(sessionData.messages) ? sessionData.messages : [];
+        console.log('handleLoadSession: Messages to load:', messages.length);
+        
         // Use the ref to access the latest setMessages function
         setMessagesRef.current(messages);
+        
+        // Force a refresh by making a copy of the messages array
+        setTimeout(() => {
+          console.log('handleLoadSession: Refreshing messages');
+          const refreshedMessages = [...messages];
+          setMessagesRef.current(refreshedMessages);
+        }, 100);
 
         // Find the last AI message with code to update the editor
         const lastAiMessageWithCode = [...messages]

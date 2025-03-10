@@ -102,6 +102,11 @@ function MessageList({
 }: MessageListProps) {
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
+  // Add logging to see when messages change
+  useEffect(() => {
+    console.log('MessageList: Rendering with messages:', messages.length, messages);
+  }, [messages]);
+
   // Scroll to bottom when messages change
   useEffect(() => {
     try {
@@ -146,6 +151,19 @@ export default memo(MessageList, (prevProps, nextProps) => {
     prevProps.messages === nextProps.messages ||
     (prevProps.messages.length === nextProps.messages.length &&
       JSON.stringify(prevProps.messages) === JSON.stringify(nextProps.messages));
+
+  console.log('MessageList memo comparison:', {
+    messagesEqual, 
+    prevLength: prevProps.messages.length,
+    nextLength: nextProps.messages.length,
+    sameRef: prevProps.messages === nextProps.messages
+  });
+
+  // Always re-render if messages don't match exactly
+  if (!messagesEqual) {
+    console.log('MessageList will re-render due to message changes');
+    return false;
+  }
 
   return (
     messagesEqual &&

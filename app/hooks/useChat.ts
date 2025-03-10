@@ -25,6 +25,18 @@ export function useChat(
   // Add a ref to store the raw stream data for debugging
   const rawStreamBuffer = useRef<string>('');
 
+  // Add debug logging whenever messages change
+  useEffect(() => {
+    console.log('useChat: Messages updated:', messages.length, messages);
+  }, [messages]);
+
+  // Create a wrapped setMessages function that includes logging
+  const setMessagesWithLogging = useCallback((newMessages: ChatMessage[] | ((prev: ChatMessage[]) => ChatMessage[])) => {
+    console.log('useChat: setMessages called with:', 
+      typeof newMessages === 'function' ? 'function updater' : `array of ${newMessages.length} messages`);
+    setMessages(newMessages);
+  }, []);
+
   // Initialize system prompt
   useEffect(() => {
     makeBaseSystemPrompt(CHOSEN_MODEL).then((prompt) => {
@@ -355,7 +367,7 @@ export function useChat(
 
   return {
     messages,
-    setMessages,
+    setMessages: setMessagesWithLogging,
     input,
     setInput,
     isGenerating,

@@ -56,13 +56,21 @@ export default function Session() {
           // Load the session document
           const sessionData = (await database.get(sessionId)) as SessionDocument;
           console.log('Session route: Successfully loaded data for session:', sessionId);
+          console.log('Session data:', JSON.stringify(sessionData, null, 2));
 
           // Normalize session data to guarantee messages array exists
           const messages = Array.isArray(sessionData.messages) ? sessionData.messages : [];
+          console.log('Messages from session:', messages.length, messages);
 
           // Clear current messages and set the loaded ones
           chatState.setMessages(messages);
+          console.log('Messages set in chat state');
 
+          // Make sure the MessageList component receives the updated messages
+          // by forcing a refresh of the chatState
+          const refreshedMessages = [...messages];
+          chatState.setMessages(refreshedMessages);
+          
           // Find the last AI message with code to update the ResultPreview
           const lastAiMessageWithCode = [...messages]
             .reverse()
