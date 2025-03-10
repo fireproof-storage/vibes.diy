@@ -202,10 +202,9 @@ a,
     transparent 0%,
     transparent 10%,
     rgba(255, 145, 0, 0.2) 15%,
-    rgba(255, 166, 0, 0.4) 20%,
-    rgba(255, 216, 107, 0.3) 35%,
+    rgba(255, 166, 0, 0.2) 20%,
+    rgba(255, 216, 107, 0.2) 35%,
     rgba(255, 255, 255, 0.2) 40%,
-    rgba(255, 255, 255, 0.1) 50%,
     transparent 70%
   );
   background-size: 200% 100%;
@@ -222,12 +221,9 @@ a,
       120deg,
       transparent 0%,
       transparent 10%,
-      
       rgba(255, 140, 0, 0.2) 20%,
       rgba(253, 158, 6, 0.2) 33%,
       rgba(255, 136, 0, 0.2) 40%,
-      
-      
       transparent 70%
     );
     background-size: 200% 100%;
