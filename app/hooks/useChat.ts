@@ -301,7 +301,7 @@ export function useChat(
                   {
                     role: 'system',
                     content:
-                      'You are a helpful assistant that generates short, descriptive titles. Create a concise title (3-5 words) that captures the essence of the content.',
+                      'You are a helpful assistant that generates short, descriptive titles. Create a concise title (3-5 words) that captures the essence of the content. Return only the title, no other text or markup.',
                   },
                   {
                     role: 'user',

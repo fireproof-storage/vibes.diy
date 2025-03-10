@@ -101,12 +101,6 @@ function ChatInterface({
   // Track if we are manually setting input to prevent feedback loops
   const isSettingInput = useRef(false);
   
-  // Track if we've already added the popstate listener to prevent multiple adds/removes
-  const popStateListenerRef = useRef<boolean>(false);
-  
-  // Store the handler as a ref to maintain reference stability
-  const handlePopStateRef = useRef<((event: PopStateEvent) => void) | undefined>(undefined);
-
   // Memoize handler functions to prevent re-renders
   const handleSelectSuggestion = useCallback(
     (suggestion: string) => {
@@ -132,73 +126,6 @@ function ChatInterface({
   useEffect(() => {
     autoResizeTextarea();
   }, [autoResizeTextarea]);
-
-  // Handle browser history navigation (back/forward buttons)
-  useEffect(() => {
-    // Create the handler function
-    handlePopStateRef.current = (event: PopStateEvent) => {
-      console.log('ChatInterface.handlePopState: Navigation event detected', event.state);
-      // If there's a sessionId in the state, load that session
-      if (event.state?.sessionId) {
-        console.log(
-          'ChatInterface.handlePopState: Session ID found in state:',
-          event.state.sessionId
-        );
-        // If we have an onSessionCreated callback, call it with the sessionId from state
-        if (onSessionCreated) {
-          console.log(
-            'ChatInterface.handlePopState: Calling onSessionCreated with ID:',
-            event.state.sessionId
-          );
-          onSessionCreated(event.state.sessionId);
-        }
-      } else {
-        console.log('ChatInterface.handlePopState: No session ID in state, treating as new chat');
-        // If we're navigating to a page without a sessionId (like the home page)
-        // call onNewChat if available
-        if (onNewChat) {
-          onNewChat();
-        }
-      }
-    };
-
-    // Only add event listener if it's not already added
-    if (!popStateListenerRef.current && handlePopStateRef.current) {
-      window.addEventListener('popstate', handlePopStateRef.current);
-      popStateListenerRef.current = true;
-      console.log('ChatInterface: Added popstate event listener');
-    }
-
-    // Clean up the event listener on unmount
-    return () => {
-      if (popStateListenerRef.current && handlePopStateRef.current) {
-        window.removeEventListener('popstate', handlePopStateRef.current);
-        popStateListenerRef.current = false;
-        console.log('ChatInterface: Removed popstate event listener');
-      }
-    };
-  }, []);  // Empty dependency array since we're using refs
-
-  // Update the handler references when callbacks change
-  useEffect(() => {
-    if (handlePopStateRef.current) {
-      // Update the handler with new callback references
-      handlePopStateRef.current = (event: PopStateEvent) => {
-        console.log('ChatInterface.handlePopState: Navigation event detected', event.state);
-        // If there's a sessionId in the state, load that session
-        if (event.state?.sessionId) {
-          if (onSessionCreated) {
-            onSessionCreated(event.state.sessionId);
-          }
-        } else {
-          // If we're navigating to a page without a sessionId
-          if (onNewChat) {
-            onNewChat();
-          }
-        }
-      };
-    }
-  }, [onSessionCreated, onNewChat]);
 
   // Load session data when sessionId changes
   useEffect(() => {
