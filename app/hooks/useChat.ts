@@ -118,7 +118,9 @@ export function useChat(
     parserState.current.on('text', (textChunk: string, fullText: string) => {
       // Only update with text when not in a code block to prevent code duplication
       if (!parserState.current.inCodeBlock) {
-        setCurrentStreamedText(fullText); // Update with the full displayText from parser
+        // Instead of using the parser's fullText (which might contain code), 
+        // we'll only use the new chunk if we're not in a code block
+        setCurrentStreamedText(prevText => prevText + textChunk);
       }
     });
 
@@ -153,6 +155,8 @@ export function useChat(
       rawStreamBuffer.current = '';
       // Reset segment tracker
       segmentTracker.current = [];
+      // Reset code line counter
+      codeLineCount.current = 0;
 
       // Add user message
       setMessages((prev) => [...prev, { text: input, type: 'user' }]);
@@ -239,7 +243,11 @@ export function useChat(
                       
                       // Only add transition indicator if we haven't already set "Writing code..."
                       if (!writingCodeMessageAdded) {
-                        setCurrentStreamedText(prevText => prevText.trim() + '\n\n> Implementing solution... 💻\n\n');
+                        // Use a direct setText approach instead of appending to avoid code leakage
+                        setCurrentStreamedText(prevText => {
+                          const baseText = parser.displayText.replace(/```[\s\S]*?```/g, '').trim();
+                          return baseText + '\n\n> Implementing solution... 💻\n\n';
+                        });
                         writingCodeMessageAdded = true;
                         codeLineCount.current = 0; // Reset line count for new code block
                       } else {
@@ -248,9 +256,10 @@ export function useChat(
                           .filter(segment => segment.type === 'code')
                           .length;
                           
-                        setCurrentStreamedText(prevText => 
-                          prevText.trim() + `\n\n> Adding code snippet #${codeBlockNumber}... 📝\n\n`
-                        );
+                        setCurrentStreamedText(prevText => {
+                          const baseText = parser.displayText.replace(/```[\s\S]*?```/g, '').trim();
+                          return baseText + `\n\n> Adding code snippet #${codeBlockNumber}... 📝\n\n`;
+                        });
                         codeLineCount.current = 0; // Reset line count for new code block
                       }
                     }
@@ -314,30 +323,35 @@ export function useChat(
                         ? firstCodeLine.substring(0, 38) + '...'
                         : firstCodeLine;
                       
-                      // Update the streaming text to show current line count
+                      // Instead of trying to modify the existing text (which might contain code),
+                      // regenerate the clean message text with the updated indicator
                       setCurrentStreamedText(prevText => {
+                        // Get the base text without any code blocks
+                        const baseText = parser.displayText.replace(/```[\s\S]*?```/g, '').trim();
+                        
                         // Find appropriate indicator pattern based on which code block we're in
                         const codeBlockNumber = segmentTracker.current
                           .filter(segment => segment.type === 'code')
                           .length;
                         
-                        let indicatorRegex;
-                        let replacementText;
-                        
+                        let indicator;
                         if (codeBlockNumber <= 1) {
-                          // First code block
-                          indicatorRegex = /> Implementing solution... 💻.*/;
-                          replacementText = `> Implementing solution... 💻 (${codeLineCount.current} lines of code)\n> ${codePreview}`;
+                          // First code block - only show line count, no preview if there's no good first line
+                          if (firstCodeLine.trim()) {
+                            indicator = `> Implementing solution... 💻 (${codeLineCount.current} lines of code)\n> ${codePreview}`;
+                          } else {
+                            indicator = `> Implementing solution... 💻 (${codeLineCount.current} lines of code)`;
+                          }
                         } else {
                           // Additional code blocks
-                          indicatorRegex = new RegExp(`> Adding code snippet #${codeBlockNumber}... 📝.*`);
-                          replacementText = `> Adding code snippet #${codeBlockNumber}... 📝 (${codeLineCount.current} lines of code)\n> ${codePreview}`;
+                          if (firstCodeLine.trim()) {
+                            indicator = `> Adding code snippet #${codeBlockNumber}... 📝 (${codeLineCount.current} lines of code)\n> ${codePreview}`;
+                          } else {
+                            indicator = `> Adding code snippet #${codeBlockNumber}... 📝 (${codeLineCount.current} lines of code)`;
+                          }
                         }
                         
-                        if (indicatorRegex && indicatorRegex.test(prevText)) {
-                          return prevText.replace(indicatorRegex, replacementText);
-                        }
-                        return prevText;
+                        return baseText + '\n\n' + indicator;
                       });
                     }
                   }
@@ -365,8 +379,8 @@ export function useChat(
           preview: segment.content.substring(0, 30).replace(/\n/g, '\\n') + '...'
         })));
 
-        // Clean up the message text - use parser's displayText instead of currentStreamedText
-        let cleanedMessage = parser.displayText || currentStreamedText;
+        // Clean up the message text - use clean text without code blocks
+        let cleanedMessage = parser.displayText.replace(/```[\s\S]*?```/g, '').trim();
 
         // Clean up any extra whitespace at the beginning
         cleanedMessage = cleanedMessage.trimStart();
