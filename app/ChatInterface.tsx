@@ -361,7 +361,6 @@ function ChatInterface({
           setInput(e.target.value);
         }}
         onSend={() => {
-          console.debug('Sending message:', input); // Add logging
           chatState.parserState.current.reset(); // Ensure parser is reset for each new message
           sendMessage();
         }}
@@ -370,7 +369,6 @@ function ChatInterface({
         onKeyDown={(e) => {
           if (e.key === 'Enter' && !e.shiftKey && !isGenerating) {
             e.preventDefault();
-            console.debug('Sending message:', input); // Add logging
             chatState.parserState.current.reset(); // Ensure parser is reset for each new message
             sendMessage();
           }
