@@ -220,8 +220,27 @@ export function useSimpleChat() {
           // Decode the chunk
           const chunk = decoder.decode(value, { stream: true });
           
-          // Add to stream buffer - we get raw content, not SSE formatted events
-          streamBufferRef.current += chunk;
+          // Process SSE format
+          const lines = chunk.split('\n');
+          for (const line of lines) {
+            // Skip OpenRouter processing messages
+            if (line.startsWith(': OPENROUTER PROCESSING')) {
+              continue;
+            }
+            
+            if (line.startsWith('data: ') && line !== 'data: [DONE]') {
+              try {
+                const data = JSON.parse(line.substring(6));
+                if (data.choices && data.choices[0]?.delta?.content) {
+                  const content = data.choices[0].delta.content;
+                  // Add only the actual content to the buffer
+                  streamBufferRef.current += content;
+                }
+              } catch (e) {
+                console.error('Error parsing SSE JSON:', e);
+              }
+            }
+          }
           
           // Parse current buffer for AI message update
           const { segments, dependenciesString } = parseContent(streamBufferRef.current);
