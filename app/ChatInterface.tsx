@@ -1,5 +1,6 @@
 import { useEffect, useState, useMemo, useCallback, useRef } from 'react';
-import type { ChatMessage, SessionDocument, Segment } from './types/chat';
+import type { ChangeEvent } from 'react';
+import type { ChatMessage, Segment, AiChatMessage } from './types/chat';
 import { useFireproof } from 'use-fireproof';
 import SessionSidebar from './components/SessionSidebar';
 import ChatHeader from './components/ChatHeader';
@@ -8,6 +9,15 @@ import ChatInput from './components/ChatInput';
 import QuickSuggestions from './components/QuickSuggestions';
 import { useChatContext } from './context/ChatContext';
 
+// Define updated document type to work with Fireproof correctly
+interface SessionDocument {
+  _id: string;
+  title?: string;
+  timestamp: number;
+  messages?: ChatMessage[];
+}
+
+// Updated interface to match useSimpleChat's return value
 interface ChatInterfaceProps {
   chatState: {
     messages: ChatMessage[];
@@ -28,7 +38,6 @@ interface ChatInterfaceProps {
   sessionId?: string | null;
   onSessionCreated?: (newSessionId: string) => void;
   onNewChat?: () => void;
-  onCodeGenerated?: (code: string, dependencies?: Record<string, string>) => void;
 }
 
 // Helper function to encode titles for URLs
@@ -38,26 +47,13 @@ function encodeTitle(title: string): string {
     .replace(/%20/g, '-');
 }
 
-// ChatInterface component handles user input and displays chat messages
 function ChatInterface({
   chatState,
   sessionId,
   onSessionCreated,
   onNewChat,
-  onCodeGenerated,
 }: ChatInterfaceProps) {
-  const [isShrinking, setIsShrinking] = useState(false);
-  const [isExpanding, setIsExpanding] = useState(false);
-  const { database, useLiveQuery } = useFireproof('fireproof-chat-history');
-
-  // Maintain a stable ref to the database to prevent re-renders
-  const databaseRef = useRef(database);
-
-  // Update database ref when it changes
-  useEffect(() => {
-    databaseRef.current = database;
-  }, [database]);
-
+  // Extract commonly used values from chatState to avoid repetition
   const {
     messages,
     setMessages,
@@ -69,355 +65,242 @@ function ChatInterface({
     autoResizeTextarea,
     scrollToBottom,
     sendMessage,
+    currentSegments,
+    getCurrentCode,
+    title,
+    setTitle
   } = chatState;
 
-  // Query chat sessions ordered by timestamp (newest first)
-  const { docs: sessions } = useLiveQuery('timestamp', {
-    descending: true,
-  });
-
-  // Get values from context when available
   const chatContext = useChatContext();
+  const { database } = useFireproof('sessions');
+  const databaseRef = useRef(database);
 
-  // Create a ref to store setMessages function to avoid dependency cycles
+  // Use refs to maintain stable references to functions
   const setMessagesRef = useRef(setMessages);
+  const scrollToBottomRef = useRef(scrollToBottom);
 
-  // Keep the ref updated with the latest setMessages function
+  // State for UI transitions and sharing
+  const [isShrinking, setIsShrinking] = useState(false);
+  const [isExpanding, setIsExpanding] = useState(false);
+  const [isFetchingSession, setIsFetchingSession] = useState(false);
+
+  // Update refs when values change
   useEffect(() => {
     setMessagesRef.current = setMessages;
-  }, [setMessages]);
+    scrollToBottomRef.current = scrollToBottom;
+  }, [setMessages, scrollToBottom]);
 
-  // Track if we are manually setting input to prevent feedback loops
-  const isSettingInput = useRef(false);
-
-  // Memoize handler functions to prevent re-renders
-  const handleSelectSuggestion = useCallback(
-    (suggestion: string) => {
-      // Set local state directly
-      setInput(suggestion);
-
-      // Focus the input after setting the value
-      setTimeout(() => {
-        if (inputRef.current) {
-          inputRef.current.focus();
+  // Function to load session data
+  async function loadSessionData() {
+    if (sessionId && !isFetchingSession) {
+      setIsFetchingSession(true);
+      try {
+        const sessionDoc = await databaseRef.current.get(sessionId) as any as SessionDocument;
+        if (!sessionDoc || !sessionDoc.messages) {
+          throw new Error('No session found or invalid session data');
         }
-      }, 0);
-    },
-    [inputRef, setInput]
-  );
 
-  // Focus input on mount
-  useEffect(() => {
-    inputRef.current?.focus();
-  }, [inputRef]);
+        // Use the ref to access the latest setMessages function
+        setMessagesRef.current(sessionDoc.messages);
 
-  // Auto-resize textarea when input changes
-  useEffect(() => {
-    autoResizeTextarea();
-  }, [autoResizeTextarea]);
+        // If the session has a title, update it
+        if (sessionDoc.title) {
+          setTitle(sessionDoc.title);
+        }
+        
+        // Get the last AI message with code 
+        const lastAiMessage = [...sessionDoc.messages].reverse().find(
+          (msg): msg is AiChatMessage => 
+            msg.type === 'ai' && msg.segments.some((seg: Segment) => seg.type === 'code')
+        );
+      } catch (error) {
+        console.error('ChatInterface: Error loading session:', error);
+      } finally {
+        setIsFetchingSession(false);
+      }
+    }
+  }
 
   // Load session data when sessionId changes
   useEffect(() => {
-    async function loadSessionData() {
-      if (sessionId) {
-        try {
-          const sessionData = (await databaseRef.current.get(sessionId)) as SessionDocument;
-          // Normalize session data to guarantee messages array exists
-          const messages = Array.isArray(sessionData.messages) ? sessionData.messages : [];
-          // Use the ref to access the latest setMessages function
-          setMessagesRef.current(messages);
+    loadSessionData();
+  }, [sessionId]);
 
-          // Find the last AI message with code
-          const lastAiMessageWithCode = [...messages]
-            .reverse()
-            .find((msg): msg is ChatMessage & { type: 'ai' } => 
-              msg.type === 'ai' && msg.segments.some(segment => segment.type === 'code')
-            );
-          
-          if (lastAiMessageWithCode) {
-            // Get code and dependencies
-            const codeSegment = lastAiMessageWithCode.segments.find(segment => segment.type === 'code');
-            const code = codeSegment?.content || '';
-            
-            // Get dependencies
-            const dependencies = lastAiMessageWithCode.dependenciesString 
-              ? JSON.parse(lastAiMessageWithCode.dependenciesString.replace(/}}$/, '}'))
-              : {};
-            
-            // Notify code generation handlers
-            onCodeGenerated?.(code, dependencies);
-          }
-        } catch (error) {
-          console.error('ChatInterface: Error loading session:', error);
-        }
-      }
-    }
-
-    // Only load session data if we have a sessionId and it's not already loading
-    const loadingTimeoutId = setTimeout(() => {
-      loadSessionData();
-    }, 0);
-
-    return () => {
-      clearTimeout(loadingTimeoutId);
-    };
-  }, [sessionId, databaseRef]); // Keep only essential dependencies
-
-  // Track streaming state to detect when streaming completes
-  const wasGeneratingRef = useRef(isGenerating);
-
-  // Save messages to Fireproof ONLY when streaming completes or on message count change
+  // Save session data when messages change
   useEffect(() => {
-    async function saveSessionData() {
-      // Only save when streaming just completed (wasGenerating was true, but isGenerating is now false)
-      const streamingJustCompleted = wasGeneratingRef.current && !isGenerating;
-
-      if (messages.length > 0 && streamingJustCompleted) {
-        // Extract title from first user message
-        const firstUserMessage = messages.find((msg) => msg.type === 'user');
-        const title = firstUserMessage?.text || 'Untitled Chat';
-
+    const saveData = async () => {
+      // If we have a sessionId and messages, save them
+      if (sessionId && messages.length > 0) {
         try {
-          const sessionData = {
-            type: 'session',
-            title,
+          // Get the current document or create a new one
+          const sessionDoc = await databaseRef.current
+            .get(sessionId)
+            .catch(() => ({
+              _id: sessionId,
+              timestamp: Date.now(),
+              title: title || 'New Chat',
+            })) as any as SessionDocument;
+
+          // Update with the current messages and title
+          const updatedDoc = {
+            ...sessionDoc,
             messages,
+            title: title || 'New Chat',
             timestamp: Date.now(),
-            ...(sessionId ? { _id: sessionId } : {}),
           };
 
-          const result = await databaseRef.current.put(sessionData);
-
-          // If this was a new session, notify the parent component using optional chaining
-          if (!sessionId) {
-            // Update the URL in the browser history without reloading
-            const encodedTitle = encodeTitle(title);
-            const url = `/session/${result.id}/${encodedTitle}`;
-            window.history.pushState({ sessionId: result.id }, '', url);
-
-            // Notify parent component
-            onSessionCreated?.(result.id);
-          }
+          // Save to the database
+          await databaseRef.current.put(updatedDoc);
         } catch (error) {
-          console.error('Error saving session to Fireproof:', error);
+          console.error('ChatInterface: Error saving session:', error);
         }
       }
+    };
 
-      // Update ref for next comparison
-      wasGeneratingRef.current = isGenerating;
-    }
+    saveData();
+  }, [messages, sessionId, title]);
 
-    saveSessionData();
-  }, [isGenerating, sessionId]); // Minimize dependencies
-
-  // Load a session from the sidebar
-  const handleLoadSession = useCallback(
-    async (session: SessionDocument) => {
-      // Ensure session has an _id - this is guaranteed by the component API
-      const sessionId = session._id;
-
-      try {
-        const sessionData = (await databaseRef.current.get(sessionId)) as SessionDocument;
-        // Normalize session data to guarantee messages array exists
-        const messages = Array.isArray(sessionData.messages) ? sessionData.messages : [];
-        // Use the ref to access the latest setMessages function
-        setMessagesRef.current(messages);
-
-        // Find the last AI message with code to update the editor
-        const lastAiMessageWithCode = [...messages]
-          .reverse()
-          .find((msg: ChatMessage) => msg.type === 'ai' && msg.code);
-
-        // If we found an AI message with code, update the code view
-        if (lastAiMessageWithCode?.code) {
-          const dependencies = lastAiMessageWithCode.dependencies || {};
-
-          // 1. Update local chatState
-          chatState.streamingCode = lastAiMessageWithCode.code;
-          chatState.completedCode = lastAiMessageWithCode.code;
-          chatState.parserState.current.dependencies = dependencies;
-          chatState.isStreaming = false;
-          chatState.isGenerating = false;
-
-          // Manually extract the UI code for app preview
-          chatState.completedMessage = lastAiMessageWithCode.text || "Here's your app:";
-
-          // 2. Call the onCodeGenerated callback to update parent state
-          onCodeGenerated?.(lastAiMessageWithCode.code, dependencies);
-        } else {
-          // No code found in session
-        }
-
-        // Notify parent component of session change
-        onSessionCreated?.(sessionId);
-      } catch (error) {
-        console.error('ChatInterface.handleLoadSession: Error loading session:', error);
-      }
-    },
-    [databaseRef, chatState, onCodeGenerated, onSessionCreated]
-  );
-
-  // Handle the "New Chat" button click
-  const handleNewChatButtonClick = useCallback(() => {
-    // Start the shrinking animation
+  // Create a new chat session
+  const handleNewChat = useCallback(() => {
+    // First trigger animation
     setIsShrinking(true);
-    setIsExpanding(false);
 
-    // After animation completes, reset the state
-    setTimeout(
-      () => {
-        // If onNewChat callback is provided, call it
-        if (onNewChat) {
-          onNewChat();
-        }
+    // Then reset state after animation
+    setTimeout(() => {
+      // Clear messages
+      setMessagesRef.current([]);
+      // Reset title
+      setTitle('New Chat');
+      // Call onNewChat if provided
+      onNewChat?.();
+      // Reset animation state
+      setIsShrinking(false);
+      setIsExpanding(true);
+      // Reset expansion state after animation
+      setTimeout(() => setIsExpanding(false), 500);
+    }, 500);
+  }, [onNewChat, setTitle]);
 
-        // Clear the UI without clearing saved messages yet
-        setInput('');
+  // Handle session selection
+  const handleSelectSession = useCallback((session: any) => {
+    if (session && session._id) {
+      // First shrink the current UI
+      setIsShrinking(true);
 
-        // Navigate to the root path
-        // window.history.pushState({ sessionId: null }, '', '/');
-        window.location.href = '/';
+      // Then load the new session after animation
+      setTimeout(() => {
+        onSessionCreated?.(session._id);
+        chatContext.closeSidebar();
+        setIsShrinking(false);
+        setIsExpanding(true);
+        // Reset expansion state after animation
+        setTimeout(() => setIsExpanding(false), 500);
+      }, 500);
+    }
+  }, [onSessionCreated, chatContext.closeSidebar]);
 
-        // // Reset animation states
-        // setIsShrinking(false);
-
-        // // Add a small bounce effect when the new chat appears
-        // setIsExpanding(true);
-        // setTimeout(() => {
-        //   setIsExpanding(false);
-        // }, 300);
-
-        // // Clear messages once animation is complete and navigation happened
-        // setTimeout(() => {
-        //   setMessages([]);
-        // }, 100);
-      },
-      500 + messages.length * 50
-    );
-  }, [onNewChat, messages.length, setInput, setMessages, setIsShrinking, setIsExpanding]);
-
-  const handleSelectSession = (session: SessionDocument) => {
-    // Navigate to the session route
-    const encodedTitle = encodeTitle(session.title || 'Untitled Session');
-    const url = `/session/${session._id}/${encodedTitle}`;
-
-    // Use window.location.href to force a full page reload to the new URL
-    window.location.href = url;
-
-    // No need to call onSessionCreated since the page will reload
-    // and the Session component will handle initializing with the new sessionId
-  };
-
-  // This function will be called when a new session is created
+  // Handle session creation callback
   const handleSessionCreated = (newSessionId: string) => {
-    // If there's a provided callback, call it
-    if (onSessionCreated) {
-      onSessionCreated(newSessionId);
-    }
-
-    // Navigate to the new session without reloading by pushing to history state
-    // This allows for a seamless experience when creating a new session during streaming
-    const url = `/session/${newSessionId}/new-session`;
-    window.history.pushState({ sessionId: newSessionId }, '', url);
+    onSessionCreated?.(newSessionId);
   };
 
-  // Memoize child components to prevent unnecessary re-renders
-  const chatHeader = useMemo(
-    () => (
-      <ChatHeader
-        onOpenSidebar={chatContext.openSidebar}
-        onNewChat={handleNewChatButtonClick}
-        isGenerating={isGenerating}
-      />
-    ),
-    [chatContext.openSidebar, handleNewChatButtonClick, isGenerating]
-  );
-
-  const sessionSidebar = useMemo(
-    () => (
-      <SessionSidebar
-        isVisible={chatContext.isSidebarVisible}
-        onClose={chatContext.closeSidebar}
-        onSelectSession={handleSelectSession}
-      />
-    ),
-    [chatContext.isSidebarVisible, chatContext.closeSidebar, handleSelectSession]
-  );
-
-  const messageList = useMemo(
-    () => (
-      <MessageList
-        messages={messages}
-        isGenerating={isGenerating}
-        currentStreamedText={currentStreamedText}
-        isShrinking={isShrinking}
-        isExpanding={isExpanding}
-        messagesEndRef={messagesEndRef}
-      />
-    ),
-    [messages, isGenerating, currentStreamedText, isShrinking, isExpanding, messagesEndRef]
-  );
-
-  const quickSuggestions = useMemo(
-    () => messages.length === 0 && <QuickSuggestions onSelectSuggestion={handleSelectSuggestion} />,
-    [messages.length, handleSelectSuggestion]
-  );
-
-  // Memoize ChatInput with direct props instead of relying on context
-  const chatInput = useMemo(() => {
-    return (
-      <ChatInput
-        value={input}
-        onChange={(e) => {
-          setInput(e.target.value);
-        }}
-        onSend={sendMessage}
-        disabled={isGenerating}
-        inputRef={inputRef}
-        onKeyDown={(e) => {
-          if (e.key === 'Enter' && !e.shiftKey && !isGenerating) {
-            e.preventDefault();
-            sendMessage();
-          }
-        }}
-      />
-    );
-  }, [input, isGenerating, setInput, sendMessage, inputRef]);
-
-  // Keep isGenerating in sync with context
-  useEffect(() => {
-    if (chatState.isGenerating !== chatContext.isGenerating) {
-      chatContext.setIsGenerating(chatState.isGenerating);
-    }
-  }, [chatContext, chatState.isGenerating]);
-
-  // Replace chatState.currentStreamedText references with content from the last streaming message
+  // Compute current streaming message text
   const currentStreamedText = useMemo(() => {
     const lastAiMessage = [...messages].reverse().find(
-      (msg): msg is ChatMessage & { type: 'ai' } => 
+      (msg): msg is AiChatMessage => 
         msg.type === 'ai' && Boolean(msg.isStreaming)
     );
     return lastAiMessage?.text || '';
   }, [messages]);
 
+  // Function to handle input changes
+  const handleInputChange = useCallback((e: ChangeEvent<HTMLTextAreaElement>) => {
+    setInput(e.target.value);
+  }, [setInput]);
+
+  // Function to handle keyboard events in textarea
+  const handleKeyDown = useCallback((e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === 'Enter' && !e.shiftKey && !isGenerating) {
+      e.preventDefault();
+      sendMessage();
+    }
+  }, [isGenerating, sendMessage]);
+
+  // Function to handle suggestion selection
+  const handleSelectSuggestion = useCallback((suggestion: string) => {
+    setInput(suggestion);
+  }, [setInput]);
+
+  // Memoize the MessageList component to prevent unnecessary re-renders
+  const memoizedMessageList = useMemo(
+    () => (
+      <MessageList
+        messages={messages}
+        isGenerating={isGenerating}
+        isShrinking={isShrinking}
+        isExpanding={isExpanding}
+      />
+    ),
+    [messages, isGenerating, currentStreamedText, isShrinking, isExpanding]
+  );
+
+  // Render the quick suggestions conditionally
+  const quickSuggestions = useMemo(
+    () => (messages.length === 0 ? <QuickSuggestions onSelectSuggestion={handleSelectSuggestion} /> : null),
+    [messages.length, handleSelectSuggestion]
+  );
+
+  // Auto-resize textarea when input changes
+  useEffect(() => {
+    autoResizeTextarea();
+  }, [input, autoResizeTextarea]);
+
+  // Show typing indicator when generating
+  useEffect(() => {
+    if (isGenerating) {
+      scrollToBottomRef.current();
+    }
+  }, [chatContext, isGenerating]);
+
   return (
-    <div className="relative flex h-full w-full flex-col overflow-hidden">
-      {chatHeader}
-      <SessionSidebar
-        isVisible={chatContext.isSidebarVisible}
-        onClose={chatContext.closeSidebar}
-        onSelectSession={handleSelectSession}
+    <div className="chat-interface flex h-full flex-col">
+      {/* Header with session title and controls */}
+      <ChatHeader
+        onOpenSidebar={chatContext.openSidebar}
+        onNewChat={handleNewChat}
+        isGenerating={isGenerating}
       />
 
+      {/* The sidebar is memoized to prevent unnecessary re-renders */}
+      {useMemo(
+        () => (
+          <SessionSidebar
+            isVisible={chatContext.isSidebarVisible}
+            onClose={chatContext.closeSidebar}
+            onSelectSession={handleSelectSession}
+          />
+        ),
+        [chatContext.isSidebarVisible, chatContext.closeSidebar, handleSelectSession]
+      )}
+
       <div className="relative flex flex-col overflow-y-auto" style={{ flexGrow: 1 }}>
-        {/* Message list */}
-        {messageList}
+        {/* Conversation history */}
+        {memoizedMessageList}
 
-        {/* Quick access buttons */}
+        {/* Suggestions shown when there are no messages */}
         {quickSuggestions}
+      </div>
 
-        {/* Chat input */}
-        {chatInput}
+      {/* Input area */}
+      <div className="bg-light-surface-01 dark:bg-dark-surface-00 px-6 py-4">
+        <ChatInput
+          value={input}
+          onChange={handleInputChange}
+          onSend={sendMessage}
+          onKeyDown={handleKeyDown}
+          disabled={isGenerating}
+          inputRef={inputRef}
+        />
       </div>
     </div>
   );

@@ -374,3 +374,21 @@ We've made significant progress implementing the simplified chat architecture:
 
 The new segment-based approach is simpler, more maintainable, and provides a clearer data flow. By parsing the content directly into segments and making those available through the hook's API, we've removed the need for complex event handling and state synchronization, resulting in more predictable behavior and easier debugging.
 
+## Files to Remove or Fix
+
+After completing the migration to the simplified chat architecture, the following files should be addressed:
+
+1. **app/hooks/useChat.ts**
+   - This file has numerous TypeScript errors related to the updated `ChatMessage` types
+   - Since we've migrated to useSimpleChat, this file can be safely removed once all components are updated
+
+2. **app/tests/ChatInterface.test.tsx**
+   - Needs to be updated to use the correct ChatInterface props with the new chat state structure
+   - The mock state should include currentSegments, getCurrentCode, title, and setTitle properties
+
+3. **tests/useChatSessions.test.ts**
+   - Contains test fixtures that don't match the updated AiChatMessage type
+   - Need to add 'segments' property to AI message objects
+
+These files have been identified as sources of TypeScript errors but don't affect the runtime functionality of the application since we're successfully using the new useSimpleChat implementation throughout the app.
+

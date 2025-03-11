@@ -1,12 +1,11 @@
 import { useEffect, useState, useRef, useCallback } from 'react';
 import { useParams } from 'react-router';
 import ChatInterface from '../ChatInterface';
-import { useChat } from '../hooks/useChat';
 import { useFireproof } from 'use-fireproof';
-import { ChatProvider } from '../context/ChatContext';
 import ResultPreview from '../components/ResultPreview/ResultPreview';
-import type { ChatMessage, SessionDocument } from '../types/chat';
-import { useSimpleChat } from '~/hooks/useSimpleChat';
+import type { ChatMessage, AiChatMessage, SessionDocument, Segment } from '../types/chat';
+import { useSimpleChat } from '../hooks/useSimpleChat';
+import { parseDependencies } from '../utils/segmentParser';
 
 export function meta() {
   return [
@@ -16,7 +15,7 @@ export function meta() {
 }
 
 export default function Session() {
-  const { sessionId, title } = useParams();
+  const { sessionId } = useParams();
 
   const [state, setState] = useState({
     generatedCode: '',
@@ -32,6 +31,22 @@ export default function Session() {
     databaseRef.current = database;
   }, [database]);
 
+  // Use the simple chat hook
+  const chatState = useSimpleChat();
+
+  // Helper function to extract dependencies from segments
+  const getDependencies = useCallback(() => {
+    const lastAiMessage = [...chatState.messages].reverse().find(
+      (msg): msg is AiChatMessage => msg.type === 'ai'
+    );
+    
+    if (lastAiMessage?.dependenciesString) {
+      return parseDependencies(lastAiMessage.dependenciesString);
+    }
+    
+    return {};
+  }, [chatState.messages]);
+
   // Handle code generation from chat interface with stable callback reference
   const handleCodeGenerated = useCallback(
     (code: string, dependencies: Record<string, string> = {}) => {
@@ -43,36 +58,23 @@ export default function Session() {
     []
   );
 
-  // Set up chat state with the simple chat hook
-  const chatState = useSimpleChat();
-
-  // Create a ref to chatState to avoid dependency cycles
-  const chatStateRef = useRef(chatState);
-
-  // Update the ref when chatState changes
-  useEffect(() => {
-    chatStateRef.current = chatState;
-  }, [chatState]);
-  
-  // Effect to handle code generation when AI message completes
+  // Extract code and dependencies when AI message completes
   useEffect(() => {
     // Find the last AI message
     const lastAiMessage = [...chatState.messages].reverse().find(
       (msg) => msg.type === 'ai' && !msg.isStreaming
     );
     
-    // If we found a completed AI message with code, trigger the handler
+    // If we found a completed AI message, extract code and dependencies
     if (lastAiMessage && lastAiMessage.type === 'ai') {
       const code = chatState.getCurrentCode();
       if (code) {
-        // Get dependencies from the AI message
-        const dependencies = lastAiMessage.dependenciesString 
-          ? JSON.parse(lastAiMessage.dependenciesString.replace(/}}$/, '}'))
-          : {};
+        // Extract dependencies from segments
+        const dependencies = getDependencies() || {};
         handleCodeGenerated(code, dependencies);
       }
     }
-  }, [chatState.messages, chatState.getCurrentCode, handleCodeGenerated]);
+  }, [chatState.messages, chatState.getCurrentCode, getDependencies, handleCodeGenerated]);
 
   // Handle session change
   useEffect(() => {
@@ -87,28 +89,28 @@ export default function Session() {
           const messages = Array.isArray(sessionData.messages) ? sessionData.messages : [];
 
           // Clear current messages and set the loaded ones
-          chatStateRef.current.setMessages(messages);
+          chatState.setMessages(messages);
 
           // Find the last AI message with code to update the ResultPreview
           const lastAiMessageWithCode = [...messages]
             .reverse()
-            .find((msg: ChatMessage) => msg.type === 'ai' && msg.code);
+            .find((msg: ChatMessage) => msg.type === 'ai');
 
           // If we found an AI message with code, update the code view
-          if (lastAiMessageWithCode?.code) {
-            const dependencies = lastAiMessageWithCode.dependencies || {};
-
-            // Update state for ResultPreview
-            setState({
-              generatedCode: lastAiMessageWithCode.code,
-              dependencies: dependencies,
-            });
-
-            // Use the ref to update chat state properties
-            chatStateRef.current.completedCode = lastAiMessageWithCode.code;
-            chatStateRef.current.streamingCode = lastAiMessageWithCode.code;
-            chatStateRef.current.completedMessage =
-              lastAiMessageWithCode.text || "Here's your app:";
+          if (lastAiMessageWithCode?.type === 'ai') {
+            const aiMessage = lastAiMessageWithCode as AiChatMessage;
+            if (aiMessage.segments) {
+              const codeSegment = aiMessage.segments.find(seg => seg.type === 'code');
+              if (codeSegment) {
+                const dependencies = getDependencies() || {};
+                
+                // Update state for ResultPreview
+                setState({
+                  generatedCode: codeSegment.content,
+                  dependencies: dependencies,
+                });
+              }
+            }
           }
         } catch (error) {
           console.error('Error loading session:', error);
@@ -117,34 +119,39 @@ export default function Session() {
     };
 
     loadSessionData();
-  }, [sessionId, databaseRef]); // Removed chatState from dependencies
+  }, [sessionId, chatState.setMessages, getDependencies]); 
+
+  // Handle new chat creation
+  const handleNewChat = useCallback(() => {
+    // Navigate to home to create a new session
+    window.location.href = '/';
+  }, []);
 
   return (
     <div style={{ display: 'flex', height: 'calc(100vh)' }}>
       <div style={{ flex: '0 0 33.333%', overflow: 'hidden', position: 'relative' }}>
-        <ChatProvider
-          initialState={{
-            input: '',
-            isGenerating: false,
-            isSidebarVisible: false,
-          }}
-        >
-          <ChatInterface
-            chatState={chatState}
-            sessionId={sessionId}
-            onSessionCreated={handleCodeGenerated}
-            onNewChat={handleCodeGenerated}
-          />
-        </ChatProvider>
+        <ChatInterface
+          chatState={chatState}
+          sessionId={sessionId}
+          onSessionCreated={handleCodeGenerated}
+          onNewChat={handleNewChat}
+        />
       </div>
       <div style={{ flex: '0 0 66.667%', overflow: 'hidden', position: 'relative' }}>
         <ResultPreview
           code={state.generatedCode}
           dependencies={state.dependencies}
-          streamingCode={chatState.streamingCode}
-          isStreaming={chatState.isStreaming}
-          completedMessage={chatState.completedMessage}
-          currentStreamContent={chatState.currentStreamedText}
+          streamingCode={chatState.getCurrentCode()}
+          isStreaming={chatState.isGenerating}
+          completedMessage={
+            chatState.messages.length > 0
+              ? chatState.messages.filter(msg => msg.type === 'ai').pop()?.text || ''
+              : ''
+          }
+          currentStreamContent={chatState.currentSegments()
+            .filter((seg: Segment) => seg.type === 'markdown')
+            .map((seg: Segment) => seg.content)
+            .join('')}
           currentMessage={
             chatState.messages.length > 0
               ? { content: chatState.messages[chatState.messages.length - 1].text }

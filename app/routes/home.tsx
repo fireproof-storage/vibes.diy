@@ -2,11 +2,11 @@ import { useEffect, useState, useCallback, useMemo, useRef } from 'react';
 import { useNavigate } from 'react-router';
 import ChatInterface from '../ChatInterface';
 import ResultPreview from '../components/ResultPreview/ResultPreview';
-import { useChat } from '../hooks/useChat';
 import { useFireproof } from 'use-fireproof';
+import type { ChatMessage, AiChatMessage, Segment, SessionDocument } from '../types/chat';
+import { useSimpleChat } from '../hooks/useSimpleChat';
+import { parseContent, parseDependencies } from '../utils/segmentParser';
 import { ChatProvider } from '../context/ChatContext';
-import { useSimpleChat } from '~/hooks/useSimpleChat';
-import type { Segment } from '~/types/chat';
 
 export function meta() {
   return [
@@ -55,13 +55,6 @@ export default function Home() {
   const { database } = useFireproof('fireproof-chat-history');
   const navigate = useNavigate();
 
-  // Keep tracking streaming props with refs to avoid re-renders
-  const streamingPropsRef = useRef({
-    messages: [] as ChatMessage[],
-    currentCode: '',
-    currentSegments: [] as Segment[],
-  });
-
   // Maintain a stable ref to the database to prevent re-renders
   const databaseRef = useRef(database);
 
@@ -70,8 +63,45 @@ export default function Home() {
     databaseRef.current = database;
   }, [database]);
 
-  // Initialize the chat state
+  // Use the simple chat hook
   const chatState = useSimpleChat();
+
+  // Helper function to extract dependencies from segments
+  const getDependencies = useCallback(() => {
+    const lastAiMessage = [...chatState.messages].reverse().find(
+      (msg): msg is AiChatMessage => msg.type === 'ai'
+    );
+    
+    if (lastAiMessage?.dependenciesString) {
+      return parseDependencies(lastAiMessage.dependenciesString);
+    }
+    
+    return {};
+  }, [chatState.messages]);
+
+  // Helper function to clear messages
+  const clearMessages = useCallback(() => {
+    chatState.setMessages([]);
+  }, [chatState]);
+
+  // Helper function to update session title
+  const updateSessionTitle = async (sessionId: string, title: string) => {
+    try {
+      // Get the current session document
+      const sessionDoc = await databaseRef.current.get(sessionId) as SessionDocument;
+
+      // Create a safe update object without undefined values
+      const updatedDoc = {
+        ...sessionDoc,
+        title: title || 'Untitled Chat',
+      };
+
+      // Save the updated document
+      await databaseRef.current.put(updatedDoc);
+    } catch (error) {
+      console.error('Error updating session title:', error);
+    }
+  };
 
   // Update handleCodeGenerated to work with the new hook
   const handleCodeGenerated = useCallback(
@@ -84,95 +114,44 @@ export default function Home() {
     [setState]
   );
 
-  // Setup effect to trigger handleCodeGenerated when a message with code is completed
+  // Extract code and dependencies when AI message completes
   useEffect(() => {
     // Find the last AI message
     const lastAiMessage = [...chatState.messages].reverse().find(
       (msg) => msg.type === 'ai' && !msg.isStreaming
     );
     
-    // If we found a completed AI message with code, trigger the handler
+    // If we found a completed AI message, extract code and dependencies
     if (lastAiMessage && lastAiMessage.type === 'ai') {
       const code = chatState.getCurrentCode();
       if (code) {
-        // Get dependencies from the AI message
-        const dependencies = lastAiMessage.dependenciesString 
-          ? JSON.parse(lastAiMessage.dependenciesString.replace(/}}$/, '}'))
-          : {};
+        // Extract dependencies from segments
+        const dependencies = getDependencies() || {};
         handleCodeGenerated(code, dependencies);
       }
     }
-  }, [chatState.messages, chatState.getCurrentCode, handleCodeGenerated]);
+  }, [chatState.messages, chatState.getCurrentCode, getDependencies, handleCodeGenerated]);
 
-  // Setup effect to handle title generation
-  useEffect(() => {
-    if (chatState.title && chatState.title !== 'New Chat') {
-      handleGeneratedTitle(chatState.title);
-    }
-  }, [chatState.title, handleGeneratedTitle]);
-
-  // Handle the generated title callback
+  // Handle title generation with stable callback reference
   const handleGeneratedTitle = useCallback(
-    async (generatedTitle: string) => {
-      // Handle the generated title
-
-      // Safety check - don't proceed if title is undefined
-      if (!generatedTitle) {
-        console.warn('Skipping title update - received undefined title');
-        return;
-      }
-
-      if (sessionId) {
-        try {
-          // Get the current session document
-          const sessionDoc = await databaseRef.current.get(sessionId);
-
-          // Validate sessionDoc before updating
-          if (!sessionDoc) {
-            console.error('Cannot update title: session document is missing');
-            return;
-          }
-
-          // Create a safe update object without undefined values
-          const updatedDoc = {
-            ...sessionDoc,
-            title: generatedTitle || 'Untitled Chat', // Ensure title is never undefined
-          };
-
-          // Save the updated document
-          await databaseRef.current.put(updatedDoc);
-        } catch (error) {
-          console.error('Error updating session title:', error);
-        }
+    (generatedTitle: string) => {
+      // If we already have a sessionId, update the title directly
+      if (sessionId && !isCreatingSession) {
+        updateSessionTitle(sessionId, generatedTitle);
       } else {
-        // If no sessionId yet, store the title for later use
+        // Otherwise, store it for when the session is created
         setPendingTitle(generatedTitle);
       }
     },
     [sessionId, isCreatingSession]
   );
 
-  // Update streamingPropsRef to match the new API
+  // Effect to handle title update when title changes
   useEffect(() => {
-    const currentProps = {
-      messages: chatState.messages,
-      currentCode: chatState.getCurrentCode(),
-      currentSegments: chatState.currentSegments(),
-    };
-
-    // Deep comparison to avoid unnecessary updates
-    const hasMessagesChanged =
-      chatState.messages.length !== streamingPropsRef.current.messages?.length ||
-      JSON.stringify(chatState.messages) !== JSON.stringify(streamingPropsRef.current.messages || []);
-    
-    const hasCodeChanged = 
-      currentProps.currentCode !== streamingPropsRef.current.currentCode;
-
-    // Only update the ref if something relevant has changed
-    if (hasMessagesChanged || hasCodeChanged) {
-      streamingPropsRef.current = currentProps;
+    if (chatState.title && chatState.title !== 'New Chat') {
+      handleGeneratedTitle(chatState.title);
     }
-  }, [chatState.messages, chatState.getCurrentCode, chatState.currentSegments]);
+  }, [chatState.title, handleGeneratedTitle]);
 
   // Apply pending title when sessionId becomes available
   useEffect(() => {
@@ -183,28 +162,8 @@ export default function Home() {
       return;
     }
 
-    const updateTitleWhenReady = async () => {
-      try {
-        // Get the current session document
-        const sessionDoc = await databaseRef.current.get(sessionId);
-
-        // Create a safe update object without undefined values
-        const updatedDoc = {
-          ...sessionDoc,
-          title: pendingTitle || 'Untitled Chat',
-        };
-
-        // Save the updated document
-        await databaseRef.current.put(updatedDoc);
-
-        // Clear the pending title after successful update
-        setPendingTitle(null);
-      } catch (error) {
-        console.error('Error updating session title:', error);
-      }
-    };
-
-    updateTitleWhenReady();
+    updateSessionTitle(sessionId, pendingTitle);
+    setPendingTitle(null);
   }, [sessionId, pendingTitle, isCreatingSession]);
 
   // Check for state in URL on component mount
@@ -224,12 +183,6 @@ export default function Home() {
   }, []);
 
   // Handle new session creation
-  const handleSessionCreated = useCallback((newSessionId: string) => {
-    setSessionId(newSessionId);
-    // We don't need to navigate here, as the ChatInterface will do that
-  }, []);
-
-  // Handle new chat (reset session)
   const handleNewChat = useCallback(() => {
     setSessionId(null);
     setShareStatus('');
@@ -237,8 +190,37 @@ export default function Home() {
       generatedCode: '',
       dependencies: {},
     });
-    chatState.setMessages([]);
+    clearMessages();
+  }, [clearMessages]);
+
+  // Handle session creation
+  const handleSessionCreated = useCallback(
+    (newSessionId: string) => {
+      if (newSessionId) {
+        setSessionId(newSessionId);
+        setIsCreatingSession(false);
+
+        // If we have a pending title from an AI response, set it now
+        if (pendingTitle) {
+          updateSessionTitle(newSessionId, pendingTitle);
+          setPendingTitle(null);
+        }
+      }
+    },
+    [pendingTitle]
+  );
+
+  // Handle sending messages with the ChatProvider
+  const handleSendMessage = useCallback(() => {
+    if (chatState.input.trim()) {
+      chatState.sendMessage();
+    }
   }, [chatState]);
+
+  // Handle new chat with the ChatProvider
+  const handleStartNewChat = useCallback(() => {
+    clearMessages();
+  }, [clearMessages]);
 
   function handleShare() {
     if (!state.generatedCode) {
@@ -305,86 +287,32 @@ export default function Home() {
 
   // Memoize dependencies to prevent unnecessary re-renders
   const previewDependencies = useMemo(() => {
-    return chatState.parserState?.current?.dependencies || state.dependencies;
-  }, [chatState.parserState?.current?.dependencies, state.dependencies]);
-
-  // Memoized ChatInterface component with refined dependencies
-  const memoizedChatInterface = useMemo(() => {
-    return (
-      <ChatProvider
-        initialState={{
-          input: '',
-          isGenerating: false,
-          isSidebarVisible: false,
-        }}
-        onSendMessage={(input) => {
-          if (input.trim()) {
-            if (!sessionId) {
-              // If no session exists, create one
-              setIsCreatingSession(true);
-              const newSession = {
-                timestamp: Date.now(),
-                title: input.length > 50 ? `${input.substring(0, 50)}...` : input,
-              };
-
-              databaseRef.current
-                .put(newSession)
-                .then((doc: { id: string }) => {
-                  handleSessionCreated(doc.id);
-                  setIsCreatingSession(false);
-                })
-                .catch((err: Error) => {
-                  console.error('Error creating session:', err);
-                  setIsCreatingSession(false);
-                });
-            }
-          }
-        }}
-        onNewChat={handleNewChat}
-      >
-        <ChatInterface
-          chatState={chatState}
-          onNewChat={handleNewChat}
-          onSessionCreated={handleSessionCreated}
-        />
-      </ChatProvider>
-    );
-  }, [
-    sessionId,
-    handleSessionCreated,
-    handleNewChat,
-    handleCodeGenerated,
-    setIsCreatingSession,
-    // Avoid including the entire chatState to prevent unnecessary re-renders
-    // Only include specific parts that affect the UI
-    chatState.sendMessage,
-    chatState.isGenerating,
-  ]);
+    return getDependencies() || state.dependencies;
+  }, [getDependencies, state.dependencies]);
 
   // Memoized ResultPreview component with improved dependency handling
   const memoizedResultPreview = useMemo(() => {
     const lastAiMessage = [...chatState.messages].reverse().find(
-      (msg) => msg.type === 'ai' && !msg.isStreaming
+      (msg): msg is AiChatMessage => msg.type === 'ai'
     );
     return (
       <ResultPreview
         code={state.generatedCode}
-        streamingCode={streamingPropsRef.current.currentCode}
-        isStreaming={streamingPropsRef.current.messages.length > 0 && chatState.isGenerating}
+        streamingCode={chatState.getCurrentCode()}
+        isStreaming={chatState.messages.length > 0 && chatState.isGenerating}
         dependencies={previewDependencies}
         onShare={handleShare}
         shareStatus={shareStatus}
         completedMessage={lastAiMessage?.text || ''}
-        currentStreamContent={streamingPropsRef.current.currentSegments
-          .filter(seg => seg.type === 'markdown')
-          .map(seg => seg.content)
+        currentStreamContent={chatState.currentSegments()
+          .filter((seg: Segment) => seg.type === 'markdown')
+          .map((seg: Segment) => seg.content)
           .join('')}
         currentMessage={
-          streamingPropsRef.current.messages.length > 0
-            ? streamingPropsRef.current.messages[streamingPropsRef.current.messages.length - 1]
+          chatState.messages.length > 0
+            ? { content: chatState.messages[chatState.messages.length - 1].text }
             : undefined
         }
-        shareUrl={state.shareUrl}
         onScreenshotCaptured={handleScreenshotCaptured}
       />
     );
@@ -396,16 +324,35 @@ export default function Home() {
     handleShare,
     handleScreenshotCaptured,
     chatState.isGenerating,
+    chatState.messages,
+    chatState.currentSegments,
+    chatState.getCurrentCode,
   ]);
 
   return (
-    <div style={{ display: 'flex', height: 'calc(100vh)' }}>
-      <div style={{ flex: '0 0 33.333%', overflow: 'hidden', position: 'relative' }}>
-        {memoizedChatInterface}
+    <ChatProvider
+      initialState={{
+        input: chatState.input,
+        isGenerating: chatState.isGenerating,
+      }}
+      onSendMessage={handleSendMessage}
+      onNewChat={handleStartNewChat}
+    >
+      <div className="flex h-screen flex-col overflow-hidden">
+        <div className="flex h-full flex-1 overflow-hidden">
+          <div className="flex h-full w-1/2 flex-col overflow-hidden">
+            <ChatInterface
+              chatState={chatState}
+              sessionId={sessionId}
+              onSessionCreated={handleSessionCreated}
+              onNewChat={handleNewChat}
+            />
+          </div>
+          <div className="h-full w-1/2">
+            {memoizedResultPreview}
+          </div>
+        </div>
       </div>
-      <div style={{ flex: '0 0 66.667%', overflow: 'hidden', position: 'relative' }}>
-        {memoizedResultPreview}
-      </div>
-    </div>
+    </ChatProvider>
   );
 }
