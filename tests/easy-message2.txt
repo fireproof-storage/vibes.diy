@@ -1,0 +1,205 @@
+{"dependencies": {}}
+
+# Lyrics Rater App
+
+```jsx
+import React, { useState } from "react";
+import { useFireproof } from "use-fireproof";
+
+export default function LyricsRaterApp() {
+  const { database, useDocument, useLiveQuery } = useFireproof("lyrics-rater");
+  const [error, setError] = useState("");
+  const [currentView, setCurrentView] = useState("add");
+  
+  const {
+    doc: newEntry,
+    merge: mergeNewEntry,
+    submit: submitNewEntry,
+    reset: resetEntry,
+  } = useDocument({
+    songTitle: "",
+    artist: "",
+    lyricSnippet: "",
+    context: "",
+    rating: 5,
+    createdAt: Date.now()
+  });
+
+  const { docs: ratedLyrics } = useLiveQuery("rating", { 
+    descending: true 
+  });
+  
+  const validateForm = () => {
+    if (!newEntry.songTitle.trim()) return "Song title is required";
+    if (!newEntry.artist.trim()) return "Artist name is required";
+    if (!newEntry.lyricSnippet.trim()) return "Lyric snippet is required";
+    if (newEntry.lyricSnippet.length > 50) return "Please keep lyric snippets brief (under 50 characters)";
+    return "";
+  };
+  
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    const validationError = validateForm();
+    if (validationError) {
+      setError(validationError);
+      return;
+    }
+    setError("");
+    mergeNewEntry({ createdAt: Date.now() });
+    submitNewEntry();
+  };
+  
+  const addDemoData = async () => {
+    await database.put({ songTitle: "Imagine", artist: "John Lennon", lyricSnippet: "You may say I'm a dreamer", context: "Reflecting on hope", rating: 10, createdAt: Date.now() });
+    await database.put({ songTitle: "Billie Jean", artist: "Michael Jackson", lyricSnippet: "The kid is not my son", context: "Denial of parenthood", rating: 8, createdAt: Date.now() });
+    await database.put({ songTitle: "Bohemian Rhapsody", artist: "Queen", lyricSnippet: "Is this real life?", context: "Existential questioning", rating: 9, createdAt: Date.now() });
+  };
+
+  return (
+    <div className="min-h-screen p-6 bg-gradient-to-br from-orange-900 via-orange-700 to-amber-500 text-white">
+      <div className="max-w-2xl mx-auto">
+        <h1 className="text-4xl font-bold mb-2 text-orange-200 text-center">Lyrics Rater</h1>
+        <p className="mb-6 text-orange-100 italic text-center">
+          *This app lets you save and rate your favorite song lyrics. Add brief snippets (not entire lyrics) from songs you love, rate them on a scale of 1-10, and add context about why those lyrics resonate with you. Browse your collection sorted by your ratings!*
+        </p>
+        
+        <div className="bg-black bg-opacity-40 rounded-lg p-6 backdrop-blur-sm mb-6">
+          <div className="flex gap-4 mb-6">
+            <button 
+              onClick={() => setCurrentView("add")}
+              className={`px-4 py-2 rounded-lg ${currentView === "add" ? 'bg-orange-500' : 'bg-orange-800'} transition-colors`}
+            >
+              Add New Lyric
+            </button>
+            <button 
+              onClick={() => setCurrentView("view")}
+              className={`px-4 py-2 rounded-lg ${currentView === "view" ? 'bg-orange-500' : 'bg-orange-800'} transition-colors`}
+            >
+              View Collection
+            </button>
+            <button 
+              onClick={addDemoData}
+              className="ml-auto px-4 py-2 rounded-lg bg-purple-700 hover:bg-purple-600 transition-colors"
+            >
+              Demo Data
+            </button>
+          </div>
+          
+          {currentView === "add" && (
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div>
+                <label className="block text-orange-200 mb-1">Song Title</label>
+                <input
+                  type="text"
+                  value={newEntry.songTitle}
+                  onChange={(e) => mergeNewEntry({ songTitle: e.target.value })}
+                  className="w-full p-2 rounded bg-black bg-opacity-50 border border-orange-600 text-white"
+                />
+              </div>
+              
+              <div>
+                <label className="block text-orange-200 mb-1">Artist</label>
+                <input
+                  type="text"
+                  value={newEntry.artist}
+                  onChange={(e) => mergeNewEntry({ artist: e.target.value })}
+                  className="w-full p-2 rounded bg-black bg-opacity-50 border border-orange-600 text-white"
+                />
+              </div>
+              
+              <div>
+                <label className="block text-orange-200 mb-1">Lyric Snippet (brief)</label>
+                <textarea
+                  value={newEntry.lyricSnippet}
+                  onChange={(e) => mergeNewEntry({ lyricSnippet: e.target.value })}
+                  className="w-full p-2 rounded bg-black bg-opacity-50 border border-orange-600 text-white h-20"
+                  maxLength={50}
+                ></textarea>
+              </div>
+              
+              <div>
+                <label className="block text-orange-200 mb-1">Why You Love It</label>
+                <textarea
+                  value={newEntry.context}
+                  onChange={(e) => mergeNewEntry({ context: e.target.value })}
+                  className="w-full p-2 rounded bg-black bg-opacity-50 border border-orange-600 text-white h-20"
+                ></textarea>
+              </div>
+              
+              <div>
+                <label className="block text-orange-200 mb-1">Rating: {newEntry.rating}/10</label>
+                <input
+                  type="range"
+                  min="1"
+                  max="10"
+                  value={newEntry.rating}
+                  onChange={(e) => mergeNewEntry({ rating: parseInt(e.target.value) })}
+                  className="w-full accent-orange-500"
+                />
+              </div>
+              
+              {error && <p className="text-red-400">{error}</p>}
+              
+              <button
+                type="submit"
+                className="w-full py-2 bg-orange-500 hover:bg-orange-400 rounded-lg transition-colors"
+              >
+                Save Lyric Rating
+              </button>
+            </form>
+          )}
+          
+          {currentView === "view" && (
+            <div>
+              <h2 className="text-2xl font-bold mb-4 text-orange-200">Your Rated Lyrics</h2>
+              {ratedLyrics.length === 0 ? (
+                <p className="text-orange-100">You haven't added any lyrics yet. Add some or click "Demo Data"!</p>
+              ) : (
+                <div className="space-y-4">
+                  {ratedLyrics.map((lyric) => (
+                    <div key={lyric._id} className="bg-black bg-opacity-20 p-4 rounded-lg border-l-4 border-orange-500">
+                      <div className="flex justify-between items-start mb-2">
+                        <div>
+                          <h3 className="text-xl font-bold text-orange-200">{lyric.songTitle}</h3>
+                          <p className="text-orange-100">{lyric.artist}</p>
+                        </div>
+                        <div className="flex items-center bg-orange-800 px-3 py-1 rounded-full">
+                          <span className="text-orange-200 font-bold">{lyric.rating}</span>
+                          <span className="text-orange-300 text-xs ml-1">/10</span>
+                        </div>
+                      </div>
+                      <p className="text-white font-medium mb-2 italic">"{lyric.lyricSnippet}"</p>
+                      {lyric.context && (
+                        <p className="text-orange-100 text-sm">{lyric.context}</p>
+                      )}
+                      <button 
+                        onClick={() => database.del(lyric._id)} 
+                        className="mt-2 text-xs text-orange-300 hover:text-orange-100"
+                      >
+                        Delete
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+```
+
+This Lyrics Rater app lets you save and rate your favorite song lyrics with a synthwave orange aesthetic. It features:
+
+- A form to add song title, artist, brief lyric snippets, context, and a 1-10 rating
+- Real-time updates to your collection using Fireproof
+- Sorting by rating (highest first)
+- A toggle between "Add" and "View" modes
+- A "Demo Data" button that adds sample entries
+- Form validation to ensure all required fields are filled
+- Ability to delete entries
+- A clear disclaimer that only brief snippets should be stored
+
+The app is designed to avoid copyright issues by limiting lyric snippets to 50 characters and encouraging users to add personal context rather than reproducing entire songs.

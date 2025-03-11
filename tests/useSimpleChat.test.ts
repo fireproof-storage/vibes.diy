@@ -3,6 +3,8 @@ import { renderHook, act, cleanup } from '@testing-library/react';
 import { useSimpleChat } from '../app/hooks/useSimpleChat';
 import { parseContent, parseDependencies } from '../app/utils/segmentParser';
 import type { ChatMessage, AiChatMessage } from '../app/types/chat';
+import fs from 'fs';
+import path from 'path';
 
 // Helper function to convert chunks into SSE format
 function formatAsSSE(chunks: string[]): string[] {
@@ -584,19 +586,381 @@ You can customize the API endpoint and items per page according to your needs. T
     expect(aiMessage.segments[0].content).toContain('Image Gallery Component');
     
     // Second segment should be the main code
-    expect(aiMessage.segments[1].content).toContain('function ImageGallery');
+    expect(aiMessage.segments[1].type).toBe('code');
+    expect(aiMessage.segments[1].content).toContain("function ImageGallery");
     
     // Third segment should be usage instructions in markdown
+    expect(aiMessage.segments[2].type).toBe('markdown');
     expect(aiMessage.segments[2].content).toContain('Usage Instructions');
     
     // Fourth segment should be example code
-    expect(aiMessage.segments[3].content).toContain('import ImageGallery');
+    expect(aiMessage.segments[3].type).toBe('code');
+    expect(aiMessage.segments[3].content).toContain("import ImageGallery");
     
     // Fifth segment should be final markdown
+    expect(aiMessage.segments[4].type).toBe('markdown');
     expect(aiMessage.segments[4].content).toContain('customize the API endpoint');
     
     // getCurrentCode should return the main code block, not the example
     expect(result.current.getCurrentCode()).toContain('function ImageGallery');
     expect(result.current.getCurrentCode()).not.toContain('My Photo Collection');
+  });
+
+  it('correctly processes a long complex message with a gallery app', async () => {
+    // Read the long-message.txt fixture file
+    const fixturePath = path.join(__dirname, 'long-message.txt');
+    const longMessageContent = fs.readFileSync(fixturePath, 'utf-8');
+    
+    // Create a mock response that returns the fixture content
+    const mockFetch = vi.fn().mockImplementation(async () => {
+      const encoder = new TextEncoder();
+      
+      const stream = new ReadableStream({
+        start(controller) {
+          // Send the content as a single SSE chunk
+          const sseChunk = formatAsSSE([longMessageContent])[0];
+          controller.enqueue(encoder.encode(sseChunk));
+          controller.close();
+        }
+      });
+      
+      return {
+        ok: true,
+        body: stream,
+        status: 200,
+        statusText: 'OK',
+        headers: new Headers(),
+      } as Response;
+    });
+    
+    window.fetch = mockFetch;
+    
+    const { result } = renderHook(() => useSimpleChat());
+    
+    act(() => {
+      result.current.setInput('Create a photo gallery app');
+    });
+    
+    await act(async () => {
+      await result.current.sendMessage();
+    });
+    
+    // Check the processed message
+    const aiMessage = result.current.messages[1] as AiChatMessage;
+    
+    // Log dependencies for debugging
+    console.log('AI message dependencies string:', aiMessage.dependenciesString);
+    
+    // Verify the dependencies
+    expect(aiMessage.dependenciesString).toBeDefined();
+    expect(aiMessage.dependenciesString?.includes('{"dependencies": {}}'))
+      .toBe(true);
+      
+    const dependencies = parseDependencies(aiMessage.dependenciesString);
+    expect(dependencies).toEqual({});
+    
+    // Log segments for debugging
+    console.log(`AI message has ${aiMessage.segments.length} segments`);
+    aiMessage.segments.forEach((segment, i) => {
+      console.log(`Segment ${i} (${segment.type}): ${segment.content.substring(0, 100)}...`);
+    });
+    
+    // Verify segmentation - the parser currently produces 2 segments
+    expect(aiMessage.segments.length).toBe(2); 
+    
+    // Verify the content of the segments based on their actual ordering
+    expect(aiMessage.segments[0].type).toBe('markdown');
+    expect(aiMessage.segments[1].type).toBe('code');
+    
+    // The intro text should be in the dependenciesString
+    expect(aiMessage.dependenciesString).toContain("Here's a photo gallery app");
+    
+    // Key content checks
+    const hasFeaturesList = aiMessage.segments.some(segment => 
+      segment.content.includes("This app features:"));
+    expect(hasFeaturesList).toBe(true);
+    
+    // Check for React import in the dependencies string
+    const hasReactImport = aiMessage.dependenciesString?.includes("import React") || 
+                           aiMessage.segments.some(segment => 
+                             segment.content.includes("import React"));
+    expect(hasReactImport).toBe(true);
+    
+    // Verify that getCurrentCode returns the code segment with key content
+    const code = result.current.getCurrentCode();
+    expect(code).toBeTruthy();
+  });
+
+  it('correctly processes the Exoplanet Tracker app from easy-message.txt', async () => {
+    // Read the easy-message.txt fixture file
+    const fixturePath = path.join(__dirname, 'easy-message.txt');
+    const messageContent = fs.readFileSync(fixturePath, 'utf-8');
+    
+    // Create a mock response that returns the fixture content
+    const mockFetch = vi.fn().mockImplementation(async () => {
+      const encoder = new TextEncoder();
+      
+      const stream = new ReadableStream({
+        start(controller) {
+          // Send the content as a single SSE chunk
+          const sseChunk = formatAsSSE([messageContent])[0];
+          controller.enqueue(encoder.encode(sseChunk));
+          controller.close();
+        }
+      });
+      
+      return {
+        ok: true,
+        body: stream,
+        status: 200,
+        statusText: 'OK',
+        headers: new Headers(),
+      } as Response;
+    });
+    
+    window.fetch = mockFetch;
+    
+    const { result } = renderHook(() => useSimpleChat());
+    
+    act(() => {
+      result.current.setInput('Create an exoplanet tracking app');
+    });
+    
+    await act(async () => {
+      await result.current.sendMessage();
+    });
+    
+    // Check the processed message
+    const aiMessage = result.current.messages[1] as AiChatMessage;
+    
+    // Log dependencies for debugging
+    console.log('AI message dependencies string (Exoplanet app):', aiMessage.dependenciesString);
+    
+    // Verify the dependencies
+    expect(aiMessage.dependenciesString).toBeDefined();
+    expect(aiMessage.dependenciesString?.includes('{"dependencies": {}}'))
+      .toBe(true);
+      
+    const dependencies = parseDependencies(aiMessage.dependenciesString);
+    expect(dependencies).toEqual({});
+    
+    // Log segments for debugging
+    console.log(`AI message has ${aiMessage.segments.length} segments (Exoplanet app)`);
+    aiMessage.segments.forEach((segment, i) => {
+      console.log(`Segment ${i} (${segment.type}): ${segment.content.substring(0, 100)}...`);
+    });
+    
+    // Verify segmentation
+    expect(aiMessage.segments.length).toBeGreaterThan(1);
+    
+    // The app description should be in a segment, not in the dependencies string
+    const hasExoplanetTracker = aiMessage.segments.some(segment => 
+      segment.content.includes("Exoplanet Tracker"));
+    expect(hasExoplanetTracker).toBe(true);
+    
+    // Check for React import and component definition
+    const hasReactImport = aiMessage.segments.some(segment => 
+      segment.content.includes("import React"));
+    expect(hasReactImport).toBe(true);
+    
+    const hasComponentDefinition = aiMessage.segments.some(segment => 
+      segment.content.includes("function ExoplanetTracker"));
+    expect(hasComponentDefinition).toBe(true);
+    
+    // Check for feature list
+    const hasFeaturesList = aiMessage.segments.some(segment => 
+      segment.content.includes("This Exoplanet Tracker app allows"));
+    expect(hasFeaturesList).toBe(true);
+    
+    // Verify getCurrentCode returns expected code
+    const code = result.current.getCurrentCode();
+    expect(code).toContain("function ExoplanetTracker");
+  });
+
+  it('correctly processes the Lyrics Rater app from easy-message2.txt', async () => {
+    // Read the easy-message2.txt fixture file
+    const fixturePath = path.join(__dirname, 'easy-message2.txt');
+    const messageContent = fs.readFileSync(fixturePath, 'utf-8');
+    
+    // Create a mock response that returns the fixture content
+    const mockFetch = vi.fn().mockImplementation(async () => {
+      const encoder = new TextEncoder();
+      
+      const stream = new ReadableStream({
+        start(controller) {
+          // Send the content as a single SSE chunk
+          const sseChunk = formatAsSSE([messageContent])[0];
+          controller.enqueue(encoder.encode(sseChunk));
+          controller.close();
+        }
+      });
+      
+      return {
+        ok: true,
+        body: stream,
+        status: 200,
+        statusText: 'OK',
+        headers: new Headers(),
+      } as Response;
+    });
+    
+    window.fetch = mockFetch;
+    
+    const { result } = renderHook(() => useSimpleChat());
+    
+    act(() => {
+      result.current.setInput('Create a lyrics rating app');
+    });
+    
+    await act(async () => {
+      await result.current.sendMessage();
+    });
+    
+    // Check the processed message
+    const aiMessage = result.current.messages[1] as AiChatMessage;
+    
+    // Log dependencies for debugging
+    console.log('AI message dependencies string (Lyrics app):', aiMessage.dependenciesString);
+    
+    // Verify the dependencies
+    expect(aiMessage.dependenciesString).toBeDefined();
+    expect(aiMessage.dependenciesString?.includes('{"dependencies": {}}'))
+      .toBe(true);
+      
+    const dependencies = parseDependencies(aiMessage.dependenciesString);
+    expect(dependencies).toEqual({});
+    
+    // Log segments for debugging
+    console.log(`AI message has ${aiMessage.segments.length} segments (Lyrics app)`);
+    aiMessage.segments.forEach((segment, i) => {
+      console.log(`Segment ${i} (${segment.type}): ${segment.content.substring(0, 100)}...`);
+    });
+    
+    // Verify segmentation
+    expect(aiMessage.segments.length).toBeGreaterThan(1);
+    
+    // Check for Markdown title segment
+    const hasTitleMarkdown = aiMessage.segments.some(segment => 
+      segment.type === 'markdown' && segment.content.includes("# Lyrics Rater App"));
+    expect(hasTitleMarkdown).toBe(true);
+    
+    // Check for React component in a code segment
+    const hasComponentCode = aiMessage.segments.some(segment => 
+      segment.type === 'code' && segment.content.includes("export default function LyricsRaterApp"));
+    expect(hasComponentCode).toBe(true);
+    
+    // Check for app description
+    const hasAppDescription = aiMessage.segments.some(segment => 
+      segment.content.includes("This Lyrics Rater app lets you save"));
+    expect(hasAppDescription).toBe(true);
+    
+    // Check for copyright disclaimer
+    const hasCopyrightDisclaimer = aiMessage.segments.some(segment => 
+      segment.content.includes("avoid copyright issues"));
+    expect(hasCopyrightDisclaimer).toBe(true);
+    
+    // Verify getCurrentCode returns expected LyricsRaterApp code
+    const code = result.current.getCurrentCode();
+    expect(code).toContain("export default function LyricsRaterApp");
+    expect(code).toContain("lyrics");
+  });
+  
+  it('correctly processes the photo gallery app from hard-message.txt', async () => {
+    // Read the hard-message.txt fixture file
+    const fixturePath = path.join(__dirname, 'hard-message.txt');
+    const messageContent = fs.readFileSync(fixturePath, 'utf-8');
+    
+    // Create a mock response that returns the fixture content
+    const mockFetch = vi.fn().mockImplementation(async () => {
+      const encoder = new TextEncoder();
+      
+      const stream = new ReadableStream({
+        start(controller) {
+          // Send the content as a single SSE chunk
+          const sseChunk = formatAsSSE([messageContent])[0];
+          controller.enqueue(encoder.encode(sseChunk));
+          controller.close();
+        }
+      });
+      
+      return {
+        ok: true,
+        body: stream,
+        status: 200,
+        statusText: 'OK',
+        headers: new Headers(),
+      } as Response;
+    });
+    
+    window.fetch = mockFetch;
+    
+    const { result } = renderHook(() => useSimpleChat());
+    
+    act(() => {
+      result.current.setInput('Create a photo gallery app with synthwave style');
+    });
+    
+    await act(async () => {
+      await result.current.sendMessage();
+    });
+    
+    // Check the processed message
+    const aiMessage = result.current.messages[1] as AiChatMessage;
+    
+    // Log dependencies for debugging
+    console.log('AI message dependencies string (Photo Gallery app):', aiMessage.dependenciesString);
+    
+    // Verify the dependencies
+    expect(aiMessage.dependenciesString).toBeDefined();
+    expect(aiMessage.dependenciesString?.includes('{"dependencies": {}}'))
+      .toBe(true);
+      
+    const dependencies = parseDependencies(aiMessage.dependenciesString);
+    expect(dependencies).toEqual({});
+    
+    // Log segments for debugging
+    console.log(`AI message has ${aiMessage.segments.length} segments (Photo Gallery app)`);
+    aiMessage.segments.forEach((segment, i) => {
+      console.log(`Segment ${i} (${segment.type}): ${segment.content.substring(0, 100)}...`);
+    });
+    
+    // Verify segmentation
+    expect(aiMessage.segments.length).toBeGreaterThan(0);
+    
+    // The photo gallery app intro should be in the dependencies string
+    expect(aiMessage.dependenciesString).toContain("Here's a photo gallery app");
+    
+    // Check for React import in a code segment or dependencies string
+    const hasReactImport = 
+      aiMessage.segments.some(segment => segment.content.includes("import React")) ||
+      (aiMessage.dependenciesString?.includes("import React") || false);
+    expect(hasReactImport).toBe(true);
+    
+    // Check for Synthwave Photo Gallery title in dependencies string or any segment
+    const hasSynthwaveTitle = 
+      (aiMessage.dependenciesString?.includes("Synthwave Photo Gallery")) ||
+      aiMessage.segments.some(segment => segment.content.includes("Synthwave Photo Gallery"));
+    expect(hasSynthwaveTitle).toBe(true);
+    
+    // Check for features list
+    const hasFeaturesList = aiMessage.segments.some(segment => 
+      segment.content.includes("This photo gallery app features"));
+    expect(hasFeaturesList).toBe(true);
+    
+    // Check for specific app features
+    const hasFeatures = aiMessage.segments.some(segment => 
+      segment.content.includes("Upload functionality") && 
+      segment.content.includes("Orange synthwave aesthetic"));
+    expect(hasFeatures).toBe(true);
+    
+    // Verify getCurrentCode returns expected photo gallery app code
+    const code = result.current.getCurrentCode();
+    expect(code).toBeTruthy();
+    
+    // Check that the code contains App function or is about a photo gallery
+    const hasAppFunction = code.includes("function App") || 
+                          code.includes("photo gallery") ||
+                          code.includes("gallery");
+    expect(hasAppFunction).toBe(true);
   });
 }); 

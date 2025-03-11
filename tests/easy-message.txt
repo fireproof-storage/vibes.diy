@@ -1,0 +1,232 @@
+{"dependencies": {}}
+
+I'll create an "Exoplanet Tracker" app that lets users log and track potential exoplanets they've discovered or are interested in. This combines astronomy with note-taking in an orange synthwave aesthetic.
+
+```js
+import React, { useState } from "react";
+import { useFireproof } from "use-fireproof";
+
+export default function ExoplanetTracker() {
+  const { useDocument, useLiveQuery, database } = useFireproof("exoplanet-tracker");
+  const [activeTab, setActiveTab] = useState("list"); // UI state only
+  
+  // New exoplanet form
+  const {
+    doc: newPlanet,
+    merge: mergeNewPlanet,
+    submit: submitNewPlanet,
+    reset
+  } = useDocument({
+    name: "",
+    constellation: "",
+    distance: "",
+    notes: "",
+    habitabilityScore: 1,
+    dateAdded: new Date().toISOString(),
+    favorite: false
+  });
+
+  // Query for all planets, sorted by date added (most recent first)
+  const { docs: planets } = useLiveQuery("dateAdded", { descending: true });
+  
+  // Query for favorite planets
+  const { docs: favorites } = useLiveQuery("favorite", { key: true });
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    submitNewPlanet();
+  };
+
+  const toggleFavorite = async (planet) => {
+    await database.put({ ...planet, favorite: !planet.favorite });
+  };
+
+  const addDemoData = async () => {
+    await database.put({
+      name: "Kepler-452b",
+      constellation: "Cygnus",
+      distance: "1400 light-years",
+      notes: "Earth's cousin, potentially habitable",
+      habitabilityScore: 4,
+      dateAdded: new Date().toISOString(),
+      favorite: true
+    });
+    await database.put({
+      name: "TRAPPIST-1e",
+      constellation: "Aquarius",
+      distance: "39 light-years",
+      notes: "Rocky planet in the habitable zone",
+      habitabilityScore: 5,
+      dateAdded: new Date().toISOString(),
+      favorite: true
+    });
+    await database.put({
+      name: "HD 189733 b",
+      constellation: "Vulpecula",
+      distance: "63 light-years",
+      notes: "Hot Jupiter with deep blue color",
+      habitabilityScore: 1,
+      dateAdded: new Date().toISOString(),
+      favorite: false
+    });
+  };
+
+  return (
+    <div className="bg-gray-900 text-orange-300 min-h-screen p-6">
+      <div className="max-w-4xl mx-auto">
+        <h1 className="text-4xl font-bold mb-2 text-orange-400 text-center">Exoplanet Tracker</h1>
+        <p className="italic text-center mb-6 text-orange-200">
+          <em>Your personal cosmic database for tracking exoplanet discoveries. Log potential new worlds, rate their
+          habitability, and organize your astronomical observations in one place.</em>
+        </p>
+
+        <div className="mb-6 flex justify-center">
+          <button onClick={() => addDemoData()} className="bg-orange-700 hover:bg-orange-600 text-white px-4 py-2 rounded-lg">
+            Demo Data
+          </button>
+        </div>
+
+        <div className="flex mb-4 border-b border-orange-700">
+          <button 
+            onClick={() => setActiveTab("list")}
+            className={`py-2 px-4 ${activeTab === "list" ? "border-b-2 border-orange-400 text-orange-400" : ""}`}
+          >
+            All Planets ({planets.length})
+          </button>
+          <button 
+            onClick={() => setActiveTab("favorites")}
+            className={`py-2 px-4 ${activeTab === "favorites" ? "border-b-2 border-orange-400 text-orange-400" : ""}`}
+          >
+            Favorites ({favorites.length})
+          </button>
+          <button 
+            onClick={() => setActiveTab("add")}
+            className={`py-2 px-4 ${activeTab === "add" ? "border-b-2 border-orange-400 text-orange-400" : ""}`}
+          >
+            Add New
+          </button>
+        </div>
+
+        {activeTab === "add" && (
+          <form onSubmit={handleSubmit} className="bg-gray-800 p-6 rounded-lg mb-6">
+            <div className="grid grid-cols-2 gap-4 mb-4">
+              <div>
+                <label className="block mb-1">Name</label>
+                <input
+                  value={newPlanet.name}
+                  onChange={(e) => mergeNewPlanet({ name: e.target.value })}
+                  className="w-full p-2 bg-gray-700 rounded text-white"
+                  placeholder="Planet name"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block mb-1">Constellation</label>
+                <input
+                  value={newPlanet.constellation}
+                  onChange={(e) => mergeNewPlanet({ constellation: e.target.value })}
+                  className="w-full p-2 bg-gray-700 rounded text-white"
+                  placeholder="Host constellation"
+                />
+              </div>
+              <div>
+                <label className="block mb-1">Distance</label>
+                <input
+                  value={newPlanet.distance}
+                  onChange={(e) => mergeNewPlanet({ distance: e.target.value })}
+                  className="w-full p-2 bg-gray-700 rounded text-white"
+                  placeholder="Distance from Earth"
+                />
+              </div>
+              <div>
+                <label className="block mb-1">Habitability Score (1-5)</label>
+                <input
+                  type="range"
+                  min="1"
+                  max="5"
+                  value={newPlanet.habitabilityScore}
+                  onChange={(e) => mergeNewPlanet({ habitabilityScore: parseInt(e.target.value) })}
+                  className="w-full"
+                />
+                <div className="text-center">{newPlanet.habitabilityScore}</div>
+              </div>
+            </div>
+            <div className="mb-4">
+              <label className="block mb-1">Notes</label>
+              <textarea
+                value={newPlanet.notes}
+                onChange={(e) => mergeNewPlanet({ notes: e.target.value })}
+                className="w-full p-2 bg-gray-700 rounded text-white h-24"
+                placeholder="Observations, potential for life, etc."
+              />
+            </div>
+            <button type="submit" className="bg-orange-600 hover:bg-orange-500 text-white px-4 py-2 rounded">
+              Add Planet
+            </button>
+          </form>
+        )}
+
+        {activeTab === "list" && (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {planets.map((planet) => (
+              <div key={planet._id} className="bg-gray-800 p-4 rounded-lg border border-orange-700">
+                <div className="flex justify-between items-start mb-2">
+                  <h3 className="text-xl font-bold text-orange-400">{planet.name}</h3>
+                  <button onClick={() => toggleFavorite(planet)} className="text-2xl">
+                    {planet.favorite ? "★" : "☆"}
+                  </button>
+                </div>
+                <div className="text-sm mb-2">
+                  {planet.constellation && <div><span className="font-bold">Constellation:</span> {planet.constellation}</div>}
+                  {planet.distance && <div><span className="font-bold">Distance:</span> {planet.distance}</div>}
+                </div>
+                <div className="mb-2">
+                  <span className="font-bold">Habitability:</span> {Array(planet.habitabilityScore).fill("●").join(" ")}
+                </div>
+                {planet.notes && <p className="text-gray-300 text-sm">{planet.notes}</p>}
+              </div>
+            ))}
+          </div>
+        )}
+
+        {activeTab === "favorites" && (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {favorites.length === 0 ? (
+              <p className="text-center col-span-2 py-8">No favorites yet. Mark planets as favorites to see them here.</p>
+            ) : (
+              favorites.map((planet) => (
+                <div key={planet._id} className="bg-gray-800 p-4 rounded-lg border border-orange-700">
+                  <div className="flex justify-between items-start mb-2">
+                    <h3 className="text-xl font-bold text-orange-400">{planet.name}</h3>
+                    <button onClick={() => toggleFavorite(planet)} className="text-2xl text-yellow-500">
+                      ★
+                    </button>
+                  </div>
+                  <div className="text-sm mb-2">
+                    {planet.constellation && <div><span className="font-bold">Constellation:</span> {planet.constellation}</div>}
+                    {planet.distance && <div><span className="font-bold">Distance:</span> {planet.distance}</div>}
+                  </div>
+                  <div className="mb-2">
+                    <span className="font-bold">Habitability:</span> {Array(planet.habitabilityScore).fill("●").join(" ")}
+                  </div>
+                  {planet.notes && <p className="text-gray-300 text-sm">{planet.notes}</p>}
+                </div>
+              ))
+            )}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+```
+
+This Exoplanet Tracker app allows astronomy enthusiasts to:
+- Log discoveries of potential exoplanets with details like name, constellation, and distance
+- Rate planets on a habitability scale of 1-5
+- Add observational notes
+- Mark favorite planets for quick reference
+- Switch between all planets and favorites with a tab interface
+- Add demo data to quickly see how the app works
+
+The app uses Fireproof for real-time persistence, with separate queries for all planets and favorites. It features an orange synthwave aesthetic against a dark background to evoke a cosmic feel.

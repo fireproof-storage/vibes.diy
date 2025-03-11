@@ -85,9 +85,10 @@ export function useSimpleChat() {
 
   /**
    * Generate a title based on the first two segments (markdown and code)
+   * Returns a promise that resolves when the title generation is complete
    */
-  async function generateTitle(segments: Segment[]) {
-    if (titleGeneratedRef.current) return;
+  async function generateTitle(segments: Segment[]): Promise<string | null> {
+    if (titleGeneratedRef.current) return null;
     
     try {
       // Get first markdown segment and first code segment (if they exist)
@@ -135,16 +136,20 @@ export function useSimpleChat() {
         const newTitle = data.choices[0]?.message?.content?.trim() || 'New Chat';
         setTitle(newTitle);
         titleGeneratedRef.current = true;
+        return newTitle;
       }
     } catch (error) {
       console.error('Error generating title:', error);
     }
+    
+    return null;
   }
 
   /**
    * Send a message and process the AI response
+   * Returns a promise that resolves when the entire process is complete, including title generation
    */
-  async function sendMessage() {
+  async function sendMessage(): Promise<void> {
     if (input.trim()) {
       // Reset state for new message
       streamBufferRef.current = '';
@@ -265,6 +270,7 @@ export function useSimpleChat() {
         }
 
         // Streaming is done, finalize the AI message
+        console.log('Finalizing AI message', streamBufferRef.current);
         const { segments, dependenciesString } = parseContent(streamBufferRef.current);
         const dependencies = parseDependencies(dependenciesString);
         
@@ -287,6 +293,7 @@ export function useSimpleChat() {
         });
 
         // Generate a title if this is the first response with code and we haven't generated a title yet
+        // This is now properly chained in the promise, so it will complete before sendMessage resolves
         const hasCode = segments.some(segment => segment.type === 'code');
         if (hasCode && !titleGeneratedRef.current) {
           await generateTitle(segments);

@@ -1,0 +1,217 @@
+{"dependencies": {}}
+
+Here's a photo gallery app using Fireproof for storage with a grid layout and modal viewing functionality:
+
+```js
+import React, { useState } from "react";
+import { useFireproof, ImgFile } from "use-fireproof";
+
+export default function App() {
+  const { useDocument, useLiveQuery, database } = useFireproof("photo-gallery");
+  const { doc, merge, submit, reset } = useDocument({ _files: {}, title: "", description: "" });
+  const { docs } = useLiveQuery("uploadedAt", { descending: true });
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedPhoto, setSelectedPhoto] = useState(null);
+
+  const handleFileChange = (e) => {
+    if (e.target.files[0]) {
+      merge({ 
+        _files: { original: e.target.files[0] }, 
+        uploadedAt: Date.now() 
+      });
+    }
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    submit();
+  };
+
+  const openModal = (photo) => {
+    setSelectedPhoto(photo);
+    setIsModalOpen(true);
+  };
+
+  const closeModal = () => {
+    setIsModalOpen(false);
+    setSelectedPhoto(null);
+  };
+
+  const addDemoData = async () => {
+    // Sample photo URLs
+    const sampleImages = [
+      { url: "https://source.unsplash.com/random/800x600/?nature", title: "Beautiful Nature", description: "A stunning landscape view" },
+      { url: "https://source.unsplash.com/random/800x600/?city", title: "Urban Scene", description: "City life in motion" },
+      { url: "https://source.unsplash.com/random/800x600/?portrait", title: "Portrait", description: "Emotional portrait" },
+      { url: "https://source.unsplash.com/random/800x600/?food", title: "Delicious Food", description: "Mouth-watering cuisine" },
+    ];
+    
+    for (const [index, image] of sampleImages.entries()) {
+      try {
+        const response = await fetch(image.url);
+        const blob = await response.blob();
+        const file = new File([blob], `demo-image-${index+1}.jpg`, { type: 'image/jpeg' });
+        
+        await database.put({
+          _files: { original: file },
+          title: image.title,
+          description: image.description,
+          uploadedAt: Date.now() - index * 1000 * 60 * 5 // Stagger times
+        });
+      } catch (error) {
+        console.error("Error adding demo data:", error);
+      }
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-orange-500 to-purple-900 p-6">
+      <div className="max-w-6xl mx-auto bg-black/50 backdrop-blur-sm rounded-lg shadow-xl p-6 text-white">
+        <h1 className="text-4xl font-bold text-orange-400 mb-2">Synthwave Photo Gallery</h1>
+        
+        <p className="mb-6 italic text-orange-300">
+          <em>This app lets you upload and showcase your favorite photos in a stylish synthwave-inspired gallery. Upload images, add titles and descriptions, then view them in a full-screen modal. Click on any image to see it in detail.</em>
+        </p>
+        
+        <form onSubmit={handleSubmit} className="mb-8 p-4 bg-black/30 rounded-lg">
+          <div className="flex flex-col md:flex-row gap-4">
+            <div className="flex-1">
+              <label className="block text-orange-300 mb-2">Upload Image</label>
+              <input 
+                type="file" 
+                accept="image/*" 
+                onChange={handleFileChange}
+                className="w-full bg-black/30 border border-orange-500 rounded p-2 text-white focus:outline-none focus:ring-2 focus:ring-orange-400"
+              />
+            </div>
+            <div className="flex-1">
+              <label className="block text-orange-300 mb-2">Title</label>
+              <input 
+                type="text" 
+                value={doc.title} 
+                onChange={(e) => merge({ title: e.target.value })}
+                className="w-full bg-black/30 border border-orange-500 rounded p-2 text-white focus:outline-none focus:ring-2 focus:ring-orange-400"
+                placeholder="Enter image title"
+              />
+            </div>
+          </div>
+          <div className="mt-4">
+            <label className="block text-orange-300 mb-2">Description</label>
+            <textarea 
+              value={doc.description} 
+              onChange={(e) => merge({ description: e.target.value })}
+              className="w-full bg-black/30 border border-orange-500 rounded p-2 text-white focus:outline-none focus:ring-2 focus:ring-orange-400"
+              placeholder="Enter image description"
+              rows="3"
+            />
+          </div>
+          <div className="mt-4 flex justify-between">
+            <button 
+              type="submit" 
+              className="bg-orange-500 hover:bg-orange-600 text-white font-bold py-2 px-6 rounded-full shadow-lg hover:shadow-orange-500/30 transition duration-300"
+            >
+              Add Photo
+            </button>
+            <button 
+              type="button"
+              onClick={addDemoData}
+              className="bg-purple-700 hover:bg-purple-800 text-white font-bold py-2 px-6 rounded-full shadow-lg hover:shadow-purple-500/30 transition duration-300"
+            >
+              Demo Data
+            </button>
+          </div>
+        </form>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+          {docs.map((photo) => (
+            <div 
+              key={photo._id} 
+              className="bg-black/40 rounded-lg overflow-hidden hover:scale-105 transition-transform duration-300 cursor-pointer shadow-lg border border-orange-500/30"
+              onClick={() => openModal(photo)}
+            >
+              <div className="h-48 overflow-hidden">
+                {photo._files?.original && (
+                  <ImgFile 
+                    file={photo._files.original} 
+                    alt={photo.title || "Gallery image"} 
+                    className="w-full h-full object-cover"
+                  />
+                )}
+              </div>
+              <div className="p-3">
+                <h3 className="font-bold text-orange-400 truncate">{photo.title || "Untitled"}</h3>
+                <p className="text-sm text-gray-300 line-clamp-2">{photo.description || "No description"}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Empty state */}
+        {docs.length === 0 && (
+          <div className="text-center p-10 bg-black/30 rounded-lg mt-6">
+            <p className="text-orange-300 mb-4">No photos in your gallery yet. Upload your first image or add demo data!</p>
+          </div>
+        )}
+
+        {/* Photo Modal */}
+        {isModalOpen && selectedPhoto && (
+          <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4">
+            <div className="max-w-6xl w-full max-h-full bg-black/70 border border-orange-500 rounded-lg overflow-hidden shadow-2xl shadow-orange-500/20">
+              <div className="flex justify-between items-center p-4 border-b border-orange-500/50">
+                <h3 className="text-2xl font-bold text-orange-400">{selectedPhoto.title || "Untitled"}</h3>
+                <button 
+                  onClick={closeModal}
+                  className="text-white hover:text-orange-400 text-2xl"
+                >
+                  ×
+                </button>
+              </div>
+              <div className="p-4 flex flex-col md:flex-row gap-6">
+                <div className="flex-1 flex items-center justify-center">
+                  {selectedPhoto._files?.original && (
+                    <ImgFile 
+                      file={selectedPhoto._files.original} 
+                      alt={selectedPhoto.title || "Gallery image"}
+                      className="max-h-[70vh] max-w-full object-contain"
+                    />
+                  )}
+                </div>
+                <div className="md:w-1/3 flex flex-col">
+                  <div className="bg-black/50 p-4 rounded-lg">
+                    <p className="text-gray-200 mb-4">{selectedPhoto.description || "No description provided."}</p>
+                    <p className="text-sm text-orange-300">
+                      Added: {new Date(selectedPhoto.uploadedAt).toLocaleString()}
+                    </p>
+                  </div>
+                  <button 
+                    onClick={() => {
+                      database.del(selectedPhoto._id);
+                      closeModal();
+                    }}
+                    className="mt-4 bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-full"
+                  >
+                    Delete Photo
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+```
+
+This photo gallery app features:
+
+1. Upload functionality with title and description fields
+2. Real-time grid display using Fireproof's useLiveQuery
+3. Modal view when clicking on a photo
+4. Delete functionality from the modal
+5. Demo data button to populate the gallery
+6. Orange synthwave aesthetic using Tailwind CSS
+7. Responsive grid layout for various screen sizes
+8. File uploads handled by Fireproof's _files API
+
+The app uses Fireproof for data persistence, storing both the images and their metadata.
