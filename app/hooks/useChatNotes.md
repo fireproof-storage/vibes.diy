@@ -209,3 +209,78 @@ The implementation will touch the following files:
 9. **tests/**
    - Update test fixtures for new message structure
    - Add tests for content parsing edge cases
+
+## Implementation Progress
+
+We've implemented the core parts of the simplified chat hook architecture:
+
+1. **Data-Driven Types** - Created discriminated union types for messages that clearly separate user and AI messages:
+   ```typescript
+   export type UserChatMessage = {
+     type: 'user';
+     text: string;
+     timestamp?: number;
+   };
+
+   export type AiChatMessage = {
+     type: 'ai';
+     text: string;
+     segments: Segment[];
+     dependenciesString?: string;
+     isStreaming?: boolean;
+     timestamp?: number;
+   };
+
+   export type ChatMessage = UserChatMessage | AiChatMessage;
+   ```
+
+2. **useSimpleChat Hook** - Implemented a new hook with focused responsibilities:
+   - Manages message state with clear types
+   - Provides a pure content parser that doesn't rely on event emitters
+   - Exposes stable, minimal API for components
+   - Handles streaming with direct buffer updates
+
+3. **StructuredMessage Component** - Created a component that:
+   - Displays markdown and code segments distinctly
+   - Shows a preview of code with line count rather than inline code
+   - Provides a copy button for code segments
+   - Visually indicates streaming status
+
+4. **MessageList Integration** - Updated the message list to:
+   - Use StructuredMessage for AI responses
+   - Remove dependency on currentStreamedText
+   - Check for streaming messages within the messages array
+
+## Lessons Learned
+
+During implementation, we discovered several important insights:
+
+1. **Pure Parsing Is Simpler** - Content parsing as a pure function is easier to test and reason about than the event-based parser.
+
+2. **State-Derived Data Works Better** - Using computed values from state (like `currentSegments()`) provides a cleaner architecture than maintaining multiple state variables.
+
+3. **Discriminated Unions Improve Type Safety** - User vs AI message types with explicit discrimination fields make the code more robust.
+
+4. **Migration Complexity** - Updating a central hook like this affects many components and requires careful migration planning, especially for persisted message data.
+
+5. **Streaming Simplification** - By modifying the message directly in the array and using an `isStreaming` flag, we eliminated the need for separate streaming state variables.
+
+## Next Steps
+
+To complete this implementation, we need to:
+
+1. **Fix ChatInterface Integration** - The current implementation has several type errors related to the new message structure. We should:
+   - Complete the migration of the ChatInterface component
+   - Update the context provider to work with the new message types
+   - Fix type errors related to the Sandpack integration
+
+2. **Add Session Migration Logic** - Create robust migration logic for existing chat sessions with the old message format.
+
+3. **Update Tests** - Migrate existing tests to the new format and add new tests for:
+   - Content parsing edge cases
+   - Streaming behavior
+   - Message type discrimination
+
+4. **Add Usage Documentation** - Document how to use the new hook and components properly.
+
+5. **Performance Testing** - Verify that the new implementation doesn't impact performance, especially during streaming.

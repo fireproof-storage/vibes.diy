@@ -1,5 +1,5 @@
 import { useEffect, useState, useMemo, useCallback, useRef } from 'react';
-import type { ChatMessage, SessionDocument } from './types/chat';
+import type { ChatMessage, SessionDocument, UserChatMessage, AiChatMessage, Segment } from './types/chat';
 import { useFireproof } from 'use-fireproof';
 import SessionSidebar from './components/SessionSidebar';
 import ChatHeader from './components/ChatHeader';
@@ -7,6 +7,7 @@ import MessageList from './components/MessageList';
 import ChatInput from './components/ChatInput';
 import QuickSuggestions from './components/QuickSuggestions';
 import { useChatContext } from './context/ChatContext';
+import { Sandpack } from '@codesandbox/sandpack-react';
 
 interface ChatInterfaceProps {
   chatState: {
@@ -36,6 +37,7 @@ interface ChatInterfaceProps {
       reset: () => void;
     }>;
     completedMessage: string;
+    getCurrentCode: () => string;
   };
   sessionId?: string | null;
   onSessionCreated?: (newSessionId: string) => void;
@@ -80,6 +82,7 @@ function ChatInterface({
     inputRef,
     autoResizeTextarea,
     sendMessage,
+    getCurrentCode,
   } = chatState;
 
   // Query chat sessions ordered by timestamp (newest first)
@@ -339,12 +342,11 @@ function ChatInterface({
       <MessageList
         messages={messages}
         isGenerating={isGenerating}
-        currentStreamedText={currentStreamedText}
         isShrinking={isShrinking}
         isExpanding={isExpanding}
       />
     ),
-    [messages, isGenerating, currentStreamedText, isShrinking, isExpanding]
+    [messages, isGenerating, isShrinking, isExpanding]
   );
 
   const quickSuggestions = useMemo(
@@ -380,6 +382,98 @@ function ChatInterface({
     }
   }, [chatContext, chatState.isGenerating]);
 
+  // Sandpack editor with current code
+  const sandpack = useMemo(() => {
+    return (
+      <Sandpack
+        customSetup={{
+          dependencies: chatContext?.dependencies || {}, // Get from context if available
+        }}
+        theme={chatContext?.theme || 'dark'} // Get theme from context
+        options={{
+          showNavigator: true,
+          showTabs: true,
+          showConsole: true,
+          showConsoleButton: true,
+          closableTabs: false,
+          visibleFiles: ['/App.jsx'],
+        }}
+        files={{
+          '/App.jsx': {
+            code: getCurrentCode() || '// Code will appear here after generation',
+            active: true,
+          },
+        }}
+        template="react"
+      />
+    );
+  }, [chatContext, getCurrentCode]);
+
+  // Function to handle session load or creation
+  const loadOrCreateSession = useCallback(
+    async (sessionId: string) => {
+      try {
+        const session = (await databaseRef.current.get(sessionId)) as SessionDocument;
+        
+        if (session && session.messages) {
+          // Convert any old message format to new format if needed
+          const convertedMessages = session.messages.map((msg): ChatMessage => {
+            if (msg.type === 'user') {
+              return {
+                type: 'user',
+                text: msg.text,
+                timestamp: msg.timestamp || Date.now()
+              };
+            } else {
+              // For AI messages, we need to parse the text into segments
+              const text = msg.text || '';
+              // Use the parseContent function from our hook to parse the segments
+              // This is just a re-implementation of that function for migration purposes
+              const segments: Segment[] = [];
+              
+              // Check if it contains code
+              if ('code' in msg && msg.code) {
+                // Add text as markdown segment
+                segments.push({
+                  type: 'markdown',
+                  content: text
+                });
+                
+                // Add code segment
+                segments.push({
+                  type: 'code',
+                  content: msg.code
+                });
+              } else {
+                // Just add text as markdown
+                segments.push({
+                  type: 'markdown',
+                  content: text
+                });
+              }
+              
+              return {
+                type: 'ai',
+                text: text,
+                segments: segments,
+                timestamp: msg.timestamp || Date.now(),
+                // Convert dependencies to dependenciesString if present
+                dependenciesString: 'dependencies' in msg && msg.dependencies ? 
+                  JSON.stringify(msg.dependencies) : undefined
+              };
+            }
+          });
+          
+          // Set the converted messages
+          setMessages(convertedMessages);
+        }
+      } catch (error) {
+        console.error('Error loading session:', error);
+      }
+    },
+    [setMessages]
+  );
+
   return (
     <div className="relative flex h-full w-full flex-col overflow-hidden">
       {chatHeader}
@@ -398,6 +492,9 @@ function ChatInterface({
 
         {/* Chat input */}
         {chatInput}
+
+        {/* Sandpack editor with current code */}
+        {sandpack}
       </div>
     </div>
   );

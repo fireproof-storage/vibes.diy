@@ -1,11 +1,28 @@
-export interface ChatMessage {
+// Type definitions for segments
+export type Segment = {
+  type: 'markdown' | 'code';
+  content: string;
+};
+
+// User message type
+export type UserChatMessage = {
+  type: 'user';
   text: string;
-  type: 'user' | 'ai';
-  code?: string;
-  dependencies?: Record<string, string>;
-  streaming?: boolean;
-  completed?: boolean;
-}
+  timestamp?: number;
+};
+
+// AI message type
+export type AiChatMessage = {
+  type: 'ai';
+  text: string;            // Raw text content
+  segments: Segment[];     // Parsed segments
+  dependenciesString?: string; // Raw dependencies for downstream parsing
+  isStreaming?: boolean;   // Whether this message is currently streaming
+  timestamp?: number;
+};
+
+// Union type for all message types
+export type ChatMessage = UserChatMessage | AiChatMessage;
 
 export interface SessionDocument {
   _id: string;
@@ -21,27 +38,13 @@ export interface ChatInterfaceProps {
     input: string;
     setInput: React.Dispatch<React.SetStateAction<string>>;
     isGenerating: boolean;
-    currentStreamedText: string;
-    streamingCode: string;
-    completedCode: string;
-    isStreaming: boolean;
     inputRef: React.RefObject<HTMLTextAreaElement | null>;
     messagesEndRef: React.RefObject<HTMLDivElement | null>;
     autoResizeTextarea: () => void;
     scrollToBottom: () => void;
     sendMessage: () => Promise<void>;
-    parserState: React.MutableRefObject<{
-      inCodeBlock: boolean;
-      codeBlockContent: string;
-      dependencies: Record<string, string>;
-      displayText: string;
-      on: (event: string, callback: Function) => void;
-      removeAllListeners: () => void;
-      write: (chunk: string) => void;
-      end: () => void;
-      reset: () => void;
-    }>;
-    completedMessage: string;
+    currentSegments: () => Segment[];
+    getCurrentCode: () => string;
   };
   sessionId?: string | null;
   onSessionCreated?: (newSessionId: string) => void;

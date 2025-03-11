@@ -1,11 +1,11 @@
 import { useEffect, useRef, memo, useCallback, useMemo } from 'react';
-import type { ChatMessage } from '../types/chat';
+import type { ChatMessage, AiChatMessage } from '../types/chat';
 import ReactMarkdown from 'react-markdown';
+import StructuredMessage from './StructuredMessage';
 
 interface MessageListProps {
   messages: ChatMessage[];
   isGenerating: boolean;
-  currentStreamedText: string;
   isShrinking?: boolean;
   isExpanding?: boolean;
 }
@@ -35,8 +35,9 @@ const Message = memo(
   }) => {
     return (
       <div
-        className={`flex flex-col transition-all duration-500 ${isShrinking ? 'origin-top-left scale-0 opacity-0' : 'scale-100 opacity-100'
-          } ${isExpanding ? 'animate-bounce-in' : ''}`}
+        className={`flex flex-col transition-all duration-500 ${
+          isShrinking ? 'origin-top-left scale-0 opacity-0' : 'scale-100 opacity-100'
+        } ${isExpanding ? 'animate-bounce-in' : ''}`}
         style={{
           transitionDelay: isShrinking ? `${index * 50}ms` : '0ms',
         }}
@@ -50,12 +51,20 @@ const Message = memo(
             </div>
           )}
           <div
-            className={`message rounded-2xl p-3 ${message.type === 'user'
+            className={`message rounded-2xl p-3 ${
+              message.type === 'user'
                 ? 'bg-accent-02-light dark:bg-accent-02-dark rounded-tr-sm text-white'
                 : 'bg-light-background-00 dark:bg-dark-decorative-00 text-light-primary dark:text-dark-primary rounded-tl-sm'
-              } max-w-[85%] shadow-sm`}
+            } max-w-[85%] shadow-sm`}
           >
-            {renderMarkdownContent(message.text)}
+            {message.type === 'user' ? (
+              renderMarkdownContent(message.text)
+            ) : (
+              <StructuredMessage 
+                segments={(message as AiChatMessage).segments} 
+                isStreaming={(message as AiChatMessage).isStreaming}
+              />
+            )}
           </div>
         </div>
       </div>
@@ -64,29 +73,21 @@ const Message = memo(
 );
 
 // Optimized AI Typing component
-const AITyping = memo(({ currentStreamedText }: { currentStreamedText: string }) => {
+const AITyping = memo(() => {
   return (
     <div className="flex justify-start">
       <div className="bg-light-background-00 dark:bg-dark-background-00 mr-2 flex h-8 w-8 items-center justify-center rounded-full">
-
         <span className="text-light-primary dark:text-dark-primary text-sm font-medium">AI</span>
       </div>
       <div className="message bg-light-background-00 dark:bg-dark-background-00 text-light-primary dark:text-dark-primary max-w-[85%] rounded-2xl rounded-tl-sm p-3 shadow-sm">
-        {currentStreamedText ? (
-          <>
-            {renderMarkdownContent(currentStreamedText)}
-            <span className="bg-light-primary dark:bg-dark-primary ml-1 inline-block h-4 w-2 animate-pulse" />
-          </>
-        ) : (
-          <div className="flex items-center gap-2">
-            Thinking
-            <span className="flex gap-1">
-              <span className="bg-light-primary dark:bg-dark-primary h-1.5 w-1.5 animate-bounce rounded-full [animation-delay:-0.3s]" />
-              <span className="bg-light-primary dark:bg-dark-primary h-1.5 w-1.5 animate-bounce rounded-full [animation-delay:-0.15s]" />
-              <span className="bg-light-primary dark:bg-dark-primary h-1.5 w-1.5 animate-bounce rounded-full" />
-            </span>
-          </div>
-        )}
+        <div className="flex items-center gap-2">
+          Thinking
+          <span className="flex gap-1">
+            <span className="bg-light-primary dark:bg-dark-primary h-1.5 w-1.5 animate-bounce rounded-full [animation-delay:-0.3s]" />
+            <span className="bg-light-primary dark:bg-dark-primary h-1.5 w-1.5 animate-bounce rounded-full [animation-delay:-0.15s]" />
+            <span className="bg-light-primary dark:bg-dark-primary h-1.5 w-1.5 animate-bounce rounded-full" />
+          </span>
+        </div>
       </div>
     </div>
   );
@@ -95,7 +96,6 @@ const AITyping = memo(({ currentStreamedText }: { currentStreamedText: string })
 function MessageList({
   messages,
   isGenerating,
-  currentStreamedText,
   isShrinking = false,
   isExpanding = false,
 }: MessageListProps) {
@@ -111,7 +111,12 @@ function MessageList({
     } catch (error) {
       console.error('Error scrolling into view:', error);
     }
-  }, [messages, currentStreamedText]);
+  }, [messages]);
+
+  // Check if there's a streaming message
+  const hasStreamingMessage = useMemo(() => {
+    return messages.some(message => message.type === 'ai' && (message as AiChatMessage).isStreaming);
+  }, [messages]);
 
   // Memoize the message list to prevent unnecessary re-renders
   const messageElements = useMemo(() => {
@@ -167,7 +172,7 @@ function MessageList({
       ) : (
         <>
           {messageElements}
-          {isGenerating && <AITyping currentStreamedText={currentStreamedText} />}
+          {isGenerating && !hasStreamingMessage && <AITyping />}
         </>
       )}
       <div ref={messagesEndRef} />
@@ -186,7 +191,6 @@ export default memo(MessageList, (prevProps, nextProps) => {
   return (
     messagesEqual &&
     prevProps.isGenerating === nextProps.isGenerating &&
-    prevProps.currentStreamedText === nextProps.currentStreamedText &&
     prevProps.isShrinking === nextProps.isShrinking &&
     prevProps.isExpanding === nextProps.isExpanding
   );
