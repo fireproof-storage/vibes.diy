@@ -100,7 +100,7 @@ export default function Session() {
 
   return (
     <div style={{ display: 'flex', height: 'calc(100vh)' }}>
-      <div style={{ flex: '0 0 33.333%', overflow: 'hidden', position: 'relative' }}>
+      <div className="mobile-code-height" style={{ flex: '0 0 33.333%', overflow: 'hidden', position: 'relative' }}>
         <ChatProvider
           initialState={{
             input: '',
@@ -115,7 +115,7 @@ export default function Session() {
           />
         </ChatProvider>
       </div>
-      <div style={{ flex: '0 0 66.667%', overflow: 'hidden', position: 'relative' }}>
+      <div className="mobile-code-height" style={{ flex: '0 0 66.667%', overflow: 'hidden', position: 'relative' }}>
         <ResultPreview
           code={state.generatedCode}
           dependencies={state.dependencies}

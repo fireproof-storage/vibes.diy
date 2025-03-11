@@ -294,3 +294,9 @@ a,
     transform: rotate(0deg) scale(1);
   }
 }
+
+@media (max-width: 768px) {
+  .mobile-code-height {
+    height: 75vh;
+  }
+}

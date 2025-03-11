@@ -241,7 +241,7 @@ function ResultPreview({
   }, [sessionId, isStreaming, code]);
 
   return (
-    <div className="h-full" style={{ overflow: 'hidden' }}>
+    <div className="h-full" style={{ overflow: 'hidden', maxHeight: '75vh' }}>
       <style>
         {`
           @keyframes spin-slow {
@@ -404,7 +404,7 @@ function ResultPreview({
               isStreaming={isStreaming}
             />
             {isStreaming && <SandpackScrollController isStreaming={isStreaming} />}
-            <SandpackLayout className="h-full" style={{ height: 'calc(100vh - 49px)' }}>
+            <SandpackLayout className="h-full" style={{ height: 'calc(100vh - 49px)', overflowY: 'auto' }}>
               <div
                 style={{
                   display: activeView === 'preview' ? 'block' : 'none',
