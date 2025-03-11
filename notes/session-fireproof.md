@@ -21,38 +21,49 @@ We've started implementing the refactoring with two new hooks:
 And we've modified:
 - **useSimpleChat**: To use the new hooks instead of direct database access
 
+## Key Design Decisions
+
+### Raw Message Storage
+For AI messages, we're storing the raw stream content rather than the parsed result. This allows:
+- Future improvements to parsing logic can be applied to existing messages
+- Original content is preserved regardless of parsing changes
+- More flexibility in how we display messages in the UI
+
+### Separation of Concerns
+- **Session**: Metadata, title, management
+- **Messages**: Individual documents linked to a session via session_id
+- **UI Components**: Focus on rendering, not data management
+
 ## Current Issues
 
 The implementation has several issues that need to be addressed:
 
 ### Type Issues
-- Missing types module (`../types`) - we need to update the import paths to use `../types/chat`
-- TypeScript errors with Fireproof API usage
+- ✅ Fixed: Missing types module - updated import paths to use `../types/chat` 
+- ⚠️ In Progress: TypeScript errors with Fireproof API usage 
 
 ### Fireproof API Issues
-- `useDatabase` doesn't exist in the Fireproof API - we should use the existing `useFireproof` approach
-- Incorrect usage of `useLiveQuery` - need to reference the Fireproof documentation for correct patterns
+- ✅ Fixed: `useDatabase` doesn't exist - updated to use the correct `useFireproof` approach
+- ⚠️ In Progress: Fireproof query syntax needs refinement - updated query pattern but still resolving type errors
 
 ## Next Steps
 
-1. **Fix Type Imports**:
-   - Update imports to use `../types/chat` instead of `../types`
+1. **Fix Remaining Type Issues**:
+   - Address type issues with Fireproof query in useSessionMessages
 
-2. **Fix Fireproof API Usage**:
-   - Update `useSession` to use proper Fireproof API:
-     ```typescript
-     const { database } = useFireproof(FIREPROOF_CHAT_HISTORY);
-     ```
-   - Update `useSessionMessages` to use proper Fireproof API for queries
+2. **Fix Message Data Model**:
+   - ✅ Done: Updated to store raw AI message content
+   - ✅ Done: Separate user and AI message document types
+   - ✅ Done: Added reparsing at the component level
 
 3. **Complete the Migration**:
-   - Update components to use the new hooks
-   - Refactor MessageList to use `useSessionMessages`
+   - Update useSimpleChat to use the new message format
+   - Refactor MessageList to consume messages from useSessionMessages
    - Update routes to handle session creation/loading
 
 4. **Data Model Transition**:
-   - Create a migration path from current "all messages in one doc" to "one doc per message"
-   - Implement backwards compatibility for existing sessions
+   - Create a migration function to convert existing sessions to the new format
+   - Implement backwards compatibility for legacy data
 
 5. **Testing**:
    - Update tests to account for the new architecture
