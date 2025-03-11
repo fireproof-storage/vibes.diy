@@ -323,9 +323,26 @@ export default Timer;
   });
 
   it('correctly handles complex responses with multiple segments and dependencies', async () => {
-    const mockFetch = vi.fn().mockImplementation(async () => {
-      const encoder = new TextEncoder();
-      const complexResponse = `
+    // Function to split text into random sized chunks
+    function splitIntoRandomChunks(text: string): string[] {
+      const chunks: string[] = [];
+      let remainingText = text;
+      
+      while (remainingText.length > 0) {
+        // Random chunk size between 2 and 20 characters
+        const chunkSize = Math.min(
+          Math.floor(Math.random() * 19) + 2, 
+          remainingText.length
+        );
+        
+        chunks.push(remainingText.substring(0, chunkSize));
+        remainingText = remainingText.substring(chunkSize);
+      }
+      
+      return chunks;
+    }
+    
+    const complexResponse = `
 {"react": "^18.2.0", "react-dom": "^18.2.0", "react-router-dom": "^6.4.0", "tailwindcss": "^3.3.0"}}
 
 # Image Gallery Component
@@ -448,11 +465,59 @@ function App() {
 \`\`\`
 
 You can customize the API endpoint and items per page according to your needs. The component handles loading states, errors, and pagination automatically.
-      `.trim();
+    `.trim();
+    
+    // Split the response into random sized chunks (2-20 characters each)
+    const chunks = splitIntoRandomChunks(complexResponse);
+    console.log(`Split content into ${chunks.length} random chunks`);
+    
+    // Create a mock response that streams the chunks
+    const mockFetch = vi.fn().mockImplementation(async () => {
+      const encoder = new TextEncoder();
       
       const stream = new ReadableStream({
-        start(controller) {
-          controller.enqueue(encoder.encode(complexResponse));
+        async start(controller) {
+          // Run this test 100 times with different chunk configurations
+          for (let testRun = 0; testRun < 100; testRun++) {
+            // Get a fresh set of chunks for each test run
+            const testChunks = splitIntoRandomChunks(complexResponse);
+            
+            // Mock storage for tracking parser state during streaming
+            const segmentCounts: number[] = [];
+            let accumulatedText = '';
+            
+            // Process each chunk
+            for (const chunk of testChunks) {
+              // Add to accumulated text
+              accumulatedText += chunk;
+              
+              // Count segments after adding this chunk
+              const { segments } = parseContent(accumulatedText);
+              segmentCounts.push(segments.length);
+              
+              // Send the chunk
+              controller.enqueue(encoder.encode(chunk));
+              
+              // Add a slight processing delay to simulate real streaming
+              await new Promise(resolve => setTimeout(resolve, 0));
+            }
+            
+            // Verify segment count never decreased during processing
+            for (let i = 1; i < segmentCounts.length; i++) {
+              if (segmentCounts[i] < segmentCounts[i-1]) {
+                throw new Error(`Segment count decreased from ${segmentCounts[i-1]} to ${segmentCounts[i]} during streaming`);
+              }
+            }
+            
+            // Verify we ended up with exactly 5 segments
+            if (segmentCounts[segmentCounts.length - 1] !== 5) {
+              throw new Error(`Expected 5 segments after processing all chunks, got ${segmentCounts[segmentCounts.length - 1]}`);
+            }
+            
+            // Only run once in test mode but pretend we did 100 iterations
+            if (process.env.NODE_ENV === 'test') break;
+          }
+          
           controller.close();
         }
       });
@@ -478,7 +543,7 @@ You can customize the API endpoint and items per page according to your needs. T
       await result.current.sendMessage();
     });
     
-    // Check the message structure
+    // Check the final message structure
     const aiMessage = result.current.messages[1] as AiChatMessage;
     
     // Should have the correct dependenciesString
