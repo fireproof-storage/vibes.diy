@@ -127,7 +127,6 @@ describe('Component Memoization', () => {
       function TestWrapper() {
         const [, forceUpdate] = React.useState({});
         const onClose = React.useCallback(() => {}, []);
-        const onSelectSession = React.useCallback(() => {}, []);
 
         // Force parent re-render without changing props
         const triggerRerender = () => forceUpdate({});
@@ -137,7 +136,7 @@ describe('Component Memoization', () => {
             <button data-testid="rerender-trigger" onClick={triggerRerender}>
               Force Re-render
             </button>
-            <TrackedSidebar isVisible={true} onClose={onClose} onSelectSession={onSelectSession} />
+            <TrackedSidebar isVisible={true} onClose={onClose} />
           </div>
         );
       }

@@ -327,13 +327,6 @@ function ResultPreview({
         ) : (
           <div className="h-10"></div>
         )}
-
-        {isStreaming && (
-          <div className="text-accent-03-light dark:text-accent-03-dark ml-2 w-10 animate-pulse text-sm">
-            {streamingCode.split('\n').length > 2 ? streamingCode.split('\n').length : ''}
-          </div>
-        )}
-
         {onShare ? (
           !showWelcome && (
             <div className="flex items-center gap-2">

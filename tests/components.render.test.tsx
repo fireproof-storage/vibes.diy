@@ -22,7 +22,6 @@ const onOpenSidebar = vi.fn();
 const onToggleSidebar = vi.fn();
 const onNewChat = vi.fn();
 const onClose = vi.fn();
-const onSelectSession = vi.fn();
 let isGeneratingValue = false;
 
 describe('Component Rendering', () => {
@@ -77,7 +76,7 @@ describe('Component Rendering', () => {
   describe('SessionSidebar', () => {
     it('renders in hidden state', () => {
       const { container } = render(
-        <SessionSidebar isVisible={false} onClose={onClose} onSelectSession={onSelectSession} />
+        <SessionSidebar isVisible={false} onClose={onClose} />
       );
       // Check that it has the hidden class
       expect(container.firstChild).toHaveClass('-translate-x-full');
@@ -85,7 +84,7 @@ describe('Component Rendering', () => {
 
     it('renders in visible state', () => {
       const { container } = render(
-        <SessionSidebar isVisible={true} onClose={onClose} onSelectSession={onSelectSession} />
+        <SessionSidebar isVisible={true} onClose={onClose} />
       );
       expect(container.firstChild).toHaveClass('translate-x-0');
 
@@ -95,7 +94,7 @@ describe('Component Rendering', () => {
 
     it('shows empty state when no sessions', () => {
       render(
-        <SessionSidebar isVisible={true} onClose={onClose} onSelectSession={onSelectSession} />
+        <SessionSidebar isVisible={true} onClose={onClose} />
       );
       expect(screen.getByText('No saved sessions yet')).toBeInTheDocument();
     });
