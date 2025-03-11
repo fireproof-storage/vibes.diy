@@ -321,4 +321,205 @@ export default Timer;
     const aiMessage = result.current.messages[1] as AiChatMessage;
     expect(aiMessage.dependenciesString).toBe('{"react": "^18.2.0", "react-dom": "^18.2.0"}}');
   });
+
+  it('correctly handles complex responses with multiple segments and dependencies', async () => {
+    const mockFetch = vi.fn().mockImplementation(async () => {
+      const encoder = new TextEncoder();
+      const complexResponse = `
+{"react": "^18.2.0", "react-dom": "^18.2.0", "react-router-dom": "^6.4.0", "tailwindcss": "^3.3.0"}}
+
+# Image Gallery Component
+
+Here's a comprehensive image gallery component that loads images from an API and displays them in a responsive grid:
+
+\`\`\`jsx
+import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
+
+function ImageGallery({ apiEndpoint = '/api/images', itemsPerPage = 12 }) {
+  const [images, setImages] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [page, setPage] = useState(1);
+  
+  useEffect(() => {
+    async function fetchImages() {
+      try {
+        setLoading(true);
+        const response = await fetch(\`\${apiEndpoint}?page=\${page}&limit=\${itemsPerPage}\`);
+        
+        if (!response.ok) {
+          throw new Error(\`API error: \${response.status}\`);
+        }
+        
+        const data = await response.json();
+        setImages(data.images || []);
+        setError(null);
+      } catch (err) {
+        console.error('Failed to fetch images:', err);
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    }
+    
+    fetchImages();
+  }, [apiEndpoint, page, itemsPerPage]);
+  
+  const handleNextPage = () => setPage(prev => prev + 1);
+  const handlePrevPage = () => setPage(prev => Math.max(1, prev - 1));
+  
+  if (loading && images.length === 0) {
+    return <div className="flex justify-center p-8"><div className="animate-spin h-10 w-10 border-4 border-blue-500 border-t-transparent rounded-full"></div></div>;
+  }
+  
+  if (error && images.length === 0) {
+    return <div className="text-red-500 p-4 bg-red-50 rounded">Error loading images: {error}</div>;
+  }
+  
+  return (
+    <div className="container mx-auto px-4 py-8">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+        {images.map(image => (
+          <div key={image.id} className="overflow-hidden rounded-lg shadow-md hover:shadow-xl transition-shadow duration-300">
+            <Link to={\`/image/\${image.id}\`}>
+              <img 
+                src={image.thumbnailUrl} 
+                alt={image.title} 
+                className="w-full h-48 object-cover"
+                loading="lazy"
+              />
+              <div className="p-4">
+                <h3 className="text-lg font-semibold truncate">{image.title}</h3>
+                <p className="text-sm text-gray-500">{image.category}</p>
+              </div>
+            </Link>
+          </div>
+        ))}
+      </div>
+      
+      {images.length > 0 && (
+        <div className="flex justify-between mt-8">
+          <button 
+            onClick={handlePrevPage} 
+            disabled={page === 1}
+            className="px-4 py-2 bg-gray-200 rounded disabled:opacity-50"
+          >
+            Previous
+          </button>
+          <span className="self-center">Page {page}</span>
+          <button 
+            onClick={handleNextPage} 
+            className="px-4 py-2 bg-blue-500 text-white rounded"
+          >
+            Next
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+export default ImageGallery;
+\`\`\`
+
+## Usage Instructions
+
+To use this component in your React application:
+
+1. Install the dependencies using npm or yarn
+2. Import the component in your app
+3. Use it with custom parameters:
+
+\`\`\`jsx
+import ImageGallery from './components/ImageGallery';
+
+function App() {
+  return (
+    <div className="app">
+      <h1>My Photo Collection</h1>
+      <ImageGallery 
+        apiEndpoint="/api/my-photos"
+        itemsPerPage={8}
+      />
+    </div>
+  );
+}
+\`\`\`
+
+You can customize the API endpoint and items per page according to your needs. The component handles loading states, errors, and pagination automatically.
+      `.trim();
+      
+      const stream = new ReadableStream({
+        start(controller) {
+          controller.enqueue(encoder.encode(complexResponse));
+          controller.close();
+        }
+      });
+      
+      return {
+        ok: true,
+        body: stream,
+        status: 200,
+        statusText: 'OK',
+        headers: new Headers(),
+      } as Response;
+    });
+    
+    window.fetch = mockFetch;
+    
+    const { result } = renderHook(() => useSimpleChat());
+    
+    act(() => {
+      result.current.setInput('Create an image gallery component');
+    });
+    
+    await act(async () => {
+      await result.current.sendMessage();
+    });
+    
+    // Check the message structure
+    const aiMessage = result.current.messages[1] as AiChatMessage;
+    
+    // Should have the correct dependenciesString
+    expect(aiMessage.dependenciesString).toBe('{"react": "^18.2.0", "react-dom": "^18.2.0", "react-router-dom": "^6.4.0", "tailwindcss": "^3.3.0"}}');
+    
+    // Should have parsed dependencies correctly
+    const parsedDependencies = parseDependencies(aiMessage.dependenciesString);
+    expect(parsedDependencies).toEqual({
+      "react": "^18.2.0", 
+      "react-dom": "^18.2.0", 
+      "react-router-dom": "^6.4.0", 
+      "tailwindcss": "^3.3.0"
+    });
+    
+    // Should have 5 segments (intro markdown, main code, usage markdown, example code, outro markdown)
+    expect(aiMessage.segments.length).toBe(5);
+    
+    // Verify each segment type
+    expect(aiMessage.segments[0].type).toBe('markdown');
+    expect(aiMessage.segments[1].type).toBe('code');
+    expect(aiMessage.segments[2].type).toBe('markdown');
+    expect(aiMessage.segments[3].type).toBe('code');
+    expect(aiMessage.segments[4].type).toBe('markdown');
+    
+    // First segment should be markdown introduction
+    expect(aiMessage.segments[0].content).toContain('Image Gallery Component');
+    
+    // Second segment should be the main code
+    expect(aiMessage.segments[1].content).toContain('function ImageGallery');
+    
+    // Third segment should be usage instructions in markdown
+    expect(aiMessage.segments[2].content).toContain('Usage Instructions');
+    
+    // Fourth segment should be example code
+    expect(aiMessage.segments[3].content).toContain('import ImageGallery');
+    
+    // Fifth segment should be final markdown
+    expect(aiMessage.segments[4].content).toContain('customize the API endpoint');
+    
+    // getCurrentCode should return the main code block, not the example
+    expect(result.current.getCurrentCode()).toContain('function ImageGallery');
+    expect(result.current.getCurrentCode()).not.toContain('My Photo Collection');
+  });
 }); 
