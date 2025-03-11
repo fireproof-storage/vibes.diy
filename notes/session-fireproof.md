@@ -106,10 +106,6 @@ The implementation has several issues that need to be addressed:
    - Add tests for useSessionMessages hook
    - Test migration from old to new format
 
-4. **Performance Optimization**:
-   - Add indexes for efficient querying
-   - Consider pagination for large message lists
-   - Optimize query patterns
 
 ## Long-term Vision
 
@@ -120,9 +116,7 @@ This architecture sets us up for several future improvements:
    - Changes are synchronized across clients
 
 2. **Advanced Document Types**:
-   - Code snippets as individual documents
    - File attachments linked to sessions
-   - References between documents
  
 3. **Enhanced UI Features**:
    - Message reactions/annotations
