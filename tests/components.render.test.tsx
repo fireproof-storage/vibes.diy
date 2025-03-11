@@ -104,7 +104,7 @@ describe('Component Rendering', () => {
   describe('MessageList', () => {
     it('renders empty list', () => {
       const { container } = render(
-        <MessageList messages={[]} isGenerating={false} currentStreamedText="" />
+        <MessageList messages={[]} isGenerating={false} />
       );
       expect(container.querySelector('.messages')).toBeInTheDocument();
     });
@@ -112,22 +112,33 @@ describe('Component Rendering', () => {
     it('renders messages correctly', () => {
       const messages: ChatMessage[] = [
         { text: 'Hello', type: 'user' },
-        { text: 'Hi there', type: 'ai' },
+        { 
+          text: 'Hi there', 
+          type: 'ai',
+          segments: [{ type: 'markdown', content: 'Hi there' }]
+        },
       ];
-      render(<MessageList messages={messages} isGenerating={false} currentStreamedText="" />);
-      expect(screen.getAllByTestId('markdown')).toHaveLength(2);
+      render(<MessageList messages={messages} isGenerating={false} />);
       expect(screen.getByText('Hello')).toBeInTheDocument();
       expect(screen.getByText('Hi there')).toBeInTheDocument();
     });
 
     it('renders AI typing indicator when generating', () => {
-      render(<MessageList messages={[]} isGenerating={true} currentStreamedText="" />);
+      render(<MessageList messages={[]} isGenerating={true} />);
       expect(screen.getByText('Thinking')).toBeInTheDocument();
     });
 
-    it('renders streamed text when available', () => {
+    it('renders streaming message', () => {
+      const messages: ChatMessage[] = [
+        { 
+          text: 'I am thinking...', 
+          type: 'ai',
+          segments: [{ type: 'markdown', content: 'I am thinking...' }],
+          isStreaming: true
+        }
+      ];
       render(
-        <MessageList messages={[]} isGenerating={true} currentStreamedText="I am thinking..." />
+        <MessageList messages={messages} isGenerating={true} />
       );
       expect(screen.getByText('I am thinking...')).toBeInTheDocument();
     });

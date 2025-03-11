@@ -1,5 +1,5 @@
 import { useEffect, useState, useMemo, useCallback, useRef } from 'react';
-import type { ChatMessage, SessionDocument } from './types/chat';
+import type { ChatMessage, SessionDocument, Segment } from './types/chat';
 import { useFireproof } from 'use-fireproof';
 import SessionSidebar from './components/SessionSidebar';
 import ChatHeader from './components/ChatHeader';
@@ -15,27 +15,15 @@ interface ChatInterfaceProps {
     input: string;
     setInput: React.Dispatch<React.SetStateAction<string>>;
     isGenerating: boolean;
-    currentStreamedText: string;
-    streamingCode: string;
-    completedCode: string;
-    isStreaming: boolean;
     inputRef: React.RefObject<HTMLTextAreaElement | null>;
     messagesEndRef: React.RefObject<HTMLDivElement | null>;
     autoResizeTextarea: () => void;
     scrollToBottom: () => void;
     sendMessage: () => Promise<void>;
-    parserState: React.MutableRefObject<{
-      inCodeBlock: boolean;
-      codeBlockContent: string;
-      dependencies: Record<string, string>;
-      displayText: string;
-      on: (event: string, callback: Function) => void;
-      removeAllListeners: () => void;
-      write: (chunk: string) => void;
-      end: () => void;
-      reset: () => void;
-    }>;
-    completedMessage: string;
+    currentSegments: () => Segment[];
+    getCurrentCode: () => string;
+    title: string;
+    setTitle: React.Dispatch<React.SetStateAction<string>>;
   };
   sessionId?: string | null;
   onSessionCreated?: (newSessionId: string) => void;
@@ -76,9 +64,10 @@ function ChatInterface({
     input,
     setInput,
     isGenerating,
-    currentStreamedText,
     inputRef,
+    messagesEndRef,
     autoResizeTextarea,
+    scrollToBottom,
     sendMessage,
   } = chatState;
 
@@ -137,6 +126,27 @@ function ChatInterface({
           const messages = Array.isArray(sessionData.messages) ? sessionData.messages : [];
           // Use the ref to access the latest setMessages function
           setMessagesRef.current(messages);
+
+          // Find the last AI message with code
+          const lastAiMessageWithCode = [...messages]
+            .reverse()
+            .find((msg): msg is ChatMessage & { type: 'ai' } => 
+              msg.type === 'ai' && msg.segments.some(segment => segment.type === 'code')
+            );
+          
+          if (lastAiMessageWithCode) {
+            // Get code and dependencies
+            const codeSegment = lastAiMessageWithCode.segments.find(segment => segment.type === 'code');
+            const code = codeSegment?.content || '';
+            
+            // Get dependencies
+            const dependencies = lastAiMessageWithCode.dependenciesString 
+              ? JSON.parse(lastAiMessageWithCode.dependenciesString.replace(/}}$/, '}'))
+              : {};
+            
+            // Notify code generation handlers
+            onCodeGenerated?.(code, dependencies);
+          }
         } catch (error) {
           console.error('ChatInterface: Error loading session:', error);
         }
@@ -342,9 +352,10 @@ function ChatInterface({
         currentStreamedText={currentStreamedText}
         isShrinking={isShrinking}
         isExpanding={isExpanding}
+        messagesEndRef={messagesEndRef}
       />
     ),
-    [messages, isGenerating, currentStreamedText, isShrinking, isExpanding]
+    [messages, isGenerating, currentStreamedText, isShrinking, isExpanding, messagesEndRef]
   );
 
   const quickSuggestions = useMemo(
@@ -379,6 +390,15 @@ function ChatInterface({
       chatContext.setIsGenerating(chatState.isGenerating);
     }
   }, [chatContext, chatState.isGenerating]);
+
+  // Replace chatState.currentStreamedText references with content from the last streaming message
+  const currentStreamedText = useMemo(() => {
+    const lastAiMessage = [...messages].reverse().find(
+      (msg): msg is ChatMessage & { type: 'ai' } => 
+        msg.type === 'ai' && Boolean(msg.isStreaming)
+    );
+    return lastAiMessage?.text || '';
+  }, [messages]);
 
   return (
     <div className="relative flex h-full w-full flex-col overflow-hidden">

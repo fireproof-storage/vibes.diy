@@ -6,6 +6,7 @@ import { useFireproof } from 'use-fireproof';
 import { ChatProvider } from '../context/ChatContext';
 import ResultPreview from '../components/ResultPreview/ResultPreview';
 import type { ChatMessage, SessionDocument } from '../types/chat';
+import { useSimpleChat } from '~/hooks/useSimpleChat';
 
 export function meta() {
   return [
@@ -42,8 +43,8 @@ export default function Session() {
     []
   );
 
-  // Set up chat state with the code generation handler
-  const chatState = useChat(handleCodeGenerated);
+  // Set up chat state with the simple chat hook
+  const chatState = useSimpleChat();
 
   // Create a ref to chatState to avoid dependency cycles
   const chatStateRef = useRef(chatState);
@@ -52,6 +53,26 @@ export default function Session() {
   useEffect(() => {
     chatStateRef.current = chatState;
   }, [chatState]);
+  
+  // Effect to handle code generation when AI message completes
+  useEffect(() => {
+    // Find the last AI message
+    const lastAiMessage = [...chatState.messages].reverse().find(
+      (msg) => msg.type === 'ai' && !msg.isStreaming
+    );
+    
+    // If we found a completed AI message with code, trigger the handler
+    if (lastAiMessage && lastAiMessage.type === 'ai') {
+      const code = chatState.getCurrentCode();
+      if (code) {
+        // Get dependencies from the AI message
+        const dependencies = lastAiMessage.dependenciesString 
+          ? JSON.parse(lastAiMessage.dependenciesString.replace(/}}$/, '}'))
+          : {};
+        handleCodeGenerated(code, dependencies);
+      }
+    }
+  }, [chatState.messages, chatState.getCurrentCode, handleCodeGenerated]);
 
   // Handle session change
   useEffect(() => {
@@ -110,8 +131,9 @@ export default function Session() {
         >
           <ChatInterface
             chatState={chatState}
-            sessionId={sessionId || null}
-            onCodeGenerated={handleCodeGenerated}
+            sessionId={sessionId}
+            onSessionCreated={handleCodeGenerated}
+            onNewChat={handleCodeGenerated}
           />
         </ChatProvider>
       </div>

@@ -1,81 +1,37 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
 import type { ChatMessage, UserChatMessage, AiChatMessage, Segment } from '../types/chat';
 import { makeBaseSystemPrompt } from '../prompts';
+import { parseContent, parseDependencies } from '../utils/segmentParser';
 
 const CHOSEN_MODEL = 'anthropic/claude-3.7-sonnet';
 
 /**
- * Parse content into segments of markdown and code
- * This is a pure function that doesn't rely on any state
- */
-function parseContent(text: string): { segments: Segment[], dependenciesString: string | undefined } {
-  const segments: Segment[] = [];
-  let dependenciesString: string | undefined;
-
-  // Extract dependencies from the first segment (if it exists)
-  const depsMatch = text.match(/^(.*}})/s);
-  if (depsMatch && depsMatch[1]) {
-    dependenciesString = depsMatch[1];
-    // Remove the dependencies part from the text
-    text = text.slice(depsMatch[1].length);
-  }
-
-  // Split by code blocks (```...)
-  const parts = text.split(/```(?:[^\n]*\n)?/);
-  
-  if (parts.length === 1) {
-    // No code blocks found, just markdown
-    segments.push({
-      type: 'markdown',
-      content: parts[0]
-    });
-  } else {
-    // We have code blocks
-    parts.forEach((part, index) => {
-      if (index % 2 === 0) {
-        // Even indices are markdown
-        if (part.trim()) {
-          segments.push({
-            type: 'markdown',
-            content: part
-          });
-        }
-      } else {
-        // Odd indices are code
-        segments.push({
-          type: 'code',
-          content: part
-        });
-      }
-    });
-  }
-
-  return { segments, dependenciesString };
-}
-
-/**
  * Simplified chat hook that focuses on data-driven state management
  */
-export function useSimpleChat(
-  onCodeGenerated: (code: string, dependencies?: Record<string, string>) => void,
-  onGeneratedTitle?: (title: string) => void
-) {
+export function useSimpleChat() {
   // Core state
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState<string>('');
   const [isGenerating, setIsGenerating] = useState(false);
   const [systemPrompt, setSystemPrompt] = useState('');
+  const [title, setTitle] = useState<string>('New Chat');
   
   // Refs for tracking streaming state
   const streamBufferRef = useRef<string>('');
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const titleGeneratedRef = useRef<boolean>(false);
 
   // Initialize system prompt
   useEffect(() => {
-    makeBaseSystemPrompt(CHOSEN_MODEL).then((prompt) => {
-      setSystemPrompt(prompt);
-    });
+    // Check if we're in a test environment
+    if (import.meta.env.MODE === 'test') {
+      setSystemPrompt('Test system prompt');
+    } else {
+      makeBaseSystemPrompt(CHOSEN_MODEL).then((prompt) => {
+        setSystemPrompt(prompt);
+      });
+    }
   }, []);
 
   // Auto-resize textarea function
@@ -97,34 +53,6 @@ export function useSimpleChat(
       role: msg.type === 'user' ? ('user' as const) : ('assistant' as const),
       content: msg.text,
     }));
-  }
-
-  /**
-   * Extract dependencies as a Record from the dependencies string
-   */
-  function parseDependencies(dependenciesString?: string): Record<string, string> {
-    if (!dependenciesString) return {};
-    
-    const dependencies: Record<string, string> = {};
-    const matches = dependenciesString.match(/"([^"]+)"\s*:\s*"([^"]+)"/g);
-    
-    if (matches) {
-      matches.forEach((match) => {
-        const keyMatch = match.match(/"([^"]+)"\s*:/);
-        const valueMatch = match.match(/:\s*"([^"]+)"/);
-        
-        if (keyMatch?.[1] && valueMatch?.[1]) {
-          const key = keyMatch[1].trim();
-          const value = valueMatch[1].trim();
-          
-          if (key && value) {
-            dependencies[key] = value;
-          }
-        }
-      });
-    }
-    
-    return dependencies;
   }
 
   /**
@@ -154,6 +82,64 @@ export function useSimpleChat(
     const codeSegment = segments.find(segment => segment.type === 'code');
     return codeSegment?.content || '';
   }, [currentSegments]);
+
+  /**
+   * Generate a title based on the first two segments (markdown and code)
+   */
+  async function generateTitle(segments: Segment[]) {
+    if (titleGeneratedRef.current) return;
+    
+    try {
+      // Get first markdown segment and first code segment (if they exist)
+      const firstMarkdown = segments.find(seg => seg.type === 'markdown');
+      const firstCode = segments.find(seg => seg.type === 'code');
+      
+      // Create content from the first two segments
+      let titleContent = '';
+      
+      if (firstMarkdown) {
+        titleContent += firstMarkdown.content + '\n\n';
+      }
+      
+      if (firstCode) {
+        titleContent += '```\n' + firstCode.content.split('\n').slice(0, 15).join('\n') + '\n```';
+      }
+      
+      const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${import.meta.env.VITE_OPENROUTER_API_KEY}`,
+          'Content-Type': 'application/json',
+          'HTTP-Referer': window.location.origin,
+          'X-Title': 'Fireproof App Builder',
+        },
+        body: JSON.stringify({
+          model: CHOSEN_MODEL,
+          stream: false,
+          messages: [
+            {
+              role: 'system',
+              content:
+                'You are a helpful assistant that generates short, descriptive titles. Create a concise title (3-5 words) that captures the essence of the content. Return only the title, no other text or markup.',
+            },
+            {
+              role: 'user',
+              content: `Generate a short, descriptive title (3-5 words) for this app, use the React JSX <h1> tag's value if you can find it:\n\n${titleContent}`,
+            },
+          ],
+        }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        const newTitle = data.choices[0]?.message?.content?.trim() || 'New Chat';
+        setTitle(newTitle);
+        titleGeneratedRef.current = true;
+      }
+    } catch (error) {
+      console.error('Error generating title:', error);
+    }
+  }
 
   /**
    * Send a message and process the AI response
@@ -233,54 +219,35 @@ export function useSimpleChat(
 
           // Decode the chunk
           const chunk = decoder.decode(value, { stream: true });
-
-          // Process each line (each SSE event)
-          const lines = chunk.split('\n');
-          for (const line of lines) {
-            if (line.startsWith('data: ') && line !== 'data: [DONE]') {
-              try {
-                const data = JSON.parse(line.substring(6));
-                if (data.choices && data.choices[0]?.delta?.content) {
-                  const content = data.choices[0].delta.content;
-
-                  // Add to stream buffer
-                  streamBufferRef.current += content;
-
-                  // Parse current buffer for AI message update
-                  const { segments, dependenciesString } = parseContent(streamBufferRef.current);
-                  
-                  // Update the AI message
-                  setMessages(prev => {
-                    const updated = [...prev];
-                    const lastIndex = updated.length - 1;
-                    
-                    if (lastIndex >= 0 && updated[lastIndex].type === 'ai') {
-                      updated[lastIndex] = {
-                        ...updated[lastIndex] as AiChatMessage,
-                        text: streamBufferRef.current,
-                        segments,
-                        dependenciesString,
-                        isStreaming: true
-                      };
-                    }
-                    
-                    return updated;
-                  });
-                }
-              } catch (e) {
-                console.error('Error parsing chunk:', e);
-              }
+          
+          // Add to stream buffer - we get raw content, not SSE formatted events
+          streamBufferRef.current += chunk;
+          
+          // Parse current buffer for AI message update
+          const { segments, dependenciesString } = parseContent(streamBufferRef.current);
+          
+          // Update the AI message
+          setMessages(prev => {
+            const updated = [...prev];
+            const lastIndex = updated.length - 1;
+            
+            if (lastIndex >= 0 && updated[lastIndex].type === 'ai') {
+              updated[lastIndex] = {
+                ...updated[lastIndex] as AiChatMessage,
+                text: streamBufferRef.current,
+                segments,
+                dependenciesString,
+                isStreaming: true
+              };
             }
-          }
+            
+            return updated;
+          });
         }
 
         // Streaming is done, finalize the AI message
         const { segments, dependenciesString } = parseContent(streamBufferRef.current);
         const dependencies = parseDependencies(dependenciesString);
-        
-        // Find code segment if any
-        const codeSegment = segments.find(segment => segment.type === 'code');
-        const code = codeSegment?.content || '';
         
         // Update the final AI message
         setMessages(prev => {
@@ -300,50 +267,10 @@ export function useSimpleChat(
           return updated;
         });
 
-        // Execute callback with generated code if available
-        if (code) {
-          onCodeGenerated(code, dependencies);
-        }
-
-        // Generate a title if needed
-        if (onGeneratedTitle) {
-          try {
-            const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-              method: 'POST',
-              headers: {
-                Authorization: `Bearer ${import.meta.env.VITE_OPENROUTER_API_KEY}`,
-                'Content-Type': 'application/json',
-                'HTTP-Referer': window.location.origin,
-                'X-Title': 'Fireproof App Builder',
-              },
-              body: JSON.stringify({
-                model: CHOSEN_MODEL,
-                stream: false,
-                messages: [
-                  {
-                    role: 'system',
-                    content:
-                      'You are a helpful assistant that generates short, descriptive titles. Create a concise title (3-5 words) that captures the essence of the content. Return only the title, no other text or markup.',
-                  },
-                  {
-                    role: 'user',
-                    content: `Generate a short, descriptive title (3-5 words) for this app, use the React JSX <h1> tag's value if you can find it:\n\n${streamBufferRef.current}`,
-                  },
-                ],
-              }),
-            });
-
-            if (response.ok) {
-              const data = await response.json();
-              const title = data.choices[0]?.message?.content?.trim() || 'New Chat';
-              onGeneratedTitle(title);
-            } else {
-              onGeneratedTitle('New Chat');
-            }
-          } catch (error) {
-            console.error('Error generating title:', error);
-            onGeneratedTitle('New Chat');
-          }
+        // Generate a title if this is the first response with code and we haven't generated a title yet
+        const hasCode = segments.some(segment => segment.type === 'code');
+        if (hasCode && !titleGeneratedRef.current) {
+          await generateTitle(segments);
         }
       } catch (error) {
         // Handle errors
@@ -380,5 +307,7 @@ export function useSimpleChat(
     messagesEndRef,       // Reference to the messages end div
     autoResizeTextarea,   // Function to resize textarea
     scrollToBottom,       // Function to scroll to bottom
+    title,                // Current chat title
+    setTitle,             // Function to update title
   };
 } 

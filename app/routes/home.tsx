@@ -5,6 +5,8 @@ import ResultPreview from '../components/ResultPreview/ResultPreview';
 import { useChat } from '../hooks/useChat';
 import { useFireproof } from 'use-fireproof';
 import { ChatProvider } from '../context/ChatContext';
+import { useSimpleChat } from '~/hooks/useSimpleChat';
+import type { Segment } from '~/types/chat';
 
 export function meta() {
   return [
@@ -55,10 +57,9 @@ export default function Home() {
 
   // Keep tracking streaming props with refs to avoid re-renders
   const streamingPropsRef = useRef({
-    streamingCode: '',
-    isStreaming: false,
-    currentStreamedText: '',
-    messages: [] as any[],
+    messages: [] as ChatMessage[],
+    currentCode: '',
+    currentSegments: [] as Segment[],
   });
 
   // Maintain a stable ref to the database to prevent re-renders
@@ -69,13 +70,46 @@ export default function Home() {
     databaseRef.current = database;
   }, [database]);
 
-  // Hoist the useChat hook to this component with stable callback reference
-  const handleCodeGenerated = useCallback((code: string, dependencies?: Record<string, string>) => {
-    setState({
-      generatedCode: code,
-      dependencies: dependencies || {},
-    });
-  }, []);
+  // Initialize the chat state
+  const chatState = useSimpleChat();
+
+  // Update handleCodeGenerated to work with the new hook
+  const handleCodeGenerated = useCallback(
+    (code: string, dependencies: Record<string, string> = {}) => {
+      setState({
+        generatedCode: code,
+        dependencies: dependencies || {},
+      });
+    },
+    [setState]
+  );
+
+  // Setup effect to trigger handleCodeGenerated when a message with code is completed
+  useEffect(() => {
+    // Find the last AI message
+    const lastAiMessage = [...chatState.messages].reverse().find(
+      (msg) => msg.type === 'ai' && !msg.isStreaming
+    );
+    
+    // If we found a completed AI message with code, trigger the handler
+    if (lastAiMessage && lastAiMessage.type === 'ai') {
+      const code = chatState.getCurrentCode();
+      if (code) {
+        // Get dependencies from the AI message
+        const dependencies = lastAiMessage.dependenciesString 
+          ? JSON.parse(lastAiMessage.dependenciesString.replace(/}}$/, '}'))
+          : {};
+        handleCodeGenerated(code, dependencies);
+      }
+    }
+  }, [chatState.messages, chatState.getCurrentCode, handleCodeGenerated]);
+
+  // Setup effect to handle title generation
+  useEffect(() => {
+    if (chatState.title && chatState.title !== 'New Chat') {
+      handleGeneratedTitle(chatState.title);
+    }
+  }, [chatState.title, handleGeneratedTitle]);
 
   // Handle the generated title callback
   const handleGeneratedTitle = useCallback(
@@ -118,42 +152,27 @@ export default function Home() {
     [sessionId, isCreatingSession]
   );
 
-  const chatState = useChat(handleCodeGenerated, handleGeneratedTitle);
-
-  // Only update refs when values actually change with deep equality check
+  // Update streamingPropsRef to match the new API
   useEffect(() => {
     const currentProps = {
-      streamingCode: chatState.streamingCode,
-      isStreaming: chatState.isStreaming,
-      currentStreamedText: chatState.currentStreamedText,
       messages: chatState.messages,
+      currentCode: chatState.getCurrentCode(),
+      currentSegments: chatState.currentSegments(),
     };
 
     // Deep comparison to avoid unnecessary updates
-    const hasStreamingChanged = chatState.isStreaming !== streamingPropsRef.current.isStreaming;
-    const hasStreamingCodeChanged =
-      chatState.streamingCode !== streamingPropsRef.current.streamingCode;
-    const hasCurrentStreamedTextChanged =
-      chatState.currentStreamedText !== streamingPropsRef.current.currentStreamedText;
     const hasMessagesChanged =
-      chatState.messages.length !== streamingPropsRef.current.messages.length ||
-      JSON.stringify(chatState.messages) !== JSON.stringify(streamingPropsRef.current.messages);
+      chatState.messages.length !== streamingPropsRef.current.messages?.length ||
+      JSON.stringify(chatState.messages) !== JSON.stringify(streamingPropsRef.current.messages || []);
+    
+    const hasCodeChanged = 
+      currentProps.currentCode !== streamingPropsRef.current.currentCode;
 
-    // Only update if something changed
-    if (
-      hasStreamingChanged ||
-      hasStreamingCodeChanged ||
-      hasCurrentStreamedTextChanged ||
-      hasMessagesChanged
-    ) {
+    // Only update the ref if something relevant has changed
+    if (hasMessagesChanged || hasCodeChanged) {
       streamingPropsRef.current = currentProps;
     }
-  }, [
-    chatState.streamingCode,
-    chatState.isStreaming,
-    chatState.currentStreamedText,
-    chatState.messages,
-  ]);
+  }, [chatState.messages, chatState.getCurrentCode, chatState.currentSegments]);
 
   // Apply pending title when sessionId becomes available
   useEffect(() => {
@@ -325,10 +344,8 @@ export default function Home() {
       >
         <ChatInterface
           chatState={chatState}
-          sessionId={sessionId}
-          onSessionCreated={handleSessionCreated}
           onNewChat={handleNewChat}
-          onCodeGenerated={handleCodeGenerated}
+          onSessionCreated={handleSessionCreated}
         />
       </ChatProvider>
     );
@@ -346,27 +363,29 @@ export default function Home() {
 
   // Memoized ResultPreview component with improved dependency handling
   const memoizedResultPreview = useMemo(() => {
+    const lastAiMessage = [...chatState.messages].reverse().find(
+      (msg) => msg.type === 'ai' && !msg.isStreaming
+    );
     return (
       <ResultPreview
         code={state.generatedCode}
-        streamingCode={streamingPropsRef.current.streamingCode}
-        isStreaming={streamingPropsRef.current.isStreaming}
+        streamingCode={streamingPropsRef.current.currentCode}
+        isStreaming={streamingPropsRef.current.messages.length > 0 && chatState.isGenerating}
         dependencies={previewDependencies}
         onShare={handleShare}
         shareStatus={shareStatus}
-        completedMessage={chatState.completedMessage}
-        currentStreamContent={streamingPropsRef.current.currentStreamedText}
+        completedMessage={lastAiMessage?.text || ''}
+        currentStreamContent={streamingPropsRef.current.currentSegments
+          .filter(seg => seg.type === 'markdown')
+          .map(seg => seg.content)
+          .join('')}
         currentMessage={
           streamingPropsRef.current.messages.length > 0
-            ? {
-                content:
-                  streamingPropsRef.current.messages[streamingPropsRef.current.messages.length - 1]
-                    .text,
-              }
+            ? streamingPropsRef.current.messages[streamingPropsRef.current.messages.length - 1]
             : undefined
         }
+        shareUrl={state.shareUrl}
         onScreenshotCaptured={handleScreenshotCaptured}
-        {...(sessionId ? { sessionId } : {})}
       />
     );
   }, [
@@ -376,8 +395,7 @@ export default function Home() {
     shareStatus,
     handleShare,
     handleScreenshotCaptured,
-    chatState.completedMessage,
-    // Removed streaming-related props since we use the ref versions
+    chatState.isGenerating,
   ]);
 
   return (

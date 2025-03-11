@@ -268,7 +268,11 @@ describe('Component Memoization', () => {
       const { Component: TrackedMessageList, getRenderCount } = createRenderTracker(MessageList);
       const messages: ChatMessage[] = [
         { text: 'Hello', type: 'user' },
-        { text: 'Hi there', type: 'ai' },
+        { 
+          text: 'Hi there', 
+          type: 'ai',
+          segments: [{ type: 'markdown', content: 'Hi there' }]
+        },
       ];
 
       function TestWrapper() {
@@ -287,7 +291,6 @@ describe('Component Memoization', () => {
             <TrackedMessageList
               messages={memoizedMessages}
               isGenerating={false}
-              currentStreamedText=""
             />
           </div>
         );
@@ -313,7 +316,14 @@ describe('Component Memoization', () => {
         const [messages, setMessages] = React.useState(initialMessages);
 
         const addMessage = () => {
-          setMessages([...messages, { text: 'New message', type: 'ai' }]);
+          setMessages([
+            ...messages, 
+            { 
+              text: 'New message', 
+              type: 'ai', 
+              segments: [{ type: 'markdown', content: 'New message' }]
+            }
+          ]);
         };
 
         return (
@@ -321,7 +331,7 @@ describe('Component Memoization', () => {
             <button data-testid="add-message" onClick={addMessage}>
               Add Message
             </button>
-            <TrackedMessageList messages={messages} isGenerating={false} currentStreamedText="" />
+            <TrackedMessageList messages={messages} isGenerating={false} />
           </div>
         );
       }
