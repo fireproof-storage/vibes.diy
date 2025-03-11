@@ -13,13 +13,26 @@ The primary goal is to refactor the database interaction logic to:
 
 ## Current Progress
 
-We've started implementing the refactoring with two new hooks:
+We've made significant progress with the implementation of three key components:
 
-1. **useSession**: Centralizes session data management
-2. **useSessionMessages**: Handles message-specific operations with reactive updates
+1. **useSession** - ✅ Complete & Enhanced
+   - Updated to use Fireproof's `useDocument` hook for reactive session management
+   - Handles session metadata (title, etc.)
+   - Provides access to the database
+   - Manages session loading, updating and creation
+   - Added comprehensive test suite
 
-And we've modified:
-- **useSimpleChat**: To use the new hooks instead of direct database access
+2. **useSessionMessages** - ✅ Complete
+   - Stores messages as separate documents with session_id field
+   - Uses different document structures for user vs. AI messages
+   - Preserves raw AI message content for future reparsing
+   - Uses Fireproof live query for reactive updates
+
+3. **useSimpleChat** - ✅ Updated
+   - Now uses useSession and useSessionMessages
+   - Handles message generation and title creation
+   - Manages streaming content with appropriate database updates
+   - Added compatibility layer for older components
 
 ## Key Design Decisions
 
@@ -34,49 +47,86 @@ For AI messages, we're storing the raw stream content rather than the parsed res
 - **Messages**: Individual documents linked to a session via session_id
 - **UI Components**: Focus on rendering, not data management
 
+### Leveraging Fireproof Hooks
+We're now using Fireproof's built-in React hooks for better integration:
+- **useDocument**: For reactive session management with automatic merge/save operations
+- **useLiveQuery**: For reactive message lists that update in real-time
+
+### Message Document Structure
+We've implemented two distinct document types:
+1. **User Message**:
+   ```typescript
+   {
+     type: 'message',
+     message_type: 'user',
+     session_id: string,
+     text: string,
+     timestamp: number
+   }
+   ```
+
+2. **AI Message**:
+   ```typescript
+   {
+     type: 'message',
+     message_type: 'ai',
+     session_id: string,
+     raw_content: string,
+     timestamp: number,
+     title_generated?: boolean
+   }
+   ```
+
 ## Current Issues
 
 The implementation has several issues that need to be addressed:
 
 ### Type Issues
 - ✅ Fixed: Missing types module - updated import paths to use `../types/chat` 
-- ⚠️ In Progress: TypeScript errors with Fireproof API usage 
+- ✅ Fixed: Added 'type' field to SessionDocument interface
+- ✅ Fixed: TypeScript errors with Fireproof API usage 
 
 ### Fireproof API Issues
 - ✅ Fixed: `useDatabase` doesn't exist - updated to use the correct `useFireproof` approach
-- ⚠️ In Progress: Fireproof query syntax needs refinement - updated query pattern but still resolving type errors
+- ✅ Fixed: Fireproof query syntax updated to use official patterns with type and key parameters
 
 ## Next Steps
 
-1. **Fix Remaining Type Issues**:
-   - Address type issues with Fireproof query in useSessionMessages
+1. **Update UI Components**:
+   - Refactor MessageList to use useSessionMessages
+   - Update session.tsx and home.tsx routes to use the new hooks
+   - Remove any direct database access from components
 
-2. **Fix Message Data Model**:
-   - ✅ Done: Updated to store raw AI message content
-   - ✅ Done: Separate user and AI message document types
-   - ✅ Done: Added reparsing at the component level
-
-3. **Complete the Migration**:
-   - Update useSimpleChat to use the new message format
-   - Refactor MessageList to consume messages from useSessionMessages
-   - Update routes to handle session creation/loading
-
-4. **Data Model Transition**:
+2. **Data Model Migration**:
    - Create a migration function to convert existing sessions to the new format
-   - Implement backwards compatibility for legacy data
+   - Add a compatibility layer for reading legacy session format
 
-5. **Testing**:
-   - Update tests to account for the new architecture
-   - Create new tests for the hooks
+3. **Testing**:
+   - ✅ Added tests for useSession hook
+   - Add tests for useSessionMessages hook
+   - Test migration from old to new format
+
+4. **Performance Optimization**:
+   - Add indexes for efficient querying
+   - Consider pagination for large message lists
+   - Optimize query patterns
 
 ## Long-term Vision
 
-The goal is to have a system where:
+This architecture sets us up for several future improvements:
 
-1. Each session is a lightweight document containing metadata
-2. Messages are stored as separate documents linked to sessions by session_id
-3. Additional document types (screenshots, generated files, etc.) can be associated with sessions
-4. Components can subscribe to only the data they need
-5. Updates are efficient and targeted
+1. **Real-time Collaboration**:
+   - Multiple users can interact with the same session
+   - Changes are synchronized across clients
 
-This architecture will make the application more maintainable, more performant, and easier to extend with new features.
+2. **Advanced Document Types**:
+   - Code snippets as individual documents
+   - File attachments linked to sessions
+   - References between documents
+ 
+3. **Enhanced UI Features**:
+   - Message reactions/annotations
+   - Message editing with history
+   - Message threading/replies
+
+The session-based architecture with individual message documents provides a solid foundation for a more scalable, maintainable, and feature-rich application.
