@@ -7,6 +7,7 @@ import type { ChatMessage, AiChatMessage, SessionDocument, Segment } from '../ty
 import { useSimpleChat } from '../hooks/useSimpleChat';
 import { parseDependencies } from '../utils/segmentParser';
 import AppLayout from '../components/AppLayout';
+import { FIREPROOF_CHAT_HISTORY } from '../config/env';
 
 export function meta() {
   return [
@@ -22,7 +23,7 @@ export default function Session() {
     generatedCode: '',
     dependencies: {} as Record<string, string>,
   });
-  const { database } = useFireproof('fireproof-chat-history');
+  const { database } = useFireproof(FIREPROOF_CHAT_HISTORY);
 
   // Maintain a stable ref to the database to prevent re-renders
   const databaseRef = useRef(database);

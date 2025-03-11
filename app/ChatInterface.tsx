@@ -7,6 +7,7 @@ import ChatHeader from './components/ChatHeader';
 import MessageList from './components/MessageList';
 import ChatInput from './components/ChatInput';
 import QuickSuggestions from './components/QuickSuggestions';
+import { FIREPROOF_CHAT_HISTORY } from './config/env';
 
 // Define updated document type to work with Fireproof correctly
 interface SessionDocument {
@@ -70,7 +71,7 @@ function ChatInterface({
     setTitle
   } = chatState;
 
-  const { database } = useFireproof('sessions');
+  const { database } = useFireproof(FIREPROOF_CHAT_HISTORY);
   const databaseRef = useRef(database);
 
   // Use refs to maintain stable references to functions

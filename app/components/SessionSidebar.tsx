@@ -1,6 +1,7 @@
 import { useEffect, useRef, memo, useMemo, useState } from 'react';
 import { useFireproof } from 'use-fireproof';
 import { Link } from 'react-router';
+import { FIREPROOF_CHAT_HISTORY } from '../config/env';
 
 function ImgFile({
   file,
@@ -71,7 +72,7 @@ interface SessionSidebarProps {
  * Component that displays a collapsible sidebar with chat session history
  */
 function SessionSidebar({ isVisible, onClose }: SessionSidebarProps) {
-  const { database, useLiveQuery } = useFireproof('fireproof-chat-history');
+  const { database, useLiveQuery } = useFireproof(FIREPROOF_CHAT_HISTORY);
   const sidebarRef = useRef<HTMLDivElement>(null);
 
   // // Query chat sessions ordered by timestamp (newest first)
