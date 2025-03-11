@@ -65,13 +65,12 @@ function encodeTitle(title: string): string {
 interface SessionSidebarProps {
   isVisible: boolean;
   onClose: () => void;
-  onSelectSession: (session: SessionDocument) => void;
 }
 
 /**
  * Component that displays a collapsible sidebar with chat session history
  */
-function SessionSidebar({ isVisible, onClose, onSelectSession }: SessionSidebarProps) {
+function SessionSidebar({ isVisible, onClose }: SessionSidebarProps) {
   const { database, useLiveQuery } = useFireproof('fireproof-chat-history');
   const sidebarRef = useRef<HTMLDivElement>(null);
 
@@ -144,16 +143,6 @@ function SessionSidebar({ isVisible, onClose, onSelectSession }: SessionSidebarP
     };
   }, [isVisible, onClose]);
 
-  // Select a session and notify parent component
-  const handleSelectSession = (session: SessionDocument) => {
-    // Call the provided onSelectSession handler
-    onSelectSession(session);
-    // Close the sidebar on mobile
-    if (window.innerWidth < 768) {
-      onClose();
-    }
-  };
-
   // Memoize the sidebar classes to prevent recalculations on every render
   const sidebarClasses = useMemo(() => {
     return `bg-light-background-00 dark:bg-dark-background-00 fixed top-0 left-0 z-10 h-full shadow-lg transition-all duration-300 ${
@@ -184,10 +173,11 @@ function SessionSidebar({ isVisible, onClose, onSelectSession }: SessionSidebarP
             <Link
               to={`/session/${sessionDoc._id}/${encodedTitle}`}
               className="block"
-              onClick={(e) => {
-                // Don't navigate, just use the handler
-                e.preventDefault();
-                handleSelectSession(sessionDoc);
+              onClick={() => {
+                // Close the sidebar on mobile
+                if (window.innerWidth < 768) {
+                  onClose();
+                }
               }}
             >
               <div className="text-sm font-semibold text-gray-900 dark:text-white">{title}</div>
@@ -269,7 +259,6 @@ export default memo(SessionSidebar, (prevProps, nextProps) => {
   // Note: Functions should be memoized by parent components
   return (
     prevProps.isVisible === nextProps.isVisible &&
-    prevProps.onClose === nextProps.onClose &&
-    prevProps.onSelectSession === nextProps.onSelectSession
+    prevProps.onClose === nextProps.onClose
   );
 });

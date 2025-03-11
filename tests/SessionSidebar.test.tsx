@@ -90,8 +90,8 @@ vi.mock('use-fireproof', () => ({
 
 // Mock Link component from react-router
 vi.mock('react-router', () => ({
-  Link: ({ to, children, ...props }: any) => (
-    <a href={to} {...props}>
+  Link: ({ to, children, onClick, ...props }: any) => (
+    <a href={to} onClick={onClick} {...props} data-testid="router-link">
       {children}
     </a>
   )
@@ -106,9 +106,8 @@ describe('SessionSidebar', () => {
 
   it('renders sidebar correctly when visible', async () => {
     const onClose = vi.fn();
-    const onSelectSession = vi.fn();
 
-    render(<SessionSidebar isVisible={true} onClose={onClose} onSelectSession={onSelectSession} />);
+    render(<SessionSidebar isVisible={true} onClose={onClose} />);
 
     // Check that the sidebar title is rendered
     expect(screen.getByText('App History')).toBeDefined();
@@ -120,9 +119,8 @@ describe('SessionSidebar', () => {
 
   it('handles close button click', () => {
     const onClose = vi.fn();
-    const onSelectSession = vi.fn();
 
-    render(<SessionSidebar isVisible={true} onClose={onClose} onSelectSession={onSelectSession} />);
+    render(<SessionSidebar isVisible={true} onClose={onClose} />);
 
     const closeButton = screen.getByLabelText('Close sidebar');
     fireEvent.click(closeButton);
@@ -130,30 +128,53 @@ describe('SessionSidebar', () => {
     expect(onClose).toHaveBeenCalled();
   });
   
-  it('selects a session when clicked', async () => {
+  it('creates correct links to sessions', async () => {
     const onClose = vi.fn();
-    const onSelectSession = vi.fn();
 
-    render(<SessionSidebar isVisible={true} onClose={onClose} onSelectSession={onSelectSession} />);
+    render(<SessionSidebar isVisible={true} onClose={onClose} />);
 
+    // Find the elements containing the session titles
+    const session1Element = screen.getByText('Test Session 1').closest('a');
+    const session2Element = screen.getByText('Test Session 2').closest('a');
+    
+    // Check that the links have the correct href values
+    expect(session1Element).toHaveAttribute('href', '/session/session1/test-session-1');
+    expect(session2Element).toHaveAttribute('href', '/session/session2/test-session-2');
+  });
+  
+  it('closes sidebar on mobile when a session is clicked', () => {
+    const onClose = vi.fn();
+    
+    // Mock window.innerWidth to simulate mobile
+    Object.defineProperty(window, 'innerWidth', {
+      writable: true,
+      configurable: true,
+      value: 500 // Mobile width
+    });
+    
+    render(<SessionSidebar isVisible={true} onClose={onClose} />);
+    
     // Find and click on a session
-    const sessionItem = screen.getByText('Test Session 1');
-    fireEvent.click(sessionItem);
-
-    // Check that onSelectSession was called with the session data
-    expect(onSelectSession).toHaveBeenCalledWith(expect.objectContaining({
-      _id: 'session1',
-      title: 'Test Session 1'
-    }));
+    const sessionItem = screen.getByText('Test Session 1').closest('a');
+    fireEvent.click(sessionItem!);
+    
+    // Check that onClose was called
+    expect(onClose).toHaveBeenCalled();
+    
+    // Reset window.innerWidth
+    Object.defineProperty(window, 'innerWidth', {
+      writable: true,
+      configurable: true,
+      value: 1024
+    });
   });
   
   it('is not visible when isVisible is false', () => {
     const onClose = vi.fn();
-    const onSelectSession = vi.fn();
     
     // Render with isVisible=false
     const { container } = render(
-      <SessionSidebar isVisible={false} onClose={onClose} onSelectSession={onSelectSession} />
+      <SessionSidebar isVisible={false} onClose={onClose} />
     );
     
     // Check that the sidebar has classes indicating it's not visible
@@ -166,11 +187,10 @@ describe('SessionSidebar', () => {
   
   it('renders screenshots associated with sessions', () => {
     const onClose = vi.fn();
-    const onSelectSession = vi.fn();
 
     // We need to wrap this in act because it causes state updates when file.file() is called
     act(() => {
-      render(<SessionSidebar isVisible={true} onClose={onClose} onSelectSession={onSelectSession} />);
+      render(<SessionSidebar isVisible={true} onClose={onClose} />);
     });
 
     // The URL.createObjectURL won't be called immediately in our test environment

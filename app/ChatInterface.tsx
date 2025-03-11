@@ -173,39 +173,11 @@ function ChatInterface({
     // First trigger animation
     setIsShrinking(true);
 
-    // Then reset state after animation
+    // Then redirect to home page after animation
     setTimeout(() => {
-      // Clear messages
-      setMessagesRef.current([]);
-      // Reset title
-      setTitle('New Chat');
-      // Call onNewChat if provided
-      onNewChat?.();
-      // Reset animation state
-      setIsShrinking(false);
-      setIsExpanding(true);
-      // Reset expansion state after animation
-      setTimeout(() => setIsExpanding(false), 500);
+      window.location.href = '/';
     }, 500);
-  }, [onNewChat, setTitle]);
-
-  // Handle session selection
-  const handleSelectSession = useCallback((session: any) => {
-    if (session && session._id) {
-      // First shrink the current UI
-      setIsShrinking(true);
-
-      // Then load the new session after animation
-      setTimeout(() => {
-        onSessionCreated?.(session._id);
-        closeSidebar();
-        setIsShrinking(false);
-        setIsExpanding(true);
-        // Reset expansion state after animation
-        setTimeout(() => setIsExpanding(false), 500);
-      }, 500);
-    }
-  }, [onSessionCreated, closeSidebar]);
+  }, []);
 
   // Handle session creation callback
   const handleSessionCreated = (newSessionId: string) => {
@@ -237,6 +209,15 @@ function ChatInterface({
   // Function to handle suggestion selection
   const handleSelectSuggestion = useCallback((suggestion: string) => {
     setInput(suggestion);
+    
+    // Focus the input and position cursor at the end
+    setTimeout(() => {
+      if (inputRef.current) {
+        inputRef.current.focus();
+        // Move cursor to end of text
+        inputRef.current.selectionStart = inputRef.current.selectionEnd = suggestion.length;
+      }
+    }, 0);
   }, [setInput]);
 
   // Memoize the MessageList component to prevent unnecessary re-renders
@@ -294,7 +275,6 @@ function ChatInterface({
       <SessionSidebar
         isVisible={isSidebarVisible}
         onClose={closeSidebar}
-        onSelectSession={handleSelectSession}
       />
     </div>
   );
