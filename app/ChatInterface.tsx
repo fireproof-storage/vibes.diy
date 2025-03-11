@@ -7,7 +7,6 @@ import ChatHeader from './components/ChatHeader';
 import MessageList from './components/MessageList';
 import ChatInput from './components/ChatInput';
 import QuickSuggestions from './components/QuickSuggestions';
-import { useChatContext } from './context/ChatContext';
 
 // Define updated document type to work with Fireproof correctly
 interface SessionDocument {
@@ -71,7 +70,6 @@ function ChatInterface({
     setTitle
   } = chatState;
 
-  const chatContext = useChatContext();
   const { database } = useFireproof('sessions');
   const databaseRef = useRef(database);
 
@@ -83,6 +81,16 @@ function ChatInterface({
   const [isShrinking, setIsShrinking] = useState(false);
   const [isExpanding, setIsExpanding] = useState(false);
   const [isFetchingSession, setIsFetchingSession] = useState(false);
+  const [isSidebarVisible, setIsSidebarVisible] = useState(false);
+
+  // Sidebar visibility functions
+  const openSidebar = useCallback(() => {
+    setIsSidebarVisible(true);
+  }, []);
+
+  const closeSidebar = useCallback(() => {
+    setIsSidebarVisible(false);
+  }, []);
 
   // Update refs when values change
   useEffect(() => {
@@ -190,14 +198,14 @@ function ChatInterface({
       // Then load the new session after animation
       setTimeout(() => {
         onSessionCreated?.(session._id);
-        chatContext.closeSidebar();
+        closeSidebar();
         setIsShrinking(false);
         setIsExpanding(true);
         // Reset expansion state after animation
         setTimeout(() => setIsExpanding(false), 500);
       }, 500);
     }
-  }, [onSessionCreated, chatContext.closeSidebar]);
+  }, [onSessionCreated, closeSidebar]);
 
   // Handle session creation callback
   const handleSessionCreated = (newSessionId: string) => {
@@ -260,48 +268,33 @@ function ChatInterface({
     if (isGenerating) {
       scrollToBottomRef.current();
     }
-  }, [chatContext, isGenerating]);
+  }, [scrollToBottom]);
 
   return (
-    <div className="chat-interface flex h-full flex-col">
-      {/* Header with session title and controls */}
+    <div className="flex flex-col h-screen">
       <ChatHeader
-        onOpenSidebar={chatContext.openSidebar}
-        onNewChat={handleNewChat}
+        onOpenSidebar={openSidebar}
+        onNewChat={onNewChat || (() => {})}
         isGenerating={isGenerating}
       />
-
-      {/* The sidebar is memoized to prevent unnecessary re-renders */}
-      {useMemo(
-        () => (
-          <SessionSidebar
-            isVisible={chatContext.isSidebarVisible}
-            onClose={chatContext.closeSidebar}
-            onSelectSession={handleSelectSession}
+      <div className="flex flex-1 overflow-hidden">
+        <div className="flex-1 flex flex-col w-full">
+          {memoizedMessageList}
+          <ChatInput
+            value={input}
+            onChange={handleInputChange}
+            onKeyDown={handleKeyDown}
+            onSend={sendMessage}
+            disabled={isGenerating}
+            inputRef={inputRef}
           />
-        ),
-        [chatContext.isSidebarVisible, chatContext.closeSidebar, handleSelectSession]
-      )}
-
-      <div className="relative flex flex-col overflow-y-auto" style={{ flexGrow: 1 }}>
-        {/* Conversation history */}
-        {memoizedMessageList}
-
-        {/* Suggestions shown when there are no messages */}
-        {quickSuggestions}
+        </div>
       </div>
-
-      {/* Input area */}
-      <div className="bg-light-surface-01 dark:bg-dark-surface-00 px-6 py-4">
-        <ChatInput
-          value={input}
-          onChange={handleInputChange}
-          onSend={sendMessage}
-          onKeyDown={handleKeyDown}
-          disabled={isGenerating}
-          inputRef={inputRef}
-        />
-      </div>
+      <SessionSidebar
+        isVisible={isSidebarVisible}
+        onClose={closeSidebar}
+        onSelectSession={handleSelectSession}
+      />
     </div>
   );
 }

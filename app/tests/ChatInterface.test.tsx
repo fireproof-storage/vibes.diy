@@ -2,7 +2,6 @@ import React from 'react';
 import { render } from '@testing-library/react';
 import ChatInterface from '../ChatInterface';
 import { vi, describe, test, expect } from 'vitest';
-import { ChatProvider } from '../context/ChatContext';
 
 /**
  * Tests for the ChatInterface component
@@ -24,29 +23,15 @@ const mockChatState = {
   input: 'test input',
   setInput: vi.fn(),
   isGenerating: false,
-  currentStreamedText: '',
-  streamingCode: '',
-  completedCode: '',
-  isStreaming: false,
   inputRef: { current: null },
   messagesEndRef: { current: null },
   autoResizeTextarea: vi.fn(),
   scrollToBottom: vi.fn(),
   sendMessage: vi.fn(),
-  parserState: {
-    current: {
-      inCodeBlock: false,
-      codeBlockContent: '',
-      dependencies: {},
-      displayText: '',
-      on: vi.fn(),
-      removeAllListeners: vi.fn(),
-      write: vi.fn(),
-      end: vi.fn(),
-      reset: vi.fn(),
-    },
-  },
-  completedMessage: '',
+  currentSegments: () => [],
+  getCurrentCode: () => '',
+  title: 'Test Title',
+  setTitle: vi.fn(),
 };
 
 describe('ChatInterface', () => {
@@ -54,9 +39,7 @@ describe('ChatInterface', () => {
     // This test passes now that we've fixed the 'input is not defined' error
     // by properly destructuring input from chatState
     const { container } = render(
-      <ChatProvider>
-        <ChatInterface chatState={mockChatState} />
-      </ChatProvider>
+      <ChatInterface chatState={mockChatState} />
     );
     expect(container).toBeDefined();
   });

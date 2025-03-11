@@ -6,7 +6,6 @@ import { useFireproof } from 'use-fireproof';
 import type { ChatMessage, AiChatMessage, Segment, SessionDocument } from '../types/chat';
 import { useSimpleChat } from '../hooks/useSimpleChat';
 import { parseContent, parseDependencies } from '../utils/segmentParser';
-import { ChatProvider } from '../context/ChatContext';
 
 export function meta() {
   return [
@@ -329,30 +328,19 @@ export default function Home() {
     chatState.getCurrentCode,
   ]);
 
+  // Return the main component
   return (
-    <ChatProvider
-      initialState={{
-        input: chatState.input,
-        isGenerating: chatState.isGenerating,
-      }}
-      onSendMessage={handleSendMessage}
-      onNewChat={handleStartNewChat}
-    >
-      <div className="flex h-screen flex-col overflow-hidden">
-        <div className="flex h-full flex-1 overflow-hidden">
-          <div className="flex h-full w-1/2 flex-col overflow-hidden">
-            <ChatInterface
-              chatState={chatState}
-              sessionId={sessionId}
-              onSessionCreated={handleSessionCreated}
-              onNewChat={handleNewChat}
-            />
-          </div>
-          <div className="h-full w-1/2">
-            {memoizedResultPreview}
-          </div>
-        </div>
+    <div className="flex h-dvh overflow-hidden">
+      <div className="flex-1 flex flex-col h-full">
+        <ChatInterface
+          chatState={chatState}
+          onSessionCreated={handleSessionCreated}
+          onNewChat={handleNewChat}
+        />
       </div>
-    </ChatProvider>
+      <div className="flex-1 relative">
+        {memoizedResultPreview}
+      </div>
+    </div>
   );
 }

@@ -392,3 +392,12 @@ After completing the migration to the simplified chat architecture, the followin
 
 These files have been identified as sources of TypeScript errors but don't affect the runtime functionality of the application since we're successfully using the new useSimpleChat implementation throughout the app.
 
+Test files (likely to break without the old hooks):
+tests/useChat.test.ts
+tests/useChat.additional.test.ts
+tests/useChat.simple.test.ts
+tests/useChatSessions.test.ts
+tests/useChatSessions.simple.test.ts
+tests/RegexParser-useChat.test.ts
+Context files (still being imported but may not be needed anymore):
+app/context/ChatContext.tsx - This is still being imported in ChatInterface.tsx, but the notes suggest the migration has moved away from this approach
