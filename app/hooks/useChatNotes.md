@@ -284,3 +284,54 @@ To complete this implementation, we need to:
 4. **Add Usage Documentation** - Document how to use the new hook and components properly.
 
 5. **Performance Testing** - Verify that the new implementation doesn't impact performance, especially during streaming.
+
+## Further Improvements
+
+I've enhanced the `useSimpleChat` hook to better adhere to the principles of data-driven architecture:
+
+1. **Internal Title Management**:
+   - Removed external `onGeneratedTitle` callback
+   - Added title state and setter directly in the hook
+   - Added a `titleGeneratedRef` to track whether a title has been generated yet
+
+2. **Self-Contained Code Generation**:
+   - Removed external `onCodeGenerated` callback
+   - The hook now handles code extraction and dependencies internally
+   - Title generation happens automatically after the first code-containing response
+
+3. **Improved Title Generation**:
+   - Added a dedicated `generateTitle` function that uses both markdown and code segments for better context
+   - Title generation only happens once per chat session
+   - Uses only the most relevant parts of the content to create concise, accurate titles
+
+4. **Cleaner API Contract**:
+   - Hook now requires no parameters, making it more self-contained
+   - All state and side effects are managed within the hook itself
+   - The return value includes the title and setTitle function for external components
+
+This makes the hook more self-sufficient and reduces coupling with its parent components, further simplifying the data flow throughout the application. The hook now follows the principle of "direct state management" more thoroughly by eliminating callbacks and focusing on state-driven updates.
+
+## Simplifying Further
+
+After reviewing the implementation, I've made an additional simplification:
+
+1. **Streamlined Title Generation**:
+   - Simplified the title generation by using the full raw text content directly
+   - Removed the complex extraction and formatting of separate markdown and code segments
+   - This approach is more straightforward and reliable, as the model can handle processing the full content
+   - Maintains consistency with the original implementation while using the improved type system
+
+This change reinforces our principle of simplicity and demonstrates that sometimes a direct approach is more maintainable than an overly engineered solution. The language model is capable of processing the full content to generate appropriate titles, so there's no need to add extra complexity by pre-processing the content.
+
+## Refined Approach
+
+After further consideration, I've refined the title generation approach:
+
+1. **Focused Title Generation**:
+   - Instead of using the full stream buffer, we now extract just the first markdown and code segments
+   - This provides a more targeted and relevant context for title generation
+   - The title is based on the description and the actual code implementation
+   - We skip dependencies which aren't relevant for title creation
+   - Limited to the first 15 lines of code to keep the prompt focused
+   
+This approach balances simplicity with effectiveness. It's more focused than using the entire text buffer but doesn't require complex formatting. By selecting just the most relevant segments (the first markdown explanation and the first code segment), we provide a good context for title generation while keeping the implementation clean and straightforward.
