@@ -398,6 +398,23 @@ function ChatInterface({
 
         {/* Chat input */}
         {chatInput}
+
+        {/* ResultPreview */}
+        <div className="mobile-code-height" style={{ height: '75vh' }}>
+          <ResultPreview
+            code={chatState.completedCode}
+            streamingCode={chatState.streamingCode}
+            isStreaming={chatState.isStreaming}
+            dependencies={chatState.parserState.current.dependencies}
+            completedMessage={chatState.completedMessage}
+            currentStreamContent={chatState.currentStreamedText}
+            currentMessage={
+              chatState.messages.length > 0
+                ? { content: chatState.messages[chatState.messages.length - 1].text }
+                : undefined
+            }
+          />
+        </div>
       </div>
     </div>
   );

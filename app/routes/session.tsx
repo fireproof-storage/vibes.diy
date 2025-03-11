@@ -115,7 +115,7 @@ export default function Session() {
           />
         </ChatProvider>
       </div>
-      <div className="flex flex-col flex-grow overflow-y-auto">
+      <div className="mobile-code-height" style={{ height: '75vh' }}>
         <ResultPreview
           code={state.generatedCode}
           dependencies={state.dependencies}

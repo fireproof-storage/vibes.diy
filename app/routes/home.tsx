@@ -347,27 +347,29 @@ export default function Home() {
   // Memoized ResultPreview component with improved dependency handling
   const memoizedResultPreview = useMemo(() => {
     return (
-      <ResultPreview
-        code={state.generatedCode}
-        streamingCode={streamingPropsRef.current.streamingCode}
-        isStreaming={streamingPropsRef.current.isStreaming}
-        dependencies={previewDependencies}
-        onShare={handleShare}
-        shareStatus={shareStatus}
-        completedMessage={chatState.completedMessage}
-        currentStreamContent={streamingPropsRef.current.currentStreamedText}
-        currentMessage={
-          streamingPropsRef.current.messages.length > 0
-            ? {
-                content:
-                  streamingPropsRef.current.messages[streamingPropsRef.current.messages.length - 1]
-                    .text,
-              }
-            : undefined
-        }
-        onScreenshotCaptured={handleScreenshotCaptured}
-        {...(sessionId ? { sessionId } : {})}
-      />
+      <div className="mobile-code-height" style={{ height: '75vh' }}>
+        <ResultPreview
+          code={state.generatedCode}
+          streamingCode={streamingPropsRef.current.streamingCode}
+          isStreaming={streamingPropsRef.current.isStreaming}
+          dependencies={previewDependencies}
+          onShare={handleShare}
+          shareStatus={shareStatus}
+          completedMessage={chatState.completedMessage}
+          currentStreamContent={streamingPropsRef.current.currentStreamedText}
+          currentMessage={
+            streamingPropsRef.current.messages.length > 0
+              ? {
+                  content:
+                    streamingPropsRef.current.messages[streamingPropsRef.current.messages.length - 1]
+                      .text,
+                }
+              : undefined
+          }
+          onScreenshotCaptured={handleScreenshotCaptured}
+          {...(sessionId ? { sessionId } : {})}
+        />
+      </div>
     );
   }, [
     state.generatedCode,
