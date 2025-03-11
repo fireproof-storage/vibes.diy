@@ -31,7 +31,7 @@ const StructuredMessage = memo(({ segments, isStreaming }: StructuredMessageProp
             <div key={`code-${index}`} className="my-4 rounded-md border border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-800">
               <div className="flex items-center justify-between mb-2">
                 <span className="text-sm font-mono text-gray-500 dark:text-gray-400">
-                  {isStreaming ? 'Generating code...' : `${codeLines} line${codeLines !== 1 ? 's' : ''} of code`}
+                  {`${codeLines} line${codeLines !== 1 ? 's' : ''} of code`}
                 </span>
                 
                 <button 

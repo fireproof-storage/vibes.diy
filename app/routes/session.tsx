@@ -6,6 +6,7 @@ import ResultPreview from '../components/ResultPreview/ResultPreview';
 import type { ChatMessage, AiChatMessage, SessionDocument, Segment } from '../types/chat';
 import { useSimpleChat } from '../hooks/useSimpleChat';
 import { parseDependencies } from '../utils/segmentParser';
+import AppLayout from '../components/AppLayout';
 
 export function meta() {
   return [
@@ -128,16 +129,16 @@ export default function Session() {
   }, []);
 
   return (
-    <div className="flex h-dvh overflow-hidden">
-      <div className="w-1/3 flex flex-col h-full">
+    <AppLayout
+      chatPanel={
         <ChatInterface
           chatState={chatState}
           sessionId={sessionId}
           onSessionCreated={handleCodeGenerated}
           onNewChat={handleNewChat}
         />
-      </div>
-      <div className="w-2/3 relative">
+      }
+      previewPanel={
         <ResultPreview
           code={state.generatedCode}
           dependencies={state.dependencies}
@@ -158,7 +159,7 @@ export default function Session() {
               : undefined
           }
         />
-      </div>
-    </div>
+      }
+    />
   );
 }

@@ -6,6 +6,7 @@ import { useFireproof } from 'use-fireproof';
 import type { ChatMessage, AiChatMessage, Segment, SessionDocument } from '../types/chat';
 import { useSimpleChat } from '../hooks/useSimpleChat';
 import { parseContent, parseDependencies } from '../utils/segmentParser';
+import AppLayout from '../components/AppLayout';
 
 export function meta() {
   return [
@@ -330,17 +331,15 @@ export default function Home() {
 
   // Return the main component
   return (
-    <div className="flex h-dvh overflow-hidden">
-      <div className="w-1/3 flex flex-col h-full">
+    <AppLayout 
+      chatPanel={
         <ChatInterface
           chatState={chatState}
           onSessionCreated={handleSessionCreated}
           onNewChat={handleNewChat}
         />
-      </div>
-      <div className="w-2/3 relative">
-        {memoizedResultPreview}
-      </div>
-    </div>
+      }
+      previewPanel={memoizedResultPreview}
+    />
   );
 }
