@@ -331,14 +331,14 @@ export default function Home() {
   // Return the main component
   return (
     <div className="flex h-dvh overflow-hidden">
-      <div className="flex-1 flex flex-col h-full">
+      <div className="w-1/3 flex flex-col h-full">
         <ChatInterface
           chatState={chatState}
           onSessionCreated={handleSessionCreated}
           onNewChat={handleNewChat}
         />
       </div>
-      <div className="flex-1 relative">
+      <div className="w-2/3 relative">
         {memoizedResultPreview}
       </div>
     </div>

@@ -128,8 +128,8 @@ export default function Session() {
   }, []);
 
   return (
-    <div style={{ display: 'flex', height: 'calc(100vh)' }}>
-      <div style={{ flex: '0 0 33.333%', overflow: 'hidden', position: 'relative' }}>
+    <div className="flex h-dvh overflow-hidden">
+      <div className="w-1/3 flex flex-col h-full">
         <ChatInterface
           chatState={chatState}
           sessionId={sessionId}
@@ -137,7 +137,7 @@ export default function Session() {
           onNewChat={handleNewChat}
         />
       </div>
-      <div style={{ flex: '0 0 66.667%', overflow: 'hidden', position: 'relative' }}>
+      <div className="w-2/3 relative">
         <ResultPreview
           code={state.generatedCode}
           dependencies={state.dependencies}
@@ -157,8 +157,6 @@ export default function Session() {
               ? { content: chatState.messages[chatState.messages.length - 1].text }
               : undefined
           }
-          initialView="code"
-          sessionId={sessionId}
         />
       </div>
     </div>
