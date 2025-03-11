@@ -124,3 +124,41 @@ This architecture sets us up for several future improvements:
    - Message threading/replies
 
 The session-based architecture with individual message documents provides a solid foundation for a more scalable, maintainable, and feature-rich application.
+
+## Remaining Steps Before Merging
+
+Based on the changes implemented so far, these are the specific steps required to complete the session management refactoring before merging:
+
+1. **Update MessageList Component**:
+   - Refactor the MessageList component to use useSessionMessages instead of receiving props
+   - Implement real-time message updates with useLiveQuery results
+   - Handle message ordering and grouping
+
+2. **Migrate Session & Home Routes**:
+   - Update the session.tsx route to use useSession and useSessionMessages directly
+   - Update the home.tsx route to handle new session creation with the new pattern
+   - Remove legacy handleScrollToBottom references and other direct database access
+
+3. **Update ChatInterface**:
+   - Remove the deprecated SessionDocument interface from ChatInterface.tsx
+   - Use the proper imported types from app/types/chat.ts
+   - Migrate to the new hook pattern for session management
+
+4. **No Migration Strategy**:
+   - There is no legacy data to migrate
+
+5. **Comprehensive Testing**:
+   - Complete test suite for useSessionMessages
+   - Test the migration strategy with various session formats
+   - Test the complete flow from UI to database and back
+   - Verify real-time updates across components
+
+6. **Performance Optimization**:
+   - Its fast enough for now, get it simple first
+
+8. **Clean Up**:
+   - Remove compatibility layers once all components are migrated
+   - Remove unused code and references to old patterns
+   - Standardize error handling across hooks
+
+After completing these steps, the new session management system will be fully integrated, providing a more maintainable, performant, and flexible foundation for future features.

@@ -26,6 +26,7 @@ export type ChatMessage = UserChatMessage | AiChatMessage;
 
 export interface SessionDocument {
   _id: string;
+  type?: 'session';        // Document type for Fireproof queries
   title?: string;
   timestamp: number;
   messages?: ChatMessage[];
