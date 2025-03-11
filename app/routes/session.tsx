@@ -23,18 +23,9 @@ export default function Session() {
     generatedCode: '',
     dependencies: {} as Record<string, string>,
   });
-  const { database } = useFireproof(FIREPROOF_CHAT_HISTORY);
 
-  // Maintain a stable ref to the database to prevent re-renders
-  const databaseRef = useRef(database);
-
-  // Update database ref when it changes
-  useEffect(() => {
-    databaseRef.current = database;
-  }, [database]);
-
-  // Use the simple chat hook
-  const chatState = useSimpleChat();
+  // Use the simple chat hook with sessionId
+  const chatState = useSimpleChat(sessionId || null);
 
   // Helper function to extract dependencies from segments
   const getDependencies = useCallback(() => {
@@ -78,51 +69,6 @@ export default function Session() {
     }
   }, [chatState.messages, chatState.getCurrentCode, getDependencies, handleCodeGenerated]);
 
-  // Handle session change
-  useEffect(() => {
-    // Load session data and extract code for the ResultPreview
-    const loadSessionData = async () => {
-      if (sessionId) {
-        try {
-          // Load the session document
-          const sessionData = (await databaseRef.current.get(sessionId)) as SessionDocument;
-
-          // Normalize session data to guarantee messages array exists
-          const messages = Array.isArray(sessionData.messages) ? sessionData.messages : [];
-
-          // Clear current messages and set the loaded ones
-          chatState.setMessages(messages);
-
-          // Find the last AI message with code to update the ResultPreview
-          const lastAiMessageWithCode = [...messages]
-            .reverse()
-            .find((msg: ChatMessage) => msg.type === 'ai');
-
-          // If we found an AI message with code, update the code view
-          if (lastAiMessageWithCode?.type === 'ai') {
-            const aiMessage = lastAiMessageWithCode as AiChatMessage;
-            if (aiMessage.segments) {
-              const codeSegment = aiMessage.segments.find(seg => seg.type === 'code');
-              if (codeSegment) {
-                const dependencies = getDependencies() || {};
-                
-                // Update state for ResultPreview
-                setState({
-                  generatedCode: codeSegment.content,
-                  dependencies: dependencies,
-                });
-              }
-            }
-          }
-        } catch (error) {
-          console.error('Error loading session:', error);
-        }
-      }
-    };
-
-    loadSessionData();
-  }, [sessionId, chatState.setMessages, getDependencies]); 
-
   // Handle new chat creation
   const handleNewChat = useCallback(() => {
     // Navigate to home to create a new session
@@ -134,8 +80,7 @@ export default function Session() {
       chatPanel={
         <ChatInterface
           chatState={chatState}
-          sessionId={sessionId}
-          onSessionCreated={handleCodeGenerated}
+          sessionId={sessionId || null}
           onNewChat={handleNewChat}
         />
       }

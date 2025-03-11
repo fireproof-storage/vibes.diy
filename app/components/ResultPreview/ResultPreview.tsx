@@ -18,6 +18,7 @@ interface ResultPreviewProps {
   dependencies?: Record<string, string>;
   onShare?: () => void;
   shareStatus?: string;
+  isSharedApp?: boolean;
   completedMessage?: string;
   currentMessage?: { content: string };
   currentStreamContent?: string;
@@ -97,6 +98,7 @@ function ResultPreview({
   dependencies = {},
   onShare,
   shareStatus,
+  isSharedApp,
   completedMessage,
   currentMessage,
   currentStreamContent,

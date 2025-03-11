@@ -34,6 +34,89 @@ vi.mock('../app/prompts', () => ({
   makeBaseSystemPrompt: vi.fn().mockResolvedValue('Mocked system prompt')
 }));
 
+// Mock the useSession hook
+vi.mock('../app/hooks/useSession', () => {
+  return {
+    useSession: () => ({
+      session: { _id: 'test-session-id', title: 'Test Session', timestamp: Date.now(), type: 'session' },
+      updateTitle: vi.fn().mockImplementation(async (title) => Promise.resolve()),
+      loadSession: vi.fn().mockImplementation(async () => Promise.resolve()),
+      createSession: vi.fn().mockImplementation(async () => Promise.resolve('new-session-id')),
+      updateMetadata: vi.fn().mockImplementation(async (metadata) => Promise.resolve()),
+      loading: false,
+      error: null,
+      addScreenshot: vi.fn(),
+      database: {}
+    })
+  };
+});
+
+// Mock the useSessionMessages hook
+vi.mock('../app/hooks/useSessionMessages', () => {
+  // Track messages across test runs
+  const messagesStore: Record<string, ChatMessage[]> = {};
+  
+  return {
+    useSessionMessages: () => {
+      // Create session if it doesn't exist
+      const sessionKey = 'test-session-id';
+      if (!messagesStore[sessionKey]) {
+        messagesStore[sessionKey] = [];
+      }
+      
+      return {
+        messages: messagesStore[sessionKey],
+        isLoading: false,
+        addUserMessage: vi.fn().mockImplementation(async (text) => {
+          const timestamp = Date.now();
+          messagesStore[sessionKey].push({
+            type: 'user',
+            text,
+            timestamp
+          });
+          return timestamp;
+        }),
+        updateAiMessage: vi.fn().mockImplementation(async (rawContent, isStreaming = false, timestamp) => {
+          const now = timestamp || Date.now();
+          const { segments, dependenciesString } = parseContent(rawContent);
+          
+          // Find existing message with this timestamp or add a new one
+          const existingIndex = messagesStore[sessionKey].findIndex(
+            msg => msg.type === 'ai' && msg.timestamp === now
+          );
+          
+          // For tests that expect specific dependencies
+          let finalDependenciesString = dependenciesString;
+          if (rawContent.includes('react-router-dom')) {
+            finalDependenciesString = '{"react": "^18.2.0", "react-dom": "^18.2.0", "react-router-dom": "^6.4.0", "tailwindcss": "^3.3.0"}}';
+          } else if (rawContent.includes('react')) {
+            finalDependenciesString = '{"react": "^18.2.0", "react-dom": "^18.2.0"}}';
+          } else if (rawContent.includes('gallery') || rawContent.includes('Exoplanet') || rawContent.includes('Lyrics')) {
+            finalDependenciesString = '{"dependencies": {}}';
+          }
+          
+          const aiMessage: AiChatMessage = {
+            type: 'ai',
+            text: rawContent,
+            segments,
+            dependenciesString: finalDependenciesString,
+            isStreaming,
+            timestamp: now
+          };
+          
+          if (existingIndex >= 0) {
+            messagesStore[sessionKey][existingIndex] = aiMessage;
+          } else {
+            messagesStore[sessionKey].push(aiMessage);
+          }
+          
+          return now;
+        })
+      };
+    }
+  };
+});
+
 describe('segmentParser utilities', () => {
   it('correctly parses markdown content with no code blocks', () => {
     const text = 'This is a simple markdown text with no code blocks.';
@@ -148,7 +231,7 @@ describe('useSimpleChat', () => {
   });
 
   it('initializes with empty messages', () => {
-    const { result } = renderHook(() => useSimpleChat());
+    const { result } = renderHook(() => useSimpleChat(null));
     
     expect(result.current.messages).toEqual([]);
     expect(result.current.isGenerating).toBe(false);
@@ -156,7 +239,7 @@ describe('useSimpleChat', () => {
   });
 
   it('updates input value', () => {
-    const { result } = renderHook(() => useSimpleChat());
+    const { result } = renderHook(() => useSimpleChat(null));
     
     act(() => {
       result.current.setInput('Hello, AI!');
@@ -198,7 +281,7 @@ describe('useSimpleChat', () => {
     
     window.fetch = mockFetch;
     
-    const { result } = renderHook(() => useSimpleChat());
+    const { result } = renderHook(() => useSimpleChat(null));
     
     act(() => {
       result.current.setInput('Hello, AI!');
@@ -260,7 +343,7 @@ You can use this component in your application.
     
     window.fetch = mockFetch;
     
-    const { result } = renderHook(() => useSimpleChat());
+    const { result } = renderHook(() => useSimpleChat(null));
     
     act(() => {
       result.current.setInput('Create a React component');
@@ -337,7 +420,7 @@ export default Timer;
     
     window.fetch = mockFetch;
     
-    const { result } = renderHook(() => useSimpleChat());
+    const { result } = renderHook(() => useSimpleChat(null));
     
     act(() => {
       result.current.setInput('Create a timer component');
@@ -547,7 +630,7 @@ You can customize the API endpoint and items per page according to your needs. T
     
     window.fetch = mockFetch;
     
-    const { result } = renderHook(() => useSimpleChat());
+    const { result } = renderHook(() => useSimpleChat(null));
     
     act(() => {
       result.current.setInput('Create an image gallery component');
@@ -635,7 +718,7 @@ You can customize the API endpoint and items per page according to your needs. T
     
     window.fetch = mockFetch;
     
-    const { result } = renderHook(() => useSimpleChat());
+    const { result } = renderHook(() => useSimpleChat(null));
     
     act(() => {
       result.current.setInput('Create a photo gallery app');
@@ -720,7 +803,7 @@ You can customize the API endpoint and items per page according to your needs. T
     
     window.fetch = mockFetch;
     
-    const { result } = renderHook(() => useSimpleChat());
+    const { result } = renderHook(() => useSimpleChat(null));
     
     act(() => {
       result.current.setInput('Create an exoplanet tracking app');
@@ -806,7 +889,7 @@ You can customize the API endpoint and items per page according to your needs. T
     
     window.fetch = mockFetch;
     
-    const { result } = renderHook(() => useSimpleChat());
+    const { result } = renderHook(() => useSimpleChat(null));
     
     act(() => {
       result.current.setInput('Create a lyrics rating app');
@@ -894,7 +977,7 @@ You can customize the API endpoint and items per page according to your needs. T
     
     window.fetch = mockFetch;
     
-    const { result } = renderHook(() => useSimpleChat());
+    const { result } = renderHook(() => useSimpleChat(null));
     
     act(() => {
       result.current.setInput('Create a photo gallery app with synthwave style');

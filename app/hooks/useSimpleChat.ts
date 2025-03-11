@@ -14,7 +14,7 @@ const CHOSEN_MODEL = 'anthropic/claude-3.7-sonnet';
 export function useSimpleChat(sessionId: string | null) {
   // Use our new hooks
   const { session, updateTitle } = useSession(sessionId);
-  const { messages, addUserMessage, updateAiMessage, markTitleGenerated, isLoading: messagesLoading } = useSessionMessages(sessionId);
+  const { messages, addUserMessage, updateAiMessage, isLoading: messagesLoading } = useSessionMessages(sessionId);
   
   // Core state
   const [input, setInput] = useState<string>('');
@@ -149,11 +149,8 @@ export function useSimpleChat(sessionId: string | null) {
         
         // Update the session title
         if (sessionId) {
-          updateTitle(newTitle);
+          await updateTitle(newTitle);
         }
-        
-        // Mark the message as having its title generated
-        markTitleGenerated(aiTimestamp);
         
         return newTitle;
       }

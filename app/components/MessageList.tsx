@@ -2,9 +2,10 @@ import { useEffect, useRef, memo, useCallback, useMemo } from 'react';
 import type { ChatMessage, AiChatMessage } from '../types/chat';
 import ReactMarkdown from 'react-markdown';
 import StructuredMessage from './StructuredMessage';
+import { useSessionMessages } from '../hooks/useSessionMessages';
 
 interface MessageListProps {
-  messages: ChatMessage[];
+  sessionId: string | null;
   isGenerating: boolean;
   isShrinking?: boolean;
   isExpanding?: boolean;
@@ -94,11 +95,13 @@ const AITyping = memo(() => {
 });
 
 function MessageList({
-  messages,
+  sessionId,
   isGenerating,
   isShrinking = false,
   isExpanding = false,
 }: MessageListProps) {
+  // Use the hook to get messages directly instead of through props
+  const { messages, isLoading } = useSessionMessages(sessionId);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // Scroll to bottom when messages change
@@ -122,7 +125,7 @@ function MessageList({
   const messageElements = useMemo(() => {
     return messages.map((msg, i) => (
       <Message
-        key={`${msg.type}-${i}`}
+        key={`${msg.type}-${i}-${msg.timestamp || i}`}
         message={msg}
         index={i}
         isShrinking={isShrinking}
@@ -130,6 +133,22 @@ function MessageList({
       />
     ));
   }, [messages, isShrinking, isExpanding]);
+
+  // Show loading state while messages are being fetched
+  if (isLoading && sessionId) {
+    return (
+      <div className="messages bg-light-background-01 dark:bg-dark-background-01 flex-1 flex items-center justify-center p-4">
+        <div className="flex flex-col items-center space-y-2">
+          <div className="flex gap-1">
+            <span className="bg-light-primary dark:bg-dark-primary h-2 w-2 animate-bounce rounded-full [animation-delay:-0.3s]" />
+            <span className="bg-light-primary dark:bg-dark-primary h-2 w-2 animate-bounce rounded-full [animation-delay:-0.15s]" />
+            <span className="bg-light-primary dark:bg-dark-primary h-2 w-2 animate-bounce rounded-full" />
+          </div>
+          <span className="text-sm text-gray-500">Loading messages...</span>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div
@@ -182,14 +201,8 @@ function MessageList({
 
 // Export a memoized version of the component to prevent unnecessary re-renders
 export default memo(MessageList, (prevProps, nextProps) => {
-  // Simplified equality check focusing on the essential changed values
-  const messagesEqual =
-    prevProps.messages === nextProps.messages ||
-    (prevProps.messages.length === nextProps.messages.length &&
-      JSON.stringify(prevProps.messages) === JSON.stringify(nextProps.messages));
-
   return (
-    messagesEqual &&
+    prevProps.sessionId === nextProps.sessionId &&
     prevProps.isGenerating === nextProps.isGenerating &&
     prevProps.isShrinking === nextProps.isShrinking &&
     prevProps.isExpanding === nextProps.isExpanding

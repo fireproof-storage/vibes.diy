@@ -1,6 +1,6 @@
 import { useEffect, useState, useMemo, useCallback, useRef } from 'react';
 import type { ChangeEvent } from 'react';
-import type { ChatMessage, Segment, AiChatMessage } from './types/chat';
+import type { ChatMessage, Segment, AiChatMessage, SessionDocument } from './types/chat';
 import { useFireproof } from 'use-fireproof';
 import SessionSidebar from './components/SessionSidebar';
 import ChatHeader from './components/ChatHeader';
@@ -9,19 +9,11 @@ import ChatInput from './components/ChatInput';
 import QuickSuggestions from './components/QuickSuggestions';
 import { FIREPROOF_CHAT_HISTORY } from './config/env';
 
-// Define updated document type to work with Fireproof correctly
-interface SessionDocument {
-  _id: string;
-  title?: string;
-  timestamp: number;
-  messages?: ChatMessage[];
-}
-
 // Updated interface to match useSimpleChat's return value
 interface ChatInterfaceProps {
   chatState: {
     messages: ChatMessage[];
-    setMessages: React.Dispatch<React.SetStateAction<ChatMessage[]>>;
+    setMessages: (newMessages: ChatMessage[] | ((prev: ChatMessage[]) => ChatMessage[])) => void;
     input: string;
     setInput: React.Dispatch<React.SetStateAction<string>>;
     isGenerating: boolean;
@@ -33,7 +25,9 @@ interface ChatInterfaceProps {
     currentSegments: () => Segment[];
     getCurrentCode: () => string;
     title: string;
-    setTitle: React.Dispatch<React.SetStateAction<string>>;
+    setTitle: (title: string) => Promise<void>;
+    sessionId?: string | null;
+    isLoadingMessages?: boolean;
   };
   sessionId?: string | null;
   onSessionCreated?: (newSessionId: string) => void;
@@ -68,7 +62,9 @@ function ChatInterface({
     currentSegments,
     getCurrentCode,
     title,
-    setTitle
+    setTitle,
+    sessionId: chatSessionId,
+    isLoadingMessages
   } = chatState;
 
   const { database } = useFireproof(FIREPROOF_CHAT_HISTORY);
@@ -104,24 +100,18 @@ function ChatInterface({
     if (sessionId && !isFetchingSession) {
       setIsFetchingSession(true);
       try {
-        const sessionDoc = await databaseRef.current.get(sessionId) as any as SessionDocument;
-        if (!sessionDoc || !sessionDoc.messages) {
+        const sessionDoc = await databaseRef.current.get(sessionId) as SessionDocument;
+        if (!sessionDoc) {
           throw new Error('No session found or invalid session data');
         }
 
-        // Use the ref to access the latest setMessages function
-        setMessagesRef.current(sessionDoc.messages);
-
         // If the session has a title, update it
         if (sessionDoc.title) {
-          setTitle(sessionDoc.title);
+          await setTitle(sessionDoc.title);
         }
         
-        // Get the last AI message with code 
-        const lastAiMessage = [...sessionDoc.messages].reverse().find(
-          (msg): msg is AiChatMessage => 
-            msg.type === 'ai' && msg.segments.some((seg: Segment) => seg.type === 'code')
-        );
+        // Note: We no longer need to manually load messages since MessageList 
+        // will use useSessionMessages to get messages directly
       } catch (error) {
         console.error('ChatInterface: Error loading session:', error);
       } finally {
@@ -135,39 +125,11 @@ function ChatInterface({
     loadSessionData();
   }, [sessionId]);
 
-  // Save session data when messages change
+  // Save session data when title changes
   useEffect(() => {
-    const saveData = async () => {
-      // If we have a sessionId and messages, save them
-      if (sessionId && messages.length > 0) {
-        try {
-          // Get the current document or create a new one
-          const sessionDoc = await databaseRef.current
-            .get(sessionId)
-            .catch(() => ({
-              _id: sessionId,
-              timestamp: Date.now(),
-              title: title || 'New Chat',
-            })) as any as SessionDocument;
-
-          // Update with the current messages and title
-          const updatedDoc = {
-            ...sessionDoc,
-            messages,
-            title: title || 'New Chat',
-            timestamp: Date.now(),
-          };
-
-          // Save to the database
-          await databaseRef.current.put(updatedDoc);
-        } catch (error) {
-          console.error('ChatInterface: Error saving session:', error);
-        }
-      }
-    };
-
-    saveData();
-  }, [messages, sessionId, title]);
+    // Title is now managed by the useSession hook inside useSimpleChat
+    // We no longer need to manually save it
+  }, []);
 
   // Create a new chat session
   const handleNewChat = useCallback(() => {
@@ -225,13 +187,13 @@ function ChatInterface({
   const memoizedMessageList = useMemo(
     () => (
       <MessageList
-        messages={messages}
+        sessionId={sessionId || null}
         isGenerating={isGenerating}
         isShrinking={isShrinking}
         isExpanding={isExpanding}
       />
     ),
-    [messages, isGenerating, currentStreamedText, isShrinking, isExpanding]
+    [sessionId, isGenerating, isShrinking, isExpanding]
   );
 
   // Render the quick suggestions conditionally

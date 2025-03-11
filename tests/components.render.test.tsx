@@ -17,6 +17,51 @@ vi.mock('use-fireproof', () => ({
   }),
 }));
 
+// Mock the scrollIntoView method
+window.HTMLElement.prototype.scrollIntoView = vi.fn();
+
+// Mock the useSessionMessages hook for MessageList
+vi.mock('../app/hooks/useSessionMessages', () => {
+  return {
+    useSessionMessages: (sessionId: string | null) => {
+      // Check the sessionId to determine what to return
+      if (sessionId === 'streaming-session') {
+        return {
+          messages: [
+            { 
+              type: 'ai', 
+              text: 'I am thinking...', 
+              segments: [{ type: 'markdown', content: 'I am thinking...' }],
+              isStreaming: true,
+              timestamp: Date.now()
+            }
+          ],
+          isLoading: false,
+          addUserMessage: vi.fn(),
+          updateAiMessage: vi.fn()
+        };
+      } else if (sessionId === 'test-session') {
+        return {
+          messages: [
+            { type: 'user', text: 'Hello', timestamp: Date.now() },
+            { type: 'ai', text: 'Hi there', segments: [{ type: 'markdown', content: 'Hi there' }], timestamp: Date.now() }
+          ],
+          isLoading: false,
+          addUserMessage: vi.fn(),
+          updateAiMessage: vi.fn()
+        };
+      } else {
+        return {
+          messages: [],
+          isLoading: false,
+          addUserMessage: vi.fn(),
+          updateAiMessage: vi.fn()
+        };
+      }
+    }
+  };
+});
+
 // Create mock functions we can control
 const onOpenSidebar = vi.fn();
 const onToggleSidebar = vi.fn();
@@ -103,41 +148,25 @@ describe('Component Rendering', () => {
   describe('MessageList', () => {
     it('renders empty list', () => {
       const { container } = render(
-        <MessageList messages={[]} isGenerating={false} />
+        <MessageList sessionId="empty-session" isGenerating={false} />
       );
       expect(container.querySelector('.messages')).toBeInTheDocument();
     });
 
     it('renders messages correctly', () => {
-      const messages: ChatMessage[] = [
-        { text: 'Hello', type: 'user' },
-        { 
-          text: 'Hi there', 
-          type: 'ai',
-          segments: [{ type: 'markdown', content: 'Hi there' }]
-        },
-      ];
-      render(<MessageList messages={messages} isGenerating={false} />);
+      render(<MessageList sessionId="test-session" isGenerating={false} />);
       expect(screen.getByText('Hello')).toBeInTheDocument();
       expect(screen.getByText('Hi there')).toBeInTheDocument();
     });
 
     it('renders AI typing indicator when generating', () => {
-      render(<MessageList messages={[]} isGenerating={true} />);
+      render(<MessageList sessionId="empty-session" isGenerating={true} />);
       expect(screen.getByText('Thinking')).toBeInTheDocument();
     });
 
     it('renders streaming message', () => {
-      const messages: ChatMessage[] = [
-        { 
-          text: 'I am thinking...', 
-          type: 'ai',
-          segments: [{ type: 'markdown', content: 'I am thinking...' }],
-          isStreaming: true
-        }
-      ];
       render(
-        <MessageList messages={messages} isGenerating={true} />
+        <MessageList sessionId="streaming-session" isGenerating={true} />
       );
       expect(screen.getByText('I am thinking...')).toBeInTheDocument();
     });

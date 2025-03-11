@@ -51,21 +51,10 @@ export default function Home() {
   const [shareStatus, setShareStatus] = useState<string>('');
   const [isSharedApp, setIsSharedApp] = useState<boolean>(false);
   const [sessionId, setSessionId] = useState<string | null>(null);
-  const [pendingTitle, setPendingTitle] = useState<string | null>(null);
-  const [isCreatingSession, setIsCreatingSession] = useState(false);
-  const { database } = useFireproof(FIREPROOF_CHAT_HISTORY);
   const navigate = useNavigate();
 
-  // Maintain a stable ref to the database to prevent re-renders
-  const databaseRef = useRef(database);
-
-  // Update database ref when it changes
-  useEffect(() => {
-    databaseRef.current = database;
-  }, [database]);
-
-  // Use the simple chat hook
-  const chatState = useSimpleChat();
+  // Use the simple chat hook with sessionId
+  const chatState = useSimpleChat(sessionId);
 
   // Helper function to extract dependencies from segments
   const getDependencies = useCallback(() => {
@@ -79,30 +68,6 @@ export default function Home() {
     
     return {};
   }, [chatState.messages]);
-
-  // Helper function to clear messages
-  const clearMessages = useCallback(() => {
-    chatState.setMessages([]);
-  }, [chatState]);
-
-  // Helper function to update session title
-  const updateSessionTitle = async (sessionId: string, title: string) => {
-    try {
-      // Get the current session document
-      const sessionDoc = await databaseRef.current.get(sessionId) as SessionDocument;
-
-      // Create a safe update object without undefined values
-      const updatedDoc = {
-        ...sessionDoc,
-        title: title || 'Untitled Chat',
-      };
-
-      // Save the updated document
-      await databaseRef.current.put(updatedDoc);
-    } catch (error) {
-      console.error('Error updating session title:', error);
-    }
-  };
 
   // Update handleCodeGenerated to work with the new hook
   const handleCodeGenerated = useCallback(
@@ -133,39 +98,16 @@ export default function Home() {
     }
   }, [chatState.messages, chatState.getCurrentCode, getDependencies, handleCodeGenerated]);
 
-  // Handle title generation with stable callback reference
-  const handleGeneratedTitle = useCallback(
-    (generatedTitle: string) => {
-      // If we already have a sessionId, update the title directly
-      if (sessionId && !isCreatingSession) {
-        updateSessionTitle(sessionId, generatedTitle);
-      } else {
-        // Otherwise, store it for when the session is created
-        setPendingTitle(generatedTitle);
+  // Handle new session creation (for navigation)
+  const handleSessionCreated = useCallback(
+    (newSessionId: string) => {
+      if (newSessionId) {
+        // Navigate to the session page
+        navigate(`/session/${newSessionId}`);
       }
     },
-    [sessionId, isCreatingSession]
+    [navigate]
   );
-
-  // Effect to handle title update when title changes
-  useEffect(() => {
-    if (chatState.title && chatState.title !== 'New Chat') {
-      handleGeneratedTitle(chatState.title);
-    }
-  }, [chatState.title, handleGeneratedTitle]);
-
-  // Apply pending title when sessionId becomes available
-  useEffect(() => {
-    if (!sessionId || !pendingTitle) return;
-
-    // Skip update if we're in the process of creating a session
-    if (isCreatingSession) {
-      return;
-    }
-
-    updateSessionTitle(sessionId, pendingTitle);
-    setPendingTitle(null);
-  }, [sessionId, pendingTitle, isCreatingSession]);
 
   // Check for state in URL on component mount
   useEffect(() => {
@@ -182,46 +124,6 @@ export default function Home() {
       }
     }
   }, []);
-
-  // Handle new session creation
-  const handleNewChat = useCallback(() => {
-    setSessionId(null);
-    setShareStatus('');
-    setState({
-      generatedCode: '',
-      dependencies: {},
-    });
-    clearMessages();
-  }, [clearMessages]);
-
-  // Handle session creation
-  const handleSessionCreated = useCallback(
-    (newSessionId: string) => {
-      if (newSessionId) {
-        setSessionId(newSessionId);
-        setIsCreatingSession(false);
-
-        // If we have a pending title from an AI response, set it now
-        if (pendingTitle) {
-          updateSessionTitle(newSessionId, pendingTitle);
-          setPendingTitle(null);
-        }
-      }
-    },
-    [pendingTitle]
-  );
-
-  // Handle sending messages with the ChatProvider
-  const handleSendMessage = useCallback(() => {
-    if (chatState.input.trim()) {
-      chatState.sendMessage();
-    }
-  }, [chatState]);
-
-  // Handle new chat with the ChatProvider
-  const handleStartNewChat = useCallback(() => {
-    clearMessages();
-  }, [clearMessages]);
 
   function handleShare() {
     if (!state.generatedCode) {
@@ -257,90 +159,56 @@ export default function Home() {
       .writeText(text)
       .then(() => {
         setShareStatus('Copied to clipboard!');
-        setTimeout(() => setShareStatus(''), 3000);
+        setTimeout(() => setShareStatus(''), 2000);
       })
       .catch((err) => {
-        console.error('Failed to copy: ', err);
-        // Further fallback - show the URL to manually copy
-        prompt('Copy this link to share your app:', text);
+        console.error('Error copying to clipboard:', err);
+        setShareStatus('Could not copy to clipboard. Try manually copying the URL.');
       });
   }
 
-  // Add screenshot handling in home.tsx
-  const handleScreenshotCaptured = useCallback(
-    async (screenshotData: string) => {
-      if (sessionId) {
-        const response = await fetch(screenshotData);
-        const blob = await response.blob();
-        const file = new File([blob], 'screenshot.png', { type: 'image/png' });
+  // Handle the case where a new session has been created
+  useEffect(() => {
+    if (sessionId && chatState.messages.length > 0) {
+      // Navigate to the new session page
+      navigate(`/session/${sessionId}`);
+    }
+  }, [sessionId, chatState.messages.length, navigate]);
 
-        await databaseRef.current.put({
-          type: 'screenshot',
-          session_id: sessionId,
-          _files: {
-            screenshot: file,
-          },
-        });
-      }
-    },
-    [sessionId]
-  );
-
-  // Memoize dependencies to prevent unnecessary re-renders
-  const previewDependencies = useMemo(() => {
-    return getDependencies() || state.dependencies;
-  }, [getDependencies, state.dependencies]);
-
-  // Memoized ResultPreview component with improved dependency handling
-  const memoizedResultPreview = useMemo(() => {
-    const lastAiMessage = [...chatState.messages].reverse().find(
-      (msg): msg is AiChatMessage => msg.type === 'ai'
-    );
-    return (
-      <ResultPreview
-        code={state.generatedCode}
-        streamingCode={chatState.getCurrentCode()}
-        isStreaming={chatState.messages.length > 0 && chatState.isGenerating}
-        dependencies={previewDependencies}
-        onShare={handleShare}
-        shareStatus={shareStatus}
-        completedMessage={lastAiMessage?.text || ''}
-        currentStreamContent={chatState.currentSegments()
-          .filter((seg: Segment) => seg.type === 'markdown')
-          .map((seg: Segment) => seg.content)
-          .join('')}
-        currentMessage={
-          chatState.messages.length > 0
-            ? { content: chatState.messages[chatState.messages.length - 1].text }
-            : undefined
-        }
-        onScreenshotCaptured={handleScreenshotCaptured}
-      />
-    );
-  }, [
-    state.generatedCode,
-    previewDependencies,
-    sessionId,
-    shareStatus,
-    handleShare,
-    handleScreenshotCaptured,
-    chatState.isGenerating,
-    chatState.messages,
-    chatState.currentSegments,
-    chatState.getCurrentCode,
-  ]);
-
-  // Return the main component
   return (
-    <AppLayout 
+    <AppLayout
       chatPanel={
         <ChatInterface
           chatState={chatState}
+          sessionId={null}
           onSessionCreated={handleSessionCreated}
-          onNewChat={handleNewChat}
         />
       }
-      previewPanel={memoizedResultPreview}
+      previewPanel={
+        <ResultPreview
+          code={state.generatedCode}
+          dependencies={state.dependencies}
+          streamingCode={chatState.getCurrentCode()}
+          isStreaming={chatState.isGenerating}
+          isSharedApp={isSharedApp}
+          shareStatus={shareStatus}
+          onShare={handleShare}
+          completedMessage={
+            chatState.messages.length > 0
+              ? chatState.messages.filter(msg => msg.type === 'ai').pop()?.text || ''
+              : ''
+          }
+          currentStreamContent={chatState.currentSegments()
+            .filter((seg: Segment) => seg.type === 'markdown')
+            .map((seg: Segment) => seg.content)
+            .join('')}
+          currentMessage={
+            chatState.messages.length > 0
+              ? { content: chatState.messages[chatState.messages.length - 1].text }
+              : undefined
+          }
+        />
+      }
     />
   );
 }

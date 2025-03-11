@@ -23,7 +23,6 @@ interface UserMessageDocument extends BaseMessageDocument {
 interface AiMessageDocument extends BaseMessageDocument {
   message_type: 'ai';
   raw_content: string; // Raw stream content before parsing
-  title_generated?: boolean;
 }
 
 // Union type for all message documents
@@ -132,36 +131,10 @@ export function useSessionMessages(sessionId: string | null) {
     }
   };
 
-  // Mark an AI message as having its title generated
-  const markTitleGenerated = async (messageTimestamp: number) => {
-    if (!sessionId || !docs) return;
-    
-    try {
-      // Find the message by timestamp
-      const messageDoc = docs.find(
-        (doc: any) => 
-          isMessageDocument(doc) && 
-          doc.message_type === 'ai' && 
-          doc.session_id === sessionId &&
-          doc.timestamp === messageTimestamp
-      ) as AiMessageDocument | undefined;
-      
-      if (messageDoc) {
-        await database.put({
-          ...messageDoc,
-          title_generated: true
-        });
-      }
-    } catch (error) {
-      console.error('Error marking title as generated:', error);
-    }
-  };
-
   return {
     messages,
     isLoading: !docs,
     addUserMessage,
-    updateAiMessage,
-    markTitleGenerated
+    updateAiMessage
   };
 } 
