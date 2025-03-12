@@ -13,13 +13,8 @@ import SandpackScrollController from './SandpackScrollController';
 
 interface ResultPreviewProps {
   code: string;
-  streamingCode?: string;
   dependencies?: Record<string, string>;
   onShare?: () => void;
-  shareStatus?: string;
-  isSharedApp?: boolean;
-  completedMessage?: string;
-  currentMessage?: { content: string };
   currentStreamContent?: string;
   onScreenshotCaptured?: (screenshotData: string) => void;
   initialView?: 'code' | 'preview';
@@ -92,13 +87,8 @@ const defaultCode = '';
 
 function ResultPreview({
   code,
-  streamingCode = '',
   dependencies = {},
   onShare,
-  shareStatus,
-  isSharedApp,
-  completedMessage,
-  currentMessage,
   currentStreamContent,
   onScreenshotCaptured,
   initialView = 'preview',
@@ -122,9 +112,6 @@ function ResultPreview({
       active: true,
     },
   });
-
-  // Simplify streaming detection - just check if the streamingCode exists
-  const hasStreamingContent = Boolean(streamingCode && streamingCode.length > 0);
 
   useEffect(() => {
     const prefersDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches;
@@ -185,14 +172,14 @@ function ResultPreview({
       setShowWelcome(false);
 
       // Show code view during streaming
-      if (hasStreamingContent) {
-        setActiveView('code');
-        setLockCodeView(true);
-      } else {
-        setLockCodeView(false);
-      }
+      // if (hasStreamingContent) {
+      //   setActiveView('code');
+      //   setLockCodeView(true);
+      // } else {
+      //   setLockCodeView(false);
+      // }
     }
-  }, [code, streamingCode]);
+  }, [code]);
 
   // Create a unique key for SandpackProvider that changes when relevant props change
   const sandpackKey = useMemo(() => {
@@ -223,11 +210,10 @@ function ResultPreview({
             <button
               type="button"
               onClick={() => setActiveView('preview')}
-              className={`flex items-center space-x-1.5 rounded-md px-4 py-1.5 text-sm font-medium transition-colors ${
-                activeView === 'preview'
+              className={`flex items-center space-x-1.5 rounded-md px-4 py-1.5 text-sm font-medium transition-colors ${activeView === 'preview'
                   ? 'bg-light-background-00 dark:bg-dark-background-00 text-light-primary dark:text-dark-primary shadow-sm'
                   : 'text-light-primary dark:text-dark-primary hover:bg-light-decorative-01 dark:hover:bg-dark-decorative-01'
-              }`}
+                }`}
               aria-label="Switch to preview"
             >
               <svg
@@ -259,11 +245,10 @@ function ResultPreview({
                 setActiveView('code');
                 setShowWelcome(false);
               }}
-              className={`flex items-center space-x-1.5 rounded-md px-4 py-1.5 text-sm font-medium transition-colors ${
-                activeView === 'code'
+              className={`flex items-center space-x-1.5 rounded-md px-4 py-1.5 text-sm font-medium transition-colors ${activeView === 'code'
                   ? 'bg-light-background-00 dark:bg-dark-background-00 text-light-primary dark:text-dark-primary shadow-sm'
                   : 'text-light-primary dark:text-dark-primary hover:bg-light-decorative-01 dark:hover:bg-dark-decorative-01'
-              }`}
+                }`}
               aria-label="Switch to code editor"
             >
               <svg
@@ -288,40 +273,33 @@ function ResultPreview({
           <div className="h-10"></div>
         )}
         {onShare ? (
-          !showWelcome && (
-            <div className="flex items-center gap-2">
-              {shareStatus && (
-                <div className="animate-fade-in bg-accent-00-light dark:bg-accent-00-dark text-light-primary dark:text-dark-primary rounded-lg px-3 py-1 text-sm">
-                  {shareStatus}
-                </div>
-              )}
-              <div className="bg-light-decorative-00 dark:bg-dark-decorative-00 flex space-x-1 rounded-lg p-1 shadow-sm">
-                <button
-                  type="button"
-                  onClick={onShare}
-                  className="text-light-primary dark:text-dark-primary hover:bg-light-decorative-01 dark:hover:bg-dark-decorative-01 flex items-center space-x-1.5 rounded-md px-4 py-1.5 text-sm font-medium transition-colors"
-                  aria-label="Share app"
+          <div className="flex items-center gap-2">
+            <div className="bg-light-decorative-00 dark:bg-dark-decorative-00 flex space-x-1 rounded-lg p-1 shadow-sm">
+              <button
+                type="button"
+                onClick={onShare}
+                className="text-light-primary dark:text-dark-primary hover:bg-light-decorative-01 dark:hover:bg-dark-decorative-01 flex items-center space-x-1.5 rounded-md px-4 py-1.5 text-sm font-medium transition-colors"
+                aria-label="Share app"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-4 w-4"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
                 >
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    className="h-4 w-4"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <title>Share icon</title>
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"
-                    />
-                  </svg>
-                  <span>Share</span>
-                </button>
-              </div>
+                  <title>Share icon</title>
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"
+                  />
+                </svg>
+                <span>Share</span>
+              </button>
             </div>
-          )
+          </div>
         ) : (
           <div className="h-10 w-10"></div>
         )}
@@ -408,11 +386,7 @@ function ResultPreview({
             Copy to Clipboard
           </button>
         )}
-        {streamingCode ? (
-          <div>{currentStreamContent}</div>
-        ) : (
-          <div>{completedMessage || currentMessage?.content || ''}</div>
-        )}
+        <div>{currentStreamContent}</div>
       </div>
     </div>
   );

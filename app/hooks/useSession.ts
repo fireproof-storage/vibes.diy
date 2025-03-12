@@ -104,26 +104,26 @@ export function useSession(sessionId: string | null) {
   );
 
   // Create a new session
-  const createSession = useCallback(
-    async (title: string = 'New Chat') => {
-      try {
-        console.log('useSession: Creating new session with title:', title);
-        await mergeSession({
-          title,
-          timestamp: Date.now(),
-          type: 'session',
-        });
-        const result = await saveSession();
-        console.log('useSession: Session created with ID:', result.id);
-        return result.id;
-      } catch (err) {
-        console.error('Error creating session:', err);
-        setError(err instanceof Error ? err : new Error(String(err)));
-        return null;
-      }
-    },
-    [mergeSession, saveSession]
-  );
+  // const createSession = useCallback(
+  //   async (title: string = 'New Chat') => {
+  //     try {
+  //       console.log('useSession: Creating new session with title:', title);
+  //       await mergeSession({
+  //         title,
+  //         timestamp: Date.now(),
+  //         type: 'session',
+  //       });
+  //       const result = await saveSession();
+  //       console.log('useSession: Session created with ID:', result.id);
+  //       return result.id;
+  //     } catch (err) {
+  //       console.error('Error creating session:', err);
+  //       setError(err instanceof Error ? err : new Error(String(err)));
+  //       return null;
+  //     }
+  //   },
+  //   [mergeSession, saveSession]
+  // );
 
   return {
     session,
@@ -133,7 +133,6 @@ export function useSession(sessionId: string | null) {
     updateTitle,
     updateMetadata,
     addScreenshot,
-    createSession,
     database,
   };
 }

@@ -49,20 +49,14 @@ export default function UnifiedSession() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Track whether we're in a shared app context
-  const [isSharedApp, setIsSharedApp] = useState<boolean>(false);
-
   // State for current session
   const [sessionId, setSessionId] = useState<string | null>(urlSessionId || null);
-  const [state, setState] = useState({
-    generatedCode: '',
-    dependencies: {} as Record<string, string>,
-  });
+ 
   const [shareStatus, setShareStatus] = useState<string>('');
   const sessionCreationAttemptedRef = useRef(false);
 
   // Initialize session management hook with current sessionId
-  const { createSession, session } = useSession(sessionId);
+  // const { createSession, session } = useSession(sessionId);
 
   // Use the simple chat hook with current sessionId
   const chatState = useSimpleChat(sessionId);
@@ -70,7 +64,7 @@ export default function UnifiedSession() {
   // Log state for debugging
   console.log('UnifiedSession: initialized with sessionId:', sessionId);
   console.log('UnifiedSession: chatState has messages:', chatState.messages.length);
-  console.log('UnifiedSession: isStreaming:', chatState.streamingState);
+  console.log('UnifiedSession: isStreaming:', chatState.isStreaming);
 
   // Check if there's a state parameter in the URL (for shared apps)
   useEffect(() => {
@@ -84,7 +78,6 @@ export default function UnifiedSession() {
           generatedCode: decodedState.code,
           dependencies: decodedState.dependencies,
         });
-        setIsSharedApp(true);
       }
     }
   }, [location.search]);
@@ -98,7 +91,7 @@ export default function UnifiedSession() {
       // We'll create a session only when the user sends their first message
       // This prevents immediate redirect from the root path
     }
-  }, [urlSessionId, createSession, navigate]);
+  }, [urlSessionId, navigate]);
 
   // Helper function to extract dependencies from segments
   const getDependencies = useCallback(() => {
@@ -167,7 +160,6 @@ export default function UnifiedSession() {
       dependencies: {},
     });
     setShareStatus('');
-    setIsSharedApp(false);
   }, [navigate]);
 
   // Handle sharing functionality
@@ -232,27 +224,15 @@ export default function UnifiedSession() {
       }
       previewPanel={
         <ResultPreview
-          code={state.generatedCode}
+          code={chatState.getCurrentCode()}
           dependencies={state.dependencies}
-          streamingCode={chatState.getCurrentCode()}
-          isSharedApp={isSharedApp}
-          shareStatus={shareStatus}
           onShare={handleShare}
-          completedMessage={
-            chatState.messages.length > 0
-              ? chatState.messages.filter((msg) => msg.type === 'ai').pop()?.text || ''
-              : ''
-          }
           currentStreamContent={chatState
             .currentSegments()
             .filter((seg: Segment) => seg.type === 'markdown')
             .map((seg: Segment) => seg.content)
             .join('')}
-          currentMessage={
-            chatState.messages.length > 0
-              ? { content: chatState.messages[chatState.messages.length - 1].text }
-              : undefined
-          }
+          
         />
       }
     />

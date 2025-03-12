@@ -26,14 +26,13 @@ export function useSimpleChat(sessionId: string | null) {
   const [input, setInput] = useState<string>('');
   const [systemPrompt, setSystemPrompt] = useState('');
   const [title, setTitle] = useState<string>(session?.title || 'New Chat');
-  const [titleGenerated, setTitleGenerated] = useState<boolean>(false);
 
   // Refs for tracking streaming state
   const streamBufferRef = useRef<string>('');
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const aiMessageTimestampRef = useRef<number | null>(null);
-  const [streamingState, setStreamingState] = useState<boolean>(false);
+  const [isStreaming, setIsStreaming] = useState<boolean>(false);
 
   // Initialize system prompt
   useEffect(() => {
@@ -67,10 +66,6 @@ export function useSimpleChat(sessionId: string | null) {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, []);
 
-  // Check if any AI message is currently streaming - simplified
-  const isStreaming = useCallback((): boolean => {
-    return streamingState;
-  }, [streamingState]);
 
   // Function to build conversation history for the prompt
   function buildMessageHistory() {
@@ -164,7 +159,7 @@ export function useSimpleChat(sessionId: string | null) {
         // Update the session title
         if (sessionId) {
           await updateTitle(newTitle);
-          setTitleGenerated(true);
+          
         }
 
         return newTitle;
@@ -192,7 +187,7 @@ export function useSimpleChat(sessionId: string | null) {
 
       // Reset state for new message
       streamBufferRef.current = '';
-      setStreamingState(true);
+      setIsStreaming(true);
 
       try {
         // Add user message
@@ -294,7 +289,7 @@ export function useSimpleChat(sessionId: string | null) {
         // Streaming is done, NOW write the complete AI message to database
         logDebug(`Finalizing AI message (${streamBufferRef.current.length} chars)`);
         await addAiMessage(streamBufferRef.current, aiMessageTimestamp, false);
-        setStreamingState(false);
+        setIsStreaming(false);
 
         // Generate a title if this is the first response with code
         const { segments } = parseContent(streamBufferRef.current);
@@ -313,7 +308,7 @@ export function useSimpleChat(sessionId: string | null) {
           'Sorry, there was an error generating the component. Please try again.';
         // Add error message as AI message
         await addAiMessage(errorMessage);
-        setStreamingState(false);
+        setIsStreaming(false);
       } finally {
         aiMessageTimestampRef.current = null;
         logDebug('sendMessage completed');
@@ -386,11 +381,11 @@ export function useSimpleChat(sessionId: string | null) {
 
   return {
     messages, // All messages in the conversation
+    // dependenciesString,
     setMessages, // Function to update messages (legacy, to be removed)
     input, // Current user input text
     setInput, // Function to update input
     isStreaming, // Whether any AI message is currently streaming
-    streamingState, // Direct access to streaming state
     sendMessage, // Function to send a message
     currentSegments, // Get current segments
     getCurrentCode, // Get current code
@@ -400,7 +395,7 @@ export function useSimpleChat(sessionId: string | null) {
     scrollToBottom, // Function to scroll to bottom
     title, // Current chat title
     setTitle: updateTitle, // Function to update title
-    titleGenerated,
+    
     sessionId,
     isLoadingMessages: messagesLoading,
     updateStreamingMessage, // Directly expose the imported function
