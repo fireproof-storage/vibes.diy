@@ -209,6 +209,10 @@ export function useSessionMessages(sessionId: string | null) {
   const combinedMessages = useMemo(() => {
     if (!streamingMessage) return messages;
 
+    console.debug('Combining messages with streaming message. Total messages:', messages.length);
+    console.debug('Streaming message text length:', streamingMessage.text.length);
+    console.debug('Streaming message segments:', streamingMessage.segments?.length || 0);
+    
     // Check if the streaming message already exists in the database messages
     const streamingMessageExists = messages.some(
       (msg) => msg.type === 'ai' && msg.timestamp === streamingMessage.timestamp
@@ -230,7 +234,14 @@ export function useSessionMessages(sessionId: string | null) {
 
   // Function to update streaming message directly (for external components)
   const updateStreamingMessage = (rawMessage: string, timestamp: number) => {
+    console.debug('Updating streaming message with content length:', rawMessage.length);
     const { segments, dependenciesString } = parseContent(rawMessage);
+    console.debug('Parsed segments count:', segments.length);
+    
+    if (segments.length > 0) {
+      console.debug('First segment type:', segments[0].type);
+      console.debug('First segment content length:', segments[0].content.length);
+    }
 
     setStreamingMessage({
       type: 'ai',

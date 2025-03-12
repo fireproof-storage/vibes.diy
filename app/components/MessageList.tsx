@@ -130,7 +130,8 @@ function MessageList({
       (msg) =>
         msg.type === 'ai' &&
         (msg as AiChatMessage).isStreaming &&
-        (msg as AiChatMessage).text.length > 0
+        ((msg as AiChatMessage).text.length > 0 || 
+         ((msg as AiChatMessage).segments && (msg as AiChatMessage).segments.length > 0))
     );
 
     return !hasStreamingContent;
@@ -209,11 +210,7 @@ function MessageList({
             </div>
           </div>
         ) : (
-          <div
-            className={`flex flex-col space-y-4 ${
-              !isStreaming() && messages.length > 0 ? 'pb-32' : ''
-            }`}
-          >
+          <div className="flex flex-col space-y-4">
             {messageElements}
             <div ref={messagesEndRef} />
             {showTypingIndicator && <AITyping />}
