@@ -126,22 +126,27 @@ function MessageList({
     if (!isStreaming()) return false;
 
     // Log the current state of messages for debugging
-    console.debug(`🔍 MESSAGE LIST DEBUG: Total messages=${messages.length}, isStreaming=${isStreaming()}`);
-    
-    // IMPORTANT: Always include streaming messages with content in the list, regardless of their state
-    // This ensures users always see partial messages as they're generated
-    const hasAnyContent = messages.some(
-      (msg) => 
-        (msg.type === 'ai' &&
-        ((msg as AiChatMessage).text.length > 0 || 
-         ((msg as AiChatMessage).segments && (msg as AiChatMessage).segments.length > 0)))
+    console.debug(
+      `🔍 MESSAGE LIST DEBUG: Total messages=${messages.length}, isStreaming=${isStreaming()}`
     );
-    
+
+    // IMPORTANT: Check if any AI message has segments with actual content
+    const hasAnyContent = messages.some(
+      (msg) =>
+        msg.type === 'ai' &&
+        ((msg as AiChatMessage).text.length > 0 ||
+          (msg as AiChatMessage).segments?.some(
+            (segment) => segment.content && segment.content.trim().length > 0
+          ))
+    );
+
     // We only want to show the typing indicator if there's no content at all
     const shouldShowTypingIndicator = !hasAnyContent;
-    
-    console.debug(`🔍 DECISION: hasAnyContent=${hasAnyContent}, showTypingIndicator=${shouldShowTypingIndicator}`);
-    
+
+    console.debug(
+      `🔍 DECISION: hasAnyContent=${hasAnyContent}, showTypingIndicator=${shouldShowTypingIndicator}`
+    );
+
     return shouldShowTypingIndicator;
   }, [isStreaming, messages]);
 

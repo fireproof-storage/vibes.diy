@@ -23,11 +23,11 @@ vi.mock('../app/hooks/useSessionMessages', () => ({
       return {
         messages: [
           { type: 'user', text: 'Create a React app' },
-          { 
-            type: 'ai', 
-            text: 'Here is a React app', 
+          {
+            type: 'ai',
+            text: 'Here is a React app',
             segments: [{ type: 'markdown', content: 'Here is a React app' }],
-            isStreaming: true
+            isStreaming: true,
           },
         ],
         isLoading: false,
@@ -37,11 +37,11 @@ vi.mock('../app/hooks/useSessionMessages', () => ({
       return {
         messages: [
           { type: 'user', text: 'Create a React app' },
-          { 
-            type: 'ai', 
-            text: '', 
+          {
+            type: 'ai',
+            text: '',
             segments: [],
-            isStreaming: true
+            isStreaming: true,
           },
         ],
         isLoading: false,
@@ -92,7 +92,7 @@ describe('MessageList', () => {
 
     // Should show the actual message content
     expect(screen.getByText('Here is a React app')).toBeInTheDocument();
-    
+
     // Should NOT show "Thinking..." when there's content
     expect(screen.queryByText('Thinking')).not.toBeInTheDocument();
   });

@@ -13,18 +13,21 @@ interface StructuredMessageProps {
 const StructuredMessage = memo(({ segments, isStreaming }: StructuredMessageProps) => {
   // Ensure segments is an array (defensive)
   const validSegments = Array.isArray(segments) ? segments : [];
-  
+
   // Clear, focused logging
-  console.debug(`🔍 STRUCTURED MESSAGE: Rendering with ${validSegments.length} segments, isStreaming=${isStreaming}`);
-  
+  console.debug(
+    `🔍 STRUCTURED MESSAGE: Rendering with ${validSegments.length} segments, isStreaming=${isStreaming}`
+  );
+
   // Count number of lines in code segments
   const codeLines = validSegments
     .filter((segment) => segment.type === 'code')
     .reduce((acc, segment) => acc + (segment.content?.split('\n').length || 0), 0);
 
   // CRITICAL: We always want to show something if there's any content at all
-  const hasContent = validSegments.length > 0 && 
-    validSegments.some(segment => segment.content && segment.content.trim().length > 0);
+  const hasContent =
+    validSegments.length > 0 &&
+    validSegments.some((segment) => segment.content && segment.content.trim().length > 0);
 
   console.debug(`🔍 STRUCTURED MESSAGE: hasContent=${hasContent}`);
 
@@ -38,11 +41,14 @@ const StructuredMessage = memo(({ segments, isStreaming }: StructuredMessageProp
       ) : (
         // Map and render each segment that has content
         validSegments
-          .filter(segment => segment.content && segment.content.trim().length > 0)
+          .filter((segment) => segment.content && segment.content.trim().length > 0)
           .map((segment, index) => {
             if (segment.type === 'markdown') {
               return (
-                <div key={`markdown-${index}`} className="prose prose-sm dark:prose-invert max-w-none">
+                <div
+                  key={`markdown-${index}`}
+                  className="prose prose-sm dark:prose-invert max-w-none"
+                >
                   <ReactMarkdown>{segment.content || ''}</ReactMarkdown>
                 </div>
               );

@@ -191,6 +191,7 @@ describe('Session Route Integration', () => {
       setTitle: vi.fn(),
       sessionId: 'test-session-id',
       isLoadingMessages: false,
+      updateStreamingMessage: vi.fn(),
     });
   });
 

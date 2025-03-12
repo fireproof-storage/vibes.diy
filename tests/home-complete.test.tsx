@@ -217,6 +217,7 @@ describe('Home Route in completed state', () => {
       setTitle: vi.fn(),
       sessionId: null,
       isLoadingMessages: false,
+      updateStreamingMessage: vi.fn(),
     });
   });
 
@@ -321,6 +322,7 @@ describe('Home Route in completed state', () => {
       setTitle: vi.fn(),
       sessionId: null,
       isLoadingMessages: true,
+      updateStreamingMessage: vi.fn(),
     };
 
     vi.spyOn(useSimpleChatModule, 'useSimpleChat').mockReturnValue(mockChatState);

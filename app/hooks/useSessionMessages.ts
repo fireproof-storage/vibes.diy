@@ -211,11 +211,14 @@ export function useSessionMessages(sessionId: string | null) {
     if (!streamingMessage) return messages;
 
     // Debug the content we're working with
-    console.debug(`🔍 COMBINING MESSAGES: db msgs=${messages.length}, streaming has ${streamingMessage.segments?.length || 0} segments`);
-    
-    const hasStreamingContent = streamingMessage.text.length > 0 && 
-      (streamingMessage.segments?.some(s => s.content && s.content.trim().length > 0) || false);
-    
+    console.debug(
+      `🔍 COMBINING MESSAGES: db msgs=${messages.length}, streaming has ${streamingMessage.segments?.length || 0} segments`
+    );
+
+    const hasStreamingContent =
+      streamingMessage.text.length > 0 &&
+      (streamingMessage.segments?.some((s) => s.content && s.content.trim().length > 0) || false);
+
     // If the streaming message has no content, just return the database messages
     if (!hasStreamingContent) {
       console.debug('🔍 STREAMING MESSAGE HAS NO CONTENT, skipping');
@@ -223,7 +226,7 @@ export function useSessionMessages(sessionId: string | null) {
     }
 
     console.debug(`🔍 STREAMING MESSAGE HAS CONTENT, adding to combined messages`);
-    
+
     // Check if the streaming message already exists in the database messages
     const streamingMessageExists = messages.some(
       (msg) => msg.type === 'ai' && msg.timestamp === streamingMessage.timestamp
@@ -248,12 +251,12 @@ export function useSessionMessages(sessionId: string | null) {
   // Function to update streaming message directly (for external components)
   const updateStreamingMessage = (rawMessage: string, timestamp: number) => {
     console.debug(`🔍 UPDATE STREAMING: msg length=${rawMessage.length}, timestamp=${timestamp}`);
-    
+
     const { segments, dependenciesString } = parseContent(rawMessage);
-    
+
     // Log what we're about to set as the streaming message
     console.debug(`🔍 SETTING STREAMING MESSAGE: ${segments.length} segments`);
-    
+
     setStreamingMessage({
       type: 'ai',
       text: rawMessage,

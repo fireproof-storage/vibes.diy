@@ -15,16 +15,14 @@ vi.mock('use-fireproof', () => {
         put: vi
           .fn()
           .mockImplementation((doc: any) => Promise.resolve({ id: doc._id || 'test-session-id' })),
-        get: vi
-          .fn()
-          .mockImplementation((id: string) =>
-            Promise.resolve({
-              _id: id,
-              title: 'Test Session',
-              type: 'session',
-              timestamp: Date.now(),
-            })
-          ),
+        get: vi.fn().mockImplementation((id: string) =>
+          Promise.resolve({
+            _id: id,
+            title: 'Test Session',
+            type: 'session',
+            timestamp: Date.now(),
+          })
+        ),
       },
       useDocument: () => ({
         doc: {
