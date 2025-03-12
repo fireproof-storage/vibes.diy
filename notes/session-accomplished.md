@@ -40,17 +40,17 @@ This update implements a significant architectural improvement to the chat appli
 
 ### ChatHeader.tsx
 - Updated props to use `isStreaming` function instead of boolean flag
-x revert - Improved icon for "New Chat" button (plus sign instead of pencil)
+- Improved icon for "New Chat" button (plus sign instead of pencil)
 - Enhanced accessibility with proper aria labels
 - Optimized memo comparison function for better performance
 
 ### MessageList.tsx
 - Complete refactoring to use `useSessionMessages` hook
 - Now takes `sessionId` instead of message array
-x revert use "Apps are sharable" version - Added loading state to improve user experience
+- Added loading state to improve user experience
 - Enhanced empty state messaging
 - Improved layout and styling
-x should repaint when stream changes, not effecient, frequent! - More efficient refresh mechanism based on session changes
+- More efficient refresh mechanism based on session changes
 
 ### ResultPreview Components
 - Simplified state management by deriving streaming state from props
@@ -129,3 +129,39 @@ Currently, we have several live queries implemented directly in components:
    - Update the component to use the new hook instead
 
 Do not cache live queries they are fast already. Focus on terse code.
+
+## Implemented Fixes
+
+### MessageList.tsx Empty State Restoration
+
+- ✅ Reverted the MessageList empty state back to the original "Apps are sharable" version
+- Restored the original content while maintaining the new component architecture
+- Kept the informational text about Fireproof and links to documentation
+- Preserved the styling and layout that matches the original design
+- Maintained all the architectural improvements (useSessionMessages hook, etc.)
+
+The empty state now properly communicates that:
+1. Apps are sharable and can be ejected to GitHub
+2. Users can fork and customize the app builder
+3. Information about Fireproof's features (encryption, synchronization, offline-first)
+
+This change preserves the new architectural improvements while restoring the more detailed and informative empty state content.
+
+### ChatHeader.tsx Icon Restoration
+
+- ✅ Reverted the New Chat button icon back to the pencil icon
+- Maintained the improved accessibility with the screen reader text
+- Preserved the updated component props structure with the isStreaming function
+- Ensured the button styling and hover effects remain consistent
+
+The pencil icon better aligns with the app's design system and provides a clearer visual indication that the button is for creating a new chat/document rather than adding something to the existing one.
+
+### useSessionList.ts Hook Implementation
+
+- ✅ Created the new custom hook for retrieving sessions with their screenshots
+- Implemented efficient grouping of sessions and screenshots in a single query
+- Added sorting functionality to show newest sessions first
+- Included loading state handling for better user experience
+- Provided a clean, focused API that abstracts away the database query complexity
+
+This hook improves the organization of live queries as outlined in the consolidation plan, making the code more maintainable and focused.
