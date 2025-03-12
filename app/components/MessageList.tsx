@@ -121,6 +121,20 @@ function MessageList({
     return messages.some(msg => msg.type === 'ai' && (msg as AiChatMessage).isStreaming);
   }, [messages]);
 
+  // Only show typing indicator when no streaming message with content is visible yet
+  const showTypingIndicator = useMemo(() => {
+    if (!isStreaming()) return false;
+    
+    // If we have a streaming message with content, don't show typing indicator
+    const hasStreamingContent = messages.some(msg => 
+      msg.type === 'ai' && 
+      (msg as AiChatMessage).isStreaming && 
+      (msg as AiChatMessage).text.length > 0
+    );
+    
+    return !hasStreamingContent;
+  }, [isStreaming, messages]);
+
   // Memoize the message list to prevent unnecessary re-renders
   const messageElements = useMemo(() => {
     return messages.map((msg, i) => (
@@ -201,7 +215,7 @@ function MessageList({
           >
             {messageElements}
             <div ref={messagesEndRef} />
-            {isStreaming() && !hasStreamingMessage && <AITyping />}
+            {showTypingIndicator && <AITyping />}
           </div>
         )}
       </div>

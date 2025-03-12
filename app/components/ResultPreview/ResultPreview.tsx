@@ -161,11 +161,12 @@ function ResultPreview({
       return cleanCodeBeforeImport(sourceCode) + '\n\n\n\n\n\n\n\n\n\n';
     };
 
-    // Prioritize streaming code when it exists, otherwise use static code
+    // IMPORTANT: Prioritize streaming code when it exists, otherwise use static code
     const codeToUse = streamingCode || code;
     
     if (codeToUse) {
-      console.log('ResultPreview: Updating code, lengths - streamingCode:', streamingCode?.length || 0, 'code:', code?.length || 0);
+      console.log('ResultPreview: Updating code, lengths - streamingCode:', 
+                 streamingCode?.length || 0, 'code:', code?.length || 0);
       const processedCode = processCode(codeToUse);
       setDisplayCode(processedCode);
       
@@ -179,7 +180,7 @@ function ResultPreview({
       
       setShowWelcome(false);
       
-      // Only show code view when we have streaming content
+      // Show code view during streaming
       if (hasStreamingContent) {
         setActiveView('code');
         setLockCodeView(true);

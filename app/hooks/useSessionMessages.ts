@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { useFireproof } from 'use-fireproof';
 import { FIREPROOF_CHAT_HISTORY } from '../config/env';
 import type { ChatMessage, UserChatMessage, AiChatMessage } from '../types/chat';
@@ -58,6 +58,9 @@ export function useSessionMessages(sessionId: string | null) {
               'sessionId:', sessionId);
   
   const [messages, setMessages] = useState<ChatMessage[]>([]);
+  
+  // Add state for current streaming message (memory only)
+  const [streamingMessage, setStreamingMessage] = useState<AiChatMessage | null>(null);
 
   // Transform query results into messages
   useEffect(() => {
@@ -138,32 +141,95 @@ export function useSessionMessages(sessionId: string | null) {
     }
   };
 
-  // Add a complete AI message - only called when streaming is complete
-  const addAiMessage = async (rawMessage: string, created_at?: number) => {
+  // Add or update AI message with two modes:
+  // 1. During streaming (isStreaming=true): Only update in-memory state, no database write
+  // 2. Final message (isStreaming=false): Write to database and clear streaming state
+  const addAiMessage = async (rawMessage: string, created_at?: number, isStreaming: boolean = false) => {
     if (!sessionId) return null;
     
     try {
       const timestamp = created_at || Date.now();
       
-      const result = await database.put({
-        type: 'ai-message',
-        session_id: sessionId,
-        rawMessage,
-        created_at: timestamp
-      } as AiMessageDocument);
-      
-      console.log('useSessionMessages: Created new AI message with ID:', result.id);
-      return timestamp;
+      if (isStreaming) {
+        // STREAMING MODE: Only update in-memory state, no database write
+        console.log('useSessionMessages: Updating streaming message in memory only');
+        const { segments, dependenciesString } = parseContent(rawMessage);
+        
+        setStreamingMessage({
+          type: 'ai',
+          text: rawMessage,
+          segments,
+          dependenciesString,
+          isStreaming: true,
+          timestamp
+        } as AiChatMessage);
+        
+        return timestamp;
+      } else {
+        // FINAL MESSAGE: Write to database and clear streaming state
+        console.log('useSessionMessages: Writing final AI message to database');
+        
+        const result = await database.put({
+          type: 'ai-message',
+          session_id: sessionId,
+          rawMessage,
+          created_at: timestamp
+        } as AiMessageDocument);
+        
+        // Clear streaming message when done
+        setStreamingMessage(null);
+        console.log('useSessionMessages: Created new AI message with ID:', result.id);
+        
+        return timestamp;
+      }
     } catch (error) {
-      console.error('Error adding AI message:', error);
+      console.error('Error with AI message:', error);
       return null;
     }
   };
 
+  // Combine database messages with streaming message
+  const combinedMessages = useMemo(() => {
+    if (!streamingMessage) return messages;
+    
+    // Check if the streaming message already exists in the database messages
+    const streamingMessageExists = messages.some(
+      msg => msg.type === 'ai' && msg.timestamp === streamingMessage.timestamp
+    );
+    
+    if (streamingMessageExists) {
+      // Replace the database version with the streaming version
+      return messages.map(msg => {
+        if (msg.type === 'ai' && msg.timestamp === streamingMessage.timestamp) {
+          return streamingMessage;
+        }
+        return msg;
+      });
+    } else {
+      // Add the streaming message to the list
+      return [...messages, streamingMessage];
+    }
+  }, [messages, streamingMessage]);
+
+  // Function to update streaming message directly (for external components)
+  const updateStreamingMessage = (rawMessage: string, timestamp: number) => {
+    const { segments, dependenciesString } = parseContent(rawMessage);
+    
+    setStreamingMessage({
+      type: 'ai',
+      text: rawMessage,
+      segments,
+      dependenciesString,
+      isStreaming: true,
+      timestamp
+    } as AiChatMessage);
+  };
+
   return {
-    messages,
+    messages: combinedMessages,
     isLoading: !docs,
     addUserMessage,
-    addAiMessage
+    addAiMessage,
+    updateStreamingMessage // New direct update function
   };
 } 

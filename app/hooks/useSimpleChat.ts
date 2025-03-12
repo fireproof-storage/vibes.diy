@@ -14,7 +14,13 @@ const CHOSEN_MODEL = 'anthropic/claude-3.7-sonnet';
 export function useSimpleChat(sessionId: string | null) {
   // Use our new hooks
   const { session, updateTitle } = useSession(sessionId);
-  const { messages, addUserMessage, addAiMessage, isLoading: messagesLoading } = useSessionMessages(sessionId);
+  const { 
+    messages, 
+    addUserMessage, 
+    addAiMessage, 
+    updateStreamingMessage,
+    isLoading: messagesLoading 
+  } = useSessionMessages(sessionId);
   
   // Core state
   const [input, setInput] = useState<string>('');
@@ -261,6 +267,10 @@ export function useSimpleChat(sessionId: string | null) {
                   // Add only the actual content to the buffer
                   streamBufferRef.current += content;
                   
+                  // IMPROVED IMPLEMENTATION: Update streaming message in memory only
+                  // This avoids database writes during streaming
+                  updateStreamingMessage(streamBufferRef.current, aiMessageTimestampRef.current);
+                  
                   // Log every 20 characters for debugging
                   if (streamBufferRef.current.length % 20 === 0) {
                     console.log('Stream buffer length:', streamBufferRef.current.length, 
@@ -276,9 +286,9 @@ export function useSimpleChat(sessionId: string | null) {
           }
         }
 
-        // Streaming is done, add the complete AI message
+        // Streaming is done, NOW write the complete AI message to database
         console.log('Finalizing AI message', streamBufferRef.current.substring(0, 50) + '...');
-        await addAiMessage(streamBufferRef.current, aiMessageTimestamp);
+        await addAiMessage(streamBufferRef.current, aiMessageTimestamp, false);
         setStreamingState(false);
 
         // Generate a title if this is the first response with code
