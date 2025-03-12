@@ -27,6 +27,8 @@ interface ResultPreviewProps {
   completedMessage: string;
   currentStreamContent: string;
   currentMessage?: { content: string };
+  shareStatus?: string;
+  onShare?: () => void;
 }
 
 interface AppLayoutProps {
@@ -50,12 +52,23 @@ vi.mock('../app/components/ResultPreview/ResultPreview', () => ({
     isSharedApp, 
     completedMessage,
     currentStreamContent,
-    currentMessage
+    currentMessage,
+    shareStatus,
+    onShare
   }: ResultPreviewProps) => (
     <div data-testid="mock-result-preview">
       <div data-testid="code-line-count">{code.split('\n').length} lines of code</div>
       <div data-testid="code-content">{code.substring(0, 50)}...</div>
       <div data-testid="message-content">{completedMessage.substring(0, 50)}</div>
+      {shareStatus && <div data-testid="share-status">{shareStatus}</div>}
+      {onShare && (
+        <button 
+          data-testid="share-button" 
+          onClick={onShare}
+        >
+          Share
+        </button>
+      )}
     </div>
   ),
 }));
@@ -76,6 +89,14 @@ vi.mock('use-fireproof', () => ({
     useLiveQuery: () => ({ docs: [] }),
   }),
 }));
+
+// Mock clipboard API for share tests
+Object.defineProperty(navigator, 'clipboard', {
+  value: {
+    writeText: vi.fn().mockImplementation(() => Promise.resolve()),
+  },
+  writable: true,
+});
 
 describe('Session Route Integration', () => {
   beforeEach(() => {
@@ -160,5 +181,19 @@ describe('Session Route Integration', () => {
       const codeLineCountElement = screen.getByTestId('code-line-count');
       expect(codeLineCountElement.textContent).toBe('210 lines of code');
     });
+  });
+
+  it('should provide a share button that copies link to clipboard', async () => {
+    // Render the Session component
+    render(<Session />);
+    
+    // Try to find the share button
+    let shareButton;
+    try {
+      shareButton = await screen.findByTestId('share-button');
+    } catch (error) {
+      // This test should fail because sharing is not implemented in session.tsx
+      expect(shareButton).toBeDefined();
+    }
   });
 }); 

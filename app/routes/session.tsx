@@ -16,6 +16,19 @@ export function meta() {
   ];
 }
 
+// Utility functions for URL state encoding/decoding
+function encodeStateToUrl(code: string, dependencies: Record<string, string>) {
+  try {
+    const stateObj = { code, dependencies };
+    const jsonStr = JSON.stringify(stateObj);
+    const encoded = btoa(encodeURIComponent(jsonStr));
+    return encoded;
+  } catch (error) {
+    console.error('Error encoding state to URL:', error);
+    return '';
+  }
+}
+
 export default function Session() {
   const { sessionId } = useParams();
 
@@ -23,6 +36,7 @@ export default function Session() {
     generatedCode: '',
     dependencies: {} as Record<string, string>,
   });
+  const [shareStatus, setShareStatus] = useState<string>('');
 
   // Use the simple chat hook with sessionId
   const chatState = useSimpleChat(sessionId || null);
@@ -75,6 +89,49 @@ export default function Session() {
     window.location.href = '/';
   }, []);
 
+  // Handle sharing functionality
+  function handleShare() {
+    if (!state.generatedCode) {
+      alert('Generate an app first before sharing!');
+      return;
+    }
+
+    const encoded = encodeStateToUrl(state.generatedCode, state.dependencies);
+    if (encoded) {
+      const shareUrl = `${window.location.origin}/home#state=${encoded}`;
+
+      // Use optional chaining for Web Share API check
+      const canUseShareApi = Boolean(navigator && 'share' in navigator);
+
+      if (canUseShareApi) {
+        navigator
+          .share({
+            title: 'Fireproof App',
+            text: 'Check out this app I built with Fireproof App Builder!',
+            url: shareUrl,
+          })
+          .catch(() => {
+            copyToClipboard(shareUrl);
+          });
+      } else {
+        copyToClipboard(shareUrl);
+      }
+    }
+  }
+
+  function copyToClipboard(text: string) {
+    navigator.clipboard
+      .writeText(text)
+      .then(() => {
+        setShareStatus('Copied to clipboard!');
+        setTimeout(() => setShareStatus(''), 2000);
+      })
+      .catch((err) => {
+        console.error('Error copying to clipboard:', err);
+        setShareStatus('Could not copy to clipboard. Try manually copying the URL.');
+      });
+  }
+
   return (
     <AppLayout
       chatPanel={
@@ -91,6 +148,8 @@ export default function Session() {
           streamingCode={chatState.getCurrentCode()}
           isStreaming={chatState.isStreaming()}
           isSharedApp={false}
+          shareStatus={shareStatus}
+          onShare={handleShare}
           completedMessage={
             chatState.messages.length > 0
               ? chatState.messages.filter(msg => msg.type === 'ai').pop()?.text || ''
