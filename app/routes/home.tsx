@@ -211,13 +211,21 @@ export default function Home() {
 
   // Handle the case where a new session has been created
   useEffect(() => {
-    if (sessionId && chatState.messages.length > 0) {
-      console.log('Home: Session created, navigating to session page. Messages:', 
-                 chatState.messages.length, 'SessionId:', sessionId);
-      // Navigate to the new session page
-      navigate(`/session/${sessionId}`);
+    // Only navigate to session page if we have a completed AI message and a title
+    if (sessionId && chatState.messages.length > 0 && !chatState.isStreaming()) {
+      const hasCompletedAiMessage = chatState.messages.some(msg => 
+        msg.type === 'ai' && !(msg as AiChatMessage).isStreaming
+      );
+      
+      if (hasCompletedAiMessage && chatState.title && chatState.title !== 'New Chat') {
+        console.log('Home: AI response completed, updating URL without reload. SessionId:', sessionId);
+        
+        // Update the URL without triggering navigation/reload
+        const newUrl = `/session/${sessionId}`;
+        window.history.pushState({ sessionId }, '', newUrl);
+      }
     }
-  }, [sessionId, chatState.messages.length, navigate]);
+  }, [sessionId, chatState.messages, chatState.isStreaming, chatState.title]);
 
   return (
     <AppLayout
@@ -232,7 +240,7 @@ export default function Home() {
         <ResultPreview
           code={state.generatedCode}
           dependencies={state.dependencies}
-          streamingCode={chatState.isStreaming() ? chatState.getCurrentCode() : ''}
+          streamingCode={chatState.getCurrentCode()}
           isSharedApp={isSharedApp}
           shareStatus={shareStatus}
           onShare={handleShare}

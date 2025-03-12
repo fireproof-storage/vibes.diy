@@ -162,8 +162,14 @@ function ResultPreview({
       return cleanCodeBeforeImport(sourceCode) + '\n\n\n\n\n\n\n\n\n\n';
     };
 
-    if (isStreaming) {
+    // Using console.log for debugging the streaming state
+    console.log('ResultPreview: streamingCode length:', streamingCode?.length || 0, 
+                'isStreaming:', isStreaming, 
+                'code length:', code?.length || 0);
+
+    if (isStreaming && streamingCode) {
       // We have streaming code - update display and set to code view
+      console.log('ResultPreview: Updating with streaming code');
       const processedCode = processCode(streamingCode);
       setDisplayCode(processedCode);
       
@@ -180,6 +186,7 @@ function ResultPreview({
       setLockCodeView(true);
     } else if (code) {
       // Static code (non-streaming state)
+      console.log('ResultPreview: Updating with static code');
       const processedCode = processCode(code);
       setDisplayCode(processedCode);
       

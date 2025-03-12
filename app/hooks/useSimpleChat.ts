@@ -62,6 +62,7 @@ export function useSimpleChat(sessionId: string | null) {
 
   // Check if any AI message is currently streaming
   const isStreaming = useCallback((): boolean => {
+    console.log('isStreaming called, current state:', streamingState);
     return streamingState;
   }, [streamingState]);
 
@@ -83,14 +84,15 @@ export function useSimpleChat(sessionId: string | null) {
     );
     
     // If there's a streaming message, parse the current buffer
-    if (lastAiMessage?.isStreaming) {
+    if (lastAiMessage?.isStreaming || streamingState) {
+      console.log('currentSegments: Parsing from buffer, length:', streamBufferRef.current.length);
       const { segments } = parseContent(streamBufferRef.current);
       return segments;
     }
     
     // Otherwise return segments from the last complete AI message
     return lastAiMessage?.segments || [];
-  }, [messages]);
+  }, [messages, streamingState]);
 
   /**
    * Get the code from the current segments
@@ -98,7 +100,9 @@ export function useSimpleChat(sessionId: string | null) {
   const getCurrentCode = useCallback((): string => {
     const segments = currentSegments();
     const codeSegment = segments.find(segment => segment.type === 'code');
-    return codeSegment?.content || '';
+    const code = codeSegment?.content || '';
+    console.log('getCurrentCode: Code segment length:', code.length);
+    return code;
   }, [currentSegments]);
 
   /**
@@ -256,6 +260,14 @@ export function useSimpleChat(sessionId: string | null) {
                   const content = data.choices[0].delta.content;
                   // Add only the actual content to the buffer
                   streamBufferRef.current += content;
+                  
+                  // Log every 20 characters for debugging
+                  if (streamBufferRef.current.length % 20 === 0) {
+                    console.log('Stream buffer length:', streamBufferRef.current.length, 
+                               'Sample:', streamBufferRef.current.substring(
+                                 streamBufferRef.current.length - 20
+                               ));
+                  }
                 }
               } catch (e) {
                 console.error('Error parsing SSE JSON:', e);
