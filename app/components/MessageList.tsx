@@ -125,16 +125,24 @@ function MessageList({
   const showTypingIndicator = useMemo(() => {
     if (!isStreaming()) return false;
 
-    // If we have a streaming message with content, don't show typing indicator
-    const hasStreamingContent = messages.some(
-      (msg) =>
-        msg.type === 'ai' &&
-        (msg as AiChatMessage).isStreaming &&
+    // Log the current state of messages for debugging
+    console.debug(`🔍 MESSAGE LIST DEBUG: Total messages=${messages.length}, isStreaming=${isStreaming()}`);
+    
+    // IMPORTANT: Always include streaming messages with content in the list, regardless of their state
+    // This ensures users always see partial messages as they're generated
+    const hasAnyContent = messages.some(
+      (msg) => 
+        (msg.type === 'ai' &&
         ((msg as AiChatMessage).text.length > 0 || 
-         ((msg as AiChatMessage).segments && (msg as AiChatMessage).segments.length > 0))
+         ((msg as AiChatMessage).segments && (msg as AiChatMessage).segments.length > 0)))
     );
-
-    return !hasStreamingContent;
+    
+    // We only want to show the typing indicator if there's no content at all
+    const shouldShowTypingIndicator = !hasAnyContent;
+    
+    console.debug(`🔍 DECISION: hasAnyContent=${hasAnyContent}, showTypingIndicator=${shouldShowTypingIndicator}`);
+    
+    return shouldShowTypingIndicator;
   }, [isStreaming, messages]);
 
   // Memoize the message list to prevent unnecessary re-renders

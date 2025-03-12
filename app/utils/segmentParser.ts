@@ -11,6 +11,9 @@ export function parseContent(text: string): {
   const segments: Segment[] = [];
   let dependenciesString: string | undefined;
 
+  // Reduced debugging logs
+  console.debug(`Parsing content, length: ${text.length}`);
+
   // Log the complete content once for debugging purposes
   console.debug('=== BEGINNING OF CONTENT ===');
   console.debug(text);
@@ -85,12 +88,13 @@ export function parseContent(text: string): {
     });
   }
 
-  // Log the resulting segments for debugging
-  console.debug('Parsed segments:', segments.length);
-  segments.forEach((segment, i) => {
-    console.debug(`Segment ${i} (${segment.type}):`);
-    console.debug(segment.content);
-  });
+  // Final log showing what we produced
+  console.debug(`🔍 SEGMENTS PARSED: ${segments.length} segments from text length ${text.length}`);
+  if (segments.length > 0) {
+    segments.forEach((segment, i) => {
+      console.debug(`  Segment ${i}: type=${segment.type}, length=${segment.content.length}`);
+    });
+  }
 
   return { segments, dependenciesString };
 }

@@ -18,6 +18,34 @@ vi.mock('../app/hooks/useSessionMessages', () => ({
         messages: [],
         isLoading: false,
       };
+    } else if (sessionId === 'streaming-with-content') {
+      // Simulate a streaming message with actual content
+      return {
+        messages: [
+          { type: 'user', text: 'Create a React app' },
+          { 
+            type: 'ai', 
+            text: 'Here is a React app', 
+            segments: [{ type: 'markdown', content: 'Here is a React app' }],
+            isStreaming: true
+          },
+        ],
+        isLoading: false,
+      };
+    } else if (sessionId === 'streaming-no-content') {
+      // Simulate a streaming message with no content yet
+      return {
+        messages: [
+          { type: 'user', text: 'Create a React app' },
+          { 
+            type: 'ai', 
+            text: '', 
+            segments: [],
+            isStreaming: true
+          },
+        ],
+        isLoading: false,
+      };
     } else {
       return {
         messages: [],
@@ -57,5 +85,22 @@ describe('MessageList', () => {
     render(<MessageList sessionId="loading-session" isStreaming={() => false} />);
 
     expect(screen.getByText('Loading messages...')).toBeDefined();
+  });
+
+  test('should show content instead of "Thinking" when streaming message has content', () => {
+    render(<MessageList sessionId="streaming-with-content" isStreaming={() => true} />);
+
+    // Should show the actual message content
+    expect(screen.getByText('Here is a React app')).toBeInTheDocument();
+    
+    // Should NOT show "Thinking..." when there's content
+    expect(screen.queryByText('Thinking')).not.toBeInTheDocument();
+  });
+
+  test('should only show "Thinking" when streaming message has no content', () => {
+    render(<MessageList sessionId="streaming-no-content" isStreaming={() => true} />);
+
+    // Should show "Thinking..." when there's no content
+    expect(screen.getByText('Thinking')).toBeInTheDocument();
   });
 });

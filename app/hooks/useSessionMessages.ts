@@ -207,11 +207,22 @@ export function useSessionMessages(sessionId: string | null) {
 
   // Combine database messages with streaming message
   const combinedMessages = useMemo(() => {
+    // If no streaming message, just return the database messages
     if (!streamingMessage) return messages;
 
-    console.debug('Combining messages with streaming message. Total messages:', messages.length);
-    console.debug('Streaming message text length:', streamingMessage.text.length);
-    console.debug('Streaming message segments:', streamingMessage.segments?.length || 0);
+    // Debug the content we're working with
+    console.debug(`🔍 COMBINING MESSAGES: db msgs=${messages.length}, streaming has ${streamingMessage.segments?.length || 0} segments`);
+    
+    const hasStreamingContent = streamingMessage.text.length > 0 && 
+      (streamingMessage.segments?.some(s => s.content && s.content.trim().length > 0) || false);
+    
+    // If the streaming message has no content, just return the database messages
+    if (!hasStreamingContent) {
+      console.debug('🔍 STREAMING MESSAGE HAS NO CONTENT, skipping');
+      return messages;
+    }
+
+    console.debug(`🔍 STREAMING MESSAGE HAS CONTENT, adding to combined messages`);
     
     // Check if the streaming message already exists in the database messages
     const streamingMessageExists = messages.some(
@@ -220,6 +231,7 @@ export function useSessionMessages(sessionId: string | null) {
 
     if (streamingMessageExists) {
       // Replace the database version with the streaming version
+      console.debug('🔍 REPLACING existing message with streaming version');
       return messages.map((msg) => {
         if (msg.type === 'ai' && msg.timestamp === streamingMessage.timestamp) {
           return streamingMessage;
@@ -228,21 +240,20 @@ export function useSessionMessages(sessionId: string | null) {
       });
     } else {
       // Add the streaming message to the list
+      console.debug('🔍 ADDING new streaming message to list');
       return [...messages, streamingMessage];
     }
   }, [messages, streamingMessage]);
 
   // Function to update streaming message directly (for external components)
   const updateStreamingMessage = (rawMessage: string, timestamp: number) => {
-    console.debug('Updating streaming message with content length:', rawMessage.length);
-    const { segments, dependenciesString } = parseContent(rawMessage);
-    console.debug('Parsed segments count:', segments.length);
+    console.debug(`🔍 UPDATE STREAMING: msg length=${rawMessage.length}, timestamp=${timestamp}`);
     
-    if (segments.length > 0) {
-      console.debug('First segment type:', segments[0].type);
-      console.debug('First segment content length:', segments[0].content.length);
-    }
-
+    const { segments, dependenciesString } = parseContent(rawMessage);
+    
+    // Log what we're about to set as the streaming message
+    console.debug(`🔍 SETTING STREAMING MESSAGE: ${segments.length} segments`);
+    
     setStreamingMessage({
       type: 'ai',
       text: rawMessage,

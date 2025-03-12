@@ -190,15 +190,20 @@ function ChatInterface({ chatState, sessionId, onSessionCreated, onNewChat }: Ch
 
   // Memoize the MessageList component to prevent unnecessary re-renders
   const memoizedMessageList = useMemo(
-    () => (
-      <MessageList
-        sessionId={sessionId || null}
-        isStreaming={isStreaming}
-        isShrinking={isShrinking}
-        isExpanding={isExpanding}
-      />
-    ),
-    [sessionId, isStreaming, isShrinking, isExpanding]
+    () => {
+      // Log the streaming state for debugging
+      console.debug(`🔍 CHAT INTERFACE: Creating MessageList with isStreaming()=${isStreaming()}, streamingState=${streamingState}`);
+      
+      return (
+        <MessageList
+          sessionId={sessionId || null}
+          isStreaming={isStreaming}
+          isShrinking={isShrinking}
+          isExpanding={isExpanding}
+        />
+      );
+    },
+    [sessionId, isStreaming, isShrinking, isExpanding, streamingState]
   );
 
   // Render the quick suggestions conditionally

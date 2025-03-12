@@ -182,10 +182,7 @@ export function useSimpleChat(sessionId: string | null) {
    */
   async function sendMessage(): Promise<void> {
     if (input.trim()) {
-      console.log(
-        'useSimpleChat: Starting sendMessage with input:',
-        input.substring(0, 30) + '...'
-      );
+      console.log('useSimpleChat: Starting sendMessage with input:', input.substring(0, 30) + '...');
       console.log('useSimpleChat: Current sessionId:', sessionId);
 
       // Reset state for new message
@@ -272,7 +269,8 @@ export function useSimpleChat(sessionId: string | null) {
 
                   // IMPROVED IMPLEMENTATION: Update streaming message in memory only
                   // This avoids database writes during streaming
-                  updateStreamingMessage(streamBufferRef.current, aiMessageTimestampRef.current);
+                  console.debug(`🔍 STREAM CONTENT UPDATE: length=${streamBufferRef.current.length}`);
+                  updateStreamingMessageImplementation(streamBufferRef.current, aiMessageTimestampRef.current);
 
                   // Log every 20 characters for debugging
                   if (streamBufferRef.current.length % 20 === 0) {
@@ -334,6 +332,36 @@ export function useSimpleChat(sessionId: string | null) {
     },
     []
   );
+
+  // Function used by the API stream handler to update streaming message
+  function updateStreamingMessageImplementation(rawMessage: string, timestamp: number) {
+    console.debug(`🔍 UPDATE_STREAMING: length=${rawMessage.length} timestamp=${timestamp}`);
+    
+    // Only process messages with actual content
+    if (!rawMessage || rawMessage.trim().length === 0) {
+      console.debug('🔍 EMPTY MESSAGE: Skipping empty streaming update');
+      return;
+    }
+    
+    // Ensure we properly parse content into segments
+    const { segments, dependenciesString } = parseContent(rawMessage);
+    
+    // Log what segments we parsed
+    console.debug(`🔍 PARSED ${segments.length} SEGMENTS for streaming message`);
+    if (segments.length > 0) {
+      segments.forEach((segment, i) => {
+        console.debug(`  Segment ${i}: type=${segment.type}, length=${segment.content.length}`);
+      });
+    }
+    
+    // Use addAiMessage with isStreaming=true to update in-memory message
+    addAiMessage(rawMessage, timestamp, true).catch(console.error);
+  }
+
+  // Function used by the API stream handler to update streaming message
+  function updateStreamingMessage(rawMessage: string, timestamp: number) {
+    updateStreamingMessageImplementation(rawMessage, timestamp);
+  }
 
   return {
     messages, // All messages in the conversation
