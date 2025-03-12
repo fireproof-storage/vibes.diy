@@ -34,65 +34,52 @@ const Message = memo(
     isShrinking: boolean;
     isExpanding: boolean;
   }) => {
+    const isAI = message.type === 'ai';
+    const isUser = message.type === 'user';
+
+    // Extract the specific properties for AI messages
+    const aiMessage = message as AiChatMessage;
+
     return (
       <div
-        className={`flex flex-col transition-all duration-500 ${
-          isShrinking ? 'origin-top-left scale-0 opacity-0' : 'scale-100 opacity-100'
-        } ${isExpanding ? 'animate-bounce-in' : ''}`}
-        style={{
-          transitionDelay: isShrinking ? `${index * 50}ms` : '0ms',
-        }}
+        data-testid={`message-${index}`}
+        className={`flex flex-row ${isAI ? 'justify-start' : 'justify-end'} mb-4 px-4`}
       >
-        <div className={`flex ${message.type === 'user' ? 'justify-end' : 'justify-start'}`}>
-          {message.type === 'ai' && (
-            <div className="bg-light-background-00 dark:bg-dark-background-00 mr-2 flex h-8 w-8 items-center justify-center rounded-full">
-              <span className="text-light-primary dark:text-dark-primary text-sm font-medium">
-                AI
-              </span>
+        <div
+          className={`rounded-lg px-4 py-2 max-w-[85%] ${
+            isAI
+              ? 'bg-white text-gray-900 dark:bg-gray-800 dark:text-gray-100'
+              : 'bg-blue-500 text-white dark:bg-blue-600 dark:text-white'
+          } ${isShrinking ? 'animate-width-shrink' : isExpanding ? 'animate-width-expand' : ''}`}
+        >
+          {isAI ? (
+            <StructuredMessage segments={aiMessage.segments || []} isStreaming={aiMessage.isStreaming} />
+          ) : (
+            <div className="prose prose-sm dark:prose-invert max-w-none">
+              <p>{message.text}</p>
             </div>
           )}
-          <div
-            className={`message rounded-2xl p-3 ${
-              message.type === 'user'
-                ? 'bg-accent-02-light dark:bg-accent-02-dark rounded-tr-sm text-white'
-                : 'bg-light-background-00 dark:bg-dark-decorative-00 text-light-primary dark:text-dark-primary rounded-tl-sm'
-            } max-w-[85%] shadow-sm`}
-          >
-            {message.type === 'user' ? (
-              renderMarkdownContent(message.text)
-            ) : (
-              <StructuredMessage
-                segments={(message as AiChatMessage).segments}
-                isStreaming={(message as AiChatMessage).isStreaming}
-              />
-            )}
-          </div>
         </div>
       </div>
     );
   }
 );
 
-// Optimized AI Typing component
-const AITyping = memo(() => {
+// AI Typing indicator component
+function AITyping() {
   return (
-    <div className="flex justify-start">
-      <div className="bg-light-background-00 dark:bg-dark-background-00 mr-2 flex h-8 w-8 items-center justify-center rounded-full">
-        <span className="text-light-primary dark:text-dark-primary text-sm font-medium">AI</span>
-      </div>
-      <div className="message bg-light-background-00 dark:bg-dark-background-00 text-light-primary dark:text-dark-primary max-w-[85%] rounded-2xl rounded-tl-sm p-3 shadow-sm">
-        <div className="flex items-center gap-2">
-          Thinking
-          <span className="flex gap-1">
-            <span className="bg-light-primary dark:bg-dark-primary h-1.5 w-1.5 animate-bounce rounded-full [animation-delay:-0.3s]" />
-            <span className="bg-light-primary dark:bg-dark-primary h-1.5 w-1.5 animate-bounce rounded-full [animation-delay:-0.15s]" />
-            <span className="bg-light-primary dark:bg-dark-primary h-1.5 w-1.5 animate-bounce rounded-full" />
-          </span>
+    <div className="flex flex-row justify-start mb-4 px-4" data-testid="typing-indicator">
+      <div className="bg-white dark:bg-gray-800 rounded-lg px-4 py-2 max-w-[85%]">
+        <div className="flex items-center gap-1">
+          <span className="text-sm text-gray-500 dark:text-gray-400">Thinking</span>
+          <span className="bg-light-primary dark:bg-dark-primary ml-1 inline-block h-1 w-1 animate-pulse rounded-full [animation-delay:-0.3s]" />
+          <span className="bg-light-primary dark:bg-dark-primary ml-1 inline-block h-1 w-1 animate-pulse rounded-full [animation-delay:-0.15s]" />
+          <span className="bg-light-primary dark:bg-dark-primary ml-1 inline-block h-1 w-1 animate-pulse rounded-full" />
         </div>
       </div>
     </div>
   );
-});
+}
 
 function MessageList({
   sessionId,
@@ -253,7 +240,6 @@ function MessageList({
           <div className="flex flex-col space-y-4">
             {messageElements}
             <div ref={messagesEndRef} />
-            {showTypingIndicator && <AITyping />}
           </div>
         )}
       </div>

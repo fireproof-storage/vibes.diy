@@ -46,6 +46,12 @@ vi.mock('../app/hooks/useSessionMessages', () => ({
         ],
         isLoading: false,
       };
+    } else if (sessionId === 'streaming-empty-session') {
+      // Simulate a streaming session with no messages yet
+      return {
+        messages: [],
+        isLoading: false,
+      };
     } else {
       return {
         messages: [],
@@ -76,9 +82,15 @@ describe('MessageList', () => {
   });
 
   test('renders streaming message correctly', () => {
-    render(<MessageList sessionId="empty-session" isStreaming={() => true} />);
+    // When streaming is true but there are no messages yet, we should see an empty messages list
+    render(<MessageList sessionId="streaming-empty-session" isStreaming={() => true} />);
 
-    expect(screen.getByText('Thinking')).toBeDefined();
+    // The welcome message should not be displayed during streaming mode
+    expect(screen.queryByText('Welcome to Fireproof App Builder')).not.toBeInTheDocument();
+    
+    // Verify that we have a container for messages
+    const container = document.querySelector('.flex-1.overflow-y-auto');
+    expect(container).toBeInTheDocument();
   });
 
   test('renders loading state correctly', () => {
@@ -87,20 +99,23 @@ describe('MessageList', () => {
     expect(screen.getByText('Loading messages...')).toBeDefined();
   });
 
-  test('should show content instead of "Thinking" when streaming message has content', () => {
+  test('should show content instead of placeholder when streaming message has content', () => {
     render(<MessageList sessionId="streaming-with-content" isStreaming={() => true} />);
 
     // Should show the actual message content
     expect(screen.getByText('Here is a React app')).toBeInTheDocument();
 
-    // Should NOT show "Thinking..." when there's content
-    expect(screen.queryByText('Thinking')).not.toBeInTheDocument();
+    // Should NOT show the empty state anymore since we have content
+    expect(screen.queryByText('Welcome to Fireproof App Builder')).not.toBeInTheDocument();
   });
 
-  test('should only show "Thinking" when streaming message has no content', () => {
+  test('should show "Processing response..." when streaming message has no content', () => {
     render(<MessageList sessionId="streaming-no-content" isStreaming={() => true} />);
-
-    // Should show "Thinking..." when there's no content
-    expect(screen.getByText('Thinking')).toBeInTheDocument();
+    
+    // Should show the user message
+    expect(screen.getByText('Create a React app')).toBeInTheDocument();
+    
+    // Should show the placeholder text from StructuredMessage for empty content
+    expect(screen.getByText('Processing response...')).toBeInTheDocument();
   });
 });

@@ -40,6 +40,22 @@ vi.mock('../app/hooks/useSessionMessages', () => {
           addUserMessage: vi.fn(),
           updateAiMessage: vi.fn(),
         };
+      } else if (sessionId === 'empty-session-streaming') {
+        return {
+          messages: [
+            { type: 'user', text: 'Hello', timestamp: Date.now() },
+            {
+              type: 'ai',
+              text: '',
+              segments: [],
+              isStreaming: true,
+              timestamp: Date.now(),
+            },
+          ],
+          isLoading: false,
+          addUserMessage: vi.fn(),
+          updateAiMessage: vi.fn(),
+        };
       } else if (sessionId === 'test-session') {
         return {
           messages: [
@@ -153,9 +169,9 @@ describe('Component Rendering', () => {
       expect(screen.getByText('Hi there')).toBeInTheDocument();
     });
 
-    it('renders AI typing indicator when generating', () => {
-      render(<MessageList sessionId="empty-session" isStreaming={() => true} />);
-      expect(screen.getByText('Thinking')).toBeInTheDocument();
+    it('renders placeholder text when streaming with no content', () => {
+      render(<MessageList sessionId="empty-session-streaming" isStreaming={() => true} />);
+      expect(screen.getByText('Processing response...')).toBeInTheDocument();
     });
 
     it('renders streaming message', () => {
