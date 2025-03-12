@@ -100,6 +100,11 @@ export default function Home() {
     return {};
   }, [chatState.messages]);
 
+  // Check if we're currently streaming content
+  const isStreaming = useMemo(() => {
+    return chatState.isStreaming();
+  }, [chatState.isStreaming]);
+
   // Update handleCodeGenerated to work with the new hook
   const handleCodeGenerated = useCallback(
     (code: string, dependencies: Record<string, string> = {}) => {
@@ -226,8 +231,7 @@ export default function Home() {
         <ResultPreview
           code={state.generatedCode}
           dependencies={state.dependencies}
-          streamingCode={chatState.getCurrentCode()}
-          isStreaming={chatState.isStreaming}
+          streamingCode={isStreaming ? chatState.getCurrentCode() : ''}
           isSharedApp={isSharedApp}
           shareStatus={shareStatus}
           onShare={handleShare}

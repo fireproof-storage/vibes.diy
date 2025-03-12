@@ -235,7 +235,7 @@ export function useSimpleChat(sessionId: string | null) {
         await updateAiMessage('', true, aiMessageTimestamp);
 
         // Process the stream
-        const updateThrottleMs = 500; // Increase to 500ms to reduce database writes
+        const updateThrottleMs = 1000; // Increase to 1000ms to reduce database writes
         let lastUpdateTime = 0;
         let contentChanged = false;
         let lastContentLength = 0;
@@ -278,9 +278,9 @@ export function useSimpleChat(sessionId: string | null) {
           
           // Only update if:
           // 1. Content has changed AND time threshold passed, OR
-          // 2. Significant content change (100+ chars) since last update
+          // 2. Significant content change (250+ chars) since last update
           if ((contentChanged && now - lastUpdateTime > updateThrottleMs) || 
-              (currentLength - lastContentLength > 100)) {
+              (currentLength - lastContentLength > 250)) {
             
             console.log(`useSimpleChat: Updating AI stream (${currentLength} chars)`);
             await updateAiMessage(streamBufferRef.current, true, aiMessageTimestamp);

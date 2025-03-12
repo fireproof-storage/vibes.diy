@@ -1,5 +1,5 @@
 import { vi, describe, it, expect, beforeEach } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, within } from '@testing-library/react';
 import ResultPreview from '../app/components/ResultPreview/ResultPreview';
 
 // Mock clipboard API
@@ -37,25 +37,28 @@ describe('ResultPreview', () => {
   });
 
   it('renders without crashing', () => {
-    render(<ResultPreview code={''} isStreaming={() => false} />);
+    // Use non-empty code to ensure the editor is shown
+    const { container } = render(<ResultPreview code="const test = 'Hello';" />);
     
-    expect(screen.getByText('Editor')).toBeDefined();
-    expect(screen.getByText('Preview')).toBeDefined();
+    // Now the sandpack editor should be visible
+    expect(screen.getByTestId('sandpack-editor')).toBeDefined();
+    expect(screen.getByTestId('sandpack-preview')).toBeDefined();
   });
 
   it('displays welcome screen when code is empty', () => {
-    render(<ResultPreview code={''} isStreaming={() => false} />);
+    render(<ResultPreview code={''} />);
     
-    expect(screen.getByTestId('sandpack-provider')).toBeDefined();
+    expect(screen.getByTestId('welcome-screen')).toBeDefined();
   });
 
-  it('uses streaming code when isStreaming is true', () => {
+  it('uses streaming code when streamingCode is provided', () => {
     const code = '';
     const streamingCode = 'const test = "Streaming";';
 
-    render(<ResultPreview code={code} streamingCode={streamingCode} isStreaming={() => true} />);
+    render(<ResultPreview code={code} streamingCode={streamingCode} />);
 
-    expect(screen.getByTestId('sandpack-provider')).toBeDefined();
+    // Just verify it renders without errors
+    expect(screen.getAllByTestId('sandpack-provider')[0]).toBeDefined();
   });
 
   it('passes dependencies to SandpackProvider', () => {
@@ -65,21 +68,20 @@ describe('ResultPreview', () => {
       'react-dom': '^18.0.0',
     };
 
-    render(<ResultPreview code={code} dependencies={dependencies} isStreaming={() => false} />);
+    render(<ResultPreview code={code} dependencies={dependencies} />);
     
-    // In a real test we would verify the dependencies are passed
-    // but since we're mocking SandpackProvider, we can only check it renders
-    expect(screen.getByTestId('sandpack-provider')).toBeDefined();
+    // Just verify it renders without errors
+    expect(screen.getAllByTestId('sandpack-provider')[0]).toBeDefined();
   });
 
   it('calls onShare when share button is clicked', () => {
     const code = 'console.log("test");';
     const onShare = vi.fn();
 
-    render(<ResultPreview code={code} onShare={onShare} isStreaming={() => false} />);
+    render(<ResultPreview code={code} onShare={onShare} />);
     
     // Find and click the share button
-    const shareButton = screen.getByText(/share/i);
+    const shareButton = screen.getByRole('button', { name: /share/i });
     shareButton.click();
 
     expect(onShare).toHaveBeenCalled();
@@ -89,31 +91,31 @@ describe('ResultPreview', () => {
     const code = 'console.log("test");';
     const completedMessage = 'This is a test message';
 
-    render(<ResultPreview code={code} completedMessage={completedMessage} isStreaming={() => false} />);
+    render(<ResultPreview code={code} completedMessage={completedMessage} />);
     
     expect(screen.getByText(completedMessage)).toBeDefined();
   });
 
   it('shows welcome content with empty code', () => {
-    render(<ResultPreview code="" isStreaming={() => false} />);
+    render(<ResultPreview code="" />);
     
     expect(screen.getByTestId('welcome-screen')).toBeDefined();
   });
 
-  it('shows a share button when onShare is provided', () => {
-    render(<ResultPreview code="" onShare={() => {}} isStreaming={() => false} />);
+  it('shows a share button when onShare is provided and code is not empty', () => {
+    // Use non-empty code to ensure the share button is shown
+    render(<ResultPreview code="const test = 'Hello';" onShare={() => {}} />);
     
-    const shareButton = screen.getByText(/share/i);
+    const shareButton = screen.getByRole('button', { name: /share/i });
     expect(shareButton).toBeDefined();
   });
 
   it('updates display when code changes', () => {
-    const { rerender } = render(<ResultPreview code="" onShare={() => {}} isStreaming={() => false} />);
-    rerender(<ResultPreview code="const test = 'Hello';" onShare={() => {}} isStreaming={() => false} />);
+    const { rerender } = render(<ResultPreview code="" onShare={() => {}} />);
+    rerender(<ResultPreview code="const test = 'Hello';" onShare={() => {}} />);
     
-    // In a real test we would verify the code changes in the editor
-    // but since we're mocking SandpackProvider, we can only check it renders
-    expect(screen.getByTestId('sandpack-provider')).toBeDefined();
+    // Just verify it renders without errors
+    expect(screen.getAllByTestId('sandpack-provider')[0]).toBeDefined();
   });
 
   it('renders with code content', () => {
@@ -121,8 +123,12 @@ describe('ResultPreview', () => {
 
     render(<ResultPreview code={code} />);
 
-    expect(screen.getByText('Preview')).toBeDefined();
-    expect(screen.getByText('Code')).toBeDefined();
+    // Use more specific selectors to avoid multiple elements issue
+    const previewButton = screen.getByRole('button', { name: /switch to preview/i });
+    const codeButton = screen.getByRole('button', { name: /switch to code editor/i });
+    
+    expect(previewButton).toBeDefined();
+    expect(codeButton).toBeDefined();
   });
 
   it('handles copy to clipboard', async () => {
@@ -145,14 +151,15 @@ describe('ResultPreview', () => {
 
     render(<ResultPreview code={code} dependencies={dependencies} />);
 
-    expect(await screen.findByTestId('sandpack-provider')).toBeDefined();
+    // Use getAllByTestId to handle multiple elements
+    expect(screen.getAllByTestId('sandpack-provider')[0]).toBeDefined();
 
     // Click on the Code button to make the code editor visible
-    const codeButton = screen.getByText('Code');
+    const codeButton = screen.getByRole('button', { name: /switch to code editor/i });
     fireEvent.click(codeButton);
 
     // Just check that the code editor is present
-    expect(screen.getByRole('textbox', { name: /code editor for app.jsx/i })).toBeDefined();
+    expect(screen.getByTestId('sandpack-editor')).toBeDefined();
   });
 
   it('handles share functionality', () => {
@@ -161,7 +168,7 @@ describe('ResultPreview', () => {
 
     render(<ResultPreview code={code} onShare={onShare} />);
 
-    const shareButton = screen.getByLabelText('Share app');
+    const shareButton = screen.getByRole('button', { name: /share app/i });
     fireEvent.click(shareButton);
 
     expect(onShare).toHaveBeenCalled();
@@ -181,30 +188,29 @@ describe('ResultPreview', () => {
 
     // With our new implementation, when code is empty, welcome screen is shown
     // and the buttons should not be visible
-    expect(screen.queryByText('Preview')).toBeNull();
-    expect(screen.queryByText('Code')).toBeNull();
+    expect(screen.queryByRole('button', { name: /switch to preview/i })).toBeNull();
+    expect(screen.queryByRole('button', { name: /switch to code editor/i })).toBeNull();
   });
 
   it('should hide Preview and Code buttons when welcome screen is shown', () => {
     // The current component behavior sets showWelcome based on code presence
     // This test is checking for the expected behavior, not the current implementation
-    render(<ResultPreview code="" onShare={() => {}} />);
+    const { rerender } = render(<ResultPreview code="" onShare={() => {}} />);
 
     // This assertion will fail because the buttons are currently visible
     // regardless of whether the welcome screen is shown
-    expect(screen.queryByText('Preview')).toBeNull();
-    expect(screen.queryByText('Code')).toBeNull();
+    expect(screen.queryByRole('button', { name: /switch to preview/i })).toBeNull();
+    expect(screen.queryByRole('button', { name: /switch to code editor/i })).toBeNull();
     // Also check that the share button is hidden
-    expect(screen.queryByLabelText('Share app')).toBeNull();
+    expect(screen.queryByRole('button', { name: /share app/i })).toBeNull();
 
     // Re-render with non-empty code which should hide welcome screen
-    const { rerender } = render(<ResultPreview code="" onShare={() => {}} />);
     rerender(<ResultPreview code="const test = 'Hello';" onShare={() => {}} />);
 
     // Now the buttons should be visible
-    expect(screen.getByText('Preview')).toBeDefined();
-    expect(screen.getByText('Code')).toBeDefined();
+    expect(screen.getByRole('button', { name: /switch to preview/i })).toBeDefined();
+    expect(screen.getByRole('button', { name: /switch to code editor/i })).toBeDefined();
     // And the share button should also be visible
-    expect(screen.getByLabelText('Share app')).toBeDefined();
+    expect(screen.getByRole('button', { name: /share app/i })).toBeDefined();
   });
 });

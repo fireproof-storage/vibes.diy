@@ -4,7 +4,7 @@ import { useSandpack } from '@codesandbox/sandpack-react';
 interface SandpackEventListenerProps {
   setActiveView: (view: 'preview' | 'code') => void;
   setBundlingComplete: (complete: boolean) => void;
-  isStreaming: () => boolean;
+  isStreaming: boolean;
   onScreenshotCaptured?: (screenshotData: string) => void;
 }
 
@@ -31,7 +31,7 @@ const SandpackEventListener: React.FC<SandpackEventListenerProps> = ({
       } else if (message.type === 'urlchange') {
         setBundlingComplete(true);
 
-        if (!isStreaming()) {
+        if (!isStreaming) {
           setActiveView('preview');
           
           // Screenshot capture logic

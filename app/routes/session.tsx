@@ -146,7 +146,6 @@ export default function Session() {
           code={state.generatedCode}
           dependencies={state.dependencies}
           streamingCode={chatState.getCurrentCode()}
-          isStreaming={chatState.isStreaming}
           isSharedApp={false}
           shareStatus={shareStatus}
           onShare={handleShare}

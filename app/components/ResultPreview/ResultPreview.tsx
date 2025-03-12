@@ -14,7 +14,6 @@ import SandpackScrollController from './SandpackScrollController';
 interface ResultPreviewProps {
   code: string;
   streamingCode?: string;
-  isStreaming: () => boolean;
   dependencies?: Record<string, string>;
   onShare?: () => void;
   shareStatus?: string;
@@ -94,7 +93,6 @@ const defaultCode = '';
 function ResultPreview({
   code,
   streamingCode = '',
-  isStreaming,
   dependencies = {},
   onShare,
   shareStatus,
@@ -110,7 +108,6 @@ function ResultPreview({
   const [displayCode, setDisplayCode] = useState(code || defaultCode);
   const [appStartedCount, setAppStartedCount] = useState(0);
   const [bundlingComplete, setBundlingComplete] = useState(true);
-  const justFinishedStreamingRef = useRef(false);
   const [showWelcome, setShowWelcome] = useState(true);
   const [isDarkMode, setIsDarkMode] = useState(false);
   const codeEditorRef = useRef<HTMLDivElement>(null);
@@ -125,6 +122,10 @@ function ResultPreview({
       active: true,
     },
   });
+
+  // Directly determine streaming state from the presence of streamingCode
+  // This is more reliable than using a function or complex state
+  const isStreaming = Boolean(streamingCode);
 
   useEffect(() => {
     const prefersDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches;
@@ -154,81 +155,51 @@ function ResultPreview({
     return () => window.removeEventListener('message', handleMessage);
   }, [onScreenshotCaptured]);
 
+  // Combined effect for handling both static code and streaming code
   useEffect(() => {
-    if (code) {
-      const codeWithWhitespace = cleanCodeBeforeImport(code) + '\n\n\n\n\n\n\n\n\n\n';
-      setDisplayCode(codeWithWhitespace);
+    // Clean the code and add whitespace
+    const processCode = (sourceCode: string) => {
+      return cleanCodeBeforeImport(sourceCode) + '\n\n\n\n\n\n\n\n\n\n';
+    };
 
+    if (isStreaming) {
+      // We have streaming code - update display and set to code view
+      const processedCode = processCode(streamingCode);
+      setDisplayCode(processedCode);
+      
       filesRef.current = {
         ...filesRef.current,
         '/App.jsx': {
-          code: codeWithWhitespace,
+          code: processedCode,
           active: true,
         },
       };
-
-      if (code) {
-        setShowWelcome(false);
-      }
-    }
-  }, [code, isStreaming, sessionId]);
-
-  useEffect(() => {
-    if (isStreaming()) {
-      if (streamingCode) {
-        const codeWithWhitespace = cleanCodeBeforeImport(streamingCode) + '\n\n\n\n\n\n\n\n\n\n';
-        setDisplayCode(codeWithWhitespace);
-
-        filesRef.current = {
-          ...filesRef.current,
-          '/App.jsx': {
-            code: codeWithWhitespace,
-            active: true,
-          },
-        };
-
-        setShowWelcome(false);
-        setActiveView('code');
-        setLockCodeView(true);
-      }
+      
+      setShowWelcome(false);
+      setActiveView('code');
+      setLockCodeView(true);
     } else if (code) {
+      // Static code (non-streaming state)
+      const processedCode = processCode(code);
+      setDisplayCode(processedCode);
+      
+      filesRef.current = {
+        ...filesRef.current,
+        '/App.jsx': {
+          code: processedCode,
+          active: true,
+        },
+      };
+      
+      setShowWelcome(false);
       setLockCodeView(false);
     }
-  }, [code, isStreaming, streamingCode]);
+  }, [code, streamingCode, isStreaming]);
 
-  useEffect(() => {
-    if (isStreaming() && streamingCode) {
-      justFinishedStreamingRef.current = true;
-    }
-  }, [isStreaming, streamingCode]);
-
-  useEffect(() => {
-    if (bundlingComplete) {
-      justFinishedStreamingRef.current = false;
-    }
-  }, [bundlingComplete]);
-
-  const shouldSpin = !isStreaming() && justFinishedStreamingRef.current && !bundlingComplete;
-
-  const spinningIconClass = shouldSpin ? 'animate-spin-slow' : '';
-
-  // Memoize the dependencies for Sandpack
-  const depsString = useMemo(() => JSON.stringify(dependencies), [dependencies]);
-
-  const sandpackDependencies = useMemo(() => {
-    // Ensure use-fireproof is included in the dependencies
-    return {
-      'use-fireproof': '0.20.0-dev-preview-52',
-      ...dependencies,
-    };
-  }, [depsString]);
-
-  // Create a unique key for SandpackProvider that changes when sessionId or code changes
+  // Create a unique key for SandpackProvider that changes when relevant props change
   const sandpackKey = useMemo(() => {
-    // Using Date.now() causes unnecessary remounts on every render
-    // Instead, use the actual content that should trigger a remount
-    const key = `${sessionId || 'default'}-${isStreaming() ? 'streaming' : 'static'}-${code.length}`;
-    return key;
+    // Use the actual content that should trigger a remount
+    return `${sessionId || 'default'}-${isStreaming ? 'streaming' : 'static'}-${code.length}`;
   }, [sessionId, isStreaming, code]);
 
   return (
@@ -263,7 +234,7 @@ function ResultPreview({
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
-                className={`h-4 w-4 ${spinningIconClass}`}
+                className={`h-4 w-4 ${!bundlingComplete && !isStreaming ? 'animate-spin-slow' : ''}`}
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
@@ -388,7 +359,7 @@ function ResultPreview({
               isStreaming={isStreaming}
               onScreenshotCaptured={onScreenshotCaptured}
             />
-            {isStreaming() && <SandpackScrollController isStreaming={isStreaming} />}
+            {isStreaming && <SandpackScrollController isStreaming={isStreaming} />}
             <SandpackLayout className="h-full" style={{ height: 'calc(100vh - 49px)' }}>
               <div
                 style={{

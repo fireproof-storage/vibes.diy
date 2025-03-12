@@ -6,23 +6,22 @@ import { parseContent } from '../utils/segmentParser';
 
 // Base message document with common fields
 interface BaseMessageDocument {
-  _id: string;
-  type: 'message';
+  _id?: string;
+  type: 'user-message' | 'ai-message';
   session_id: string;
-  message_type: 'user' | 'ai';
-  timestamp: number;
+  created_at: number;
 }
 
 // User message document stores text directly
 interface UserMessageDocument extends BaseMessageDocument {
-  message_type: 'user';
-  text: string;
+  type: 'user-message';
+  prompt: string;
 }
 
 // AI message document stores raw stream content
 interface AiMessageDocument extends BaseMessageDocument {
-  message_type: 'ai';
-  raw_content: string; // Raw stream content before parsing
+  type: 'ai-message';
+  rawMessage: string; // Raw stream content before parsing
 }
 
 // Union type for all message documents
@@ -31,18 +30,17 @@ type MessageDocument = UserMessageDocument | AiMessageDocument;
 // Type guard for message documents
 function isMessageDocument(doc: any): doc is MessageDocument {
   return (
-    doc.type === 'message' && 
-    doc.session_id !== undefined && 
-    doc.message_type !== undefined
+    (doc.type === 'user-message' || doc.type === 'ai-message') && 
+    doc.session_id !== undefined
   );
 }
 
 export function useSessionMessages(sessionId: string | null) {
   const { database, useLiveQuery } = useFireproof(FIREPROOF_CHAT_HISTORY);
   
-  // Query for messages by their 'type' index
+  // Query for all message document types
   const { docs } = useLiveQuery('type', { 
-    key: 'message',
+    keys: ['user-message', 'ai-message'],
     limit: 100
   });
   
@@ -66,55 +64,36 @@ export function useSessionMessages(sessionId: string | null) {
     console.log('useSessionMessages: Processing docs for session:', sessionId, 
                 'Total docs:', docs.length);
     
-    // Log all session IDs to debug filtering
-    const allSessionIds = docs.map((doc: any) => doc.session_id).filter(Boolean);
-    console.log('useSessionMessages: All session IDs in docs:', allSessionIds);
-    
-    // Filter for this session's messages and convert them to chat messages
+    // Filter for this session's messages
     const docsForThisSession = docs.filter((doc: any) => 
       isMessageDocument(doc) && doc.session_id === sessionId
     );
     console.log('useSessionMessages: Docs for this session:', docsForThisSession.length);
     
-    // Deduplicate messages - this is critical to prevent duplicate UI elements
-    // Use a Map to only keep the latest message with a given timestamp
-    const messagesByTimestamp = new Map();
-    docsForThisSession.forEach((doc: any) => {
-      // For messages with the same timestamp, keep the one with the most recent _rev
-      const existingDoc = messagesByTimestamp.get(doc.timestamp);
-      if (!existingDoc || (doc._rev && existingDoc._rev && doc._rev > existingDoc._rev)) {
-        messagesByTimestamp.set(doc.timestamp, doc);
-      }
-    });
-    
-    // Convert the Map values back to an array
-    const uniqueDocs = Array.from(messagesByTimestamp.values());
-    console.log('useSessionMessages: After deduplication:', uniqueDocs.length, 'messages');
-    
-    const sortedMessages = uniqueDocs
-      // Sort by timestamp
-      .sort((a: any, b: any) => (a.timestamp || 0) - (b.timestamp || 0))
+    const sortedMessages = docsForThisSession
+      // Sort by created_at time
+      .sort((a: any, b: any) => (a.created_at || 0) - (b.created_at || 0))
       // Map to the appropriate message type
       .map((doc: any) => {
-        if (doc.message_type === 'user') {
+        if (doc.type === 'user-message') {
           const userDoc = doc as UserMessageDocument;
           return {
             type: 'user',
-            text: userDoc.text,
-            timestamp: userDoc.timestamp
+            text: userDoc.prompt,
+            timestamp: userDoc.created_at // Keep timestamp for compatibility
           } as UserChatMessage;
         } else {
           const aiDoc = doc as AiMessageDocument;
           // Parse raw content for AI messages
-          const { segments, dependenciesString } = parseContent(aiDoc.raw_content);
+          const { segments, dependenciesString } = parseContent(aiDoc.rawMessage);
           
           return {
             type: 'ai',
-            text: aiDoc.raw_content,
+            text: aiDoc.rawMessage,
             segments,
             dependenciesString,
             isStreaming: false,
-            timestamp: aiDoc.timestamp
+            timestamp: aiDoc.created_at // Keep timestamp for compatibility
           } as AiChatMessage;
         }
       });
@@ -128,82 +107,46 @@ export function useSessionMessages(sessionId: string | null) {
 
   // Add a new user message
   const addUserMessage = async (text: string) => {
-    if (!sessionId) return;
+    if (!sessionId) return null;
     
     try {
-      const timestamp = Date.now();
+      const created_at = Date.now();
       console.log('useSessionMessages: Adding user message to session:', 
                   sessionId, 'Text:', text.substring(0, 30) + '...');
       
-      await database.put({
-        type: 'message',
+      const result = await database.put({
+        type: 'user-message',
         session_id: sessionId,
-        message_type: 'user',
-        text,
-        timestamp
+        prompt: text,
+        created_at
       } as UserMessageDocument);
       
-      console.log('useSessionMessages: Successfully added user message at timestamp:', timestamp);
-      return timestamp;
+      console.log('useSessionMessages: Successfully added user message with ID:', result.id);
+      return created_at;
     } catch (error) {
       console.error('Error adding user message:', error);
       return null;
     }
   };
 
-  // Add or update an AI message
-  const updateAiMessage = async (rawContent: string, isStreaming: boolean = false, timestamp?: number) => {
-    if (!sessionId) return;
+  // Add a complete AI message - only called when streaming is complete
+  const addAiMessage = async (rawMessage: string, created_at?: number) => {
+    if (!sessionId) return null;
     
     try {
-      const now = timestamp || Date.now();
+      const timestamp = created_at || Date.now();
       
-      // First, check if we already know about this message in our local state
-      let existingMessageId = null;
+      const result = await database.put({
+        type: 'ai-message',
+        session_id: sessionId,
+        rawMessage,
+        created_at: timestamp
+      } as AiMessageDocument);
       
-      // Store a reference to the last AI message ID and timestamp for this session
-      if (timestamp) {
-        // Check if we have an existing AI message with this timestamp in our current docs
-        if (docs) {
-          const existingMessage = docs.find((doc: any) => 
-            doc.type === 'message' && 
-            doc.session_id === sessionId && 
-            doc.message_type === 'ai' && 
-            doc.timestamp === now
-          );
-          
-          if (existingMessage) {
-            existingMessageId = existingMessage._id;
-          }
-        }
-      }
-      
-      if (existingMessageId) {
-        // Update the existing message by providing its ID
-        await database.put({
-          _id: existingMessageId,
-          type: 'message',
-          session_id: sessionId,
-          message_type: 'ai',
-          raw_content: rawContent,
-          timestamp: now
-        });
-        console.log('useSessionMessages: Updated existing AI message with ID:', existingMessageId);
-      } else {
-        // Create a new message
-        const result = await database.put({
-          type: 'message',
-          session_id: sessionId,
-          message_type: 'ai',
-          raw_content: rawContent,
-          timestamp: now
-        } as AiMessageDocument);
-        console.log('useSessionMessages: Created new AI message with ID:', result.id);
-      }
-      
-      return now;
+      console.log('useSessionMessages: Created new AI message with ID:', result.id);
+      return timestamp;
     } catch (error) {
-      console.error('Error updating AI message:', error);
+      console.error('Error adding AI message:', error);
       return null;
     }
   };
@@ -212,6 +155,6 @@ export function useSessionMessages(sessionId: string | null) {
     messages,
     isLoading: !docs,
     addUserMessage,
-    updateAiMessage
+    addAiMessage
   };
 } 

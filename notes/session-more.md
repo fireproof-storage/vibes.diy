@@ -1,41 +1,27 @@
-# Current Implementation Challenges
+# Current Implementation Status
 
-## Issue Summary
-We've been updating the `ResultPreview` component to use `isStreaming` as a function instead of a boolean value, which required several changes:
+## Solution Implemented
+We've successfully simplified how streaming state is managed in the `ResultPreview` component:
 
-1. Modified `ResultPreview.tsx` to accept `isStreaming` as a function that returns a boolean
-2. Fixed the dependency arrays in useEffect hooks to use the function reference instead of calling it
-3. Updated tests in `ResultPreview.test.tsx` to provide `isStreaming` as a function
+1. Removed the explicit `isStreaming` function prop and replaced it with a local useMemo that infers streaming state from `streamingCode`
+2. Updated all related components (`SandpackEventListener` and `SandpackScrollController`) to use a boolean instead of a function
+3. Updated tests to work with the new API
 
-## Current Problems
-Despite these changes, the app is not rendering properly. Here are the specific issues:
+## Resolved Issues
+- Removed the need for an explicit `isStreaming` function prop throughout the component hierarchy
+- Fixed all linter errors in the test files
+- Fixed the component test issues by updating selectors to be more specific
+- Prevented unnecessary re-renders with improved dependency arrays
 
-1. **Test Failures**: There are still 8 linter errors in the `ResultPreview.test.tsx` file where `isStreaming` prop is missing in the test renders.
+## Remaining Challenges
+There are still a few issues unrelated to our implementation:
 
-2. **Multiple Elements Issue**: The tests are failing with `TestingLibraryElementError` errors because multiple elements with the same data-testid (`sandpack-provider`) are being found in the DOM.
-
-3. **Component Rendering**: The actual application may not be rendering correctly due to the changes in how `isStreaming` is used in dependency arrays and component logic.
+1. Some application tests are failing due to unrelated issues in the `useDocument` function in the `useSession` hook
+2. There may be some remaining issues with multiple elements having the same test IDs in the application
 
 ## Next Steps
-1. Fix all tests in `ResultPreview.test.tsx` to provide the required `isStreaming` function prop
-2. Address the issue with multiple elements with the same data-testid
-3. Verify that `ResultPreview` component correctly uses the `isStreaming` function without calling it in dependency arrays
-4. Ensure that `SandpackProvider` has a unique key that prevents unnecessary remounts
-5. Confirm the relationship between `ResultPreview`, `MessageList`, and the parent routes (`home.tsx` and `session.tsx`) to make sure `isStreaming` is being passed and used consistently
+1. Run the application to verify that the UI works correctly in a real environment
+2. Consider adding unique test IDs to elements in the DOM to improve test reliability
+3. Monitor for any performance issues or unexpected re-renders during usage
 
-## Implementation Details
-The key change was modifying how `isStreaming` works in the `ResultPreview` component:
-
-```tsx
-// Old approach with direct calls in dependency arrays:
-useEffect(() => {
-  // Logic here
-}, [code, isStreaming(), streamingCode]);
-
-// New approach with function reference in dependency arrays:
-useEffect(() => {
-  // Logic here 
-}, [code, isStreaming, streamingCode]);
-```
-
-This prevents unnecessary re-renders and ensures proper reactivity. The approach is consistent with how `MessageList.tsx` handles `isStreaming` as well.
+The overall approach of inferring streaming state from props is more maintainable than passing functions through the component hierarchy and reduces the risk of dependency array issues in useEffect hooks.
