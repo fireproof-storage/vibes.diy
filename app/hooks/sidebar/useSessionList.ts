@@ -36,7 +36,7 @@ export function useSessionList() {
   // For session docs: returns doc._id
   // For screenshot docs: returns doc.session_id
   // This creates a virtual index where sessions and screenshots share the same key value
-  const { docs: sessionAndScreenshots, status } = useLiveQuery<SessionOrScreenshot>((doc) =>
+  const { docs: sessionAndScreenshots } = useLiveQuery<SessionOrScreenshot>((doc) =>
     doc.type && doc.type === 'session' ? doc._id : (doc as any).session_id
   );
   
@@ -87,15 +87,14 @@ export function useSessionList() {
     // Convert map to array and sort by timestamp (newest first)
     return Array.from(groups.values())
       .sort((a, b) => {
-        const timeA = a.session.timestamp || a.session.created_at || 0;
-        const timeB = b.session.timestamp || b.session.created_at || 0;
+        const timeA = a.session.timestamp || 0;
+        const timeB = b.session.timestamp || 0;
         return timeB - timeA;
       });
   }, [sessionAndScreenshots]);
   
   return {
     groupedSessions,
-    isLoading: status === 'loading',
     count: groupedSessions.length
   };
 } 

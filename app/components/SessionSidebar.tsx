@@ -1,7 +1,6 @@
 import { useEffect, useRef, memo, useMemo, useState } from 'react';
-import { useFireproof } from 'use-fireproof';
 import { Link } from 'react-router';
-import { FIREPROOF_CHAT_HISTORY } from '../config/env';
+import { useSessionList, type GroupedSession } from '../hooks/sidebar/useSessionList';
 
 function ImgFile({
   file,
@@ -72,58 +71,10 @@ interface SessionSidebarProps {
  * Component that displays a collapsible sidebar with chat session history
  */
 function SessionSidebar({ isVisible, onClose }: SessionSidebarProps) {
-  const { database, useLiveQuery } = useFireproof(FIREPROOF_CHAT_HISTORY);
   const sidebarRef = useRef<HTMLDivElement>(null);
-
-  // // Query chat sessions ordered by timestamp (newest first)
-  // const { docs: sessions } = useLiveQuery('type', {
-  //   key: 'session',
-  //   descending: true,
-  // });
-
-  // // Query chat sessions ordered by timestamp (newest first)
-  // const { docs: screenshots } = useLiveQuery('type', {
-  //   key: 'screenshot',
-  //   descending: true,
-  // });
-
-  const { docs: sessionAndScreenshots } = useLiveQuery<SessionOrScreenshot>((doc) =>
-    doc.type && doc.type === 'session' ? doc._id : (doc as any).session_id
-  );
-
-  // Group sessions and screenshots together
-  const groupedSessions = useMemo(() => {
-    const groups = new Map<
-      string,
-      { session?: SessionDocument; screenshots: ScreenshotDocument[] }
-    >();
-
-    sessionAndScreenshots.forEach((doc) => {
-      if ('type' in doc && doc.type === 'screenshot') {
-        // Handle screenshot
-        const sessionId = doc.session_id;
-        let group = groups.get(sessionId);
-        if (!group) {
-          group = { session: undefined, screenshots: [] };
-          groups.set(sessionId, group);
-        }
-        group.screenshots.push(doc as ScreenshotDocument);
-      } else {
-        // Handle session
-        let group = groups.get(doc._id);
-        if (!group) {
-          group = { session: undefined, screenshots: [] };
-          groups.set(doc._id, group);
-        }
-        group.session = doc as SessionDocument;
-      }
-    });
-
-    // Convert map to array and sort by session timestamp
-    return Array.from(groups.values())
-      .filter((group) => group.session) // Only include groups with sessions
-      .sort((a, b) => (b.session!.timestamp || 0) - (a.session!.timestamp || 0));
-  }, [sessionAndScreenshots]) as { session: SessionDocument; screenshots: ScreenshotDocument[] }[];
+  
+  // Use the custom hook instead of direct database queries
+  const { groupedSessions } = useSessionList();
 
   // Handle clicks outside the sidebar to close it
   useEffect(() => {
@@ -153,54 +104,50 @@ function SessionSidebar({ isVisible, onClose }: SessionSidebarProps) {
 
   // Render session items with Link components
   const renderSessionItems = () => {
-    return groupedSessions
-      .map(({ session, screenshots }) => {
-        // Skip if this isn't a session document
-        if (!session || !('_id' in session)) {
-          return null;
-        }
+    return groupedSessions.map(({ session, screenshots }) => {
+      // Skip if this isn't a session document
+      if (!session || !('_id' in session)) {
+        return null;
+      }
 
-        // Cast to SessionDocument to access title
-        const sessionDoc = session as SessionDocument;
-        const title = sessionDoc.title || 'New Chat';
-        const encodedTitle = encodeTitle(title);
+      const title = session.title || 'New Chat';
+      const encodedTitle = encodeTitle(title);
 
-        return (
-          <li
-            key={sessionDoc._id}
-            className="cursor-pointer border-b border-gray-200 p-3 hover:bg-gray-100 dark:border-gray-700 dark:hover:bg-gray-800"
-            data-testid="session-item"
+      return (
+        <li
+          key={session._id}
+          className="cursor-pointer border-b border-gray-200 p-3 hover:bg-gray-100 dark:border-gray-700 dark:hover:bg-gray-800"
+          data-testid="session-item"
+        >
+          <Link
+            to={`/session/${session._id}/${encodedTitle}`}
+            className="block"
+            onClick={() => {
+              // Close the sidebar on mobile
+              if (window.innerWidth < 768) {
+                onClose();
+              }
+            }}
           >
-            <Link
-              to={`/session/${sessionDoc._id}/${encodedTitle}`}
-              className="block"
-              onClick={() => {
-                // Close the sidebar on mobile
-                if (window.innerWidth < 768) {
-                  onClose();
-                }
-              }}
-            >
-              <div className="text-sm font-semibold text-gray-900 dark:text-white">{title}</div>
-              <div className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                {new Date(sessionDoc.timestamp).toLocaleString()}
-              </div>
-              {screenshots.map(
-                (screenshot) =>
-                  screenshot._files?.screenshot && (
-                    <ImgFile
-                      key={screenshot._id}
-                      file={screenshot._files.screenshot}
-                      alt={`Screenshot from ${title}`}
-                      className="mt-2"
-                    />
-                  )
-              )}
-            </Link>
-          </li>
-        );
-      })
-      .filter(Boolean);
+            <div className="text-sm font-semibold text-gray-900 dark:text-white">{title}</div>
+            <div className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+              {new Date(session.timestamp).toLocaleString()}
+            </div>
+            {screenshots.map(
+              (screenshot) =>
+                screenshot._files?.screenshot && (
+                  <ImgFile
+                    key={screenshot._id}
+                    file={screenshot._files.screenshot}
+                    alt={`Screenshot from ${title}`}
+                    className="mt-2"
+                  />
+                )
+            )}
+          </Link>
+        </li>
+      );
+    });
   };
 
   // Conditionally render content but keep animation classes
