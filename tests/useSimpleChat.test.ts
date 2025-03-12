@@ -79,6 +79,20 @@ vi.mock('../app/hooks/useSessionMessages', () => {
           });
           return timestamp;
         }),
+        addAiMessage: vi.fn().mockImplementation(async (rawContent, timestamp) => {
+          const now = timestamp || Date.now();
+          const { segments, dependenciesString } = parseContent(rawContent);
+          
+          messagesStore[sessionKey].push({
+            type: 'ai',
+            text: rawContent,
+            segments,
+            dependenciesString,
+            isStreaming: false,
+            timestamp: now
+          });
+          return now;
+        }),
         updateAiMessage: vi.fn().mockImplementation(async (rawContent, isStreaming = false, timestamp) => {
           const now = timestamp || Date.now();
           

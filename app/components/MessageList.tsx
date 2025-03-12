@@ -160,6 +160,8 @@ function MessageList({
       <div className="mx-auto flex min-h-full max-w-5xl flex-col py-4">
         {messages.length === 0 && !isStreaming() ? (
           <div className="text-accent-02 mx-auto max-w-2xl space-y-4 px-12 pt-8 text-center italic">
+            <h2 className="text-xl font-semibold mb-4">Welcome to Fireproof App Builder</h2>
+            <p>Ask me to generate a web application for you</p>
             <p>
               Quickly create React apps in your browser, no setup required. Apps are sharable, or
               eject them to GitHub for easy deploys.{' '}

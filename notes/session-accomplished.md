@@ -175,3 +175,38 @@ This hook improves the organization of live queries as outlined in the consolida
 - Maintained all existing functionality while making the code more maintainable
 
 This change completes the planned refactoring for live query consolidation, creating a cleaner separation of concerns where data access is handled by specialized hooks and components focus on presentation.
+
+## Test Suite Fixes
+
+After implementing the UI and architectural improvements, several tests were failing due to the changes in component structure and API. The following fixes were implemented to align the test suite with the new architecture:
+
+### MessageList Empty State Text Restoration
+
+- ✅ Updated the MessageList component's empty state to include the expected welcome message text
+- Added an H2 title "Welcome to Fireproof App Builder" that was expected by the tests
+- Added the prompt text "Ask me to generate a web application for you"
+- Maintained the additional information about Fireproof features and links to documentation
+- Preserved the styling and layout while ensuring tests pass
+
+### useSimpleChat Test Mock Updates
+
+- ✅ Added missing `addAiMessage` function to the useSessionMessages mock in the tests
+- Properly implemented the function to handle creating AI messages with segments and dependencies
+- Ensured the mock function behavior matches the real implementation's expectations
+- This fixed the "addAiMessage is not a function" errors in the tests
+
+### useSession Mock Updates for Home Tests
+
+- ✅ Created a proper mock for the useSession hook in home.test.tsx
+- Added all necessary functions including createSession, updateTitle, and updateMetadata
+- Added proper mock implementations that return expected values
+- Fixed test failures caused by missing or improperly implemented session functions
+
+### useFireproof Mock Enhancements 
+
+- ✅ Added the useDocument function to the useFireproof mock in the tests
+- Implemented proper doc, merge, and save methods in the mock
+- Ensured the mock returns appropriate resolved promises for async operations
+- Fixed "useDocument is not a function" errors in the tests
+
+All tests are now passing, which validates that our architectural improvements maintain the expected behavior while providing better separation of concerns and improved performance. The act() warnings in the test output are common in React tests with complex components and don't affect the test results.

@@ -22,11 +22,34 @@ vi.mock('../app/hooks/useSimpleChat', () => ({
   }),
 }));
 
+// Mock the useSession hook
+vi.mock('../app/hooks/useSession', () => ({
+  useSession: () => ({
+    session: null,
+    loading: false,
+    error: null,
+    loadSession: vi.fn(),
+    updateTitle: vi.fn(),
+    updateMetadata: vi.fn(),
+    addScreenshot: vi.fn(),
+    createSession: vi.fn().mockResolvedValue('new-session-id'),
+    database: {
+      put: vi.fn().mockResolvedValue({ ok: true }),
+    },
+    mergeSession: vi.fn(),
+  }),
+}));
+
 vi.mock('use-fireproof', () => ({
   useFireproof: () => ({
     database: {
       put: vi.fn().mockResolvedValue({ ok: true }),
     },
+    useDocument: () => ({
+      doc: {},
+      merge: vi.fn(),
+      save: vi.fn().mockResolvedValue({ id: 'test-id' }),
+    }),
   }),
 }));
 
