@@ -88,7 +88,7 @@ function SessionSidebar({ isVisible, onClose }: SessionSidebarProps) {
   // });
 
   const { docs: sessionAndScreenshots } = useLiveQuery<SessionOrScreenshot>((doc) =>
-    doc.type && doc.type === 'screenshot' ? doc.session_id : doc._id
+    doc.type && doc.type === 'session' ? doc._id : (doc as any).session_id
   );
 
   // Group sessions and screenshots together
