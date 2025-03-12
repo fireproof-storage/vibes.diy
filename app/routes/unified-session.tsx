@@ -70,7 +70,7 @@ export default function UnifiedSession() {
   // Log state for debugging
   console.log('UnifiedSession: initialized with sessionId:', sessionId);
   console.log('UnifiedSession: chatState has messages:', chatState.messages.length);
-  console.log('UnifiedSession: isStreaming:', chatState.isStreaming());
+  console.log('UnifiedSession: isStreaming:', chatState.streamingState);
 
   // Check if there's a state parameter in the URL (for shared apps)
   useEffect(() => {
@@ -92,25 +92,11 @@ export default function UnifiedSession() {
   // Create a new session when loaded without sessionId
   useEffect(() => {
     if (!urlSessionId && !sessionCreationAttemptedRef.current) {
-      console.log('UnifiedSession: No sessionId in URL, creating new session');
+      console.log('UnifiedSession: No sessionId in URL, but NOT creating new session yet');
       sessionCreationAttemptedRef.current = true;
       
-      const createNewSession = async () => {
-        try {
-          // Create a new session with the default title
-          const newSessionId = await createSession('New Chat');
-          console.log('UnifiedSession: Created new session with ID:', newSessionId);
-          if (newSessionId) {
-            setSessionId(newSessionId);
-            // Update URL without full page reload
-            navigate(`/session/${newSessionId}`, { replace: true });
-          }
-        } catch (error) {
-          console.error('Error creating new session:', error);
-        }
-      };
-      
-      createNewSession();
+      // We'll create a session only when the user sends their first message
+      // This prevents immediate redirect from the root path
     }
   }, [urlSessionId, createSession, navigate]);
 

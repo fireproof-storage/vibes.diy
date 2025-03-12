@@ -53,3 +53,24 @@ The home and session routes should be consolidated into a single unified route t
    - Unified approach to code extraction and dependency handling
 
 This consolidation will greatly simplify the codebase, ensure consistent behavior, and provide a more seamless experience particularly during streaming operations.
+
+## New Goals
+
+1. **Simplify Streaming Logic**
+   - Remove unnecessary streaming state flags throughout the application
+   - Display components should not need to know about streaming state
+   - Only use streaming indicators for UI elements that need to show progress
+
+2. **Improve Code Display Flow**
+   - Always show the most recent code, whether streaming or static
+   - Prioritize content display over state management complexity
+   - Remove conditional rendering that delays content visibility
+
+3. **Prevent Premature Navigation**
+   - Fix immediate redirect from root path
+   - Only navigate to session routes when explicitly required
+
+4. **Reduce Component Complexity**
+   - Components should focus on their core responsibilities
+   - Remove streaming-specific logic where possible
+   - Apply consistent patterns for code display and updates

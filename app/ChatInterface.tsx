@@ -1,5 +1,5 @@
 import { useEffect, useState, useMemo, useCallback, useRef } from 'react';
-import type { ChangeEvent } from 'react';
+import type { ChangeEvent, FormEvent } from 'react';
 import type { ChatMessage, Segment, AiChatMessage, SessionDocument } from './types/chat';
 import { useFireproof } from 'use-fireproof';
 import SessionSidebar from './components/SessionSidebar';
@@ -28,6 +28,7 @@ interface ChatInterfaceProps {
     setTitle: (title: string) => Promise<void>;
     sessionId?: string | null;
     isLoadingMessages?: boolean;
+    streamingState: boolean;
   };
   sessionId?: string | null;
   onSessionCreated?: (newSessionId: string) => void;
@@ -64,7 +65,8 @@ function ChatInterface({
     title,
     setTitle,
     sessionId: chatSessionId,
-    isLoadingMessages
+    isLoadingMessages,
+    streamingState
   } = chatState;
 
   const { database } = useFireproof(FIREPROOF_CHAT_HISTORY);
@@ -213,6 +215,19 @@ function ChatInterface({
       scrollToBottomRef.current();
     }
   }, [scrollToBottom]);
+
+  // Update any checks for streaming state to use the direct streamingState value
+  // instead of calling isStreaming() function
+  const handleSubmit = async (e: FormEvent) => {
+    e.preventDefault();
+
+    // Don't allow submission while streaming
+    if (streamingState) {
+      return;
+    }
+
+    // ... rest of the function ...
+  };
 
   return (
     <div className="flex flex-col h-screen">

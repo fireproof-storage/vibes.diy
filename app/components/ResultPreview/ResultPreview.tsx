@@ -123,9 +123,8 @@ function ResultPreview({
     },
   });
 
-  // Directly determine streaming state from the presence of streamingCode
-  // This is more reliable than using a function or complex state
-  const isStreaming = Boolean(streamingCode);
+  // Simplify streaming detection - just check if the streamingCode exists
+  const hasStreamingContent = Boolean(streamingCode && streamingCode.length > 0);
 
   useEffect(() => {
     const prefersDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches;
@@ -155,22 +154,19 @@ function ResultPreview({
     return () => window.removeEventListener('message', handleMessage);
   }, [onScreenshotCaptured]);
 
-  // Combined effect for handling both static code and streaming code
+  // Simplified code update logic - always use the most up-to-date code
   useEffect(() => {
     // Clean the code and add whitespace
     const processCode = (sourceCode: string) => {
       return cleanCodeBeforeImport(sourceCode) + '\n\n\n\n\n\n\n\n\n\n';
     };
 
-    // Using console.log for debugging the streaming state
-    console.log('ResultPreview: streamingCode length:', streamingCode?.length || 0, 
-                'isStreaming:', isStreaming, 
-                'code length:', code?.length || 0);
-
-    if (isStreaming && streamingCode) {
-      // We have streaming code - update display and set to code view
-      console.log('ResultPreview: Updating with streaming code');
-      const processedCode = processCode(streamingCode);
+    // Prioritize streaming code when it exists, otherwise use static code
+    const codeToUse = streamingCode || code;
+    
+    if (codeToUse) {
+      console.log('ResultPreview: Updating code, lengths - streamingCode:', streamingCode?.length || 0, 'code:', code?.length || 0);
+      const processedCode = processCode(codeToUse);
       setDisplayCode(processedCode);
       
       filesRef.current = {
@@ -182,32 +178,22 @@ function ResultPreview({
       };
       
       setShowWelcome(false);
-      setActiveView('code');
-      setLockCodeView(true);
-    } else if (code) {
-      // Static code (non-streaming state)
-      console.log('ResultPreview: Updating with static code');
-      const processedCode = processCode(code);
-      setDisplayCode(processedCode);
       
-      filesRef.current = {
-        ...filesRef.current,
-        '/App.jsx': {
-          code: processedCode,
-          active: true,
-        },
-      };
-      
-      setShowWelcome(false);
-      setLockCodeView(false);
+      // Only show code view when we have streaming content
+      if (hasStreamingContent) {
+        setActiveView('code');
+        setLockCodeView(true);
+      } else {
+        setLockCodeView(false);
+      }
     }
-  }, [code, streamingCode, isStreaming]);
+  }, [code, streamingCode]);
 
   // Create a unique key for SandpackProvider that changes when relevant props change
   const sandpackKey = useMemo(() => {
     // Use the actual content that should trigger a remount
-    return `${sessionId || 'default'}-${isStreaming ? 'streaming' : 'static'}-${code.length}`;
-  }, [sessionId, isStreaming, code]);
+    return `${sessionId || 'default'}-${hasStreamingContent ? 'streaming' : 'static'}-${code.length}`;
+  }, [sessionId, hasStreamingContent, code]);
 
   return (
     <div className="h-full" style={{ overflow: 'hidden' }}>
@@ -241,7 +227,7 @@ function ResultPreview({
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
-                className={`h-4 w-4 ${!bundlingComplete && !isStreaming ? 'animate-spin-slow' : ''}`}
+                className={`h-4 w-4 ${!bundlingComplete && !hasStreamingContent ? 'animate-spin-slow' : ''}`}
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
@@ -360,13 +346,15 @@ function ResultPreview({
           >
             <SandpackEventListener
               setActiveView={(view) => {
-                setActiveView(view);
+                if (!lockCodeView) {
+                  setActiveView(view);
+                }
               }}
               setBundlingComplete={setBundlingComplete}
-              isStreaming={isStreaming}
+              isStreaming={hasStreamingContent}
               onScreenshotCaptured={onScreenshotCaptured}
             />
-            {isStreaming && <SandpackScrollController isStreaming={isStreaming} />}
+            {hasStreamingContent && <SandpackScrollController isStreaming={hasStreamingContent} />}
             <SandpackLayout className="h-full" style={{ height: 'calc(100vh - 49px)' }}>
               <div
                 style={{

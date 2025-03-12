@@ -19,7 +19,8 @@ export function useSimpleChat(sessionId: string | null) {
   // Core state
   const [input, setInput] = useState<string>('');
   const [systemPrompt, setSystemPrompt] = useState('');
-  const [title, setTitle] = useState<string>('New Chat');
+  const [title, setTitle] = useState<string>(session?.title || 'New Chat');
+  const [titleGenerated, setTitleGenerated] = useState<boolean>(false);
   
   // Refs for tracking streaming state
   const streamBufferRef = useRef<string>('');
@@ -60,9 +61,8 @@ export function useSimpleChat(sessionId: string | null) {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, []);
 
-  // Check if any AI message is currently streaming
+  // Check if any AI message is currently streaming - simplified
   const isStreaming = useCallback((): boolean => {
-    console.log('isStreaming called, current state:', streamingState);
     return streamingState;
   }, [streamingState]);
 
@@ -76,33 +76,32 @@ export function useSimpleChat(sessionId: string | null) {
 
   /**
    * Get current segments from the last AI message or the streaming buffer
+   * Simplified to always return segments, regardless of streaming state
    */
   const currentSegments = useCallback((): Segment[] => {
-    // Find the last AI message
-    const lastAiMessage = [...messages].reverse().find(
-      (msg): msg is AiChatMessage => msg.type === 'ai'
-    );
-    
-    // If there's a streaming message, parse the current buffer
-    if (lastAiMessage?.isStreaming || streamingState) {
-      console.log('currentSegments: Parsing from buffer, length:', streamBufferRef.current.length);
+    // If we have content in the streaming buffer, use it
+    if (streamBufferRef.current.length > 0) {
       const { segments } = parseContent(streamBufferRef.current);
       return segments;
     }
     
-    // Otherwise return segments from the last complete AI message
+    // Otherwise find the last AI message
+    const lastAiMessage = [...messages].reverse().find(
+      (msg): msg is AiChatMessage => msg.type === 'ai'
+    );
+    
+    // Return segments from the last AI message or empty array
     return lastAiMessage?.segments || [];
-  }, [messages, streamingState]);
+  }, [messages]);
 
   /**
    * Get the code from the current segments
+   * Simplified to avoid streaming-specific logic
    */
   const getCurrentCode = useCallback((): string => {
     const segments = currentSegments();
     const codeSegment = segments.find(segment => segment.type === 'code');
-    const code = codeSegment?.content || '';
-    console.log('getCurrentCode: Code segment length:', code.length);
-    return code;
+    return codeSegment?.content || '';
   }, [currentSegments]);
 
   /**
@@ -159,6 +158,7 @@ export function useSimpleChat(sessionId: string | null) {
         // Update the session title
         if (sessionId) {
           await updateTitle(newTitle);
+          setTitleGenerated(true);
         }
         
         return newTitle;
@@ -318,6 +318,7 @@ export function useSimpleChat(sessionId: string | null) {
     input,                // Current user input text
     setInput,             // Function to update input
     isStreaming,          // Whether any AI message is currently streaming
+    streamingState,       // Direct access to streaming state
     sendMessage,          // Function to send a message
     currentSegments,      // Get current segments
     getCurrentCode,       // Get current code
@@ -327,6 +328,7 @@ export function useSimpleChat(sessionId: string | null) {
     scrollToBottom,       // Function to scroll to bottom
     title,                // Current chat title
     setTitle: updateTitle,// Function to update title
+    titleGenerated,
     sessionId,
     isLoadingMessages: messagesLoading
   };
