@@ -5,57 +5,66 @@ import { vi, describe, test, expect, beforeEach } from 'vitest';
 // Mock scrollIntoView
 beforeEach(() => {
   window.HTMLElement.prototype.scrollIntoView = vi.fn();
-  
-  // Log MessageList props for debugging
-  console.log = vi.fn(console.log);
 });
+
+// Create a custom logging function that writes directly to stdout
+function debugLog(message: string) {
+  process.stdout.write(`\n${message}\n`);
+}
 
 // Mock the useSessionMessages hook for streaming tests
 vi.mock('../app/hooks/useSessionMessages', () => ({
   useSessionMessages: vi.fn().mockImplementation((sessionId) => {
-    if (sessionId === 'very-early-streaming') {
-      // Simulate the very beginning of streaming with just JSON metadata
+    if (sessionId === 'streaming-incremental') {
+      // Simulate realistic streaming updates - this mimics what we see in browser
+      debugLog('🔍 STREAM UPDATE: length=2 - content={"');
+      
+      // Return very minimal content first (just like real app)
       return {
         messages: [
-          { type: 'user', text: 'Create a todo app' },
+          { type: 'user', text: 'Create a quiz app' },
           {
             type: 'ai',
-            text: '{"dependencies": {}}',
+            text: '{"',
             segments: [
-              { type: 'markdown', content: '{"dependencies": {}}' },
+              { type: 'markdown', content: '{"' },
             ],
             isStreaming: true,
           },
         ],
         isLoading: false,
       };
-    } else if (sessionId === 'streaming-partial-message') {
-      // Simulate partial message similar to what we see in browser logs
+    } else if (sessionId === 'streaming-partial') {
+      // Simulate a bit more content now, still just markdown
+      debugLog('🔍 STREAM UPDATE: length=58 - content reduced to "{"dependencies": {}}\n\nThis quiz app allows users to create"');
+      
       return {
         messages: [
-          { type: 'user', text: 'Create a todo app' },
+          { type: 'user', text: 'Create a quiz app' },
           {
             type: 'ai',
-            text: '{"dependencies": {}}\n\nHere\'s a Todo App with',
+            text: '{"dependencies": {}}\n\nThis quiz app allows users to create',
             segments: [
-              { type: 'markdown', content: '{"dependencies": {}}\n\nHere\'s a Todo App with' },
+              { type: 'markdown', content: '{"dependencies": {}}\n\nThis quiz app allows users to create' },
             ],
             isStreaming: true,
           },
         ],
         isLoading: false,
       };
-    } else if (sessionId === 'streaming-with-code-start') {
-      // Simulate getting to the point where code segment starts appearing
+    } else if (sessionId === 'streaming-with-code') {
+      // Simulate adding code segments like in the logs
+      debugLog('🔍 STREAM UPDATE: length=261 with code segment - markdown=206 bytes, code=29 bytes');
+      
       return {
         messages: [
-          { type: 'user', text: 'Create a todo app' },
+          { type: 'user', text: 'Create a quiz app' },
           {
             type: 'ai',
-            text: '{"dependencies": {}}\n\nHere\'s a Todo App with due dates:\n\n```jsx\nimport React',
+            text: '{"dependencies": {}}\n\nThis quiz app allows users to create quizzes with timed questions and track scores. Users can create new quizzes, add questions with multiple choice options, and then take quizzes to track their scores.\n\n```js\nimport React, { useState, use',
             segments: [
-              { type: 'markdown', content: '{"dependencies": {}}\n\nHere\'s a Todo App with due dates:' },
-              { type: 'code', content: 'import React' },
+              { type: 'markdown', content: '{"dependencies": {}}\n\nThis quiz app allows users to create quizzes with timed questions and track scores. Users can create new quizzes, add questions with multiple choice options, and then take quizzes to track their scores.' },
+              { type: 'code', content: 'import React, { useState, use' },
             ],
             isStreaming: true,
           },
@@ -71,61 +80,56 @@ vi.mock('../app/hooks/useSessionMessages', () => ({
   }),
 }));
 
-describe('MessageList Very Early Streaming', () => {
-  test('shows content instead of "Thinking" even with just metadata', () => {
-    render(<MessageList sessionId="very-early-streaming" isStreaming={() => true} />);
+describe('MessageList Real-World Streaming Tests', () => {
+  test('should display minimal content at stream start', () => {
+    render(<MessageList sessionId="streaming-incremental" isStreaming={() => true} />);
     
-    // Get the content that we want to inspect
-    const content = screen.getByText(/{"dependencies": {}}/).textContent;
+    // Check if we see the minimal content in the DOM
+    const messageContent = screen.queryByText(/\{\"/);
+    debugLog(`Is minimal content "{" visible? ${messageContent ? 'YES' : 'NO'}`);
     
-    // Write directly to stdout to bypass console filtering
-    process.stdout.write(`\n==DEBUG== Found metadata content: ${content}\n`);
-    
-    // Should show the content (json metadata) instead of "Thinking..."
-    expect(screen.getByText(/{"dependencies": {}}/)).toBeInTheDocument();
-    expect(screen.queryByText('Thinking')).not.toBeInTheDocument();
-    
-    // Also check the DOM structure to see what we're rendering
-    const allElements = document.body.innerHTML;
-    process.stdout.write(`\n==DEBUG== DOM structure:\n${allElements.substring(0, 500)}...\n`);
-  });
-
-  test('shows partial markdown during streaming', () => {
-    render(<MessageList sessionId="streaming-partial-message" isStreaming={() => true} />);
-    
-    // Should show the markdown content
-    expect(screen.getByText(/Here's a Todo App with/)).toBeInTheDocument();
-    expect(screen.queryByText('Thinking')).not.toBeInTheDocument();
-  });
-
-  test('shows markdown when code segments start appearing', () => {
-    render(<MessageList sessionId="streaming-with-code-start" isStreaming={() => true} />);
-    
-    // Get the markdown content
-    const markdownEl = screen.getByText(/Here's a Todo App with due dates:/);
-    const markdownContent = markdownEl.textContent;
-    
-    // Get the code content
-    const codeEl = screen.getByText(/import React/);
-    const codeContent = codeEl.textContent;
-    
-    // Write directly to stdout to bypass console filtering
-    process.stdout.write(`\n==DEBUG== Markdown content: ${markdownContent}\n`);
-    process.stdout.write(`\n==DEBUG== Code content: ${codeContent}\n`);
-    
-    // Also check if StructuredMessage is rendering properly
+    // Log the DOM structure to see what's actually rendered
     const messageContainer = document.querySelector('[data-testid="message-1"]');
     if (messageContainer) {
-      process.stdout.write(`\n==DEBUG== Message structure:\n${messageContainer.innerHTML.substring(0, 500)}...\n`);
+      debugLog(`DOM content at start of stream: ${messageContainer.innerHTML.substring(0, 100)}...`);
+    } else {
+      debugLog('MESSAGE CONTAINER NOT FOUND - could be why content is not showing');
     }
     
-    // Should show the markdown part
-    expect(screen.getByText(/Here's a Todo App with due dates:/)).toBeInTheDocument();
+    // This is what we want - but it might fail if the app has a bug
+    expect(screen.getByText(/\{\"/)).toBeInTheDocument();
+  });
+
+  test('should update UI as more content streams in', () => {
+    render(<MessageList sessionId="streaming-partial" isStreaming={() => true} />);
     
-    // And should also show the code part
-    expect(screen.getByText(/import React/)).toBeInTheDocument();
+    // Check if we see the content
+    const content = screen.queryByText(/This quiz app allows users to create/);
+    debugLog(`Is partial content visible? ${content ? 'YES' : 'NO'}`);
     
-    // Should not show "Thinking..."
-    expect(screen.queryByText('Thinking')).not.toBeInTheDocument();
+    // Log what MessageList is deciding to render
+    debugLog(`MessageList showTypingIndicator check - would return: ${!content ? 'SHOW TYPING' : 'SHOW CONTENT'}`);
+    
+    expect(screen.getByText(/This quiz app allows users to create/)).toBeInTheDocument();
+  });
+
+  test('should display both markdown and code when segments are present', () => {
+    render(<MessageList sessionId="streaming-with-code" isStreaming={() => true} />);
+    
+    // Check if we see both types of content
+    const markdownContent = screen.queryByText(/This quiz app allows users/);
+    const codeContent = screen.queryByText(/import React/);
+    
+    debugLog(`Markdown content visible? ${markdownContent ? 'YES' : 'NO'}`);
+    debugLog(`Code content visible? ${codeContent ? 'YES' : 'NO'}`);
+    
+    if (markdownContent && codeContent) {
+      debugLog('Both segments rendering correctly in test');
+    } else {
+      debugLog('SEGMENTS MISSING - same issue as in real app?');
+    }
+    
+    expect(markdownContent).toBeInTheDocument();
+    expect(codeContent).toBeInTheDocument();
   });
 }); 

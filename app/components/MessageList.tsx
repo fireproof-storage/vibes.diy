@@ -65,22 +65,6 @@ const Message = memo(
   }
 );
 
-// AI Typing indicator component
-function AITyping() {
-  return (
-    <div className="flex flex-row justify-start mb-4 px-4" data-testid="typing-indicator">
-      <div className="bg-white dark:bg-gray-800 rounded-lg px-4 py-2 max-w-[85%]">
-        <div className="flex items-center gap-1">
-          <span className="text-sm text-gray-500 dark:text-gray-400">Thinking</span>
-          <span className="bg-light-primary dark:bg-dark-primary ml-1 inline-block h-1 w-1 animate-pulse rounded-full [animation-delay:-0.3s]" />
-          <span className="bg-light-primary dark:bg-dark-primary ml-1 inline-block h-1 w-1 animate-pulse rounded-full [animation-delay:-0.15s]" />
-          <span className="bg-light-primary dark:bg-dark-primary ml-1 inline-block h-1 w-1 animate-pulse rounded-full" />
-        </div>
-      </div>
-    </div>
-  );
-}
-
 function MessageList({
   sessionId,
   isStreaming,
@@ -166,15 +150,28 @@ function MessageList({
 
   // Memoize the message list to prevent unnecessary re-renders
   const messageElements = useMemo(() => {
-    return messages.map((msg, i) => (
-      <Message
-        key={`${msg.type}-${i}-${msg.timestamp || i}`}
-        message={msg}
-        index={i}
-        isShrinking={isShrinking}
-        isExpanding={isExpanding}
-      />
-    ));
+    return messages.map((msg, i) => {
+      // Create a key that changes when content changes
+      let contentKey = msg.text?.length || 0;
+      
+      // For AI messages, use segments information
+      if (msg.type === 'ai') {
+        const aiMsg = msg as AiChatMessage;
+        contentKey = aiMsg.segments?.reduce((total, segment) => {
+          return total + (segment?.content?.length || 0);
+        }, 0) || 0;
+      }
+
+      return (
+        <Message
+          key={`${msg.type}-${i}-${msg.timestamp || i}-${contentKey}`}
+          message={msg}
+          index={i}
+          isShrinking={isShrinking}
+          isExpanding={isExpanding}
+        />
+      );
+    });
   }, [messages, isShrinking, isExpanding]);
 
   // Show loading state while messages are being fetched
