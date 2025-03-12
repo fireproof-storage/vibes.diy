@@ -11,14 +11,6 @@ export function parseContent(text: string): {
   const segments: Segment[] = [];
   let dependenciesString: string | undefined;
 
-  // Reduced debugging logs
-  console.debug(`Parsing content, length: ${text.length}`);
-
-  // Log the complete content once for debugging purposes
-  console.debug('=== BEGINNING OF CONTENT ===');
-  console.debug(text);
-  console.debug('=== END OF CONTENT ===');
-
   // Extract dependencies from the first segment (if it exists)
   const depsMatch = text.match(/^(.*}})/s);
   if (depsMatch && depsMatch[1]) {
@@ -85,14 +77,6 @@ export function parseContent(text: string): {
     segments.push({
       type: 'markdown',
       content: text,
-    });
-  }
-
-  // Final log showing what we produced
-  console.debug(`🔍 SEGMENTS PARSED: ${segments.length} segments from text length ${text.length}`);
-  if (segments.length > 0) {
-    segments.forEach((segment, i) => {
-      console.debug(`  Segment ${i}: type=${segment.type}, length=${segment.content.length}`);
     });
   }
 

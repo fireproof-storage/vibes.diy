@@ -4,9 +4,8 @@ import ChatInterface from '../ChatInterface';
 import ResultPreview from '../components/ResultPreview/ResultPreview';
 import type { ChatMessage, AiChatMessage, Segment, SessionDocument } from '../types/chat';
 import { useSimpleChat } from '../hooks/useSimpleChat';
-import { parseContent, parseDependencies } from '../utils/segmentParser';
 import AppLayout from '../components/AppLayout';
-import { FIREPROOF_CHAT_HISTORY } from '../config/env';
+
 import { useSession } from '../hooks/useSession';
 
 export function meta() {
@@ -49,20 +48,16 @@ export default function UnifiedSession() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // State for current session
-  const [sessionId, setSessionId] = useState<string | null>(urlSessionId || null);
- 
   const [shareStatus, setShareStatus] = useState<string>('');
-  const sessionCreationAttemptedRef = useRef(false);
 
   // Initialize session management hook with current sessionId
   // const { createSession, session } = useSession(sessionId);
 
   // Use the simple chat hook with current sessionId
-  const chatState = useSimpleChat(sessionId);
+  const chatState = useSimpleChat(urlSessionId);
 
   // Log state for debugging
-  console.log('UnifiedSession: initialized with sessionId:', sessionId);
+  console.log('UnifiedSession: initialized with sessionId:', chatState.sessionId);
   console.log('UnifiedSession: chatState has messages:', chatState.messages.length);
   console.log('UnifiedSession: isStreaming:', chatState.isStreaming);
 
@@ -74,102 +69,87 @@ export default function UnifiedSession() {
     if (encodedState) {
       const decodedState = decodeStateFromUrl(encodedState);
       if (decodedState.code) {
-        setState({
-          generatedCode: decodedState.code,
-          dependencies: decodedState.dependencies,
-        });
+        console.log('UnifiedSession: decodedState share:', decodedState);
       }
     }
   }, [location.search]);
 
   // Create a new session when loaded without sessionId
-  useEffect(() => {
-    if (!urlSessionId && !sessionCreationAttemptedRef.current) {
-      console.log('UnifiedSession: No sessionId in URL, but NOT creating new session yet');
-      sessionCreationAttemptedRef.current = true;
-
-      // We'll create a session only when the user sends their first message
-      // This prevents immediate redirect from the root path
-    }
-  }, [urlSessionId, navigate]);
+  // useEffect(() => {
+  //   if (!urlSessionId ) {
+  //     // this should run when the stream completes
+  //   }
+  // }, [urlSessionId, navigate]);
 
   // Helper function to extract dependencies from segments
-  const getDependencies = useCallback(() => {
-    const lastAiMessage = [...chatState.messages]
-      .reverse()
-      .find((msg): msg is AiChatMessage => msg.type === 'ai');
+  // const getDependencies = useCallback(() => {
+  //   const lastAiMessage = [...chatState.messages]
+  //     .reverse()
+  //     .find((msg): msg is AiChatMessage => msg.type === 'ai');
 
-    if (lastAiMessage?.dependenciesString) {
-      return parseDependencies(lastAiMessage.dependenciesString);
-    }
+  //   if (lastAiMessage?.dependenciesString) {
+  //     return parseDependencies(lastAiMessage.dependenciesString);
+  //   }
 
-    return {};
-  }, [chatState.messages]);
+  //   return {};
+  // }, [chatState.messages]);
 
   // Handle code generation from chat interface with stable callback reference
-  const handleCodeGenerated = useCallback(
-    (code: string, dependencies: Record<string, string> = {}) => {
-      setState({
-        generatedCode: code,
-        dependencies,
-      });
-    },
-    []
-  );
+  // const handleCodeGenerated = useCallback(
+  //   (code: string, dependencies: Record<string, string> = {}) => {
+  //     setState({
+  //       generatedCode: code,
+  //       dependencies,
+  //     });
+  //   },
+  //   []
+  // );
 
   // Extract code and dependencies when AI message completes
-  useEffect(() => {
-    // Find the last AI message that is not streaming
-    const lastAiMessage = [...chatState.messages]
-      .reverse()
-      .find((msg) => msg.type === 'ai' && !msg.isStreaming);
+  // useEffect(() => {
+  //   // Find the last AI message that is not streaming
+  //   const lastAiMessage = [...chatState.messages]
+  //     .reverse()
+  //     .find((msg) => msg.type === 'ai' && !msg.isStreaming);
 
-    // If we found a completed AI message, extract code and dependencies
-    if (lastAiMessage && lastAiMessage.type === 'ai') {
-      const code = chatState.getCurrentCode();
-      if (code) {
-        // Extract dependencies from segments
-        const dependencies = getDependencies() || {};
-        handleCodeGenerated(code, dependencies);
-      }
-    }
-  }, [chatState.messages, chatState.getCurrentCode, getDependencies, handleCodeGenerated]);
+  //   // If we found a completed AI message, extract code and dependencies
+  //   if (lastAiMessage && lastAiMessage.type === 'ai') {
+  //     const code = chatState.getCurrentCode();
+  //     if (code) {
+  //       // Extract dependencies from segments
+  //       const dependencies = getDependencies() || {};
+  //       handleCodeGenerated(code, dependencies);
+  //     }
+  //   }
+  // }, [chatState.messages, chatState.getCurrentCode, getDependencies, handleCodeGenerated]);
 
   // Handle session creation
-  const handleSessionCreated = useCallback(
-    (newSessionId: string) => {
-      setSessionId(newSessionId);
-      // Update URL without full page reload
-      navigate(`/session/${newSessionId}`, { replace: true });
-    },
-    [navigate]
-  );
+  // const handleSessionCreated = useCallback(
+  //   (newSessionId: string) => {
+  //     setSessionId(newSessionId);
+  //     // Update URL without full page reload
+  //     navigate(`/session/${newSessionId}`, { replace: true });
+  //   },
+  //   [navigate]
+  // );
 
   // Handle new chat creation
-  const handleNewChat = useCallback(() => {
-    // Reset session creation flag
-    sessionCreationAttemptedRef.current = false;
+  // const handleNewChat = useCallback(() => {
+   
+  //   // Navigate to home to create a new session
+  //   navigate('/', { replace: true });
 
-    // Navigate to home to create a new session
-    navigate('/', { replace: true });
-
-    // Reset state
-    setSessionId(null);
-    setState({
-      generatedCode: '',
-      dependencies: {},
-    });
-    setShareStatus('');
-  }, [navigate]);
+  
+  // }, [navigate]);
 
   // Handle sharing functionality
   function handleShare() {
-    if (!state.generatedCode) {
+    if (!chatState.getCurrentCode()) {
       alert('Generate an app first before sharing!');
       return;
     }
 
-    const encoded = encodeStateToUrl(state.generatedCode, state.dependencies);
+    const encoded = encodeStateToUrl(chatState.getCurrentCode(), chatState.getDependencies());
     if (encoded) {
       // Create a sharable URL with the encoded state
       const shareUrl = `${window.location.origin}/shared?state=${encoded}`;
@@ -217,22 +197,15 @@ export default function UnifiedSession() {
       chatPanel={
         <ChatInterface
           chatState={chatState}
-          sessionId={sessionId}
-          onSessionCreated={handleSessionCreated}
-          onNewChat={handleNewChat}
         />
       }
       previewPanel={
         <ResultPreview
+          sessionId={chatState.sessionId}
           code={chatState.getCurrentCode()}
-          dependencies={state.dependencies}
-          onShare={handleShare}
-          currentStreamContent={chatState
-            .currentSegments()
-            .filter((seg: Segment) => seg.type === 'markdown')
-            .map((seg: Segment) => seg.content)
-            .join('')}
-          
+          dependencies={chatState.getDependencies()}
+          isStreaming={chatState.isStreaming}
+          onShare={handleShare}          
         />
       }
     />

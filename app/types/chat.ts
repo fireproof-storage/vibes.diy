@@ -1,3 +1,4 @@
+import type { DocTypes } from "use-fireproof";
 // Type definitions for segments
 export type Segment = {
   type: 'markdown' | 'code';
@@ -12,24 +13,22 @@ export type UserChatMessage = {
 };
 
 // AI message type
-export type AiChatMessage = {
+export type AiChatMessageDocument = {
   type: 'ai';
-  text: string; // Raw text content
-  segments: Segment[]; // Parsed segments
-  dependenciesString?: string; // Raw dependencies for downstream parsing
-  isStreaming?: boolean; // Whether this message is currently streaming
-  timestamp?: number;
+  session_id: string;
+  text: string; // Raw text content 
+  created_at: number;
 };
 
 // Union type for all message types
-export type ChatMessage = UserChatMessage | AiChatMessage;
+export type ChatMessage = UserChatMessage | AiChatMessageDocument;
 
-export interface SessionDocument {
-  _id: string;
-  type?: 'session'; // Document type for Fireproof queries
+export interface SessionDocument extends DocTypes {
+  _id?: string;
+  type: 'session'; // Document type for Fireproof queries
   title?: string;
-  timestamp: number;
-  messages?: ChatMessage[];
+  prompt?: string;
+  created_at: number;
 }
 
 export interface ChatInterfaceProps {
@@ -44,7 +43,6 @@ export interface ChatInterfaceProps {
     autoResizeTextarea: () => void;
     scrollToBottom: () => void;
     sendMessage: () => Promise<void>;
-    currentSegments: () => Segment[];
     getCurrentCode: () => string;
   };
   sessionId?: string | null;

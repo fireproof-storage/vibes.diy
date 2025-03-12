@@ -40,9 +40,9 @@ const isMessageDocument = (doc: any): boolean => {
   );
 };
 
-export function useSessionMessages(sessionId: string | null) {
+export function useSessionMessages(sessionId: string | undefined) {
   // Use ref to track prior sessionId for comparison
-  const prevSessionIdRef = useRef<string | null>(null);
+  const prevSessionIdRef = useRef<string | undefined>(undefined);
   
   const { database, useLiveQuery } = useFireproof(FIREPROOF_CHAT_HISTORY);
 
@@ -135,6 +135,13 @@ export function useSessionMessages(sessionId: string | null) {
   // Function to update streaming message directly (for external components)
   const updateStreamingMessage = useCallback((rawMessage: string, timestamp: number) => {
     console.debug(`🔍 UPDATE STREAMING: msg length=${rawMessage.length}, timestamp=${timestamp}`);
+    
+    // IMPORTANT: Always continue if there's any content at all
+    if (!rawMessage || rawMessage.trim().length === 0) {
+      console.debug('🔍 UPDATE STREAMING: Empty message, skipping update');
+      return;
+    }
+    
     const { segments, dependenciesString } = parseMessageContent(rawMessage);
 
     // Log what we're about to set as the streaming message
@@ -148,6 +155,15 @@ export function useSessionMessages(sessionId: string | null) {
           `has content=${Boolean(segment.content && segment.content.trim().length > 0)}`
         );
       });
+    } else {
+      // If no segments but we have text, create a default markdown segment
+      if (rawMessage.trim().length > 0) {
+        console.debug(`🔍 No segments found but message has content, creating default markdown segment`);
+        segments.push({
+          type: 'markdown',
+          content: rawMessage
+        });
+      }
     }
 
     setStreamingMessage({
@@ -205,6 +221,12 @@ export function useSessionMessages(sessionId: string | null) {
     isStreaming: boolean = false
   ) => {
     const timestamp = created_at || Date.now();
+    
+    // Skip empty messages
+    if (!rawMessage || rawMessage.trim().length === 0) {
+      console.debug('🔍 ADD_AI_MESSAGE: Empty message, skipping');
+      return null;
+    }
 
     if (isStreaming) {
       // STREAMING MODE: Always update in-memory state even without sessionId
@@ -223,6 +245,15 @@ export function useSessionMessages(sessionId: string | null) {
             `has content=${Boolean(segment.content && segment.content.trim().length > 0)}`
           );
         });
+      } else {
+        // If no segments but we have text, create a default markdown segment
+        if (rawMessage.trim().length > 0) {
+          console.debug(`🔍 No segments found but message has content, creating default markdown segment`);
+          segments.push({
+            type: 'markdown',
+            content: rawMessage
+          });
+        }
       }
 
       setStreamingMessage({

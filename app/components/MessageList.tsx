@@ -11,9 +11,8 @@ function writeToStdout(message: string) {
 }
 
 interface MessageListProps {
-  sessionId: string | null;
-  isStreaming: () => boolean;
-  currentSegments?: () => Segment[];
+  messages: ChatMessage[];
+  isStreaming: boolean;
   isShrinking?: boolean;
   isExpanding?: boolean;
 }
@@ -73,17 +72,15 @@ const Message = memo(
 );
 
 function MessageList({
-  sessionId,
+  messages,
   isStreaming,
-  currentSegments,
   isShrinking = false,
   isExpanding = false,
 }: MessageListProps) {
-  // Use the hook to get messages directly instead of through props
-  const { messages, isLoading } = useSessionMessages(sessionId);
+  // Create a local ref for scrolling
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  // Scroll to bottom when messages change
+  // Scroll to bottom when messages change or when streaming starts/continues
   useEffect(() => {
     try {
       // Only run scrollIntoView if the element exists and the function is available
@@ -93,104 +90,19 @@ function MessageList({
     } catch (error) {
       console.error('Error scrolling into view:', error);
     }
-  }, [messages]);
+  }, [messages, isStreaming]);  // Added isStreaming as a dependency to scroll during streaming
 
-  // Check if there's a streaming message
-  const hasStreamingMessage = useMemo(() => {
-    const hasStreaming = messages.some((msg) => msg.type === 'ai' && (msg as AiChatMessage).isStreaming);
-    writeToStdout(`hasStreamingMessage check: ${hasStreaming}, messages=${messages.length}`);
-    return hasStreaming;
-  }, [messages]);
-
-  // Only show typing indicator when no streaming message with content is visible yet
+  // Only show typing indicator when streaming and there are no messages
   const showTypingIndicator = useMemo(() => {
-    if (!isStreaming()) return false;
-
-    // Log the current state of messages for debugging
-    writeToStdout(
-      `🔍 MESSAGE LIST DEBUG: Total messages=${messages.length}, isStreaming=${isStreaming()}`
-    );
-
-    // IMPORTANT: Check if any AI message has segments with actual content
-    let hasAnyContent = messages.some(
-      (msg) => {
-        if (msg.type === 'ai') {
-          const aiMsg = msg as AiChatMessage;
-          const hasText = aiMsg.text.length > 0;
-          
-          // Check if the message has any segments with actual content
-          const hasSegmentsWithContent = 
-            Array.isArray(aiMsg.segments) && 
-            aiMsg.segments.length > 0 && 
-            aiMsg.segments.some(segment => 
-              segment && segment.content && segment.content.trim().length > 0
-            );
-          
-          // Log individual message details for each AI message
-          writeToStdout(
-            `🔍 AI MESSAGE ${aiMsg.timestamp || 'unknown'}: text length=${aiMsg.text.length}, ` +
-            `segments=${aiMsg.segments?.length || 0}, hasContent=${hasText || hasSegmentsWithContent}, ` +
-            `isStreaming=${aiMsg.isStreaming}`
-          );
-          
-          if (aiMsg.segments && aiMsg.segments.length > 0) {
-            aiMsg.segments.forEach((segment, i) => {
-              if (segment) {
-                const contentPreview = segment.content 
-                  ? `${segment.content.substring(0, 20)}${segment.content.length > 20 ? '...' : ''}`
-                  : '[empty]';
-                  
-                writeToStdout(
-                  `  Segment ${i}: type=${segment.type}, length=${segment.content?.length || 0}, ` +
-                  `content="${contentPreview}"`
-                );
-              }
-            });
-          }
-          
-          return hasText || hasSegmentsWithContent;
-        }
-        return false;
-      }
-    );
-
-    // Also check currentSegments prop if available
-    if (!hasAnyContent && currentSegments) {
-      const segments = currentSegments();
-      writeToStdout(`🔍 CHECKING CURRENT SEGMENTS: count=${segments.length}`);
-      
-      if (segments.length > 0) {
-        segments.forEach((segment, i) => {
-          if (segment) {
-            const contentPreview = segment.content 
-              ? `${segment.content.substring(0, 20)}${segment.content.length > 20 ? '...' : ''}`
-              : '[empty]';
-              
-            writeToStdout(
-              `  Segment ${i}: type=${segment.type}, length=${segment.content?.length || 0}, ` +
-              `content="${contentPreview}"`
-            );
-          }
-        });
-        
-        hasAnyContent = segments.some(segment => 
-          segment && segment.content && segment.content.trim().length > 0
-        );
-        
-        writeToStdout(`🔍 Current segments has content: ${hasAnyContent}`);
-      }
-    }
-
-    // We only want to show the typing indicator if there's no content at all
-    const shouldShowTypingIndicator = !hasAnyContent;
-
+    const shouldShowTypingIndicator = isStreaming && messages.length === 0;
+    
     // Log the final decision for the typing indicator
     writeToStdout(
-      `🔍 DECISION: hasAnyContent=${hasAnyContent}, showTypingIndicator=${shouldShowTypingIndicator}`
+      `🔍 DECISION: messages.length=${messages.length}, isStreaming=${isStreaming}, showTypingIndicator=${shouldShowTypingIndicator}`
     );
 
     return shouldShowTypingIndicator;
-  }, [isStreaming, messages, currentSegments]);
+  }, [isStreaming, messages]);
 
   // Memoize the message list to prevent unnecessary re-renders
   const messageElements = useMemo(() => {
@@ -228,22 +140,6 @@ function MessageList({
     });
   }, [messages, isShrinking, isExpanding, showTypingIndicator]);
 
-  // Show loading state while messages are being fetched
-  if (isLoading && sessionId) {
-    return (
-      <div className="messages bg-light-background-01 dark:bg-dark-background-01 flex flex-1 items-center justify-center p-4">
-        <div className="flex flex-col items-center space-y-2">
-          <div className="flex gap-1">
-            <span className="bg-light-primary dark:bg-dark-primary h-2 w-2 animate-bounce rounded-full [animation-delay:-0.3s]" />
-            <span className="bg-light-primary dark:bg-dark-primary h-2 w-2 animate-bounce rounded-full [animation-delay:-0.15s]" />
-            <span className="bg-light-primary dark:bg-dark-primary h-2 w-2 animate-bounce rounded-full" />
-          </div>
-          <span className="text-sm text-gray-500">Loading messages...</span>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div
       className={`flex-1 overflow-y-auto ${
@@ -252,7 +148,7 @@ function MessageList({
       ref={messagesEndRef}
     >
       <div className="mx-auto flex min-h-full max-w-5xl flex-col py-4">
-        {messages.length === 0 && !isStreaming() ? (
+        {messages.length === 0 && !isStreaming ? (
           <div className="text-accent-02 mx-auto max-w-2xl space-y-4 px-12 pt-8 text-center italic">
             <h2 className="mb-4 text-xl font-semibold">Welcome to Fireproof App Builder</h2>
             <p>Ask me to generate a web application for you</p>
@@ -301,15 +197,9 @@ function MessageList({
 // Only re-render when necessary to improve performance
 export default memo(MessageList, (prevProps, nextProps) => {
   // Don't re-render if these props haven't changed
-  const prevSegments = prevProps.currentSegments ? prevProps.currentSegments() : [];
-  const nextSegments = nextProps.currentSegments ? nextProps.currentSegments() : [];
-  const segmentsEqual = prevSegments.length === nextSegments.length;
-  
   return (
-    prevProps.sessionId === nextProps.sessionId &&
-    prevProps.isStreaming() === nextProps.isStreaming() &&
+    prevProps.isStreaming === nextProps.isStreaming &&
     prevProps.isShrinking === nextProps.isShrinking &&
-    prevProps.isExpanding === nextProps.isExpanding &&
-    segmentsEqual
+    prevProps.isExpanding === nextProps.isExpanding
   );
 });

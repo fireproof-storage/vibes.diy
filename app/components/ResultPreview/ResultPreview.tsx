@@ -15,10 +15,10 @@ interface ResultPreviewProps {
   code: string;
   dependencies?: Record<string, string>;
   onShare?: () => void;
-  currentStreamContent?: string;
   onScreenshotCaptured?: (screenshotData: string) => void;
   initialView?: 'code' | 'preview';
   sessionId?: string;
+  isStreaming?: boolean;
 }
 
 const indexHtml = `<!DOCTYPE html>
@@ -89,10 +89,10 @@ function ResultPreview({
   code,
   dependencies = {},
   onShare,
-  currentStreamContent,
   onScreenshotCaptured,
   initialView = 'preview',
   sessionId,
+  isStreaming = false,
 }: ResultPreviewProps) {
   const [activeView, setActiveView] = useState<'preview' | 'code'>(initialView);
   const [displayCode, setDisplayCode] = useState(code || defaultCode);
@@ -148,17 +148,12 @@ function ResultPreview({
       return cleanCodeBeforeImport(sourceCode) + '\n\n\n\n\n\n\n\n\n\n';
     };
 
-    // IMPORTANT: Prioritize streaming code when it exists, otherwise use static code
-    const codeToUse = streamingCode || code;
-
-    if (codeToUse) {
+    if (code) {
       console.log(
-        'ResultPreview: Updating code, lengths - streamingCode:',
-        streamingCode?.length || 0,
-        'code:',
+        'ResultPreview: Updating code, length:',
         code?.length || 0
       );
-      const processedCode = processCode(codeToUse);
+      const processedCode = processCode(code);
       setDisplayCode(processedCode);
 
       filesRef.current = {
@@ -172,7 +167,7 @@ function ResultPreview({
       setShowWelcome(false);
 
       // Show code view during streaming
-      // if (hasStreamingContent) {
+      // if (isStreaming) {
       //   setActiveView('code');
       //   setLockCodeView(true);
       // } else {
@@ -183,9 +178,8 @@ function ResultPreview({
 
   // Create a unique key for SandpackProvider that changes when relevant props change
   const sandpackKey = useMemo(() => {
-    // Use the actual content that should trigger a remount
-    return `${sessionId || 'default'}-${hasStreamingContent ? 'streaming' : 'static'}-${code.length}`;
-  }, [sessionId, hasStreamingContent, code]);
+    return `${sessionId || 'default'}-${isStreaming ? 'streaming' : 'static'}-${code}`;
+  }, [sessionId, isStreaming, code]);
 
   return (
     <div className="h-full" style={{ overflow: 'hidden' }}>
@@ -218,7 +212,7 @@ function ResultPreview({
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
-                className={`h-4 w-4 ${!bundlingComplete && !hasStreamingContent ? 'animate-spin-slow' : ''}`}
+                className={`h-4 w-4 ${!bundlingComplete && !isStreaming ? 'animate-spin-slow' : ''}`}
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
@@ -334,10 +328,10 @@ function ResultPreview({
                 }
               }}
               setBundlingComplete={setBundlingComplete}
-              isStreaming={hasStreamingContent}
+              isStreaming={isStreaming}
               onScreenshotCaptured={onScreenshotCaptured}
             />
-            {hasStreamingContent && <SandpackScrollController isStreaming={hasStreamingContent} />}
+            {isStreaming && <SandpackScrollController isStreaming={isStreaming} />}
             <SandpackLayout className="h-full" style={{ height: 'calc(100vh - 49px)' }}>
               <div
                 style={{
@@ -386,7 +380,6 @@ function ResultPreview({
             Copy to Clipboard
           </button>
         )}
-        <div>{currentStreamContent}</div>
       </div>
     </div>
   );

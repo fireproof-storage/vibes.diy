@@ -13,22 +13,15 @@ import { FIREPROOF_CHAT_HISTORY } from './config/env';
 interface ChatInterfaceProps {
   chatState: {
     messages: ChatMessage[];
-    setMessages: (newMessages: ChatMessage[] | ((prev: ChatMessage[]) => ChatMessage[])) => void;
     input: string;
     setInput: React.Dispatch<React.SetStateAction<string>>;
-    isStreaming: () => boolean;
+    isStreaming: boolean;
     inputRef: React.RefObject<HTMLTextAreaElement | null>;
-    messagesEndRef: React.RefObject<HTMLDivElement | null>;
-    autoResizeTextarea: () => void;
-    scrollToBottom: () => void;
     sendMessage: () => Promise<void>;
-    currentSegments: () => Segment[];
-    getCurrentCode: () => string;
+  
     title: string;
-    setTitle: (title: string) => Promise<void>;
     sessionId?: string | null;
-    isLoadingMessages?: boolean;
-    streamingState: boolean;
+
   };
   sessionId?: string | null;
   onSessionCreated?: (newSessionId: string) => void;
@@ -46,39 +39,21 @@ function logDebug(message: string) {
   console.debug(`🔍 CHAT_INTERFACE: ${message}`);
 }
 
-function ChatInterface({ chatState, sessionId, onSessionCreated, onNewChat }: ChatInterfaceProps) {
+function ChatInterface({ chatState, onSessionCreated, onNewChat }: ChatInterfaceProps) {
   // Extract commonly used values from chatState to avoid repetition
   const {
     messages,
-    setMessages,
     input,
     setInput,
     isStreaming,
     inputRef,
-    messagesEndRef,
-    autoResizeTextarea,
-    scrollToBottom,
     sendMessage,
-    currentSegments,
-    getCurrentCode,
-    title,
-    setTitle,
-    sessionId: chatSessionId,
-    isLoadingMessages,
-    streamingState,
+    sessionId,
+    title
   } = chatState;
-
-  const { database } = useFireproof(FIREPROOF_CHAT_HISTORY);
-  const databaseRef = useRef(database);
-
-  // Use refs to maintain stable references to functions
-  const setMessagesRef = useRef(setMessages);
-  const scrollToBottomRef = useRef(scrollToBottom);
-
   // State for UI transitions and sharing
   const [isShrinking, setIsShrinking] = useState(false);
   const [isExpanding, setIsExpanding] = useState(false);
-  const [isFetchingSession, setIsFetchingSession] = useState(false);
   const [isSidebarVisible, setIsSidebarVisible] = useState(false);
 
   // Sidebar visibility functions
@@ -90,71 +65,30 @@ function ChatInterface({ chatState, sessionId, onSessionCreated, onNewChat }: Ch
     setIsSidebarVisible(false);
   }, []);
 
-  // Update refs when values change
-  useEffect(() => {
-    setMessagesRef.current = setMessages;
-    scrollToBottomRef.current = scrollToBottom;
-  }, [setMessages, scrollToBottom]);
-
-  // Function to load session data
-  async function loadSessionData() {
-    if (sessionId && !isFetchingSession) {
-      setIsFetchingSession(true);
-      try {
-        const sessionDoc = (await databaseRef.current.get(sessionId)) as SessionDocument;
-        if (!sessionDoc) {
-          throw new Error('No session found or invalid session data');
-        }
-
-        // If the session has a title, update it
-        if (sessionDoc.title) {
-          await setTitle(sessionDoc.title);
-        }
-
-        // Note: We no longer need to manually load messages since MessageList
-        // will use useSessionMessages to get messages directly
-      } catch (error) {
-        console.error('ChatInterface: Error loading session:', error);
-      } finally {
-        setIsFetchingSession(false);
-      }
-    }
-  }
-
-  // Load session data when sessionId changes
-  useEffect(() => {
-    loadSessionData();
-  }, [sessionId]);
 
   // Save session data when title changes
-  useEffect(() => {
-    // Title is now managed by the useSession hook inside useSimpleChat
-    // We no longer need to manually save it
-  }, []);
+  // useEffect(() => {
+  //   // Title is now managed by the useSession hook inside useSimpleChat
+  //   // We no longer need to manually save it
+  // }, []);
 
   // Create a new chat session
-  const handleNewChat = useCallback(() => {
-    // First trigger animation
-    setIsShrinking(true);
-
-    // Then redirect to home page after animation
-    setTimeout(() => {
-      window.location.href = '/';
-    }, 500);
-  }, []);
-
-  // Handle session creation callback
-  const handleSessionCreated = (newSessionId: string) => {
-    onSessionCreated?.(newSessionId);
-  };
+  // const handleNewChat = useCallback(() => {
+  //   // First trigger animation
+  //   setIsShrinking(true);
+  //   // Then redirect to home page after animation
+  //   setTimeout(() => {
+  //     window.location.href = '/';
+  //   }, 500);
+  // }, []);
 
   // Compute current streaming message text
-  const currentStreamedText = useMemo(() => {
-    const lastAiMessage = [...messages]
-      .reverse()
-      .find((msg): msg is AiChatMessage => msg.type === 'ai' && Boolean(msg.isStreaming));
-    return lastAiMessage?.text || '';
-  }, [messages]);
+  // const currentStreamedText = useMemo(() => {
+  //   const lastAiMessage = [...messages]
+  //     .reverse()
+  //     .find((msg): msg is AiChatMessage => msg.type === 'ai' && Boolean(msg.isStreaming));
+  //   return lastAiMessage?.text || '';
+  // }, [messages]);
 
   // Function to handle input changes
   const handleInputChange = useCallback(
@@ -167,7 +101,7 @@ function ChatInterface({ chatState, sessionId, onSessionCreated, onNewChat }: Ch
   // Function to handle keyboard events in textarea
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-      if (e.key === 'Enter' && !e.shiftKey && !isStreaming()) {
+      if (e.key === 'Enter' && !e.shiftKey && !isStreaming) {
         e.preventDefault();
         sendMessage();
       }
@@ -194,80 +128,35 @@ function ChatInterface({ chatState, sessionId, onSessionCreated, onNewChat }: Ch
 
   // Memoize the MessageList component to prevent unnecessary re-renders
   const memoizedMessageList = useMemo(() => {
-    logDebug(`Creating MessageList with sessionId=${sessionId}, messages=${messages.length}, isStreaming=${streamingState}`);
-    if (messages.length > 0) {
-      messages.forEach((msg, i) => {
-        if (msg.type === 'ai') {
-          const aiMsg = msg as AiChatMessage;
-          logDebug(`  Message ${i}: type=${msg.type}, isStreaming=${aiMsg.isStreaming}, segments=${aiMsg.segments?.length || 0}, text length=${msg.text?.length || 0}`);
-        } else {
-          logDebug(`  Message ${i}: type=${msg.type}, text length=${msg.text?.length || 0}`);
-        }
-      });
-    }
+    logDebug(`Creating MessageList with sessionId=${sessionId}, messages=${messages.length}, isStreaming=${isStreaming}`);
 
     return (
       <MessageList
-        sessionId={sessionId || null}
-        isStreaming={() => streamingState}
-        currentSegments={currentSegments}
+        messages={messages}
+        isStreaming={isStreaming}
         isShrinking={isShrinking}
         isExpanding={isExpanding}
       />
     );
-  }, [sessionId, messages, streamingState, isShrinking, isExpanding, currentSegments]);
-
-  // Render the quick suggestions conditionally
-  const quickSuggestions = useMemo(
-    () =>
-      messages.length === 0 ? (
-        <QuickSuggestions onSelectSuggestion={handleSelectSuggestion} />
-      ) : null,
-    [messages.length, handleSelectSuggestion]
-  );
-
-  // Auto-resize textarea when input changes
-  useEffect(() => {
-    autoResizeTextarea();
-  }, [input, autoResizeTextarea]);
-
-  // Show typing indicator when generating
-  useEffect(() => {
-    if (isStreaming()) {
-      scrollToBottomRef.current();
-    }
-  }, [scrollToBottom]);
-
-  // Update any checks for streaming state to use the direct streamingState value
-  // instead of calling isStreaming() function
-  const handleSubmit = async (e: FormEvent) => {
-    e.preventDefault();
-
-    // Don't allow submission while streaming
-    if (streamingState) {
-      return;
-    }
-
-    // ... rest of the function ...
-  };
+  }, [sessionId, messages, isStreaming, isShrinking, isExpanding]);
 
   return (
     <div className="flex h-screen flex-col">
       <ChatHeader
-        onOpenSidebar={openSidebar}
-        onNewChat={onNewChat || (() => {})}
-        isStreaming={isStreaming}
+        onOpenSidebar={openSidebar} title={title}
       />
       <div className="flex flex-1 overflow-hidden">
         <div className="flex w-full flex-1 flex-col">
           {memoizedMessageList}
-          {quickSuggestions}
+          {messages.length === 0 && (
+            <QuickSuggestions onSelectSuggestion={handleSelectSuggestion} />
+          )}
           <ChatInput
             value={input}
             onChange={handleInputChange}
             onKeyDown={handleKeyDown}
             onSend={sendMessage}
-            disabled={isStreaming()}
+            disabled={isStreaming}
             inputRef={inputRef}
           />
         </div>
