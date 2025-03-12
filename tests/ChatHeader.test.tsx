@@ -5,13 +5,13 @@ import ChatHeader from '../app/components/ChatHeader';
 // Create mock functions we can control
 const onOpenSidebar = vi.fn();
 const onNewChat = vi.fn();
-let isGeneratingValue = false;
+let isStreamingFn: () => boolean;
 
 describe('ChatHeader', () => {
   beforeEach(() => {
     // Reset mocks and values before each test
     vi.resetAllMocks();
-    isGeneratingValue = false;
+    isStreamingFn = () => false;
   });
 
   it('renders correctly', () => {
@@ -19,7 +19,7 @@ describe('ChatHeader', () => {
       <ChatHeader
         onOpenSidebar={onOpenSidebar}
         onNewChat={onNewChat}
-        isGenerating={isGeneratingValue}
+        isStreaming={isStreamingFn}
       />
     );
 
@@ -32,7 +32,7 @@ describe('ChatHeader', () => {
       <ChatHeader
         onOpenSidebar={onOpenSidebar}
         onNewChat={onNewChat}
-        isGenerating={isGeneratingValue}
+        isStreaming={isStreamingFn}
       />
     );
 
@@ -47,7 +47,7 @@ describe('ChatHeader', () => {
       <ChatHeader
         onOpenSidebar={onOpenSidebar}
         onNewChat={onNewChat}
-        isGenerating={isGeneratingValue}
+        isStreaming={isStreamingFn}
       />
     );
 
@@ -57,15 +57,15 @@ describe('ChatHeader', () => {
     expect(onNewChat).toHaveBeenCalledTimes(1);
   });
 
-  it('disables the new chat button when isGenerating is true', () => {
-    // Set isGenerating to true for this test
-    isGeneratingValue = true;
+  it('disables the new chat button when isStreaming returns true', () => {
+    // Set isStreaming to return true for this test
+    isStreamingFn = () => true;
 
     render(
       <ChatHeader
         onOpenSidebar={onOpenSidebar}
         onNewChat={onNewChat}
-        isGenerating={isGeneratingValue}
+        isStreaming={isStreamingFn}
       />
     );
 

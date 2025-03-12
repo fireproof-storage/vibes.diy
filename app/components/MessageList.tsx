@@ -6,7 +6,7 @@ import { useSessionMessages } from '../hooks/useSessionMessages';
 
 interface MessageListProps {
   sessionId: string | null;
-  isGenerating: boolean;
+  isStreaming: () => boolean;
   isShrinking?: boolean;
   isExpanding?: boolean;
 }
@@ -96,7 +96,7 @@ const AITyping = memo(() => {
 
 function MessageList({
   sessionId,
-  isGenerating,
+  isStreaming,
   isShrinking = false,
   isExpanding = false,
 }: MessageListProps) {
@@ -118,7 +118,7 @@ function MessageList({
 
   // Check if there's a streaming message
   const hasStreamingMessage = useMemo(() => {
-    return messages.some(message => message.type === 'ai' && (message as AiChatMessage).isStreaming);
+    return messages.some(msg => msg.type === 'ai' && (msg as AiChatMessage).isStreaming);
   }, [messages]);
 
   // Memoize the message list to prevent unnecessary re-renders
@@ -152,58 +152,43 @@ function MessageList({
 
   return (
     <div
-      className="messages bg-light-background-01 dark:bg-dark-background-01 flex-1 space-y-4 overflow-y-auto p-4"
-      style={{ maxHeight: 'calc(100vh - 140px)' }}
+      className={`flex-1 overflow-y-auto ${
+        isShrinking ? 'animate-width-shrink' : isExpanding ? 'animate-width-expand' : ''
+      }`}
+      ref={messagesEndRef}
     >
-      {messages.length === 0 && !isGenerating ? (
-        <div className="text-accent-02 mx-auto max-w-2xl space-y-4 px-12 pt-8 text-center italic">
-          <p>
-            Quickly create React apps in your browser, no setup required. Apps are sharable, or
-            eject them to GitHub for easy deploys.{' '}
-            <a
-              href="https://github.com/fireproof-storage/ai-app-builder"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-accent-00 hover:underline"
-            >
-              Fork and customize this app builder
-            </a>
-            , no backend required.
-          </p>
-
-          <div className="mt-6 border-t border-gray-200 pt-4 dark:border-gray-700">
-            <h3 className="py-2 text-lg font-semibold">About Fireproof</h3>
-            <p className="text-sm">
-              Fireproof enables secure saving and sharing of your data, providing encrypted live
-              synchronization and offline-first capabilities. Learn more about{' '}
-              <a
-                href="https://use-fireproof.com/"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-accent-00 hover:underline"
-              >
-                Fireproof
-              </a>
-              .
-            </p>
+      <div className="mx-auto flex min-h-full max-w-5xl flex-col py-4">
+        {messages.length === 0 && !isStreaming() ? (
+          <div className="flex flex-1 items-center justify-center p-8 text-center dark:text-white">
+            <div>
+              <h2 className="text-xl font-semibold">Welcome to Fireproof App Builder</h2>
+              <p className="mt-2 text-gray-600 dark:text-gray-300">
+                Ask me to generate a web application for you
+              </p>
+            </div>
           </div>
-        </div>
-      ) : (
-        <>
-          {messageElements}
-          {isGenerating && !hasStreamingMessage && <AITyping />}
-        </>
-      )}
-      <div ref={messagesEndRef} />
+        ) : (
+          <div
+            className={`flex flex-col space-y-4 ${
+              !isStreaming() && messages.length > 0 ? 'pb-32' : ''
+            }`}
+          >
+            {messageElements}
+            <div ref={messagesEndRef} />
+            {isStreaming() && !hasStreamingMessage && <AITyping />}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
 
-// Export a memoized version of the component to prevent unnecessary re-renders
+// Only re-render when necessary to improve performance
 export default memo(MessageList, (prevProps, nextProps) => {
+  // Don't re-render if these props haven't changed
   return (
     prevProps.sessionId === nextProps.sessionId &&
-    prevProps.isGenerating === nextProps.isGenerating &&
+    prevProps.isStreaming === nextProps.isStreaming &&
     prevProps.isShrinking === nextProps.isShrinking &&
     prevProps.isExpanding === nextProps.isExpanding
   );

@@ -27,7 +27,7 @@ describe('ResultPreview', () => {
     const code = '';
     const streamingCode = 'const test = "Streaming";';
 
-    render(<ResultPreview code={code} streamingCode={streamingCode} isStreaming={true} />);
+    render(<ResultPreview code={code} streamingCode={streamingCode} isStreaming={() => true} />);
 
     expect(await screen.findByTestId('sandpack-provider')).toBeDefined();
 

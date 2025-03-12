@@ -189,7 +189,7 @@ export default function Home() {
           code={state.generatedCode}
           dependencies={state.dependencies}
           streamingCode={chatState.getCurrentCode()}
-          isStreaming={chatState.isGenerating}
+          isStreaming={chatState.isStreaming()}
           isSharedApp={isSharedApp}
           shareStatus={shareStatus}
           onShare={handleShare}

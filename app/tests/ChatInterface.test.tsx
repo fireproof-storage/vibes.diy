@@ -22,7 +22,7 @@ const mockChatState = {
   setMessages: vi.fn(),
   input: 'test input',
   setInput: vi.fn(),
-  isGenerating: false,
+  isStreaming: () => false,
   inputRef: { current: null },
   messagesEndRef: { current: null },
   autoResizeTextarea: vi.fn(),

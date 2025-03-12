@@ -9,7 +9,7 @@ vi.mock('../app/hooks/useSimpleChat', () => ({
     setMessages: vi.fn(),
     input: '',
     setInput: vi.fn(),
-    isGenerating: false,
+    isStreaming: () => false,
     inputRef: { current: null },
     messagesEndRef: { current: null },
     autoResizeTextarea: vi.fn(),

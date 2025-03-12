@@ -16,7 +16,7 @@ interface ChatInterfaceProps {
     setMessages: (newMessages: ChatMessage[] | ((prev: ChatMessage[]) => ChatMessage[])) => void;
     input: string;
     setInput: React.Dispatch<React.SetStateAction<string>>;
-    isGenerating: boolean;
+    isStreaming: () => boolean;
     inputRef: React.RefObject<HTMLTextAreaElement | null>;
     messagesEndRef: React.RefObject<HTMLDivElement | null>;
     autoResizeTextarea: () => void;
@@ -53,7 +53,7 @@ function ChatInterface({
     setMessages,
     input,
     setInput,
-    isGenerating,
+    isStreaming,
     inputRef,
     messagesEndRef,
     autoResizeTextarea,
@@ -163,11 +163,11 @@ function ChatInterface({
 
   // Function to handle keyboard events in textarea
   const handleKeyDown = useCallback((e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    if (e.key === 'Enter' && !e.shiftKey && !isGenerating) {
+    if (e.key === 'Enter' && !e.shiftKey && !isStreaming()) {
       e.preventDefault();
       sendMessage();
     }
-  }, [isGenerating, sendMessage]);
+  }, [isStreaming, sendMessage]);
 
   // Function to handle suggestion selection
   const handleSelectSuggestion = useCallback((suggestion: string) => {
@@ -188,12 +188,12 @@ function ChatInterface({
     () => (
       <MessageList
         sessionId={sessionId || null}
-        isGenerating={isGenerating}
+        isStreaming={isStreaming}
         isShrinking={isShrinking}
         isExpanding={isExpanding}
       />
     ),
-    [sessionId, isGenerating, isShrinking, isExpanding]
+    [sessionId, isStreaming, isShrinking, isExpanding]
   );
 
   // Render the quick suggestions conditionally
@@ -209,7 +209,7 @@ function ChatInterface({
 
   // Show typing indicator when generating
   useEffect(() => {
-    if (isGenerating) {
+    if (isStreaming()) {
       scrollToBottomRef.current();
     }
   }, [scrollToBottom]);
@@ -219,7 +219,7 @@ function ChatInterface({
       <ChatHeader
         onOpenSidebar={openSidebar}
         onNewChat={onNewChat || (() => {})}
-        isGenerating={isGenerating}
+        isStreaming={isStreaming}
       />
       <div className="flex flex-1 overflow-hidden">
         <div className="flex-1 flex flex-col w-full">
@@ -230,7 +230,7 @@ function ChatInterface({
             onChange={handleInputChange}
             onKeyDown={handleKeyDown}
             onSend={sendMessage}
-            disabled={isGenerating}
+            disabled={isStreaming()}
             inputRef={inputRef}
           />
         </div>

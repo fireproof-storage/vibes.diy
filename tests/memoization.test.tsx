@@ -3,7 +3,7 @@ import { render, act, screen } from '@testing-library/react';
 import React, { useContext } from 'react';
 
 // Create a controlled context for testing
-const TestContext = React.createContext<{ isGenerating: boolean }>({ isGenerating: false });
+const TestContext = React.createContext<{ isStreaming: () => boolean }>({ isStreaming: () => false });
 const useTestContext = () => useContext(TestContext);
 
 // No need to mock ChatContext anymore
@@ -53,8 +53,8 @@ function createRenderTracker(Component: React.ComponentType<any>) {
 // Update the test component to use TestContext
 function TestComponent({ renderCount }: { renderCount: React.MutableRefObject<number> }) {
   renderCount.current += 1;
-  const { isGenerating } = useTestContext();
-  return <div data-testid="test-component">{isGenerating ? 'Generating' : 'Idle'}</div>;
+  const { isStreaming } = useTestContext();
+  return <div data-testid="test-component">{isStreaming() ? 'Generating' : 'Idle'}</div>;
 }
 
 describe('Component Memoization', () => {
@@ -66,6 +66,11 @@ describe('Component Memoization', () => {
     it('does not re-render when props are unchanged', async () => {
       // Create a wrapper component for testing
       const { Component: TrackedHeader, getRenderCount } = createRenderTracker(ChatHeader);
+      
+      // Create stable callback functions outside the component
+      const onOpenSidebar = () => {};
+      const onNewChat = () => {};
+      const isStreaming = () => false;
 
       function TestWrapper() {
         const [, forceUpdate] = React.useState({});
@@ -78,8 +83,12 @@ describe('Component Memoization', () => {
             <button data-testid="rerender-trigger" onClick={triggerRerender}>
               Force Re-render
             </button>
-            {/* No need to pass props as they come from context */}
-            <TrackedHeader />
+            {/* Pass required props */}
+            <TrackedHeader 
+              onOpenSidebar={onOpenSidebar} 
+              onNewChat={onNewChat} 
+              isStreaming={isStreaming} 
+            />
           </div>
         );
       }
@@ -100,7 +109,7 @@ describe('Component Memoization', () => {
       const renderCount = { current: 0 };
       
       const { rerender } = render(
-        <TestContext.Provider value={{ isGenerating: false }}>
+        <TestContext.Provider value={{ isStreaming: () => false }}>
           <TestComponent renderCount={renderCount} />
         </TestContext.Provider>
       );
@@ -109,12 +118,12 @@ describe('Component Memoization', () => {
       
       // Update the context with a new value
       rerender(
-        <TestContext.Provider value={{ isGenerating: true }}>
+        <TestContext.Provider value={{ isStreaming: () => true }}>
           <TestComponent renderCount={renderCount} />
         </TestContext.Provider>
       );
       
-      // The component should have re-rendered because it uses isGenerating
+      // The component should have re-rendered because it uses isStreaming
       expect(renderCount.current).toBe(initialRenderCount + 1);
       expect(screen.getByTestId('test-component')).toHaveTextContent('Generating');
     });
@@ -157,19 +166,14 @@ describe('Component Memoization', () => {
   describe('MessageList Memoization', () => {
     it('does not re-render when props are unchanged', async () => {
       const { Component: TrackedMessageList, getRenderCount } = createRenderTracker(MessageList);
-      const messages: ChatMessage[] = [
-        { text: 'Hello', type: 'user' },
-        { 
-          text: 'Hi there', 
-          type: 'ai',
-          segments: [{ type: 'markdown', content: 'Hi there' }]
-        },
-      ];
-
+      const initialMessages: ChatMessage[] = [{ text: 'Hello', type: 'user' }];
+      
       function TestWrapper() {
         const [, forceUpdate] = React.useState({});
-        // Memoize the messages array to prevent reference changes
-        const memoizedMessages = React.useMemo(() => messages, []);
+        
+        // Memoize the messages array and function inside the component
+        const memoizedMessages = React.useMemo(() => initialMessages, []);
+        const isStreamingFn = React.useCallback(() => false, []);
 
         // Force parent re-render without changing props
         const triggerRerender = () => forceUpdate({});
@@ -181,7 +185,8 @@ describe('Component Memoization', () => {
             </button>
             <TrackedMessageList
               messages={memoizedMessages}
-              isGenerating={false}
+              isStreaming={isStreamingFn}
+              sessionId="test-session"
             />
           </div>
         );
@@ -222,7 +227,7 @@ describe('Component Memoization', () => {
             <button data-testid="add-message" onClick={addMessage}>
               Add Message
             </button>
-            <TrackedMessageList messages={messages} isGenerating={false} />
+            <TrackedMessageList messages={messages} isStreaming={() => false} />
           </div>
         );
       }

@@ -201,4 +201,55 @@ The core functionality changes for SessionSidebar are working correctly as demon
 
 With these session improvements, the architecture now allows for more flexible document types all connected to the session, advancing the goals of better separation of concerns and centralized database access.
 
+## Improved UI State Management Plan
 
+### Issue
+The UI currently relies on an `isGenerating` flag to determine when to show the "Thinking" state. However, this can lead to situations where the UI appears stuck in the "Thinking" state even when content has been received.
+
+### Solution: Content-Based UI State
+We will replace the `isGenerating` boolean flag with direct checks against message content and segments. This approach has several advantages:
+- More direct connection between UI state and actual content
+- Eliminates synchronization issues between state variables
+- Makes the code more predictable since it's based on content rather than a separate flag
+
+### Implementation Plan
+
+1. **Remove `isGenerating` from `useSimpleChat` Return Value**:
+   - No longer expose this as part of the hook's public API
+   - Rely on the presence of streaming messages instead
+
+2. **Update UI Components**:
+   - Replace all instances of `isGenerating` with segment-based checks
+   - For showing typing indicators: `messages.some(msg => msg.type === 'ai' && (msg as AiChatMessage).isStreaming)`
+   - For input disabling: Same as above
+   - For ResultPreview: `currentSegments().length > 0`
+
+3. **Improve Content Display**:
+   - Show content in ResultPreview as soon as segments are available
+   - Transition smoothly from "Thinking" to content display
+   - Maintain visual feedback during ongoing streaming
+
+4. **Keyboard Event Handling**:
+   - Replace `!isGenerating` check with direct message state check
+   - Prevent message sending while any AI message is in streaming state
+
+This change will eliminate the "stuck thinking" UI issue by making the display respond directly to the availability of content rather than a separate state variable that might not be correctly synchronized.
+
+### Benefits
+- Simplifies the code by removing a layer of state management
+- Creates a more reactive UI that responds directly to content
+- Fixes the "stuck thinking" issue by directly tying display to segment availability
+- More resilient approach that's less prone to synchronization issues
+
+I've added the UI state management plan to session-fireproof.md. The plan outlines how we'll improve the application by replacing the isGenerating flag with direct checks against message content and segments.
+This content-based approach will:
+Fix the "stuck thinking" UI issue by responding directly to content availability
+Simplify the code by removing an unnecessary state variable
+Make the interface more reactive and predictable
+Reduce the potential for state synchronization issues
+The implementation focuses on four key areas:
+Removing isGenerating from the hook's API
+Updating UI components to use segment-based checks
+Improving content display to show results as soon as segments are available
+Modifying keyboard event handling to rely on message state
+This change aligns well with the overall architecture described in the document, which emphasizes separation of concerns and reactive UI components that respond directly to data changes.

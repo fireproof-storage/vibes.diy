@@ -37,7 +37,7 @@ describe('MessageList', () => {
     render(
       <MessageList
         sessionId="test-session"
-        isGenerating={false}
+        isStreaming={() => false}
       />
     );
 
@@ -49,18 +49,19 @@ describe('MessageList', () => {
     render(
       <MessageList
         sessionId="empty-session"
-        isGenerating={false}
+        isStreaming={() => false}
       />
     );
 
-    expect(screen.getByText(/Quickly create React apps/)).toBeDefined();
+    expect(screen.getByText('Welcome to Fireproof App Builder')).toBeInTheDocument();
+    expect(screen.getByText('Ask me to generate a web application for you')).toBeInTheDocument();
   });
 
   test('renders streaming message correctly', () => {
     render(
       <MessageList
         sessionId="empty-session"
-        isGenerating={true}
+        isStreaming={() => true}
       />
     );
 
@@ -71,7 +72,7 @@ describe('MessageList', () => {
     render(
       <MessageList
         sessionId="loading-session"
-        isGenerating={false}
+        isStreaming={() => false}
       />
     );
 

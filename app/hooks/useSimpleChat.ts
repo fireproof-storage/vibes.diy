@@ -18,7 +18,6 @@ export function useSimpleChat(sessionId: string | null) {
   
   // Core state
   const [input, setInput] = useState<string>('');
-  const [isGenerating, setIsGenerating] = useState(false);
   const [systemPrompt, setSystemPrompt] = useState('');
   const [title, setTitle] = useState<string>('New Chat');
   
@@ -60,6 +59,11 @@ export function useSimpleChat(sessionId: string | null) {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, []);
 
+  // Check if any AI message is currently streaming
+  const isStreaming = useCallback((): boolean => {
+    return messages.some(msg => msg.type === 'ai' && (msg as AiChatMessage).isStreaming);
+  }, [messages]);
+
   // Function to build conversation history for the prompt
   function buildMessageHistory() {
     return messages.map((msg) => ({
@@ -78,14 +82,14 @@ export function useSimpleChat(sessionId: string | null) {
     );
     
     // If there's a streaming message, parse the current buffer
-    if (isGenerating) {
+    if (lastAiMessage?.isStreaming) {
       const { segments } = parseContent(streamBufferRef.current);
       return segments;
     }
     
     // Otherwise return segments from the last complete AI message
     return lastAiMessage?.segments || [];
-  }, [messages, isGenerating]);
+  }, [messages]);
 
   /**
    * Get the code from the current segments
@@ -169,7 +173,6 @@ export function useSimpleChat(sessionId: string | null) {
     if (input.trim()) {
       // Reset state for new message
       streamBufferRef.current = '';
-      setIsGenerating(true);
 
       try {
         // Add user message
@@ -282,7 +285,6 @@ export function useSimpleChat(sessionId: string | null) {
         }
         console.error('Error calling OpenRouter API:', error);
       } finally {
-        setIsGenerating(false);
         aiMessageTimestampRef.current = null;
       }
     }
@@ -299,7 +301,7 @@ export function useSimpleChat(sessionId: string | null) {
     setMessages,          // Function to update messages (legacy, to be removed)
     input,                // Current user input text
     setInput,             // Function to update input
-    isGenerating,         // Whether a message is being generated
+    isStreaming,          // Whether any AI message is currently streaming
     sendMessage,          // Function to send a message
     currentSegments,      // Get current segments
     getCurrentCode,       // Get current code

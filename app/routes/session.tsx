@@ -89,7 +89,8 @@ export default function Session() {
           code={state.generatedCode}
           dependencies={state.dependencies}
           streamingCode={chatState.getCurrentCode()}
-          isStreaming={chatState.isGenerating}
+          isStreaming={chatState.isStreaming()}
+          isSharedApp={false}
           completedMessage={
             chatState.messages.length > 0
               ? chatState.messages.filter(msg => msg.type === 'ai').pop()?.text || ''

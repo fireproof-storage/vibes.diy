@@ -355,7 +355,7 @@ describe('useSimpleChat', () => {
     const { result } = renderHook(() => useSimpleChat(null));
     
     expect(result.current.messages).toEqual([]);
-    expect(result.current.isGenerating).toBe(false);
+    expect(result.current.isStreaming()).toBe(false);
     expect(result.current.input).toBe('');
   });
 
@@ -874,15 +874,19 @@ You can customize the API endpoint and items per page according to your needs. T
     expect(aiMessage.segments[0].content).toContain('Image Gallery Component');
     
     // Second segment should be the main code
+    expect(aiMessage.segments[1].type).toBe('code');
     expect(aiMessage.segments[1].content).toContain("function ImageGallery");
     
     // Third segment should be usage instructions in markdown
+    expect(aiMessage.segments[2].type).toBe('markdown');
     expect(aiMessage.segments[2].content).toContain('Usage Instructions');
     
     // Fourth segment should be example code
+    expect(aiMessage.segments[3].type).toBe('code');
     expect(aiMessage.segments[3].content).toContain("import ImageGallery");
     
     // Fifth segment should be final markdown
+    expect(aiMessage.segments[4].type).toBe('markdown');
     expect(aiMessage.segments[4].content).toContain('customize the API endpoint');
   });
 

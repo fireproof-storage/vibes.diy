@@ -81,10 +81,10 @@ describe('Component Rendering', () => {
         <ChatHeader
           onOpenSidebar={onOpenSidebar}
           onNewChat={onNewChat}
-          isGenerating={isGeneratingValue}
+          isStreaming={() => isGeneratingValue}
         />
       );
-      expect(screen.getByLabelText('New Chat')).toBeInTheDocument();
+      expect(screen.getAllByLabelText('New Chat').length).toBeGreaterThan(0);
     });
 
     it('applies tooltip classes correctly', () => {
@@ -92,7 +92,7 @@ describe('Component Rendering', () => {
         <ChatHeader
           onOpenSidebar={onOpenSidebar}
           onNewChat={onNewChat}
-          isGenerating={isGeneratingValue}
+          isStreaming={() => isGeneratingValue}
         />
       );
 
@@ -111,11 +111,22 @@ describe('Component Rendering', () => {
         <ChatHeader
           onOpenSidebar={onOpenSidebar}
           onNewChat={onNewChat}
-          isGenerating={isGeneratingValue}
+          isStreaming={() => isGeneratingValue}
         />
       );
       expect(screen.getByLabelText('New Chat')).toBeDisabled();
     });
+
+    // Set isGenerating to true for this test
+    isGeneratingValue = true;
+    
+    render(
+      <ChatHeader
+        onOpenSidebar={onOpenSidebar}
+        onNewChat={onNewChat}
+        isStreaming={() => isGeneratingValue}
+      />
+    );
   });
 
   describe('SessionSidebar', () => {
@@ -148,25 +159,25 @@ describe('Component Rendering', () => {
   describe('MessageList', () => {
     it('renders empty list', () => {
       const { container } = render(
-        <MessageList sessionId="empty-session" isGenerating={false} />
+        <MessageList sessionId="empty-session" isStreaming={() => false} />
       );
-      expect(container.querySelector('.messages')).toBeInTheDocument();
+      expect(screen.getByText('Welcome to Fireproof App Builder')).toBeInTheDocument();
     });
 
     it('renders messages correctly', () => {
-      render(<MessageList sessionId="test-session" isGenerating={false} />);
+      render(<MessageList sessionId="test-session" isStreaming={() => false} />);
       expect(screen.getByText('Hello')).toBeInTheDocument();
       expect(screen.getByText('Hi there')).toBeInTheDocument();
     });
 
     it('renders AI typing indicator when generating', () => {
-      render(<MessageList sessionId="empty-session" isGenerating={true} />);
+      render(<MessageList sessionId="empty-session" isStreaming={() => true} />);
       expect(screen.getByText('Thinking')).toBeInTheDocument();
     });
 
     it('renders streaming message', () => {
       render(
-        <MessageList sessionId="streaming-session" isGenerating={true} />
+        <MessageList sessionId="streaming-session" isStreaming={() => true} />
       );
       expect(screen.getByText('I am thinking...')).toBeInTheDocument();
     });
