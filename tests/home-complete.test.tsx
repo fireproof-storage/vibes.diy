@@ -16,7 +16,7 @@ let locationMock = {
   pathname: '/',
   hash: '',
   state: null,
-  key: ''
+  key: '',
 };
 
 // Mock useNavigate hook from react-router - this mock applies to all tests
@@ -24,7 +24,7 @@ vi.mock('react-router', () => {
   return {
     useParams: () => ({}),
     useNavigate: () => navigateMock,
-    useLocation: () => locationMock
+    useLocation: () => locationMock,
   };
 });
 
@@ -94,8 +94,8 @@ Object.defineProperty(window, 'location', {
 vi.mock('../app/ChatInterface', () => ({
   default: ({ chatState, sessionId, onSessionCreated }: ChatInterfaceProps) => (
     <div data-testid="mock-chat-interface">
-      <button 
-        data-testid="create-session-button" 
+      <button
+        data-testid="create-session-button"
         onClick={() => onSessionCreated?.('new-session-id')}
       >
         Create Session
@@ -105,27 +105,24 @@ vi.mock('../app/ChatInterface', () => ({
 }));
 
 vi.mock('../app/components/ResultPreview/ResultPreview', () => ({
-  default: ({ 
-    code, 
-    dependencies, 
-    streamingCode, 
-    isStreaming, 
-    isSharedApp, 
+  default: ({
+    code,
+    dependencies,
+    streamingCode,
+    isStreaming,
+    isSharedApp,
     shareStatus,
     onShare,
     completedMessage,
     currentStreamContent,
-    currentMessage
+    currentMessage,
   }: ResultPreviewProps) => (
     <div data-testid="mock-result-preview">
       <div data-testid="code-line-count">{code.split('\n').length} lines of code</div>
       <div data-testid="code-content">{code.substring(0, 50)}...</div>
       <div data-testid="message-content">{completedMessage.substring(0, 50)}</div>
       {shareStatus && <div data-testid="share-status">{shareStatus}</div>}
-      <button 
-        data-testid="share-button" 
-        onClick={onShare}
-      >
+      <button data-testid="share-button" onClick={onShare}>
         Share
       </button>
     </div>
@@ -157,55 +154,59 @@ vi.mock('use-fireproof', () => ({
 
 describe('Home Route in completed state', () => {
   let mockCode: string;
-  
+
   beforeEach(() => {
     // Clear all mocks before each test
     vi.clearAllMocks();
-    
+
     mockCode = Array(210)
       .fill(0)
       .map((_, i) => `console.log("Line ${i}");`)
       .join('\n');
-      
+
     // Mock segmentParser functions
     vi.spyOn(segmentParser, 'parseContent').mockReturnValue({
       segments: [
         { type: 'markdown', content: 'Explanation of the code' } as Segment,
-        { type: 'code', content: mockCode } as Segment
+        { type: 'code', content: mockCode } as Segment,
       ],
-      dependenciesString: JSON.stringify({ dependencies: { react: '^18.2.0', 'react-dom': '^18.2.0' } })
+      dependenciesString: JSON.stringify({
+        dependencies: { react: '^18.2.0', 'react-dom': '^18.2.0' },
+      }),
     });
-    
+
     vi.spyOn(segmentParser, 'parseDependencies').mockReturnValue({
       react: '^18.2.0',
       'react-dom': '^18.2.0',
     });
-    
+
     // Mock useSimpleChat hook to return a chat with completed AI message containing code
     vi.spyOn(useSimpleChatModule, 'useSimpleChat').mockReturnValue({
       messages: [
-        { 
-          type: 'user', 
-          text: 'Create a React app' 
+        {
+          type: 'user',
+          text: 'Create a React app',
         } as UserChatMessage,
-        { 
-          type: 'ai', 
+        {
+          type: 'ai',
           text: '```javascript\n' + mockCode + '\n```\n\nExplanation of the code',
           segments: [
             { type: 'markdown', content: 'Explanation of the code' } as Segment,
-            { type: 'code', content: mockCode } as Segment
+            { type: 'code', content: mockCode } as Segment,
           ],
-          isStreaming: false
-        } as AiChatMessage
+          isStreaming: false,
+        } as AiChatMessage,
       ],
       sendMessage: vi.fn(),
       isStreaming: () => false,
+      streamingState: false,
+      titleGenerated: false,
       setMessages: vi.fn(),
       input: '',
       setInput: vi.fn(),
       currentSegments: () => [
         { type: 'markdown', content: 'Explanation of the code' } as Segment,
-        { type: 'code', content: mockCode } as Segment
+        { type: 'code', content: mockCode } as Segment,
       ],
       getCurrentCode: () => mockCode,
       inputRef: { current: null },
@@ -215,7 +216,7 @@ describe('Home Route in completed state', () => {
       title: 'React App',
       setTitle: vi.fn(),
       sessionId: null,
-      isLoadingMessages: false
+      isLoadingMessages: false,
     });
   });
 
@@ -226,7 +227,7 @@ describe('Home Route in completed state', () => {
       pathname: '/',
       hash: '',
       state: null,
-      key: ''
+      key: '',
     };
 
     render(<UnifiedSession />);
@@ -243,7 +244,7 @@ describe('Home Route in completed state', () => {
       pathname: '/',
       hash: '',
       state: null,
-      key: ''
+      key: '',
     };
 
     render(<UnifiedSession />);
@@ -265,7 +266,7 @@ describe('Home Route in completed state', () => {
       pathname: '/',
       hash: '',
       state: null,
-      key: ''
+      key: '',
     };
 
     render(<UnifiedSession />);
@@ -292,15 +293,15 @@ describe('Home Route in completed state', () => {
       pathname: '/',
       hash: '',
       state: null,
-      key: ''
+      key: '',
     };
 
     // Mock just what we need for this specific test
     const mockSegments = [
       { type: 'markdown', content: 'Explanation from hash' } as Segment,
-      { type: 'code', content: hashCode } as Segment
+      { type: 'code', content: hashCode } as Segment,
     ];
-    
+
     const mockChatState = {
       messages: [],
       input: '',
@@ -311,15 +312,17 @@ describe('Home Route in completed state', () => {
       autoResizeTextarea: vi.fn(),
       scrollToBottom: vi.fn(),
       sendMessage: vi.fn(),
+      isStreaming: () => false,
+      streamingState: false,
+      titleGenerated: false,
       currentSegments: () => mockSegments,
       getCurrentCode: () => hashCode,
-      isStreaming: () => false,
-      title: 'Hash Code Test',
+      title: 'New Chat',
       setTitle: vi.fn(),
       sessionId: null,
-      isLoadingMessages: false
+      isLoadingMessages: true,
     };
-    
+
     vi.spyOn(useSimpleChatModule, 'useSimpleChat').mockReturnValue(mockChatState);
 
     render(<UnifiedSession />);
@@ -327,4 +330,4 @@ describe('Home Route in completed state', () => {
     // Verify our mock was used
     expect(useSimpleChatModule.useSimpleChat).toHaveBeenCalled();
   });
-}); 
+});

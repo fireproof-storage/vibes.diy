@@ -46,16 +46,16 @@ vi.mock('../app/ChatInterface', () => ({
 }));
 
 vi.mock('../app/components/ResultPreview/ResultPreview', () => ({
-  default: ({ 
-    code, 
-    dependencies, 
-    streamingCode, 
-    isSharedApp, 
+  default: ({
+    code,
+    dependencies,
+    streamingCode,
+    isSharedApp,
     completedMessage,
     currentStreamContent,
     currentMessage,
     shareStatus,
-    onShare
+    onShare,
   }: ResultPreviewProps) => (
     <div data-testid="mock-result-preview">
       <div data-testid="code-line-count">{code.split('\n').length} lines of code</div>
@@ -63,10 +63,7 @@ vi.mock('../app/components/ResultPreview/ResultPreview', () => ({
       <div data-testid="message-content">{completedMessage.substring(0, 50)}</div>
       {shareStatus && <div data-testid="share-status">{shareStatus}</div>}
       {onShare && (
-        <button 
-          data-testid="share-button" 
-          onClick={onShare}
-        >
+        <button data-testid="share-button" onClick={onShare}>
           Share
         </button>
       )}
@@ -125,25 +122,25 @@ describe('Session Route Integration', () => {
   beforeEach(() => {
     // Create mock code with 210 lines
     const mockCode = Array(210).fill('console.log("test");').join('\n');
-    
+
     // Mock parseContent to return specific segments with code
     vi.spyOn(segmentParser, 'parseContent').mockReturnValue({
       segments: [
         {
           type: 'markdown',
-          content: "Here's a photo gallery app with a grid layout and modal view."
+          content: "Here's a photo gallery app with a grid layout and modal view.",
         },
         {
           type: 'code',
-          content: mockCode
-        }
+          content: mockCode,
+        },
       ],
-      dependenciesString: JSON.stringify({ dependencies: {} })
+      dependenciesString: JSON.stringify({ dependencies: {} }),
     });
-    
+
     // Mock parseDependencies to return empty dependencies
     vi.spyOn(segmentParser, 'parseDependencies').mockReturnValue({});
-    
+
     // Mock useSimpleChat to return chat state with an AI message
     vi.spyOn(useSimpleChatModule, 'useSimpleChat').mockReturnValue({
       messages: [
@@ -158,30 +155,32 @@ describe('Session Route Integration', () => {
           segments: [
             {
               type: 'markdown',
-              content: "Here's a photo gallery app with a grid layout and modal view."
+              content: "Here's a photo gallery app with a grid layout and modal view.",
             },
             {
               type: 'code',
-              content: mockCode
-            }
+              content: mockCode,
+            },
           ],
-          dependenciesString: JSON.stringify({ dependencies: {} })
-        }
+          dependenciesString: JSON.stringify({ dependencies: {} }),
+        },
       ],
       input: '',
       setInput: vi.fn(),
       setMessages: vi.fn(),
       isStreaming: () => false,
+      streamingState: false,
+      titleGenerated: true,
       sendMessage: vi.fn(),
       currentSegments: () => [
         {
           type: 'markdown',
-          content: "Here's a photo gallery app with a grid layout and modal view."
+          content: "Here's a photo gallery app with a grid layout and modal view.",
         },
         {
           type: 'code',
-          content: mockCode
-        }
+          content: mockCode,
+        },
       ],
       getCurrentCode: () => mockCode,
       inputRef: { current: null },
@@ -191,7 +190,7 @@ describe('Session Route Integration', () => {
       title: 'Photo Gallery App',
       setTitle: vi.fn(),
       sessionId: 'test-session-id',
-      isLoadingMessages: false
+      isLoadingMessages: false,
     });
   });
 
@@ -209,9 +208,9 @@ describe('Session Route Integration', () => {
   it('should provide a share button that copies link to clipboard', async () => {
     // Render the UnifiedSession component
     render(<UnifiedSession />);
-    
+
     // Try to find the share button
     const shareButton = await screen.findByTestId('share-button');
     expect(shareButton).toBeInTheDocument();
   });
-}); 
+});

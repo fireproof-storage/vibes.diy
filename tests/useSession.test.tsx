@@ -4,21 +4,39 @@ import { vi, describe, test, expect, beforeEach } from 'vitest';
 
 // Mock the useFireproof hook
 vi.mock('use-fireproof', () => {
-  const mockSaveSession = vi.fn().mockImplementation(() => Promise.resolve({ id: 'test-session-id' }));
+  const mockSaveSession = vi
+    .fn()
+    .mockImplementation(() => Promise.resolve({ id: 'test-session-id' }));
   const mockMergeSession = vi.fn();
-  
+
   return {
     useFireproof: () => ({
       database: {
-        put: vi.fn().mockImplementation((doc: any) => Promise.resolve({ id: doc._id || 'test-session-id' })),
-        get: vi.fn().mockImplementation((id: string) => Promise.resolve({ _id: id, title: 'Test Session', type: 'session', timestamp: Date.now() }))
+        put: vi
+          .fn()
+          .mockImplementation((doc: any) => Promise.resolve({ id: doc._id || 'test-session-id' })),
+        get: vi
+          .fn()
+          .mockImplementation((id: string) =>
+            Promise.resolve({
+              _id: id,
+              title: 'Test Session',
+              type: 'session',
+              timestamp: Date.now(),
+            })
+          ),
       },
       useDocument: () => ({
-        doc: { _id: 'test-session-id', title: 'Test Session', type: 'session', timestamp: Date.now() },
+        doc: {
+          _id: 'test-session-id',
+          title: 'Test Session',
+          type: 'session',
+          timestamp: Date.now(),
+        },
         merge: mockMergeSession,
-        save: mockSaveSession
-      })
-    })
+        save: mockSaveSession,
+      }),
+    }),
   };
 });
 
@@ -63,7 +81,7 @@ describe('useSession', () => {
     // Verify merge and save were called
     const { useFireproof } = await import('use-fireproof');
     const mockUseDocument = (useFireproof as any)().useDocument;
-    
+
     expect(mockUseDocument().merge).toHaveBeenCalledWith({ title: 'Updated Title' });
     expect(mockUseDocument().save).toHaveBeenCalled();
   });
@@ -80,8 +98,8 @@ describe('useSession', () => {
     // Verify merge and save were called with correct data
     const { useFireproof } = await import('use-fireproof');
     const mockUseDocument = (useFireproof as any)().useDocument;
-    
+
     expect(mockUseDocument().merge).toHaveBeenCalledWith(metadata);
     expect(mockUseDocument().save).toHaveBeenCalled();
   });
-}); 
+});

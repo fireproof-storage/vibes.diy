@@ -14,10 +14,10 @@ export type UserChatMessage = {
 // AI message type
 export type AiChatMessage = {
   type: 'ai';
-  text: string;            // Raw text content
-  segments: Segment[];     // Parsed segments
+  text: string; // Raw text content
+  segments: Segment[]; // Parsed segments
   dependenciesString?: string; // Raw dependencies for downstream parsing
-  isStreaming?: boolean;   // Whether this message is currently streaming
+  isStreaming?: boolean; // Whether this message is currently streaming
   timestamp?: number;
 };
 
@@ -26,7 +26,7 @@ export type ChatMessage = UserChatMessage | AiChatMessage;
 
 export interface SessionDocument {
   _id: string;
-  type?: 'session';        // Document type for Fireproof queries
+  type?: 'session'; // Document type for Fireproof queries
   title?: string;
   timestamp: number;
   messages?: ChatMessage[];

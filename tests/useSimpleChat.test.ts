@@ -11,37 +11,44 @@ import { useSessionMessages } from '../app/hooks/useSessionMessages';
 
 // Helper function to convert chunks into SSE format
 function formatAsSSE(chunks: string[]): string[] {
-  return chunks.map(chunk => {
+  return chunks.map((chunk) => {
     return `data: ${JSON.stringify({
       id: `gen-${Date.now()}`,
-      provider: "Anthropic",
-      model: "anthropic/claude-3.7-sonnet",
-      object: "chat.completion.chunk",
+      provider: 'Anthropic',
+      model: 'anthropic/claude-3.7-sonnet',
+      object: 'chat.completion.chunk',
       created: Date.now(),
-      choices: [{
-        index: 0,
-        delta: {
-          role: "assistant",
-          content: chunk
+      choices: [
+        {
+          index: 0,
+          delta: {
+            role: 'assistant',
+            content: chunk,
+          },
+          finish_reason: null,
+          native_finish_reason: null,
+          logprobs: null,
         },
-        finish_reason: null,
-        native_finish_reason: null,
-        logprobs: null
-      }]
+      ],
     })}\n\n`;
   });
 }
 
 // Mock the prompts module
 vi.mock('../app/prompts', () => ({
-  makeBaseSystemPrompt: vi.fn().mockResolvedValue('Mocked system prompt')
+  makeBaseSystemPrompt: vi.fn().mockResolvedValue('Mocked system prompt'),
 }));
 
 // Mock the useSession hook
 vi.mock('../app/hooks/useSession', () => {
   return {
     useSession: () => ({
-      session: { _id: 'test-session-id', title: 'Test Session', timestamp: Date.now(), type: 'session' },
+      session: {
+        _id: 'test-session-id',
+        title: 'Test Session',
+        timestamp: Date.now(),
+        type: 'session',
+      },
       updateTitle: vi.fn().mockImplementation(async (title) => Promise.resolve()),
       loadSession: vi.fn().mockImplementation(async () => Promise.resolve()),
       createSession: vi.fn().mockImplementation(async () => Promise.resolve('new-session-id')),
@@ -49,8 +56,8 @@ vi.mock('../app/hooks/useSession', () => {
       loading: false,
       error: null,
       addScreenshot: vi.fn(),
-      database: {}
-    })
+      database: {},
+    }),
   };
 });
 
@@ -58,7 +65,7 @@ vi.mock('../app/hooks/useSession', () => {
 vi.mock('../app/hooks/useSessionMessages', () => {
   // Track messages across test runs
   const messagesStore: Record<string, ChatMessage[]> = {};
-  
+
   return {
     useSessionMessages: () => {
       // Create session if it doesn't exist
@@ -66,7 +73,7 @@ vi.mock('../app/hooks/useSessionMessages', () => {
       if (!messagesStore[sessionKey]) {
         messagesStore[sessionKey] = [];
       }
-      
+
       return {
         messages: messagesStore[sessionKey],
         isLoading: false,
@@ -75,75 +82,80 @@ vi.mock('../app/hooks/useSessionMessages', () => {
           messagesStore[sessionKey].push({
             type: 'user',
             text,
-            timestamp
+            timestamp,
           });
           return timestamp;
         }),
         addAiMessage: vi.fn().mockImplementation(async (rawContent, timestamp) => {
           const now = timestamp || Date.now();
           const { segments, dependenciesString } = parseContent(rawContent);
-          
+
           messagesStore[sessionKey].push({
             type: 'ai',
             text: rawContent,
             segments,
             dependenciesString,
             isStreaming: false,
-            timestamp: now
+            timestamp: now,
           });
           return now;
         }),
-        updateAiMessage: vi.fn().mockImplementation(async (rawContent, isStreaming = false, timestamp) => {
-          const now = timestamp || Date.now();
-          
-          // Find existing message with this timestamp or create a new index for it
-          const existingIndex = messagesStore[sessionKey].findIndex(
-            msg => msg.type === 'ai' && msg.timestamp === now
-          );
-          
-          let aiMessage: AiChatMessage;
-          
-          // Special case for the markdown and code segments test
-          if (rawContent.includes('function HelloWorld()') && rawContent.includes('Hello, World!')) {
-            aiMessage = {
-              type: 'ai',
-              text: rawContent,
-              segments: [
-                {
-                  type: 'markdown' as const,
-                  content: "Here's a simple React component:"
-                },
-                {
-                  type: 'code' as const,
-                  content: `function HelloWorld() {
+        updateAiMessage: vi
+          .fn()
+          .mockImplementation(async (rawContent, isStreaming = false, timestamp) => {
+            const now = timestamp || Date.now();
+
+            // Find existing message with this timestamp or create a new index for it
+            const existingIndex = messagesStore[sessionKey].findIndex(
+              (msg) => msg.type === 'ai' && msg.timestamp === now
+            );
+
+            let aiMessage: AiChatMessage;
+
+            // Special case for the markdown and code segments test
+            if (
+              rawContent.includes('function HelloWorld()') &&
+              rawContent.includes('Hello, World!')
+            ) {
+              aiMessage = {
+                type: 'ai',
+                text: rawContent,
+                segments: [
+                  {
+                    type: 'markdown' as const,
+                    content: "Here's a simple React component:",
+                  },
+                  {
+                    type: 'code' as const,
+                    content: `function HelloWorld() {
   return <div>Hello, World!</div>;
 }
 
-export default HelloWorld;`
-                },
-                {
-                  type: 'markdown' as const,
-                  content: "You can use this component in your application."
-                }
-              ],
-              dependenciesString: '{"react": "^18.2.0", "react-dom": "^18.2.0"}}',
-              isStreaming,
-              timestamp: now
-            };
-          }
-          // Special case for the dependencies test
-          else if (rawContent.includes('function Timer()') && rawContent.includes('useEffect')) {
-            aiMessage = {
-              type: 'ai',
-              text: rawContent,
-              segments: [
-                {
-                  type: 'markdown' as const, 
-                  content: "Here's a React component that uses useEffect:"
-                },
-                {
-                  type: 'code' as const,
-                  content: `import React, { useEffect } from 'react';
+export default HelloWorld;`,
+                  },
+                  {
+                    type: 'markdown' as const,
+                    content: 'You can use this component in your application.',
+                  },
+                ],
+                dependenciesString: '{"react": "^18.2.0", "react-dom": "^18.2.0"}}',
+                isStreaming,
+                timestamp: now,
+              };
+            }
+            // Special case for the dependencies test
+            else if (rawContent.includes('function Timer()') && rawContent.includes('useEffect')) {
+              aiMessage = {
+                type: 'ai',
+                text: rawContent,
+                segments: [
+                  {
+                    type: 'markdown' as const,
+                    content: "Here's a React component that uses useEffect:",
+                  },
+                  {
+                    type: 'code' as const,
+                    content: `import React, { useEffect } from 'react';
 
 function Timer() {
   useEffect(() => {
@@ -157,98 +169,125 @@ function Timer() {
   return <div>Timer Running</div>;
 }
 
-export default Timer;`
-                }
-              ],
-              dependenciesString: '{"react": "^18.2.0", "react-dom": "^18.2.0"}}',
-              isStreaming,
-              timestamp: now
-            };
-          }
-          // Special case for the complex response test
-          else if (rawContent.includes('ImageGallery') && rawContent.includes('react-router-dom')) {
-            aiMessage = {
-              type: 'ai',
-              text: rawContent,
-              segments: [
-                { type: 'markdown' as const, content: '# Image Gallery Component' },
-                { type: 'code' as const, content: 'function ImageGallery() { /* ... */ }' },
-                { type: 'markdown' as const, content: '## Usage Instructions' },
-                { type: 'code' as const, content: 'import ImageGallery from "./components/ImageGallery";' },
-                { type: 'markdown' as const, content: 'You can customize the API endpoint and items per page.' }
-              ],
-              dependenciesString: '{"react": "^18.2.0", "react-dom": "^18.2.0", "react-router-dom": "^6.4.0", "tailwindcss": "^3.3.0"}}',
-              isStreaming,
-              timestamp: now
-            };
-          }
-          // Gallery app
-          else if (rawContent.includes('photo gallery') || rawContent.includes('Photo Gallery')) {
-            aiMessage = {
-              type: 'ai',
-              text: rawContent,
-              segments: [
-                { type: 'markdown' as const, content: "Here's the photo gallery app:" },
-                { type: 'code' as const, content: "import React from 'react';\nexport default function App() { /* ... */ }" }
-              ],
-              dependenciesString: "Here's a photo gallery app using Fireproof for storage with a grid layout and modal viewing functionality:",
-              isStreaming,
-              timestamp: now
-            };
-          }
-          // Exoplanet Tracker
-          else if (rawContent.includes('ExoplanetTracker') || rawContent.includes('Exoplanet Tracker')) {
-            aiMessage = {
-              type: 'ai',
-              text: rawContent,
-              segments: [
-                { type: 'markdown' as const, content: "I'll create an \"Exoplanet Tracker\" app" },
-                { type: 'code' as const, content: "import React from 'react';\nexport default function ExoplanetTracker() { /* ... */ }" }
-              ],
-              dependenciesString: "I'll create an \"Exoplanet Tracker\" app that lets users log and track potential exoplanets they've discovered or are interested in.",
-              isStreaming,
-              timestamp: now
-            };
-          }
-          // Lyrics Rater
-          else if (rawContent.includes('LyricsRaterApp') || rawContent.includes('Lyrics Rater')) {
-            aiMessage = {
-              type: 'ai',
-              text: rawContent,
-              segments: [
-                { type: 'markdown' as const, content: "# Lyrics Rater App" },
-                { type: 'code' as const, content: "import React from 'react';\nexport default function LyricsRaterApp() { /* ... */ }" }
-              ],
-              dependenciesString: "# Lyrics Rater App",
-              isStreaming,
-              timestamp: now
-            };
-          }
-          // Default case
-          else {
-            const { segments, dependenciesString } = parseContent(rawContent);
-            aiMessage = {
-              type: 'ai',
-              text: rawContent,
-              segments,
-              dependenciesString: dependenciesString || '{"dependencies": {}}',
-              isStreaming,
-              timestamp: now
-            };
-          }
-          
-          if (existingIndex >= 0) {
-            messagesStore[sessionKey][existingIndex] = aiMessage;
-          } else {
-            messagesStore[sessionKey].push(aiMessage);
-          }
-          
-          return now;
-        }),
+export default Timer;`,
+                  },
+                ],
+                dependenciesString: '{"react": "^18.2.0", "react-dom": "^18.2.0"}}',
+                isStreaming,
+                timestamp: now,
+              };
+            }
+            // Special case for the complex response test
+            else if (
+              rawContent.includes('ImageGallery') &&
+              rawContent.includes('react-router-dom')
+            ) {
+              aiMessage = {
+                type: 'ai',
+                text: rawContent,
+                segments: [
+                  { type: 'markdown' as const, content: '# Image Gallery Component' },
+                  { type: 'code' as const, content: 'function ImageGallery() { /* ... */ }' },
+                  { type: 'markdown' as const, content: '## Usage Instructions' },
+                  {
+                    type: 'code' as const,
+                    content: 'import ImageGallery from "./components/ImageGallery";',
+                  },
+                  {
+                    type: 'markdown' as const,
+                    content: 'You can customize the API endpoint and items per page.',
+                  },
+                ],
+                dependenciesString:
+                  '{"react": "^18.2.0", "react-dom": "^18.2.0", "react-router-dom": "^6.4.0", "tailwindcss": "^3.3.0"}}',
+                isStreaming,
+                timestamp: now,
+              };
+            }
+            // Gallery app
+            else if (rawContent.includes('photo gallery') || rawContent.includes('Photo Gallery')) {
+              aiMessage = {
+                type: 'ai',
+                text: rawContent,
+                segments: [
+                  { type: 'markdown' as const, content: "Here's the photo gallery app:" },
+                  {
+                    type: 'code' as const,
+                    content:
+                      "import React from 'react';\nexport default function App() { /* ... */ }",
+                  },
+                ],
+                dependenciesString:
+                  "Here's a photo gallery app using Fireproof for storage with a grid layout and modal viewing functionality:",
+                isStreaming,
+                timestamp: now,
+              };
+            }
+            // Exoplanet Tracker
+            else if (
+              rawContent.includes('ExoplanetTracker') ||
+              rawContent.includes('Exoplanet Tracker')
+            ) {
+              aiMessage = {
+                type: 'ai',
+                text: rawContent,
+                segments: [
+                  { type: 'markdown' as const, content: 'I\'ll create an "Exoplanet Tracker" app' },
+                  {
+                    type: 'code' as const,
+                    content:
+                      "import React from 'react';\nexport default function ExoplanetTracker() { /* ... */ }",
+                  },
+                ],
+                dependenciesString:
+                  'I\'ll create an "Exoplanet Tracker" app that lets users log and track potential exoplanets they\'ve discovered or are interested in.',
+                isStreaming,
+                timestamp: now,
+              };
+            }
+            // Lyrics Rater
+            else if (rawContent.includes('LyricsRaterApp') || rawContent.includes('Lyrics Rater')) {
+              aiMessage = {
+                type: 'ai',
+                text: rawContent,
+                segments: [
+                  { type: 'markdown' as const, content: '# Lyrics Rater App' },
+                  {
+                    type: 'code' as const,
+                    content:
+                      "import React from 'react';\nexport default function LyricsRaterApp() { /* ... */ }",
+                  },
+                ],
+                dependenciesString: '# Lyrics Rater App',
+                isStreaming,
+                timestamp: now,
+              };
+            }
+            // Default case
+            else {
+              const { segments, dependenciesString } = parseContent(rawContent);
+              aiMessage = {
+                type: 'ai',
+                text: rawContent,
+                segments,
+                dependenciesString: dependenciesString || '{"dependencies": {}}',
+                isStreaming,
+                timestamp: now,
+              };
+            }
+
+            if (existingIndex >= 0) {
+              messagesStore[sessionKey][existingIndex] = aiMessage;
+            } else {
+              messagesStore[sessionKey].push(aiMessage);
+            }
+
+            return now;
+          }),
         // Expose the messagesStore for testing
-        _getMessagesStore: () => messagesStore
+        _getMessagesStore: () => messagesStore,
       };
-    }
+    },
   };
 });
 
@@ -256,13 +295,13 @@ describe('segmentParser utilities', () => {
   it('correctly parses markdown content with no code blocks', () => {
     const text = 'This is a simple markdown text with no code blocks.';
     const result = parseContent(text);
-    
+
     expect(result.segments.length).toBe(1);
     expect(result.segments[0].type).toBe('markdown');
     expect(result.segments[0].content).toBe(text);
     expect(result.dependenciesString).toBeUndefined();
   });
-  
+
   it('correctly parses content with code blocks', () => {
     const text = `
 Here's a React component:
@@ -275,46 +314,46 @@ function Button() {
 
 You can use it in your app.
     `.trim();
-    
+
     const result = parseContent(text);
-    
+
     expect(result.segments.length).toBe(3);
     expect(result.segments[0].type).toBe('markdown');
     expect(result.segments[0].content).toContain("Here's a React component:");
     expect(result.segments[1].type).toBe('code');
-    expect(result.segments[1].content).toContain("function Button()");
+    expect(result.segments[1].content).toContain('function Button()');
     expect(result.segments[2].type).toBe('markdown');
-    expect(result.segments[2].content).toContain("You can use it in your app.");
+    expect(result.segments[2].content).toContain('You can use it in your app.');
   });
-  
+
   it('correctly extracts dependencies from content', () => {
     const text = `{"react": "^18.2.0", "react-dom": "^18.2.0"}}
 
 Here's how to use React.
     `.trim();
-    
+
     const result = parseContent(text);
-    
+
     expect(result.dependenciesString).toBe('{"react": "^18.2.0", "react-dom": "^18.2.0"}}');
     expect(result.segments.length).toBe(1);
     expect(result.segments[0].type).toBe('markdown');
     expect(result.segments[0].content.trim()).toBe("Here's how to use React.");
   });
-  
+
   it('correctly parses dependencies string into object', () => {
     const dependenciesString = '{"react": "^18.2.0", "react-dom": "^18.2.0"}}';
     const dependencies = parseDependencies(dependenciesString);
-    
+
     expect(dependencies).toEqual({
-      "react": "^18.2.0",
-      "react-dom": "^18.2.0"
+      react: '^18.2.0',
+      'react-dom': '^18.2.0',
     });
   });
-  
+
   it('returns empty object for invalid dependencies string', () => {
     const dependencies = parseDependencies(undefined);
     expect(dependencies).toEqual({});
-    
+
     const emptyDependencies = parseDependencies('{}');
     expect(emptyDependencies).toEqual({});
   });
@@ -329,7 +368,7 @@ describe('useSimpleChat', () => {
         start(controller) {
           controller.enqueue(new TextEncoder().encode('This is a test response'));
           controller.close();
-        }
+        },
       });
 
       return {
@@ -343,18 +382,18 @@ describe('useSimpleChat', () => {
 
     // Mock ScrollIntoView
     Element.prototype.scrollIntoView = vi.fn();
-    
+
     // Mock environment variables
     vi.stubEnv('VITE_OPENROUTER_API_KEY', 'test-api-key');
-    
+
     // Mock import.meta.env.MODE for testing
     vi.stubGlobal('import', {
       meta: {
         env: {
           MODE: 'test',
-          VITE_OPENROUTER_API_KEY: 'test-api-key'
-        }
-      }
+          VITE_OPENROUTER_API_KEY: 'test-api-key',
+        },
+      },
     });
   });
 
@@ -367,7 +406,7 @@ describe('useSimpleChat', () => {
 
   it('initializes with empty messages', () => {
     const { result } = renderHook(() => useSimpleChat(null));
-    
+
     expect(result.current.messages).toEqual([]);
     expect(result.current.isStreaming()).toBe(false);
     expect(result.current.input).toBe('');
@@ -375,11 +414,11 @@ describe('useSimpleChat', () => {
 
   it('updates input value', () => {
     const { result } = renderHook(() => useSimpleChat(null));
-    
+
     act(() => {
       result.current.setInput('Hello, AI!');
     });
-    
+
     expect(result.current.input).toBe('Hello, AI!');
   });
 
@@ -389,22 +428,18 @@ describe('useSimpleChat', () => {
       const stream = new ReadableStream({
         start(controller) {
           // Simulate a streaming response
-          const chunks = [
-            'Hello',
-            '! How can I help ',
-            'you today?'
-          ];
-          
+          const chunks = ['Hello', '! How can I help ', 'you today?'];
+
           // Format chunks as SSE and send them
           const sseChunks = formatAsSSE(chunks);
-          sseChunks.forEach(chunk => {
+          sseChunks.forEach((chunk) => {
             controller.enqueue(encoder.encode(chunk));
           });
-          
+
           controller.close();
-        }
+        },
       });
-      
+
       return {
         ok: true,
         body: stream,
@@ -413,32 +448,34 @@ describe('useSimpleChat', () => {
         headers: new Headers(),
       } as Response;
     });
-    
+
     window.fetch = mockFetch;
-    
+
     const { result } = renderHook(() => useSimpleChat(null));
-    
+
     act(() => {
       result.current.setInput('Hello, AI!');
     });
-    
+
     await act(async () => {
       await result.current.sendMessage();
     });
-    
+
     // Should have 2 messages: user message and AI response
     expect(result.current.messages.length).toBe(2);
-    
+
     // Check user message
     expect(result.current.messages[0].type).toBe('user');
     expect(result.current.messages[0].text).toBe('Hello, AI!');
-    
+
     // Check AI message
     expect(result.current.messages[1].type).toBe('ai');
     expect(result.current.messages[1].text).toBe('Hello! How can I help you today?');
     expect((result.current.messages[1] as AiChatMessage).segments.length).toBe(1);
     expect((result.current.messages[1] as AiChatMessage).segments[0].type).toBe('markdown');
-    expect((result.current.messages[1] as AiChatMessage).segments[0].content).toBe('Hello! How can I help you today?');
+    expect((result.current.messages[1] as AiChatMessage).segments[0].content).toBe(
+      'Hello! How can I help you today?'
+    );
   });
 
   it('correctly parses markdown and code segments', async () => {
@@ -447,11 +484,13 @@ describe('useSimpleChat', () => {
       const encoder = new TextEncoder();
       const stream = new ReadableStream({
         start(controller) {
-          controller.enqueue(encoder.encode('data: {"choices":[{"delta":{"content":""},"finish_reason":null}]}\n\n'));
+          controller.enqueue(
+            encoder.encode('data: {"choices":[{"delta":{"content":""},"finish_reason":null}]}\n\n')
+          );
           controller.close();
-        }
+        },
       });
-      
+
       return {
         ok: true,
         body: stream,
@@ -460,12 +499,12 @@ describe('useSimpleChat', () => {
         headers: new Headers(),
       } as Response;
     });
-    
+
     window.fetch = mockFetch;
-    
+
     // Mock renderHook to inject our custom messages
     const { result } = renderHook(() => useSimpleChat('test-session-id'));
-    
+
     // For this test, we are going to manually construct the messages array
     // This bypasses all the mock complexity
     const codeContent = `function HelloWorld() {
@@ -478,7 +517,7 @@ export default HelloWorld;`;
       {
         type: 'user',
         text: 'Create a React component',
-        timestamp: Date.now() - 1000
+        timestamp: Date.now() - 1000,
       },
       {
         type: 'ai',
@@ -492,69 +531,69 @@ You can use this component in your application.`,
         segments: [
           {
             type: 'markdown' as const,
-            content: "Here's a simple React component:"
+            content: "Here's a simple React component:",
           },
           {
             type: 'code' as const,
-            content: codeContent
+            content: codeContent,
           },
           {
             type: 'markdown' as const,
-            content: "You can use this component in your application."
-          }
+            content: 'You can use this component in your application.',
+          },
         ],
         dependenciesString: '{"react": "^18.2.0", "react-dom": "^18.2.0"}}',
         isStreaming: false,
-        timestamp: Date.now()
-      }
+        timestamp: Date.now(),
+      },
     ];
-    
+
     // We need to mock the currentSegments and getCurrentCode methods too
     const originalGetCurrentCode = result.current.getCurrentCode;
-    
+
     // Replace getCurrentCode with a mock that returns the code
     Object.defineProperty(result.current, 'getCurrentCode', {
       value: () => codeContent,
-      configurable: true
+      configurable: true,
     });
-    
+
     // Directly set the messages in the result
     // This is hacky but necessary for testing
     Object.defineProperty(result.current, 'messages', {
       get: () => mockMessages,
-      configurable: true
+      configurable: true,
     });
-    
+
     // Force a re-render to ensure our mock is used
     act(() => {
       result.current.setInput('');
     });
-    
+
     // Check AI message segments
     const aiMessage = result.current.messages[1] as AiChatMessage;
-    
+
     // Verify segments
     expect(aiMessage.segments.length).toBe(3);
-    
+
     // First segment should be markdown intro
     expect(aiMessage.segments[0].type).toBe('markdown');
     expect(aiMessage.segments[0].content).toContain("Here's a simple React component");
-    
+
     // Second segment should be code
     expect(aiMessage.segments[1].type).toBe('code');
-    expect(aiMessage.segments[1].content).toContain("function HelloWorld()");
-    
+    expect(aiMessage.segments[1].content).toContain('function HelloWorld()');
+
     // Third segment should be markdown conclusion
     expect(aiMessage.segments[2].type).toBe('markdown');
-    expect(aiMessage.segments[2].content).toContain("You can use this component");
-    
+    expect(aiMessage.segments[2].content).toContain('You can use this component');
+
     // getCurrentCode should return the code block
-    expect(result.current.getCurrentCode()).toContain("function HelloWorld()");
+    expect(result.current.getCurrentCode()).toContain('function HelloWorld()');
 
     // Restore the original method if needed
     Object.defineProperty(result.current, 'getCurrentCode', {
       value: originalGetCurrentCode,
-      configurable: true
+      configurable: true,
     });
   });
 
@@ -564,11 +603,13 @@ You can use this component in your application.`,
       const encoder = new TextEncoder();
       const stream = new ReadableStream({
         start(controller) {
-          controller.enqueue(encoder.encode('data: {"choices":[{"delta":{"content":""},"finish_reason":null}]}\n\n'));
+          controller.enqueue(
+            encoder.encode('data: {"choices":[{"delta":{"content":""},"finish_reason":null}]}\n\n')
+          );
           controller.close();
-        }
+        },
       });
-      
+
       return {
         ok: true,
         body: stream,
@@ -577,18 +618,18 @@ You can use this component in your application.`,
         headers: new Headers(),
       } as Response;
     });
-    
+
     window.fetch = mockFetch;
-    
+
     // Mock renderHook to inject our custom messages
     const { result } = renderHook(() => useSimpleChat(null));
-    
+
     // Create our custom messages with the dependenciesString we want
     const mockMessages = [
       {
         type: 'user',
         text: 'Create a timer component',
-        timestamp: Date.now() - 1000
+        timestamp: Date.now() - 1000,
       },
       {
         type: 'ai',
@@ -616,7 +657,7 @@ export default Timer;
         segments: [
           {
             type: 'markdown' as const,
-            content: "Here's a React component that uses useEffect:"
+            content: "Here's a React component that uses useEffect:",
           },
           {
             type: 'code' as const,
@@ -634,26 +675,26 @@ function Timer() {
   return <div>Timer Running</div>;
 }
 
-export default Timer;`
-          }
+export default Timer;`,
+          },
         ],
         dependenciesString: '{"react": "^18.2.0", "react-dom": "^18.2.0"}}',
         isStreaming: false,
-        timestamp: Date.now()
-      }
+        timestamp: Date.now(),
+      },
     ];
-    
+
     // Directly set the messages in the result
     Object.defineProperty(result.current, 'messages', {
       get: () => mockMessages,
-      configurable: true
+      configurable: true,
     });
-    
+
     // Force a re-render
     act(() => {
       result.current.setInput('');
     });
-    
+
     // Check AI message has dependenciesString
     const aiMessage = result.current.messages[1] as AiChatMessage;
     expect(aiMessage.dependenciesString).toBe('{"react": "^18.2.0", "react-dom": "^18.2.0"}}');
@@ -665,11 +706,13 @@ export default Timer;`
       const encoder = new TextEncoder();
       const stream = new ReadableStream({
         start(controller) {
-          controller.enqueue(encoder.encode('data: {"choices":[{"delta":{"content":""},"finish_reason":null}]}\n\n'));
+          controller.enqueue(
+            encoder.encode('data: {"choices":[{"delta":{"content":""},"finish_reason":null}]}\n\n')
+          );
           controller.close();
-        }
+        },
       });
-      
+
       return {
         ok: true,
         body: stream,
@@ -678,12 +721,12 @@ export default Timer;`
         headers: new Headers(),
       } as Response;
     });
-    
+
     window.fetch = mockFetch;
-    
+
     // Mock renderHook to inject our custom messages
     const { result } = renderHook(() => useSimpleChat(null));
-    
+
     // For this test, we are going to manually construct the messages array
     const complexResponse = `
 {"react": "^18.2.0", "react-dom": "^18.2.0", "react-router-dom": "^6.4.0", "tailwindcss": "^3.3.0"}}
@@ -809,96 +852,99 @@ function App() {
 
 You can customize the API endpoint and items per page according to your needs. The component handles loading states, errors, and pagination automatically.
     `.trim();
-    
+
     // Create our mock messages
     const mockMessages = [
       {
         type: 'user',
         text: 'Create an image gallery component',
-        timestamp: Date.now() - 1000
+        timestamp: Date.now() - 1000,
       },
       {
         type: 'ai',
         text: complexResponse,
         segments: [
-          { 
-            type: 'markdown' as const, 
-            content: '# Image Gallery Component'
-          },
-          { 
-            type: 'code' as const, 
-            content: 'function ImageGallery() { /* ... */ }' 
-          },
-          { 
-            type: 'markdown' as const, 
-            content: '## Usage Instructions' 
-          },
-          { 
-            type: 'code' as const, 
-            content: 'import ImageGallery from "./components/ImageGallery";' 
-          },
-          { 
+          {
             type: 'markdown' as const,
-            content: 'You can customize the API endpoint and items per page.' 
-          }
+            content: '# Image Gallery Component',
+          },
+          {
+            type: 'code' as const,
+            content: 'function ImageGallery() { /* ... */ }',
+          },
+          {
+            type: 'markdown' as const,
+            content: '## Usage Instructions',
+          },
+          {
+            type: 'code' as const,
+            content: 'import ImageGallery from "./components/ImageGallery";',
+          },
+          {
+            type: 'markdown' as const,
+            content: 'You can customize the API endpoint and items per page.',
+          },
         ],
-        dependenciesString: '{"react": "^18.2.0", "react-dom": "^18.2.0", "react-router-dom": "^6.4.0", "tailwindcss": "^3.3.0"}}',
+        dependenciesString:
+          '{"react": "^18.2.0", "react-dom": "^18.2.0", "react-router-dom": "^6.4.0", "tailwindcss": "^3.3.0"}}',
         isStreaming: false,
-        timestamp: Date.now()
-      }
+        timestamp: Date.now(),
+      },
     ];
-    
+
     // Directly set the messages in the result
     Object.defineProperty(result.current, 'messages', {
       get: () => mockMessages,
-      configurable: true
+      configurable: true,
     });
-    
+
     // Force a re-render
     act(() => {
       result.current.setInput('');
     });
-    
+
     // Check the final message structure
     const aiMessage = result.current.messages[1] as AiChatMessage;
-    
+
     // Should have the correct dependenciesString
-    expect(aiMessage.dependenciesString).toBe('{"react": "^18.2.0", "react-dom": "^18.2.0", "react-router-dom": "^6.4.0", "tailwindcss": "^3.3.0"}}');
-    
+    expect(aiMessage.dependenciesString).toBe(
+      '{"react": "^18.2.0", "react-dom": "^18.2.0", "react-router-dom": "^6.4.0", "tailwindcss": "^3.3.0"}}'
+    );
+
     // Should have parsed dependencies correctly
     const parsedDependencies = parseDependencies(aiMessage.dependenciesString);
     expect(parsedDependencies).toEqual({
-      "react": "^18.2.0", 
-      "react-dom": "^18.2.0", 
-      "react-router-dom": "^6.4.0", 
-      "tailwindcss": "^3.3.0"
+      react: '^18.2.0',
+      'react-dom': '^18.2.0',
+      'react-router-dom': '^6.4.0',
+      tailwindcss: '^3.3.0',
     });
-    
+
     // Should have 5 segments (intro markdown, main code, usage markdown, example code, outro markdown)
     expect(aiMessage.segments.length).toBe(5);
-    
+
     // Verify each segment type
     expect(aiMessage.segments[0].type).toBe('markdown');
     expect(aiMessage.segments[1].type).toBe('code');
     expect(aiMessage.segments[2].type).toBe('markdown');
     expect(aiMessage.segments[3].type).toBe('code');
     expect(aiMessage.segments[4].type).toBe('markdown');
-    
+
     // First segment should be markdown introduction
     expect(aiMessage.segments[0].content).toContain('Image Gallery Component');
-    
+
     // Second segment should be the main code
     expect(aiMessage.segments[1].type).toBe('code');
-    expect(aiMessage.segments[1].content).toContain("function ImageGallery");
-    
+    expect(aiMessage.segments[1].content).toContain('function ImageGallery');
+
     // Third segment should be usage instructions in markdown
     expect(aiMessage.segments[2].type).toBe('markdown');
     expect(aiMessage.segments[2].content).toContain('Usage Instructions');
-    
+
     // Fourth segment should be example code
     expect(aiMessage.segments[3].type).toBe('code');
-    expect(aiMessage.segments[3].content).toContain("import ImageGallery");
-    
+    expect(aiMessage.segments[3].content).toContain('import ImageGallery');
+
     // Fifth segment should be final markdown
     expect(aiMessage.segments[4].type).toBe('markdown');
     expect(aiMessage.segments[4].content).toContain('customize the API endpoint');
@@ -910,11 +956,13 @@ You can customize the API endpoint and items per page according to your needs. T
       const encoder = new TextEncoder();
       const stream = new ReadableStream({
         start(controller) {
-          controller.enqueue(encoder.encode('data: {"choices":[{"delta":{"content":""},"finish_reason":null}]}\n\n'));
+          controller.enqueue(
+            encoder.encode('data: {"choices":[{"delta":{"content":""},"finish_reason":null}]}\n\n')
+          );
           controller.close();
-        }
+        },
       });
-      
+
       return {
         ok: true,
         body: stream,
@@ -923,22 +971,22 @@ You can customize the API endpoint and items per page according to your needs. T
         headers: new Headers(),
       } as Response;
     });
-    
+
     window.fetch = mockFetch;
-    
+
     // Read the fixture file for reference only (we won't use it directly)
     const fixturePath = path.join(__dirname, 'long-message.txt');
     const longMessageContent = fs.readFileSync(fixturePath, 'utf-8');
-    
+
     // Mock renderHook to inject our custom messages
     const { result } = renderHook(() => useSimpleChat(null));
-    
+
     // Create mock messages with the expected format
     const mockMessages = [
       {
         type: 'user',
         text: 'Create a photo gallery app',
-        timestamp: Date.now() - 1000
+        timestamp: Date.now() - 1000,
       },
       {
         type: 'ai',
@@ -946,40 +994,43 @@ You can customize the API endpoint and items per page according to your needs. T
         segments: [
           {
             type: 'markdown' as const,
-            content: "Here's a photo gallery app:"
+            content: "Here's a photo gallery app:",
           },
           {
             type: 'code' as const,
-            content: "import React from 'react';\nexport default function App() { /* ... */ }"
-          }
+            content: "import React from 'react';\nexport default function App() { /* ... */ }",
+          },
         ],
-        dependenciesString: "Here's a photo gallery app using Fireproof for storage with a grid layout and modal viewing functionality:",
+        dependenciesString:
+          "Here's a photo gallery app using Fireproof for storage with a grid layout and modal viewing functionality:",
         isStreaming: false,
-        timestamp: Date.now()
-      }
+        timestamp: Date.now(),
+      },
     ];
-    
+
     // Directly set the messages in the result
     Object.defineProperty(result.current, 'messages', {
       get: () => mockMessages,
-      configurable: true
+      configurable: true,
     });
-    
+
     // Force a re-render
     act(() => {
       result.current.setInput('');
     });
-    
+
     // Verify the message structure
     const aiMessage = result.current.messages[1] as AiChatMessage;
-    
+
     // Check segments
     expect(aiMessage.segments.length).toBe(2);
     expect(aiMessage.segments[0].type).toBe('markdown');
     expect(aiMessage.segments[1].type).toBe('code');
-    
+
     // Check dependenciesString
-    expect(aiMessage.dependenciesString).toBe("Here's a photo gallery app using Fireproof for storage with a grid layout and modal viewing functionality:");
+    expect(aiMessage.dependenciesString).toBe(
+      "Here's a photo gallery app using Fireproof for storage with a grid layout and modal viewing functionality:"
+    );
   });
 
   it('correctly processes the Exoplanet Tracker app from easy-message.txt', async () => {
@@ -988,11 +1039,13 @@ You can customize the API endpoint and items per page according to your needs. T
       const encoder = new TextEncoder();
       const stream = new ReadableStream({
         start(controller) {
-          controller.enqueue(encoder.encode('data: {"choices":[{"delta":{"content":""},"finish_reason":null}]}\n\n'));
+          controller.enqueue(
+            encoder.encode('data: {"choices":[{"delta":{"content":""},"finish_reason":null}]}\n\n')
+          );
           controller.close();
-        }
+        },
       });
-      
+
       return {
         ok: true,
         body: stream,
@@ -1001,22 +1054,22 @@ You can customize the API endpoint and items per page according to your needs. T
         headers: new Headers(),
       } as Response;
     });
-    
+
     window.fetch = mockFetch;
-    
+
     // Read the fixture file for reference only
     const fixturePath = path.join(__dirname, 'easy-message.txt');
     const messageContent = fs.readFileSync(fixturePath, 'utf-8');
-    
+
     // Mock renderHook to inject our custom messages
     const { result } = renderHook(() => useSimpleChat(null));
-    
+
     // Create mock messages with the expected format
     const mockMessages = [
       {
         type: 'user',
         text: 'Create an exoplanet tracking app',
-        timestamp: Date.now() - 1000
+        timestamp: Date.now() - 1000,
       },
       {
         type: 'ai',
@@ -1024,40 +1077,44 @@ You can customize the API endpoint and items per page according to your needs. T
         segments: [
           {
             type: 'markdown' as const,
-            content: "I'll create an \"Exoplanet Tracker\" app"
+            content: 'I\'ll create an "Exoplanet Tracker" app',
           },
           {
             type: 'code' as const,
-            content: "import React from 'react';\nexport default function ExoplanetTracker() { /* ... */ }"
-          }
+            content:
+              "import React from 'react';\nexport default function ExoplanetTracker() { /* ... */ }",
+          },
         ],
-        dependenciesString: "I'll create an \"Exoplanet Tracker\" app that lets users log and track potential exoplanets they've discovered or are interested in.",
+        dependenciesString:
+          'I\'ll create an "Exoplanet Tracker" app that lets users log and track potential exoplanets they\'ve discovered or are interested in.',
         isStreaming: false,
-        timestamp: Date.now()
-      }
+        timestamp: Date.now(),
+      },
     ];
-    
+
     // Directly set the messages in the result
     Object.defineProperty(result.current, 'messages', {
       get: () => mockMessages,
-      configurable: true
+      configurable: true,
     });
-    
+
     // Force a re-render
     act(() => {
       result.current.setInput('');
     });
-    
+
     // Verify the message structure
     const aiMessage = result.current.messages[1] as AiChatMessage;
-    
+
     // Check segments
     expect(aiMessage.segments.length).toBe(2);
     expect(aiMessage.segments[0].type).toBe('markdown');
     expect(aiMessage.segments[1].type).toBe('code');
-    
+
     // Check dependenciesString
-    expect(aiMessage.dependenciesString).toBe("I'll create an \"Exoplanet Tracker\" app that lets users log and track potential exoplanets they've discovered or are interested in.");
+    expect(aiMessage.dependenciesString).toBe(
+      'I\'ll create an "Exoplanet Tracker" app that lets users log and track potential exoplanets they\'ve discovered or are interested in.'
+    );
   });
 
   it('correctly processes the Lyrics Rater app from easy-message2.txt', async () => {
@@ -1066,11 +1123,13 @@ You can customize the API endpoint and items per page according to your needs. T
       const encoder = new TextEncoder();
       const stream = new ReadableStream({
         start(controller) {
-          controller.enqueue(encoder.encode('data: {"choices":[{"delta":{"content":""},"finish_reason":null}]}\n\n'));
+          controller.enqueue(
+            encoder.encode('data: {"choices":[{"delta":{"content":""},"finish_reason":null}]}\n\n')
+          );
           controller.close();
-        }
+        },
       });
-      
+
       return {
         ok: true,
         body: stream,
@@ -1079,22 +1138,22 @@ You can customize the API endpoint and items per page according to your needs. T
         headers: new Headers(),
       } as Response;
     });
-    
+
     window.fetch = mockFetch;
-    
+
     // Read the fixture file for reference only
     const fixturePath = path.join(__dirname, 'easy-message2.txt');
     const messageContent = fs.readFileSync(fixturePath, 'utf-8');
-    
+
     // Mock renderHook to inject our custom messages
     const { result } = renderHook(() => useSimpleChat(null));
-    
+
     // Create mock messages with the expected format
     const mockMessages = [
       {
         type: 'user',
         text: 'Create a lyrics rating app',
-        timestamp: Date.now() - 1000
+        timestamp: Date.now() - 1000,
       },
       {
         type: 'ai',
@@ -1102,53 +1161,56 @@ You can customize the API endpoint and items per page according to your needs. T
         segments: [
           {
             type: 'markdown' as const,
-            content: "# Lyrics Rater App"
+            content: '# Lyrics Rater App',
           },
           {
             type: 'code' as const,
-            content: "import React from 'react';\nexport default function LyricsRaterApp() { /* ... */ }"
-          }
+            content:
+              "import React from 'react';\nexport default function LyricsRaterApp() { /* ... */ }",
+          },
         ],
-        dependenciesString: "# Lyrics Rater App",
+        dependenciesString: '# Lyrics Rater App',
         isStreaming: false,
-        timestamp: Date.now()
-      }
+        timestamp: Date.now(),
+      },
     ];
-    
+
     // Directly set the messages in the result
     Object.defineProperty(result.current, 'messages', {
       get: () => mockMessages,
-      configurable: true
+      configurable: true,
     });
-    
+
     // Force a re-render
     act(() => {
       result.current.setInput('');
     });
-    
+
     // Verify the message structure
     const aiMessage = result.current.messages[1] as AiChatMessage;
-    
+
     // Check segments
     expect(aiMessage.segments.length).toBe(2);
     expect(aiMessage.segments[0].type).toBe('markdown');
     expect(aiMessage.segments[1].type).toBe('code');
-    
+
     // Check dependenciesString
-    expect(aiMessage.dependenciesString).toBe("# Lyrics Rater App");
+    expect(aiMessage.dependenciesString).toBe('# Lyrics Rater App');
   });
-  
+
   it('correctly processes the photo gallery app from hard-message.txt', async () => {
     // Create a mock fetch that just returns an empty response
     const mockFetch = vi.fn().mockImplementation(async () => {
       const encoder = new TextEncoder();
       const stream = new ReadableStream({
         start(controller) {
-          controller.enqueue(encoder.encode('data: {"choices":[{"delta":{"content":""},"finish_reason":null}]}\n\n'));
+          controller.enqueue(
+            encoder.encode('data: {"choices":[{"delta":{"content":""},"finish_reason":null}]}\n\n')
+          );
           controller.close();
-        }
+        },
       });
-      
+
       return {
         ok: true,
         body: stream,
@@ -1157,22 +1219,22 @@ You can customize the API endpoint and items per page according to your needs. T
         headers: new Headers(),
       } as Response;
     });
-    
+
     window.fetch = mockFetch;
-    
+
     // Read the fixture file for reference only
     const fixturePath = path.join(__dirname, 'hard-message.txt');
     const messageContent = fs.readFileSync(fixturePath, 'utf-8');
-    
+
     // Mock renderHook to inject our custom messages
     const { result } = renderHook(() => useSimpleChat(null));
-    
+
     // Create mock messages with the expected format
     const mockMessages = [
       {
         type: 'user',
         text: 'Create a photo gallery app with synthwave style',
-        timestamp: Date.now() - 1000
+        timestamp: Date.now() - 1000,
       },
       {
         type: 'ai',
@@ -1180,39 +1242,42 @@ You can customize the API endpoint and items per page according to your needs. T
         segments: [
           {
             type: 'markdown' as const,
-            content: "Here's a photo gallery app:"
+            content: "Here's a photo gallery app:",
           },
           {
             type: 'code' as const,
-            content: "import React from 'react';\nexport default function App() { /* ... */ }"
-          }
+            content: "import React from 'react';\nexport default function App() { /* ... */ }",
+          },
         ],
-        dependenciesString: "Here's a photo gallery app using Fireproof for storage with a grid layout and modal viewing functionality:",
+        dependenciesString:
+          "Here's a photo gallery app using Fireproof for storage with a grid layout and modal viewing functionality:",
         isStreaming: false,
-        timestamp: Date.now()
-      }
+        timestamp: Date.now(),
+      },
     ];
-    
+
     // Directly set the messages in the result
     Object.defineProperty(result.current, 'messages', {
       get: () => mockMessages,
-      configurable: true
+      configurable: true,
     });
-    
+
     // Force a re-render
     act(() => {
       result.current.setInput('');
     });
-    
+
     // Verify the message structure
     const aiMessage = result.current.messages[1] as AiChatMessage;
-    
+
     // Check segments
     expect(aiMessage.segments.length).toBe(2);
     expect(aiMessage.segments[0].type).toBe('markdown');
     expect(aiMessage.segments[1].type).toBe('code');
-    
+
     // Check dependenciesString
-    expect(aiMessage.dependenciesString).toBe("Here's a photo gallery app using Fireproof for storage with a grid layout and modal viewing functionality:");
+    expect(aiMessage.dependenciesString).toBe(
+      "Here's a photo gallery app using Fireproof for storage with a grid layout and modal viewing functionality:"
+    );
   });
-}); 
+});

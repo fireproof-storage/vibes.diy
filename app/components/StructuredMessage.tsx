@@ -13,7 +13,7 @@ interface StructuredMessageProps {
 const StructuredMessage = memo(({ segments, isStreaming }: StructuredMessageProps) => {
   // Count number of lines in code segments
   const codeLines = segments
-    .filter(segment => segment.type === 'code')
+    .filter((segment) => segment.type === 'code')
     .reduce((acc, segment) => acc + segment.content.split('\n').length, 0);
 
   return (
@@ -28,29 +28,35 @@ const StructuredMessage = memo(({ segments, isStreaming }: StructuredMessageProp
         } else if (segment.type === 'code') {
           // For code segments, show a summary with line count rather than full code
           return (
-            <div key={`code-${index}`} className="my-4 rounded-md border border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-800">
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-sm font-mono text-gray-500 dark:text-gray-400">
+            <div
+              key={`code-${index}`}
+              className="my-4 rounded-md border border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-800"
+            >
+              <div className="mb-2 flex items-center justify-between">
+                <span className="font-mono text-sm text-gray-500 dark:text-gray-400">
                   {`${codeLines} line${codeLines !== 1 ? 's' : ''} of code`}
                 </span>
-                
-                <button 
+
+                <button
                   onClick={() => {
                     navigator.clipboard.writeText(segment.content);
                   }}
-                  className="text-xs bg-gray-200 dark:bg-gray-700 px-2 py-1 rounded hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
+                  className="rounded bg-gray-200 px-2 py-1 text-xs transition-colors hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600"
                 >
                   Copy Code
                 </button>
               </div>
 
               {/* Preview of first few lines */}
-              <div className="overflow-hidden text-sm font-mono bg-gray-100 dark:bg-gray-800 p-2 rounded max-h-24">
-                {segment.content.split('\n').slice(0, 3).map((line, i) => (
-                  <div key={i} className="truncate">
-                    {line || ' '}
-                  </div>
-                ))}
+              <div className="max-h-24 overflow-hidden rounded bg-gray-100 p-2 font-mono text-sm dark:bg-gray-800">
+                {segment.content
+                  .split('\n')
+                  .slice(0, 3)
+                  .map((line, i) => (
+                    <div key={i} className="truncate">
+                      {line || ' '}
+                    </div>
+                  ))}
                 {segment.content.split('\n').length > 3 && (
                   <div className="text-gray-500 dark:text-gray-400">...</div>
                 )}
@@ -60,7 +66,7 @@ const StructuredMessage = memo(({ segments, isStreaming }: StructuredMessageProp
         }
         return null;
       })}
-      
+
       {isStreaming && (
         <span className="bg-light-primary dark:bg-dark-primary ml-1 inline-block h-4 w-2 animate-pulse" />
       )}
@@ -70,4 +76,4 @@ const StructuredMessage = memo(({ segments, isStreaming }: StructuredMessageProp
 
 StructuredMessage.displayName = 'StructuredMessage';
 
-export default StructuredMessage; 
+export default StructuredMessage;

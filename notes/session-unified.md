@@ -13,13 +13,13 @@ export function useSessionMessages(sessionId: string | null) {
   // Existing database query logic
   const { db } = useFireproof();
   const messages = useLiveQuery(...);
-  
+
   // Add state for current streaming message
   const [streamingMessage, setStreamingMessage] = useState<AiChatMessage | null>(null);
-  
+
   // Enhanced addAiMessage function
   const addAiMessage = async (
-    rawMessage: string, 
+    rawMessage: string,
     timestamp: number | null = null,
     isStreaming: boolean = false
   ) => {
@@ -31,10 +31,10 @@ export function useSessionMessages(sessionId: string | null) {
       raw_content: rawMessage,
       timestamp: timestamp || Date.now()
     };
-    
+
     // Save to database (same as before)
     await db.put(aiDoc);
-    
+
     // If streaming, also parse and keep in memory
     if (isStreaming) {
       const { segments, dependenciesString } = parseContent(rawMessage);
@@ -51,11 +51,11 @@ export function useSessionMessages(sessionId: string | null) {
       setStreamingMessage(null);
     }
   };
-  
+
   // Combine database messages with streaming message
   const combinedMessages = useMemo(() => {
     if (!streamingMessage) return messages;
-    
+
     // Replace the database version of the streaming message with memory version
     return messages.map(msg => {
       if (msg.type === 'ai' && msg.timestamp === streamingMessage.timestamp) {
@@ -64,7 +64,7 @@ export function useSessionMessages(sessionId: string | null) {
       return msg;
     });
   }, [messages, streamingMessage]);
-  
+
   return {
     // Return combined messages instead of just database messages
     messages: combinedMessages,
@@ -81,10 +81,10 @@ export function useSessionMessages(sessionId: string | null) {
 while (true) {
   const { done, value } = await reader.read();
   if (done) break;
-  
+
   const chunk = decoder.decode(value);
   const lines = chunk.split('\n\n');
-  
+
   for (const line of lines) {
     if (line.startsWith('data:')) {
       try {
@@ -93,7 +93,7 @@ while (true) {
           const content = data.choices[0].delta.content;
           // Add content to buffer
           streamBufferRef.current += content;
-          
+
           // This will update both database AND memory state
           // Messages in components will render from the parsed memory version
           await addAiMessage(streamBufferRef.current, aiMessageTimestampRef.current, true);
@@ -135,30 +135,32 @@ Based on the understanding that the current streaming message is always the most
 ### Step 1: Modify useSessionMessages.ts
 
 1. Add state for tracking streaming message:
+
    ```typescript
    const [streamingMessage, setStreamingMessage] = useState<AiChatMessage | null>(null);
    ```
 
 2. Update the `addAiMessage` function to handle streaming:
+
    ```typescript
    const addAiMessage = async (
-     rawMessage: string, 
+     rawMessage: string,
      created_at?: number,
      isStreaming: boolean = false
    ) => {
      if (!sessionId) return null;
-     
+
      try {
        const timestamp = created_at || Date.now();
-       
+
        // Always create the same database document - no streaming flag in DB
        const result = await database.put({
          type: 'ai-message',
          session_id: sessionId,
          rawMessage,
-         created_at: timestamp
+         created_at: timestamp,
        } as AiMessageDocument);
-       
+
        // For streaming, keep parsed version in memory
        if (isStreaming) {
          const { segments, dependenciesString } = parseContent(rawMessage);
@@ -168,12 +170,12 @@ Based on the understanding that the current streaming message is always the most
            segments,
            dependenciesString,
            isStreaming: true,
-           timestamp
+           timestamp,
          } as AiChatMessage);
        } else {
          setStreamingMessage(null);
        }
-       
+
        return timestamp;
      } catch (error) {
        console.error('Error adding AI message:', error);
@@ -183,6 +185,7 @@ Based on the understanding that the current streaming message is always the most
    ```
 
 3. Simplify the combinedMessages logic:
+
    ```typescript
    const combinedMessages = useMemo(() => {
      if (!streamingMessage) return messages;
@@ -196,7 +199,7 @@ Based on the understanding that the current streaming message is always the most
      messages: combinedMessages,
      isLoading: !docs,
      addUserMessage,
-     addAiMessage
+     addAiMessage,
    };
    ```
 
@@ -262,6 +265,7 @@ Remove disabled state based on streaming:
 ### Step 3: Test and Refine
 
 Test thoroughly to ensure:
+
 - Immediate streaming updates
 - Correct final message persistence
 - Smooth UI transitions
@@ -276,5 +280,3 @@ This simplified approach leverages the fact that the current streaming message i
 - By using message timestamps as identity keys, we ensure proper matching between streaming and final messages
 
 Implementation should begin with the hook modifications, then update the streaming loop, and finally refine component interactions as needed.
-
-

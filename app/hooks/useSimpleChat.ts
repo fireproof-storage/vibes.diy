@@ -14,20 +14,20 @@ const CHOSEN_MODEL = 'anthropic/claude-3.7-sonnet';
 export function useSimpleChat(sessionId: string | null) {
   // Use our new hooks
   const { session, updateTitle } = useSession(sessionId);
-  const { 
-    messages, 
-    addUserMessage, 
-    addAiMessage, 
+  const {
+    messages,
+    addUserMessage,
+    addAiMessage,
     updateStreamingMessage,
-    isLoading: messagesLoading 
+    isLoading: messagesLoading,
   } = useSessionMessages(sessionId);
-  
+
   // Core state
   const [input, setInput] = useState<string>('');
   const [systemPrompt, setSystemPrompt] = useState('');
   const [title, setTitle] = useState<string>(session?.title || 'New Chat');
   const [titleGenerated, setTitleGenerated] = useState<boolean>(false);
-  
+
   // Refs for tracking streaming state
   const streamBufferRef = useRef<string>('');
   const inputRef = useRef<HTMLTextAreaElement>(null);
@@ -90,12 +90,12 @@ export function useSimpleChat(sessionId: string | null) {
       const { segments } = parseContent(streamBufferRef.current);
       return segments;
     }
-    
+
     // Otherwise find the last AI message
-    const lastAiMessage = [...messages].reverse().find(
-      (msg): msg is AiChatMessage => msg.type === 'ai'
-    );
-    
+    const lastAiMessage = [...messages]
+      .reverse()
+      .find((msg): msg is AiChatMessage => msg.type === 'ai');
+
     // Return segments from the last AI message or empty array
     return lastAiMessage?.segments || [];
   }, [messages]);
@@ -106,7 +106,7 @@ export function useSimpleChat(sessionId: string | null) {
    */
   const getCurrentCode = useCallback((): string => {
     const segments = currentSegments();
-    const codeSegment = segments.find(segment => segment.type === 'code');
+    const codeSegment = segments.find((segment) => segment.type === 'code');
     return codeSegment?.content || '';
   }, [currentSegments]);
 
@@ -117,20 +117,20 @@ export function useSimpleChat(sessionId: string | null) {
   async function generateTitle(aiTimestamp: number, segments: Segment[]): Promise<string | null> {
     try {
       // Get first markdown segment and first code segment (if they exist)
-      const firstMarkdown = segments.find(seg => seg.type === 'markdown');
-      const firstCode = segments.find(seg => seg.type === 'code');
-      
+      const firstMarkdown = segments.find((seg) => seg.type === 'markdown');
+      const firstCode = segments.find((seg) => seg.type === 'code');
+
       // Create content from the first two segments
       let titleContent = '';
-      
+
       if (firstMarkdown) {
         titleContent += firstMarkdown.content + '\n\n';
       }
-      
+
       if (firstCode) {
         titleContent += '```\n' + firstCode.content.split('\n').slice(0, 15).join('\n') + '\n```';
       }
-      
+
       const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
         method: 'POST',
         headers: {
@@ -160,19 +160,19 @@ export function useSimpleChat(sessionId: string | null) {
         const data = await response.json();
         const newTitle = data.choices[0]?.message?.content?.trim() || 'New Chat';
         setTitle(newTitle);
-        
+
         // Update the session title
         if (sessionId) {
           await updateTitle(newTitle);
           setTitleGenerated(true);
         }
-        
+
         return newTitle;
       }
     } catch (error) {
       console.error('Error generating title:', error);
     }
-    
+
     return null;
   }
 
@@ -182,9 +182,12 @@ export function useSimpleChat(sessionId: string | null) {
    */
   async function sendMessage(): Promise<void> {
     if (input.trim()) {
-      console.log('useSimpleChat: Starting sendMessage with input:', input.substring(0, 30) + '...');
+      console.log(
+        'useSimpleChat: Starting sendMessage with input:',
+        input.substring(0, 30) + '...'
+      );
       console.log('useSimpleChat: Current sessionId:', sessionId);
-      
+
       // Reset state for new message
       streamBufferRef.current = '';
       setStreamingState(true);
@@ -193,7 +196,7 @@ export function useSimpleChat(sessionId: string | null) {
         // Add user message
         console.log('useSimpleChat: Adding user message to session');
         await addUserMessage(input);
-        
+
         // Clear input
         setInput('');
 
@@ -238,7 +241,7 @@ export function useSimpleChat(sessionId: string | null) {
         }
 
         const decoder = new TextDecoder();
-        
+
         // Create a timestamp for this AI message - we'll use it when storing the final message
         const aiMessageTimestamp = Date.now();
         aiMessageTimestampRef.current = aiMessageTimestamp;
@@ -250,7 +253,7 @@ export function useSimpleChat(sessionId: string | null) {
 
           // Decode the chunk
           const chunk = decoder.decode(value, { stream: true });
-          
+
           // Process SSE format
           const lines = chunk.split('\n');
           for (const line of lines) {
@@ -258,7 +261,7 @@ export function useSimpleChat(sessionId: string | null) {
             if (line.startsWith(': OPENROUTER PROCESSING')) {
               continue;
             }
-            
+
             if (line.startsWith('data: ') && line !== 'data: [DONE]') {
               try {
                 const data = JSON.parse(line.substring(6));
@@ -266,17 +269,19 @@ export function useSimpleChat(sessionId: string | null) {
                   const content = data.choices[0].delta.content;
                   // Add only the actual content to the buffer
                   streamBufferRef.current += content;
-                  
+
                   // IMPROVED IMPLEMENTATION: Update streaming message in memory only
                   // This avoids database writes during streaming
                   updateStreamingMessage(streamBufferRef.current, aiMessageTimestampRef.current);
-                  
+
                   // Log every 20 characters for debugging
                   if (streamBufferRef.current.length % 20 === 0) {
-                    console.log('Stream buffer length:', streamBufferRef.current.length, 
-                               'Sample:', streamBufferRef.current.substring(
-                                 streamBufferRef.current.length - 20
-                               ));
+                    console.log(
+                      'Stream buffer length:',
+                      streamBufferRef.current.length,
+                      'Sample:',
+                      streamBufferRef.current.substring(streamBufferRef.current.length - 20)
+                    );
                   }
                 }
               } catch (e) {
@@ -293,11 +298,15 @@ export function useSimpleChat(sessionId: string | null) {
 
         // Generate a title if this is the first response with code
         const { segments } = parseContent(streamBufferRef.current);
-        const hasCode = segments.some(segment => segment.type === 'code');
-        
-        console.log('useSimpleChat: Response has code:', hasCode, 
-                   'Session title:', session?.title || 'none');
-        
+        const hasCode = segments.some((segment) => segment.type === 'code');
+
+        console.log(
+          'useSimpleChat: Response has code:',
+          hasCode,
+          'Session title:',
+          session?.title || 'none'
+        );
+
         if (hasCode && (!session?.title || session.title === 'New Chat')) {
           console.log('useSimpleChat: Generating title for session');
           await generateTitle(aiMessageTimestamp, segments);
@@ -305,7 +314,8 @@ export function useSimpleChat(sessionId: string | null) {
       } catch (error) {
         // Handle errors
         console.error('Error calling OpenRouter API:', error);
-        const errorMessage = 'Sorry, there was an error generating the component. Please try again.';
+        const errorMessage =
+          'Sorry, there was an error generating the component. Please try again.';
         // Add error message as AI message
         await addAiMessage(errorMessage);
         setStreamingState(false);
@@ -317,29 +327,32 @@ export function useSimpleChat(sessionId: string | null) {
   }
 
   // Helper for compatibility with current components
-  const setMessages = useCallback((newMessages: ChatMessage[] | ((prev: ChatMessage[]) => ChatMessage[])) => {
-    console.warn('setMessages is deprecated. Use addUserMessage and updateAiMessage instead.');
-    // This is just a stub for compatibility, we should remove it once components are updated
-  }, []);
+  const setMessages = useCallback(
+    (newMessages: ChatMessage[] | ((prev: ChatMessage[]) => ChatMessage[])) => {
+      console.warn('setMessages is deprecated. Use addUserMessage and updateAiMessage instead.');
+      // This is just a stub for compatibility, we should remove it once components are updated
+    },
+    []
+  );
 
   return {
-    messages,             // All messages in the conversation
-    setMessages,          // Function to update messages (legacy, to be removed)
-    input,                // Current user input text
-    setInput,             // Function to update input
-    isStreaming,          // Whether any AI message is currently streaming
-    streamingState,       // Direct access to streaming state
-    sendMessage,          // Function to send a message
-    currentSegments,      // Get current segments
-    getCurrentCode,       // Get current code
-    inputRef,             // Reference to the input textarea
-    messagesEndRef,       // Reference to the messages end div
-    autoResizeTextarea,   // Function to resize textarea
-    scrollToBottom,       // Function to scroll to bottom
-    title,                // Current chat title
-    setTitle: updateTitle,// Function to update title
+    messages, // All messages in the conversation
+    setMessages, // Function to update messages (legacy, to be removed)
+    input, // Current user input text
+    setInput, // Function to update input
+    isStreaming, // Whether any AI message is currently streaming
+    streamingState, // Direct access to streaming state
+    sendMessage, // Function to send a message
+    currentSegments, // Get current segments
+    getCurrentCode, // Get current code
+    inputRef, // Reference to the input textarea
+    messagesEndRef, // Reference to the messages end div
+    autoResizeTextarea, // Function to resize textarea
+    scrollToBottom, // Function to scroll to bottom
+    title, // Current chat title
+    setTitle: updateTitle, // Function to update title
     titleGenerated,
     sessionId,
-    isLoadingMessages: messagesLoading
+    isLoadingMessages: messagesLoading,
   };
-} 
+}

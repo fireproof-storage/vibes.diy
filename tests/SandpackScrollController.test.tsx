@@ -29,52 +29,46 @@ describe('SandpackScrollController', () => {
     // Setup DOM structure that SandpackScrollController would expect
     const rootDiv = document.createElement('div');
     rootDiv.className = 'sp-wrapper';
-    
+
     const previewContainer = document.createElement('div');
     previewContainer.className = 'sp-preview-container';
     rootDiv.appendChild(previewContainer);
-    
+
     document.body.appendChild(rootDiv);
   });
-  
+
   afterEach(() => {
     // Clean up
     document.body.innerHTML = '';
-    
+
     // Remove the style element if it was added
     const styleElement = document.getElementById('highlight-style');
     if (styleElement) {
       styleElement.remove();
     }
   });
-  
+
   it('renders without crashing', () => {
-    render(
-      <SandpackScrollController isStreaming={false} />
-    );
-    
+    render(<SandpackScrollController isStreaming={false} />);
+
     // Check that the highlight style is added
     const styleElement = document.getElementById('highlight-style');
     expect(styleElement).not.toBeNull();
   });
-  
+
   it('renders with streaming enabled', () => {
-    render(
-      <SandpackScrollController isStreaming={true} />
-    );
-    
+    render(<SandpackScrollController isStreaming={true} />);
+
     // Component renders without errors
     const styleElement = document.getElementById('highlight-style');
     expect(styleElement).not.toBeNull();
   });
-  
+
   it('adds highlight style to the document', () => {
-    render(
-      <SandpackScrollController isStreaming={false} />
-    );
-    
+    render(<SandpackScrollController isStreaming={false} />);
+
     const styleElement = document.getElementById('highlight-style');
     expect(styleElement).not.toBeNull();
     expect(styleElement?.textContent).toContain('.cm-line-highlighted');
   });
-}); 
+});

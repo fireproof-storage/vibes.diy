@@ -72,7 +72,7 @@ interface SessionSidebarProps {
  */
 function SessionSidebar({ isVisible, onClose }: SessionSidebarProps) {
   const sidebarRef = useRef<HTMLDivElement>(null);
-  
+
   // Use the custom hook instead of direct database queries
   const { groupedSessions } = useSessionList();
 
@@ -205,8 +205,5 @@ function SessionSidebar({ isVisible, onClose }: SessionSidebarProps) {
 export default memo(SessionSidebar, (prevProps, nextProps) => {
   // Only re-render if isVisible changes
   // Note: Functions should be memoized by parent components
-  return (
-    prevProps.isVisible === nextProps.isVisible &&
-    prevProps.onClose === nextProps.onClose
-  );
+  return prevProps.isVisible === nextProps.isVisible && prevProps.onClose === nextProps.onClose;
 });

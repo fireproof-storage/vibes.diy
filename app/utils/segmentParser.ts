@@ -4,7 +4,10 @@ import type { Segment } from '../types/chat';
  * Parse content into segments of markdown and code
  * This is a pure function that doesn't rely on any state
  */
-export function parseContent(text: string): { segments: Segment[], dependenciesString: string | undefined } {
+export function parseContent(text: string): {
+  segments: Segment[];
+  dependenciesString: string | undefined;
+} {
   const segments: Segment[] = [];
   let dependenciesString: string | undefined;
 
@@ -24,16 +27,16 @@ export function parseContent(text: string): { segments: Segment[], dependenciesS
   // More robust code block detection - matching standard markdown code fence pattern
   // This will match ```language\n and ``` patterns
   const codeBlockRegex = /```(?:([a-zA-Z0-9]+)?\n)?/g;
-  
+
   let match;
   let lastIndex = 0;
   let inCodeBlock = false;
-  
+
   // Loop through all code block markers
   while ((match = codeBlockRegex.exec(text)) !== null) {
     const matchIndex = match.index;
     const matchLength = match[0].length;
-    
+
     if (!inCodeBlock) {
       // This is the start of a code block
       // Add the text before this code block as markdown
@@ -41,10 +44,10 @@ export function parseContent(text: string): { segments: Segment[], dependenciesS
       if (markdownContent.trim()) {
         segments.push({
           type: 'markdown',
-          content: markdownContent
+          content: markdownContent,
         });
       }
-      
+
       // Mark the position after this code block marker
       lastIndex = matchIndex + matchLength;
       inCodeBlock = true;
@@ -55,30 +58,30 @@ export function parseContent(text: string): { segments: Segment[], dependenciesS
       if (codeContent) {
         segments.push({
           type: 'code',
-          content: codeContent
+          content: codeContent,
         });
       }
-      
+
       // Mark the position after this code block marker
       lastIndex = matchIndex + matchLength;
       inCodeBlock = false;
     }
   }
-  
+
   // Add any remaining content
   if (lastIndex < text.length) {
     segments.push({
       type: inCodeBlock ? 'code' : 'markdown',
-      content: text.substring(lastIndex)
+      content: text.substring(lastIndex),
     });
   }
-  
+
   // If no segments were created (which shouldn't happen but just in case)
   // treat the entire content as markdown
   if (segments.length === 0) {
     segments.push({
       type: 'markdown',
-      content: text
+      content: text,
     });
   }
 
@@ -88,7 +91,7 @@ export function parseContent(text: string): { segments: Segment[], dependenciesS
     console.debug(`Segment ${i} (${segment.type}):`);
     console.debug(segment.content);
   });
-  
+
   return { segments, dependenciesString };
 }
 
@@ -97,25 +100,25 @@ export function parseContent(text: string): { segments: Segment[], dependenciesS
  */
 export function parseDependencies(dependenciesString?: string): Record<string, string> {
   if (!dependenciesString) return {};
-  
+
   const dependencies: Record<string, string> = {};
   const matches = dependenciesString.match(/"([^"]+)"\s*:\s*"([^"]+)"/g);
-  
+
   if (matches) {
     matches.forEach((match) => {
       const keyMatch = match.match(/"([^"]+)"\s*:/);
       const valueMatch = match.match(/:\s*"([^"]+)"/);
-      
+
       if (keyMatch?.[1] && valueMatch?.[1]) {
         const key = keyMatch[1].trim();
         const value = valueMatch[1].trim();
-        
+
         if (key && value) {
           dependencies[key] = value;
         }
       }
     });
   }
-  
+
   return dependencies;
-} 
+}

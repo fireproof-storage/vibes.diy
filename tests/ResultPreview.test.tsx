@@ -11,7 +11,9 @@ Object.assign(navigator, {
 
 // Mock SandpackProvider and related components
 vi.mock('@codesandbox/sandpack-react', () => ({
-  SandpackProvider: ({ children }: { children: React.ReactNode }) => <div data-testid="sandpack-provider">{children}</div>,
+  SandpackProvider: ({ children }: { children: React.ReactNode }) => (
+    <div data-testid="sandpack-provider">{children}</div>
+  ),
   SandpackLayout: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
   SandpackCodeEditor: () => <div data-testid="sandpack-editor">Editor</div>,
   SandpackPreview: () => <div data-testid="sandpack-preview">Preview</div>,
@@ -39,7 +41,7 @@ describe('ResultPreview', () => {
   it('renders without crashing', () => {
     // Use non-empty code to ensure the editor is shown
     const { container } = render(<ResultPreview code="const test = 'Hello';" />);
-    
+
     // Now the sandpack editor should be visible
     expect(screen.getByTestId('sandpack-editor')).toBeDefined();
     expect(screen.getByTestId('sandpack-preview')).toBeDefined();
@@ -47,7 +49,7 @@ describe('ResultPreview', () => {
 
   it('displays welcome screen when code is empty', () => {
     render(<ResultPreview code={''} />);
-    
+
     expect(screen.getByTestId('welcome-screen')).toBeDefined();
   });
 
@@ -69,7 +71,7 @@ describe('ResultPreview', () => {
     };
 
     render(<ResultPreview code={code} dependencies={dependencies} />);
-    
+
     // Just verify it renders without errors
     expect(screen.getAllByTestId('sandpack-provider')[0]).toBeDefined();
   });
@@ -79,7 +81,7 @@ describe('ResultPreview', () => {
     const onShare = vi.fn();
 
     render(<ResultPreview code={code} onShare={onShare} />);
-    
+
     // Find and click the share button
     const shareButton = screen.getByRole('button', { name: /share/i });
     shareButton.click();
@@ -92,20 +94,20 @@ describe('ResultPreview', () => {
     const completedMessage = 'This is a test message';
 
     render(<ResultPreview code={code} completedMessage={completedMessage} />);
-    
+
     expect(screen.getByText(completedMessage)).toBeDefined();
   });
 
   it('shows welcome content with empty code', () => {
     render(<ResultPreview code="" />);
-    
+
     expect(screen.getByTestId('welcome-screen')).toBeDefined();
   });
 
   it('shows a share button when onShare is provided and code is not empty', () => {
     // Use non-empty code to ensure the share button is shown
     render(<ResultPreview code="const test = 'Hello';" onShare={() => {}} />);
-    
+
     const shareButton = screen.getByRole('button', { name: /share/i });
     expect(shareButton).toBeDefined();
   });
@@ -113,7 +115,7 @@ describe('ResultPreview', () => {
   it('updates display when code changes', () => {
     const { rerender } = render(<ResultPreview code="" onShare={() => {}} />);
     rerender(<ResultPreview code="const test = 'Hello';" onShare={() => {}} />);
-    
+
     // Just verify it renders without errors
     expect(screen.getAllByTestId('sandpack-provider')[0]).toBeDefined();
   });
@@ -126,7 +128,7 @@ describe('ResultPreview', () => {
     // Use more specific selectors to avoid multiple elements issue
     const previewButton = screen.getByRole('button', { name: /switch to preview/i });
     const codeButton = screen.getByRole('button', { name: /switch to code editor/i });
-    
+
     expect(previewButton).toBeDefined();
     expect(codeButton).toBeDefined();
   });

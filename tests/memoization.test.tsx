@@ -3,7 +3,9 @@ import { render, act, screen } from '@testing-library/react';
 import React, { useContext } from 'react';
 
 // Create a controlled context for testing
-const TestContext = React.createContext<{ isStreaming: () => boolean }>({ isStreaming: () => false });
+const TestContext = React.createContext<{ isStreaming: () => boolean }>({
+  isStreaming: () => false,
+});
 const useTestContext = () => useContext(TestContext);
 
 // No need to mock ChatContext anymore
@@ -66,7 +68,7 @@ describe('Component Memoization', () => {
     it('does not re-render when props are unchanged', async () => {
       // Create a wrapper component for testing
       const { Component: TrackedHeader, getRenderCount } = createRenderTracker(ChatHeader);
-      
+
       // Create stable callback functions outside the component
       const onOpenSidebar = () => {};
       const onNewChat = () => {};
@@ -84,10 +86,10 @@ describe('Component Memoization', () => {
               Force Re-render
             </button>
             {/* Pass required props */}
-            <TrackedHeader 
-              onOpenSidebar={onOpenSidebar} 
-              onNewChat={onNewChat} 
-              isStreaming={isStreaming} 
+            <TrackedHeader
+              onOpenSidebar={onOpenSidebar}
+              onNewChat={onNewChat}
+              isStreaming={isStreaming}
             />
           </div>
         );
@@ -107,22 +109,22 @@ describe('Component Memoization', () => {
 
     it('should not re-render when context value changes but component does not use that value', () => {
       const renderCount = { current: 0 };
-      
+
       const { rerender } = render(
         <TestContext.Provider value={{ isStreaming: () => false }}>
           <TestComponent renderCount={renderCount} />
         </TestContext.Provider>
       );
-      
+
       const initialRenderCount = renderCount.current;
-      
+
       // Update the context with a new value
       rerender(
         <TestContext.Provider value={{ isStreaming: () => true }}>
           <TestComponent renderCount={renderCount} />
         </TestContext.Provider>
       );
-      
+
       // The component should have re-rendered because it uses isStreaming
       expect(renderCount.current).toBe(initialRenderCount + 1);
       expect(screen.getByTestId('test-component')).toHaveTextContent('Generating');
@@ -167,10 +169,10 @@ describe('Component Memoization', () => {
     it('does not re-render when props are unchanged', async () => {
       const { Component: TrackedMessageList, getRenderCount } = createRenderTracker(MessageList);
       const initialMessages: ChatMessage[] = [{ text: 'Hello', type: 'user' }];
-      
+
       function TestWrapper() {
         const [, forceUpdate] = React.useState({});
-        
+
         // Memoize the messages array and function inside the component
         const memoizedMessages = React.useMemo(() => initialMessages, []);
         const isStreamingFn = React.useCallback(() => false, []);
@@ -213,12 +215,12 @@ describe('Component Memoization', () => {
 
         const addMessage = () => {
           setMessages([
-            ...messages, 
-            { 
-              text: 'New message', 
-              type: 'ai', 
-              segments: [{ type: 'markdown', content: 'New message' }]
-            }
+            ...messages,
+            {
+              text: 'New message',
+              type: 'ai',
+              segments: [{ type: 'markdown', content: 'New message' }],
+            },
           ]);
         };
 

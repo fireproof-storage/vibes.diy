@@ -14,18 +14,17 @@ The `useChat` hook should follow a data-driven approach with these key principle
 - `fetch`: Used for API calls to OpenRouter
 - `TextDecoder`: For decoding stream chunks
 
-
 ## Essential State
 
 ```typescript
 // Core state needed
-const [messages, setMessages] = useState<ChatMessage[]>([]);  // Primary message store
-const [input, setInput] = useState<string>('');               // Current user input
-const [isGenerating, setIsGenerating] = useState(false);      // Message generation status
-const [systemPrompt, setSystemPrompt] = useState('');         // System prompt
+const [messages, setMessages] = useState<ChatMessage[]>([]); // Primary message store
+const [input, setInput] = useState<string>(''); // Current user input
+const [isGenerating, setIsGenerating] = useState(false); // Message generation status
+const [systemPrompt, setSystemPrompt] = useState(''); // System prompt
 
 // Refs for tracking without re-renders
-const streamBufferRef = useRef<string>('');                  // Accumulated stream content
+const streamBufferRef = useRef<string>(''); // Accumulated stream content
 ```
 
 ## Return Values
@@ -33,12 +32,12 @@ const streamBufferRef = useRef<string>('');                  // Accumulated stre
 ```typescript
 // Only what components actually need
 return {
-  messages,                // All messages in the conversation
-  input,                   // Current user input text
-  setInput,                // Function to update input
-  isGenerating,            // Whether a message is being generated
-  sendMessage,             // Function to send a message
-  currentSegments,         // Segments of the current/last message and code (derived)
+  messages, // All messages in the conversation
+  input, // Current user input text
+  setInput, // Function to update input
+  isGenerating, // Whether a message is being generated
+  sendMessage, // Function to send a message
+  currentSegments, // Segments of the current/last message and code (derived)
 };
 ```
 
@@ -54,10 +53,10 @@ type UserChatMessage = {
 
 type AiChatMessage = {
   type: 'ai';
-  text: string;            // Raw text content
-  segments: Segment[];     // Parsed segments
+  text: string; // Raw text content
+  segments: Segment[]; // Parsed segments
   dependenciesString?: string; // Raw dependencies for downstream parsing
-  isStreaming?: boolean;   // Whether this message is currently streaming
+  isStreaming?: boolean; // Whether this message is currently streaming
   timestamp?: number;
 };
 
@@ -70,10 +69,11 @@ type ChatMessage = UserChatMessage | AiChatMessage;
 ```
 
 ## Content Parsing Specifics
-  1. Language tags: Ignore language tags after backticks (e.g., ```javascript should be treated the same as ```)
-  2. Single code block: The parser assumes there will be at most one code block per AI response
-  3. Segment structure: Always follows pattern of dependencies → markdown → code → markdown (some segments may be empty, assume it starts with dependencies)
-  4. Dependencies: Should be extracted from the first segment, it ends with `}}`
+
+1. Language tags: Ignore language tags after backticks (e.g., `javascript should be treated the same as `)
+2. Single code block: The parser assumes there will be at most one code block per AI response
+3. Segment structure: Always follows pattern of dependencies → markdown → code → markdown (some segments may be empty, assume it starts with dependencies)
+4. Dependencies: Should be extracted from the first segment, it ends with `}}`
 
 ## Key Functions
 
@@ -89,28 +89,28 @@ type ChatMessage = UserChatMessage | AiChatMessage;
 4. Fetch from API with streaming
 5. For each chunk:
    - Add to `streamBufferRef`
-   - Parse full buffer into dependencies and segments when updating 
+   - Parse full buffer into dependencies and segments when updating
 6. On stream completion:
    - Force final update
    - Set `isStreaming: false` on the AI message
-   
 
 ## Error Handling
 
 On error:
+
 1. Log error for debugging, throw
 
 ## Advantages Over Current Implementation
 
 1. **Simplicity**: No complex event system or callbacks
 2. **Predictability**: Clear data flow from API to UI
-4. **Type Safety**: Discriminated union types for messages
-5. **Maintainability**: Pure functions for content parsing
-6. **Testability**: Easier to test with pure functions and direct data access
+3. **Type Safety**: Discriminated union types for messages
+4. **Maintainability**: Pure functions for content parsing
+5. **Testability**: Easier to test with pure functions and direct data access
 
 ## Integration Points
 
-- **ChatInterface**: Uses `currentCode` directly for Sandpack 
+- **ChatInterface**: Uses `currentCode` directly for Sandpack
 - **MessageList**: Renders `messages` with their segments
 - **StructuredMessage**: Renders individual segments based on type
 - **ChatInput**: Uses `input`, `setInput`, and `sendMessage`
@@ -118,24 +118,27 @@ On error:
 ## Implementation Challenges & Tips
 
 2. **Backtick Handling**:
+
    - Streaming content may contain incomplete backtick blocks
    - Parser should be robust enough to handle partial code blocks during streaming
    - The final parsing pass should produce the definitive segments
    - Parsing happens after chunk join, and gets the full buffer
 
 3. **Simple Dependencies Extraction**:
+
    - Don't try to parse JSON dependencies in the zeroth segment
    - Just extract the raw string ending with `}}` and let downstream components handle it
    - Avoid regex complexity in the initial implementation
 
-5. **Testing**:
+4. **Testing**:
+
    - Test with partially streamed backtick blocks
    - Test with multiple code blocks (even though only one is expected)
    - Test with missing or malformed dependencies sections
    - Test error cases to ensure graceful degradation
    - Repurpose existing test buffercontent
 
-6. **State Updates**:
+5. **State Updates**:
    - Consider using functional updates with `setMessages(prev => ...)` to avoid race conditions
    - Ensure the final message accurately reflects the complete streamed content
    - Raw content should be persisted to the session and parsed on reload, dont save parsed content
@@ -144,16 +147,19 @@ On error:
 
 The simplified implementation aims to achieve these high-level goals:
 
-1. **Unified Parsing Logic**:  
+1. **Unified Parsing Logic**:
+
    - Use a single, consistent parsing approach for both streaming and completed AI responses.
    - Ensure the same parsing logic applies regardless of whether content is streaming or fully loaded, avoiding duplicated or divergent parsing paths.
 
 2. **Consistent User Experience**:
+
    - Provide clean, incremental updates to the user interface during streaming, ensuring the UI remains responsive and informative.
    - Clearly indicate when code is being generated, including displaying the current line count of the code segment.
    - Offer a convenient "Copy" button for users to easily copy generated code, without displaying the full code content directly in the message.
 
 3. **Simplified Data Flow**:
+
    - Maintain a single, unified data flow from API responses through parsing to UI rendering.
    - Avoid callbacks or event-driven complexity; rely solely on state-driven updates to ensure predictability and ease of debugging.
 
@@ -168,34 +174,41 @@ These goals guide the simplified implementation, ensuring maintainability, clari
 The implementation will touch the following files:
 
 1. **app/types/chat.ts**
+
    - Update message type definitions
    - Add discriminated union types
 
 2. **app/hooks/useChat.ts**
+
    - Reimplement the main hook with simplified logic
    - Integrate content parsing directly
 
-4. **app/components/StructuredMessage.tsx**
+3. **app/components/StructuredMessage.tsx**
+
    - Create a new component to consume the new segment structure
    - Implement code summary display with copy functionality
 
-5. **app/components/MessageList.tsx**
+4. **app/components/MessageList.tsx**
+
    - Update to handle streaming and completed messages consistently
    - Ensure proper handling of AI message segments
 
-6. **app/ChatInterface.tsx**
+5. **app/ChatInterface.tsx**
+
    - Remove callback props
    - Use data directly from useChat hook
 
-7. **app/routes/home.tsx**
+6. **app/routes/home.tsx**
+
    - Remove the old callback props
    - Use data directly from useChat hook
 
-8. **app/routes/session.tsx**
+7. **app/routes/session.tsx**
+
    - Remove the old callback props
    - Use data directly from useChat hook
 
-9. **tests/**
+8. **tests/**
    - Update test fixtures for new message structure
    - Add tests for content parsing edge cases
 
@@ -204,6 +217,7 @@ The implementation will touch the following files:
 We've implemented the core parts of the simplified chat hook architecture:
 
 1. **Data-Driven Types** - Created discriminated union types for messages that clearly separate user and AI messages:
+
    ```typescript
    export type UserChatMessage = {
      type: 'user';
@@ -224,12 +238,14 @@ We've implemented the core parts of the simplified chat hook architecture:
    ```
 
 2. **useSimpleChat Hook** - Implemented a new hook with focused responsibilities:
+
    - Manages message state with clear types
    - Provides a pure content parser that doesn't rely on event emitters
    - Exposes stable, minimal API for components
    - Handles streaming with direct buffer updates
 
 3. **StructuredMessage Component** - Created a component that:
+
    - Displays markdown and code segments distinctly
    - Shows a preview of code with line count rather than inline code
    - Provides a copy button for code segments
@@ -259,10 +275,12 @@ During implementation, we discovered several important insights:
 To finalize this implementation, we will:
 
 1. **Integrate ChatInterface**:
+
    - Directly update `ChatInterface` to use the new `useSimpleChat` hook
    - Remove any old callback props and use hook state directly
 
 2. **Finalize Components**:
+
    - Ensure `MessageList` and `StructuredMessage` components fully support the new message structure
    - Verify streaming indicators and copy functionality work seamlessly
 
@@ -286,11 +304,13 @@ This simplified approach ensures a clean, maintainable codebase without unnecess
 ### 2. Update Component Integration
 
 - [ ] Update `ChatInterface.tsx`:
+
   - Remove all callbacks (`onCodeGenerated`, `onGeneratedTitle`)
   - Use `useSimpleChat` directly instead of `useChat`
   - Update Sandpack integration to use the segments directly
 
-- [ ] Finalize `MessageList.tsx`:  
+- [ ] Finalize `MessageList.tsx`:
+
   - Ensure proper handling of both user and AI messages
   - Verify that streaming indicators work correctly
   - Make sure message styling is consistent
@@ -304,11 +324,13 @@ This simplified approach ensures a clean, maintainable codebase without unnecess
 ### 3. Testing and Verification
 
 - [ ] Create unit tests for:
+
   - Content parsing logic (`parseContent` function)
   - Dependencies extraction
   - Message type handling
 
 - [ ] Add integration tests for:
+
   - Full message flow from user input to AI response
   - Streaming behavior and UI updates
   - Title generation functionality
@@ -318,7 +340,6 @@ This simplified approach ensures a clean, maintainable codebase without unnecess
   - Verify streaming UI feedback during response generation
   - Test copy functionality for code segments
   - Verify title generation after code completion
-
 
 ### 5. Final Cleanup
 
@@ -336,17 +357,20 @@ We've made significant progress implementing the simplified chat architecture:
 ### Completed Tasks
 
 - [x] **Content Parsing Logic** - Implemented as pure utility functions:
+
   - Created `segmentParser.ts` with standalone functions for parsing content and dependencies
   - `parseContent` function correctly splits content into markdown and code segments
   - `parseDependencies` function extracts dependencies from raw strings
 
 - [x] **useSimpleChat Hook Implementation**:
+
   - Built a stateful hook based on React useState/useEffect for managing messages
   - Implemented segment-based content parsing instead of event-based parsing
   - Simplified streaming logic to handle raw chunks directly
   - Added title generation based on AI response content
 
 - [x] **Message Components Update**:
+
   - Updated MessageList to work with segment-based messages
   - Removed currentStreamedText prop in favor of direct isStreaming flag on messages
 
@@ -358,6 +382,7 @@ We've made significant progress implementing the simplified chat architecture:
 ### In Progress
 
 - [ ] **ChatInterface Integration**:
+
   - Update to use new simplified hook with segment-based content
   - Replace old callback-based code with direct state access
 
@@ -379,10 +404,12 @@ The new segment-based approach is simpler, more maintainable, and provides a cle
 After completing the migration to the simplified chat architecture, the following files should be addressed:
 
 1. **app/hooks/useChat.ts**
+
    - This file has numerous TypeScript errors related to the updated `ChatMessage` types
    - Since we've migrated to useSimpleChat, this file can be safely removed once all components are updated
 
 2. **app/tests/ChatInterface.test.tsx**
+
    - Needs to be updated to use the correct ChatInterface props with the new chat state structure
    - The mock state should include currentSegments, getCurrentCode, title, and setTitle properties
 

@@ -62,7 +62,7 @@ describe('Prompts Utility', () => {
     const mockImplementation = vi.fn().mockImplementation(() => {
       throw new Error('Network error');
     });
-    
+
     // Override the mock for this test
     vi.mocked(makeBaseSystemPrompt).mockImplementationOnce(mockImplementation);
 
@@ -76,12 +76,12 @@ describe('Prompts Utility', () => {
       expect(error.message).toBe('Network error');
     }
   });
-  
+
   it('handles empty llms list', async () => {
     // For this test we just verify that the mock was called
     const model = 'gpt-4';
     await makeBaseSystemPrompt(model);
-    
+
     expect(makeBaseSystemPrompt).toHaveBeenCalledWith(model);
   });
 });

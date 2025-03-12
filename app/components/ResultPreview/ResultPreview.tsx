@@ -163,13 +163,17 @@ function ResultPreview({
 
     // IMPORTANT: Prioritize streaming code when it exists, otherwise use static code
     const codeToUse = streamingCode || code;
-    
+
     if (codeToUse) {
-      console.log('ResultPreview: Updating code, lengths - streamingCode:', 
-                 streamingCode?.length || 0, 'code:', code?.length || 0);
+      console.log(
+        'ResultPreview: Updating code, lengths - streamingCode:',
+        streamingCode?.length || 0,
+        'code:',
+        code?.length || 0
+      );
       const processedCode = processCode(codeToUse);
       setDisplayCode(processedCode);
-      
+
       filesRef.current = {
         ...filesRef.current,
         '/App.jsx': {
@@ -177,9 +181,9 @@ function ResultPreview({
           active: true,
         },
       };
-      
+
       setShowWelcome(false);
-      
+
       // Show code view during streaming
       if (hasStreamingContent) {
         setActiveView('code');

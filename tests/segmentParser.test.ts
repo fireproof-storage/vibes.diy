@@ -7,7 +7,7 @@ describe('segmentParser utilities', () => {
   it('correctly parses markdown content with no code blocks', () => {
     const text = 'This is a simple markdown text with no code blocks.';
     const result = parseContent(text);
-    
+
     expect(result.segments.length).toBe(1);
     expect(result.segments[0].type).toBe('markdown');
     expect(result.segments[0].content).toBe(text);
@@ -68,7 +68,7 @@ This app creates a retr`;
     console.log('Testing with problematic content:', text);
 
     const result = parseContent(text);
-    
+
     // We expect the parser to handle this as a single markdown segment
     expect(result.segments.length).toBe(1);
     expect(result.segments[0].type).toBe('markdown');
@@ -96,9 +96,9 @@ function SearchResults({ searches }) {
     console.log(text);
 
     const result = parseContent(text);
-    
+
     console.log('Resulting segments:', result.segments);
-    
+
     // The text should be split into:
     // 1. Markdown before the code
     // 2. Code block
@@ -113,54 +113,53 @@ function SearchResults({ searches }) {
     // Read the long-message.txt fixture file
     const fixturePath = path.join(__dirname, 'long-message.txt');
     const longMessageContent = fs.readFileSync(fixturePath, 'utf-8');
-    
+
     console.log('Testing with long message fixture');
-    
+
     const result = parseContent(longMessageContent);
-    
+
     // Log the segments for debugging
     console.log(`Parsed ${result.segments.length} segments from long-message.txt`);
     result.segments.forEach((segment, i) => {
       console.log(`Segment ${i} (${segment.type}): ${segment.content.substring(0, 100)}...`);
     });
-    
+
     // Basic validations - the parser currently produces 2 segments
-    expect(result.segments.length).toBe(2); 
-    
+    expect(result.segments.length).toBe(2);
+
     // Log the dependencies string for debugging
     console.log('Dependencies string:', result.dependenciesString);
-    
+
     // Verify dependencies - the fixture contains {"dependencies": {}}
     // This may contain the whole string with the first part of the message
     expect(result.dependenciesString).toBeDefined();
-    expect(result.dependenciesString?.includes('{"dependencies": {}}'))
-      .toBe(true);
-      
+    expect(result.dependenciesString?.includes('{"dependencies": {}}')).toBe(true);
+
     const dependencies = parseDependencies(result.dependenciesString);
     expect(dependencies).toEqual({});
-    
+
     // Verify the content of the segments
     // Based on the logging, it appears the segments are ordered differently than expected
     // First segment is the end of the content
     expect(result.segments[0].type).toBe('markdown');
-    
+
     // Second segment is the code with feature list at the end
     expect(result.segments[1].type).toBe('code');
-    expect(result.segments[1].content).toContain("This app features:");
-    
+    expect(result.segments[1].content).toContain('This app features:');
+
     // The intro text about gallery app should be in the dependenciesString
     expect(result.dependenciesString).toContain("Here's a photo gallery app");
-    
+
     // Check that key parts of the gallery app are present
-    const hasGalleryApp = result.dependenciesString?.includes("photo gallery app") || 
-                          result.segments.some(segment => 
-                            segment.content.includes("photo gallery app"));
+    const hasGalleryApp =
+      result.dependenciesString?.includes('photo gallery app') ||
+      result.segments.some((segment) => segment.content.includes('photo gallery app'));
     expect(hasGalleryApp).toBe(true);
-    
+
     // Check for React import in the dependencies string
-    const hasReactImport = result.dependenciesString?.includes("import React") || 
-                           result.segments.some(segment => 
-                             segment.content.includes("import React"));
+    const hasReactImport =
+      result.dependenciesString?.includes('import React') ||
+      result.segments.some((segment) => segment.content.includes('import React'));
     expect(hasReactImport).toBe(true);
   });
 
@@ -168,48 +167,49 @@ function SearchResults({ searches }) {
     // Read the easy-message.txt fixture file
     const fixturePath = path.join(__dirname, 'easy-message.txt');
     const messageContent = fs.readFileSync(fixturePath, 'utf-8');
-    
+
     console.log('Testing with easy-message.txt fixture');
-    
+
     const result = parseContent(messageContent);
-    
+
     // Log the segments for debugging
     console.log(`Parsed ${result.segments.length} segments from easy-message.txt`);
     result.segments.forEach((segment, i) => {
       console.log(`Segment ${i} (${segment.type}): ${segment.content.substring(0, 100)}...`);
     });
-    
+
     // Basic validations
-    expect(result.segments.length).toBeGreaterThan(1); 
-    
+    expect(result.segments.length).toBeGreaterThan(1);
+
     // Log the dependencies string for debugging
     console.log('Dependencies string:', result.dependenciesString);
-    
+
     // Verify dependencies - the fixture contains {"dependencies": {}}
     expect(result.dependenciesString).toBeDefined();
-    expect(result.dependenciesString?.includes('{"dependencies": {}}'))
-      .toBe(true);
-      
+    expect(result.dependenciesString?.includes('{"dependencies": {}}')).toBe(true);
+
     const dependencies = parseDependencies(result.dependenciesString);
     expect(dependencies).toEqual({});
-    
+
     // In the current implementation, the introduction text is in the first segment, not in dependenciesString
     // Check that the description of the Exoplanet Tracker app is present in a segment
-    const hasExoplanetAppDescription = result.segments.some(segment => 
-      segment.content.includes("I'll create an \"Exoplanet Tracker\" app"));
+    const hasExoplanetAppDescription = result.segments.some((segment) =>
+      segment.content.includes('I\'ll create an "Exoplanet Tracker" app')
+    );
     expect(hasExoplanetAppDescription).toBe(true);
-    
+
     // Verify code segment exists
-    const codeSegment = result.segments.find(segment => segment.type === 'code');
+    const codeSegment = result.segments.find((segment) => segment.type === 'code');
     expect(codeSegment).toBeDefined();
-    
+
     // Check content in code segment
-    expect(codeSegment?.content).toContain("import React");
-    expect(codeSegment?.content).toContain("function ExoplanetTracker");
-    
+    expect(codeSegment?.content).toContain('import React');
+    expect(codeSegment?.content).toContain('function ExoplanetTracker');
+
     // Check for features list - should be in markdown segment
-    const hasFeaturesList = result.segments.some(segment => 
-      segment.content.includes("This Exoplanet Tracker app allows"));
+    const hasFeaturesList = result.segments.some((segment) =>
+      segment.content.includes('This Exoplanet Tracker app allows')
+    );
     expect(hasFeaturesList).toBe(true);
   });
 
@@ -217,111 +217,115 @@ function SearchResults({ searches }) {
     // Read the easy-message2.txt fixture file
     const fixturePath = path.join(__dirname, 'easy-message2.txt');
     const messageContent = fs.readFileSync(fixturePath, 'utf-8');
-    
+
     console.log('Testing with easy-message2.txt fixture');
-    
+
     const result = parseContent(messageContent);
-    
+
     // Log the segments for debugging
     console.log(`Parsed ${result.segments.length} segments from easy-message2.txt`);
     result.segments.forEach((segment, i) => {
       console.log(`Segment ${i} (${segment.type}): ${segment.content.substring(0, 100)}...`);
     });
-    
+
     // Basic validations
-    expect(result.segments.length).toBeGreaterThan(1); 
-    
+    expect(result.segments.length).toBeGreaterThan(1);
+
     // Log the dependencies string for debugging
     console.log('Dependencies string:', result.dependenciesString);
-    
+
     // Verify dependencies - the fixture contains {"dependencies": {}}
     expect(result.dependenciesString).toBeDefined();
-    expect(result.dependenciesString?.includes('{"dependencies": {}}'))
-      .toBe(true);
-      
+    expect(result.dependenciesString?.includes('{"dependencies": {}}')).toBe(true);
+
     const dependencies = parseDependencies(result.dependenciesString);
     expect(dependencies).toEqual({});
-    
+
     // Verify markdown segment contains the title
-    const markdownSegment = result.segments.find(segment => 
-      segment.type === 'markdown' && segment.content.includes("Lyrics Rater App"));
+    const markdownSegment = result.segments.find(
+      (segment) => segment.type === 'markdown' && segment.content.includes('Lyrics Rater App')
+    );
     expect(markdownSegment).toBeDefined();
-    
+
     // Verify code segment exists
-    const codeSegment = result.segments.find(segment => segment.type === 'code');
+    const codeSegment = result.segments.find((segment) => segment.type === 'code');
     expect(codeSegment).toBeDefined();
-    
+
     // Check content in code segment
-    expect(codeSegment?.content).toContain("function LyricsRaterApp");
-    expect(codeSegment?.content).toContain("useFireproof");
-    
+    expect(codeSegment?.content).toContain('function LyricsRaterApp');
+    expect(codeSegment?.content).toContain('useFireproof');
+
     // Check for app features list in a segment
-    const hasAppFeatures = result.segments.some(segment => 
-      segment.content.includes("This Lyrics Rater app lets you save"));
+    const hasAppFeatures = result.segments.some((segment) =>
+      segment.content.includes('This Lyrics Rater app lets you save')
+    );
     expect(hasAppFeatures).toBe(true);
-    
+
     // Check for the copyright disclaimer
-    const hasCopyrightDisclaimer = result.segments.some(segment => 
-      segment.content.includes("avoid copyright issues"));
+    const hasCopyrightDisclaimer = result.segments.some((segment) =>
+      segment.content.includes('avoid copyright issues')
+    );
     expect(hasCopyrightDisclaimer).toBe(true);
   });
-  
+
   it('correctly parses photo gallery app from hard-message.txt', () => {
     // Read the hard-message.txt fixture file
     const fixturePath = path.join(__dirname, 'hard-message.txt');
     const messageContent = fs.readFileSync(fixturePath, 'utf-8');
-    
+
     console.log('Testing with hard-message.txt fixture');
-    
+
     const result = parseContent(messageContent);
-    
+
     // Log the segments for debugging
     console.log(`Parsed ${result.segments.length} segments from hard-message.txt`);
     result.segments.forEach((segment, i) => {
       console.log(`Segment ${i} (${segment.type}): ${segment.content.substring(0, 100)}...`);
     });
-    
+
     // Basic validations
-    expect(result.segments.length).toBeGreaterThan(0); 
-    
+    expect(result.segments.length).toBeGreaterThan(0);
+
     // Log the dependencies string for debugging
     console.log('Dependencies string:', result.dependenciesString);
-    
+
     // Verify dependencies - the fixture contains {"dependencies": {}}
     expect(result.dependenciesString).toBeDefined();
-    expect(result.dependenciesString?.includes('{"dependencies": {}}'))
-      .toBe(true);
-      
+    expect(result.dependenciesString?.includes('{"dependencies": {}}')).toBe(true);
+
     const dependencies = parseDependencies(result.dependenciesString);
     expect(dependencies).toEqual({});
-    
+
     // Verify the intro text is in the dependencies string or in the segments
-    const hasIntroText = result.dependenciesString?.includes("Here's a photo gallery app") || 
-                         result.segments.some(segment => 
-                           segment.content.includes("Here's a photo gallery app"));
+    const hasIntroText =
+      result.dependenciesString?.includes("Here's a photo gallery app") ||
+      result.segments.some((segment) => segment.content.includes("Here's a photo gallery app"));
     expect(hasIntroText).toBe(true);
-    
+
     // Look for Synthwave Photo Gallery in dependenciesString or any segment
-    const hasSynthwavePhotoGallery = 
-      (result.dependenciesString?.includes("Synthwave Photo Gallery")) || 
-      result.segments.some(segment => segment.content.includes("Synthwave Photo Gallery"));
+    const hasSynthwavePhotoGallery =
+      result.dependenciesString?.includes('Synthwave Photo Gallery') ||
+      result.segments.some((segment) => segment.content.includes('Synthwave Photo Gallery'));
     expect(hasSynthwavePhotoGallery).toBe(true);
-    
+
     // Check for React import in dependenciesString or any segment
-    const hasReactImport = 
-      (result.dependenciesString?.includes("import React")) ||
-      result.segments.some(segment => segment.content.includes("import React"));
+    const hasReactImport =
+      result.dependenciesString?.includes('import React') ||
+      result.segments.some((segment) => segment.content.includes('import React'));
     expect(hasReactImport).toBe(true);
-    
+
     // Check for features list at the end in any segment
-    const hasFeaturesList = result.segments.some(segment => 
-      segment.content.includes("This photo gallery app features"));
+    const hasFeaturesList = result.segments.some((segment) =>
+      segment.content.includes('This photo gallery app features')
+    );
     expect(hasFeaturesList).toBe(true);
-    
+
     // Verify specific app features are mentioned in any segment
-    const hasAppFeatures = result.segments.some(segment => 
-      segment.content.includes("Upload functionality") && 
-      segment.content.includes("Orange synthwave aesthetic"));
+    const hasAppFeatures = result.segments.some(
+      (segment) =>
+        segment.content.includes('Upload functionality') &&
+        segment.content.includes('Orange synthwave aesthetic')
+    );
     expect(hasAppFeatures).toBe(true);
   });
-}); 
+});

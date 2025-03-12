@@ -16,11 +16,7 @@ describe('ChatHeader', () => {
 
   it('renders correctly', () => {
     render(
-      <ChatHeader
-        onOpenSidebar={onOpenSidebar}
-        onNewChat={onNewChat}
-        isStreaming={isStreamingFn}
-      />
+      <ChatHeader onOpenSidebar={onOpenSidebar} onNewChat={onNewChat} isStreaming={isStreamingFn} />
     );
 
     expect(screen.getByLabelText('Open chat history')).toBeDefined();
@@ -29,11 +25,7 @@ describe('ChatHeader', () => {
 
   it('calls openSidebar when the sidebar button is clicked', () => {
     render(
-      <ChatHeader
-        onOpenSidebar={onOpenSidebar}
-        onNewChat={onNewChat}
-        isStreaming={isStreamingFn}
-      />
+      <ChatHeader onOpenSidebar={onOpenSidebar} onNewChat={onNewChat} isStreaming={isStreamingFn} />
     );
 
     const openButton = screen.getByLabelText('Open chat history');
@@ -44,11 +36,7 @@ describe('ChatHeader', () => {
 
   it('calls handleNewChat when the new chat button is clicked', () => {
     render(
-      <ChatHeader
-        onOpenSidebar={onOpenSidebar}
-        onNewChat={onNewChat}
-        isStreaming={isStreamingFn}
-      />
+      <ChatHeader onOpenSidebar={onOpenSidebar} onNewChat={onNewChat} isStreaming={isStreamingFn} />
     );
 
     const newChatButton = screen.getByLabelText('New Chat');
@@ -57,22 +45,18 @@ describe('ChatHeader', () => {
     expect(onNewChat).toHaveBeenCalledTimes(1);
   });
 
-  it('disables the new chat button when isStreaming returns true', () => {
+  it('allows creating a new chat even when isStreaming returns true', () => {
     // Set isStreaming to return true for this test
     isStreamingFn = () => true;
 
     render(
-      <ChatHeader
-        onOpenSidebar={onOpenSidebar}
-        onNewChat={onNewChat}
-        isStreaming={isStreamingFn}
-      />
+      <ChatHeader onOpenSidebar={onOpenSidebar} onNewChat={onNewChat} isStreaming={isStreamingFn} />
     );
 
     const newChatButton = screen.getByLabelText('New Chat');
-    expect(newChatButton).toBeDisabled();
+    expect(newChatButton).not.toBeDisabled();
 
     fireEvent.click(newChatButton);
-    expect(onNewChat).not.toHaveBeenCalled();
+    expect(onNewChat).toHaveBeenCalledTimes(1);
   });
 });

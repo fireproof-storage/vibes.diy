@@ -61,8 +61,8 @@ const Message = memo(
             {message.type === 'user' ? (
               renderMarkdownContent(message.text)
             ) : (
-              <StructuredMessage 
-                segments={(message as AiChatMessage).segments} 
+              <StructuredMessage
+                segments={(message as AiChatMessage).segments}
                 isStreaming={(message as AiChatMessage).isStreaming}
               />
             )}
@@ -118,20 +118,21 @@ function MessageList({
 
   // Check if there's a streaming message
   const hasStreamingMessage = useMemo(() => {
-    return messages.some(msg => msg.type === 'ai' && (msg as AiChatMessage).isStreaming);
+    return messages.some((msg) => msg.type === 'ai' && (msg as AiChatMessage).isStreaming);
   }, [messages]);
 
   // Only show typing indicator when no streaming message with content is visible yet
   const showTypingIndicator = useMemo(() => {
     if (!isStreaming()) return false;
-    
+
     // If we have a streaming message with content, don't show typing indicator
-    const hasStreamingContent = messages.some(msg => 
-      msg.type === 'ai' && 
-      (msg as AiChatMessage).isStreaming && 
-      (msg as AiChatMessage).text.length > 0
+    const hasStreamingContent = messages.some(
+      (msg) =>
+        msg.type === 'ai' &&
+        (msg as AiChatMessage).isStreaming &&
+        (msg as AiChatMessage).text.length > 0
     );
-    
+
     return !hasStreamingContent;
   }, [isStreaming, messages]);
 
@@ -151,7 +152,7 @@ function MessageList({
   // Show loading state while messages are being fetched
   if (isLoading && sessionId) {
     return (
-      <div className="messages bg-light-background-01 dark:bg-dark-background-01 flex-1 flex items-center justify-center p-4">
+      <div className="messages bg-light-background-01 dark:bg-dark-background-01 flex flex-1 items-center justify-center p-4">
         <div className="flex flex-col items-center space-y-2">
           <div className="flex gap-1">
             <span className="bg-light-primary dark:bg-dark-primary h-2 w-2 animate-bounce rounded-full [animation-delay:-0.3s]" />
@@ -174,7 +175,7 @@ function MessageList({
       <div className="mx-auto flex min-h-full max-w-5xl flex-col py-4">
         {messages.length === 0 && !isStreaming() ? (
           <div className="text-accent-02 mx-auto max-w-2xl space-y-4 px-12 pt-8 text-center italic">
-            <h2 className="text-xl font-semibold mb-4">Welcome to Fireproof App Builder</h2>
+            <h2 className="mb-4 text-xl font-semibold">Welcome to Fireproof App Builder</h2>
             <p>Ask me to generate a web application for you</p>
             <p>
               Quickly create React apps in your browser, no setup required. Apps are sharable, or

@@ -12,12 +12,8 @@ interface AppLayoutProps {
 export default function AppLayout({ chatPanel, previewPanel }: AppLayoutProps) {
   return (
     <div className="flex h-dvh overflow-hidden">
-      <div className="w-1/3 flex flex-col h-full">
-        {chatPanel}
-      </div>
-      <div className="w-2/3 relative">
-        {previewPanel}
-      </div>
+      <div className="flex h-full w-1/3 flex-col">{chatPanel}</div>
+      <div className="relative w-2/3">{previewPanel}</div>
     </div>
   );
-} 
+}

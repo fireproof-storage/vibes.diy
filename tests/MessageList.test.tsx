@@ -9,22 +9,22 @@ vi.mock('../app/hooks/useSessionMessages', () => ({
       return {
         messages: [
           { type: 'user', text: 'Hello' },
-          { type: 'ai', text: 'Hi there!', segments: [{ type: 'markdown', content: 'Hi there!' }] }
+          { type: 'ai', text: 'Hi there!', segments: [{ type: 'markdown', content: 'Hi there!' }] },
         ],
-        isLoading: false
+        isLoading: false,
       };
     } else if (sessionId === 'empty-session') {
       return {
         messages: [],
-        isLoading: false
+        isLoading: false,
       };
     } else {
       return {
         messages: [],
-        isLoading: true
+        isLoading: true,
       };
     }
-  })
+  }),
 }));
 
 // Mock scrollIntoView
@@ -34,47 +34,27 @@ beforeEach(() => {
 
 describe('MessageList', () => {
   test('renders messages correctly', () => {
-    render(
-      <MessageList
-        sessionId="test-session"
-        isStreaming={() => false}
-      />
-    );
+    render(<MessageList sessionId="test-session" isStreaming={() => false} />);
 
     expect(screen.getByText('Hello')).toBeDefined();
     expect(screen.getByText('Hi there!')).toBeDefined();
   });
 
   test('renders empty state correctly', () => {
-    render(
-      <MessageList
-        sessionId="empty-session"
-        isStreaming={() => false}
-      />
-    );
+    render(<MessageList sessionId="empty-session" isStreaming={() => false} />);
 
     expect(screen.getByText('Welcome to Fireproof App Builder')).toBeInTheDocument();
     expect(screen.getByText('Ask me to generate a web application for you')).toBeInTheDocument();
   });
 
   test('renders streaming message correctly', () => {
-    render(
-      <MessageList
-        sessionId="empty-session"
-        isStreaming={() => true}
-      />
-    );
+    render(<MessageList sessionId="empty-session" isStreaming={() => true} />);
 
     expect(screen.getByText('Thinking')).toBeDefined();
   });
 
   test('renders loading state correctly', () => {
-    render(
-      <MessageList
-        sessionId="loading-session"
-        isStreaming={() => false}
-      />
-    );
+    render(<MessageList sessionId="loading-session" isStreaming={() => false} />);
 
     expect(screen.getByText('Loading messages...')).toBeDefined();
   });

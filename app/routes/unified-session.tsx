@@ -48,10 +48,10 @@ export default function UnifiedSession() {
   const { sessionId: urlSessionId } = useParams<{ sessionId: string }>();
   const navigate = useNavigate();
   const location = useLocation();
-  
+
   // Track whether we're in a shared app context
   const [isSharedApp, setIsSharedApp] = useState<boolean>(false);
-  
+
   // State for current session
   const [sessionId, setSessionId] = useState<string | null>(urlSessionId || null);
   const [state, setState] = useState({
@@ -63,7 +63,7 @@ export default function UnifiedSession() {
 
   // Initialize session management hook with current sessionId
   const { createSession, session } = useSession(sessionId);
-  
+
   // Use the simple chat hook with current sessionId
   const chatState = useSimpleChat(sessionId);
 
@@ -76,7 +76,7 @@ export default function UnifiedSession() {
   useEffect(() => {
     const searchParams = new URLSearchParams(location.search);
     const encodedState = searchParams.get('state');
-    
+
     if (encodedState) {
       const decodedState = decodeStateFromUrl(encodedState);
       if (decodedState.code) {
@@ -94,7 +94,7 @@ export default function UnifiedSession() {
     if (!urlSessionId && !sessionCreationAttemptedRef.current) {
       console.log('UnifiedSession: No sessionId in URL, but NOT creating new session yet');
       sessionCreationAttemptedRef.current = true;
-      
+
       // We'll create a session only when the user sends their first message
       // This prevents immediate redirect from the root path
     }
@@ -102,14 +102,14 @@ export default function UnifiedSession() {
 
   // Helper function to extract dependencies from segments
   const getDependencies = useCallback(() => {
-    const lastAiMessage = [...chatState.messages].reverse().find(
-      (msg): msg is AiChatMessage => msg.type === 'ai'
-    );
-    
+    const lastAiMessage = [...chatState.messages]
+      .reverse()
+      .find((msg): msg is AiChatMessage => msg.type === 'ai');
+
     if (lastAiMessage?.dependenciesString) {
       return parseDependencies(lastAiMessage.dependenciesString);
     }
-    
+
     return {};
   }, [chatState.messages]);
 
@@ -127,10 +127,10 @@ export default function UnifiedSession() {
   // Extract code and dependencies when AI message completes
   useEffect(() => {
     // Find the last AI message that is not streaming
-    const lastAiMessage = [...chatState.messages].reverse().find(
-      (msg) => msg.type === 'ai' && !msg.isStreaming
-    );
-    
+    const lastAiMessage = [...chatState.messages]
+      .reverse()
+      .find((msg) => msg.type === 'ai' && !msg.isStreaming);
+
     // If we found a completed AI message, extract code and dependencies
     if (lastAiMessage && lastAiMessage.type === 'ai') {
       const code = chatState.getCurrentCode();
@@ -143,20 +143,23 @@ export default function UnifiedSession() {
   }, [chatState.messages, chatState.getCurrentCode, getDependencies, handleCodeGenerated]);
 
   // Handle session creation
-  const handleSessionCreated = useCallback((newSessionId: string) => {
-    setSessionId(newSessionId);
-    // Update URL without full page reload
-    navigate(`/session/${newSessionId}`, { replace: true });
-  }, [navigate]);
+  const handleSessionCreated = useCallback(
+    (newSessionId: string) => {
+      setSessionId(newSessionId);
+      // Update URL without full page reload
+      navigate(`/session/${newSessionId}`, { replace: true });
+    },
+    [navigate]
+  );
 
   // Handle new chat creation
   const handleNewChat = useCallback(() => {
     // Reset session creation flag
     sessionCreationAttemptedRef.current = false;
-    
+
     // Navigate to home to create a new session
     navigate('/', { replace: true });
-    
+
     // Reset state
     setSessionId(null);
     setState({
@@ -178,10 +181,10 @@ export default function UnifiedSession() {
     if (encoded) {
       // Create a sharable URL with the encoded state
       const shareUrl = `${window.location.origin}/shared?state=${encoded}`;
-      
+
       copyToClipboard(shareUrl);
       setShareStatus('Share URL copied to clipboard!');
-      
+
       // Reset status after a brief delay
       setTimeout(() => {
         setShareStatus('');
@@ -192,7 +195,8 @@ export default function UnifiedSession() {
   // Copy text to clipboard
   function copyToClipboard(text: string) {
     if (navigator.clipboard) {
-      navigator.clipboard.writeText(text)
+      navigator.clipboard
+        .writeText(text)
         .then(() => {
           console.log('Text copied to clipboard');
         })
@@ -236,10 +240,11 @@ export default function UnifiedSession() {
           onShare={handleShare}
           completedMessage={
             chatState.messages.length > 0
-              ? chatState.messages.filter(msg => msg.type === 'ai').pop()?.text || ''
+              ? chatState.messages.filter((msg) => msg.type === 'ai').pop()?.text || ''
               : ''
           }
-          currentStreamContent={chatState.currentSegments()
+          currentStreamContent={chatState
+            .currentSegments()
             .filter((seg: Segment) => seg.type === 'markdown')
             .map((seg: Segment) => seg.content)
             .join('')}
@@ -252,4 +257,4 @@ export default function UnifiedSession() {
       }
     />
   );
-} 
+}

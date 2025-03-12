@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
 import ChatHeader from '../app/components/ChatHeader';
 import SessionSidebar from '../app/components/SessionSidebar';
 import MessageList from '../app/components/MessageList';
@@ -28,37 +28,42 @@ vi.mock('../app/hooks/useSessionMessages', () => {
       if (sessionId === 'streaming-session') {
         return {
           messages: [
-            { 
-              type: 'ai', 
-              text: 'I am thinking...', 
+            {
+              type: 'ai',
+              text: 'I am thinking...',
               segments: [{ type: 'markdown', content: 'I am thinking...' }],
               isStreaming: true,
-              timestamp: Date.now()
-            }
+              timestamp: Date.now(),
+            },
           ],
           isLoading: false,
           addUserMessage: vi.fn(),
-          updateAiMessage: vi.fn()
+          updateAiMessage: vi.fn(),
         };
       } else if (sessionId === 'test-session') {
         return {
           messages: [
             { type: 'user', text: 'Hello', timestamp: Date.now() },
-            { type: 'ai', text: 'Hi there', segments: [{ type: 'markdown', content: 'Hi there' }], timestamp: Date.now() }
+            {
+              type: 'ai',
+              text: 'Hi there',
+              segments: [{ type: 'markdown', content: 'Hi there' }],
+              timestamp: Date.now(),
+            },
           ],
           isLoading: false,
           addUserMessage: vi.fn(),
-          updateAiMessage: vi.fn()
+          updateAiMessage: vi.fn(),
         };
       } else {
         return {
           messages: [],
           isLoading: false,
           addUserMessage: vi.fn(),
-          updateAiMessage: vi.fn()
+          updateAiMessage: vi.fn(),
         };
       }
-    }
+    },
   };
 });
 
@@ -88,24 +93,15 @@ describe('Component Rendering', () => {
     });
 
     it('applies tooltip classes correctly', () => {
-      const { container } = render(
-        <ChatHeader
-          onOpenSidebar={onOpenSidebar}
-          onNewChat={onNewChat}
-          isStreaming={() => isGeneratingValue}
-        />
+      render(
+        <ChatHeader onOpenSidebar={() => {}} onNewChat={() => {}} isStreaming={() => false} />
       );
-
-      // Check if the button has the peer class
-      const button = screen.getByLabelText('New Chat');
-      expect(button).toHaveClass('peer');
-
-      // Check if the tooltip has correct classes
-      const tooltip = container.querySelector('.absolute.top-full');
-      expect(tooltip).toHaveClass('peer-hover:opacity-100');
+      expect(
+        screen.getByText('New Chat', { selector: 'span.pointer-events-none' })
+      ).toBeInTheDocument();
     });
 
-    it('disables new chat button when generating', () => {
+    it('allows creating a new chat even when generating', () => {
       isGeneratingValue = true;
       render(
         <ChatHeader
@@ -114,34 +110,23 @@ describe('Component Rendering', () => {
           isStreaming={() => isGeneratingValue}
         />
       );
-      expect(screen.getByLabelText('New Chat')).toBeDisabled();
-    });
+      const newChatButton = screen.getByLabelText('New Chat');
+      expect(newChatButton).not.toBeDisabled();
 
-    // Set isGenerating to true for this test
-    isGeneratingValue = true;
-    
-    render(
-      <ChatHeader
-        onOpenSidebar={onOpenSidebar}
-        onNewChat={onNewChat}
-        isStreaming={() => isGeneratingValue}
-      />
-    );
+      fireEvent.click(newChatButton);
+      expect(onNewChat).toHaveBeenCalledTimes(1);
+    });
   });
 
   describe('SessionSidebar', () => {
     it('renders in hidden state', () => {
-      const { container } = render(
-        <SessionSidebar isVisible={false} onClose={onClose} />
-      );
+      const { container } = render(<SessionSidebar isVisible={false} onClose={onClose} />);
       // Check that it has the hidden class
       expect(container.firstChild).toHaveClass('-translate-x-full');
     });
 
     it('renders in visible state', () => {
-      const { container } = render(
-        <SessionSidebar isVisible={true} onClose={onClose} />
-      );
+      const { container } = render(<SessionSidebar isVisible={true} onClose={onClose} />);
       expect(container.firstChild).toHaveClass('translate-x-0');
 
       // Check that content is rendered when visible
@@ -149,9 +134,7 @@ describe('Component Rendering', () => {
     });
 
     it('shows empty state when no sessions', () => {
-      render(
-        <SessionSidebar isVisible={true} onClose={onClose} />
-      );
+      render(<SessionSidebar isVisible={true} onClose={onClose} />);
       expect(screen.getByText('No saved sessions yet')).toBeInTheDocument();
     });
   });
@@ -176,9 +159,7 @@ describe('Component Rendering', () => {
     });
 
     it('renders streaming message', () => {
-      render(
-        <MessageList sessionId="streaming-session" isStreaming={() => true} />
-      );
+      render(<MessageList sessionId="streaming-session" isStreaming={() => true} />);
       expect(screen.getByText('I am thinking...')).toBeInTheDocument();
     });
   });

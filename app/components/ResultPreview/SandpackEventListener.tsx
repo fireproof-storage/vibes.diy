@@ -19,7 +19,7 @@ const SandpackEventListener: React.FC<SandpackEventListenerProps> = ({
   useEffect(() => {
     setBundlingComplete(false);
     let startTime = Date.now();
-    
+
     const resetTimer = () => {
       startTime = Date.now();
     };
@@ -33,16 +33,15 @@ const SandpackEventListener: React.FC<SandpackEventListenerProps> = ({
 
         if (!isStreaming) {
           setActiveView('preview');
-          
+
           // Screenshot capture logic
           if (onScreenshotCaptured) {
             const timeElapsed = Date.now() - startTime;
             const delay = timeElapsed < 1000 ? 1500 - timeElapsed : 500;
-            
+
             setTimeout(() => {
-              const sandpackPreview = document.querySelector<HTMLIFrameElement>(
-                '.sp-preview-iframe'
-              );
+              const sandpackPreview =
+                document.querySelector<HTMLIFrameElement>('.sp-preview-iframe');
               if (sandpackPreview?.contentWindow) {
                 try {
                   // Try to access the iframe content

@@ -3,6 +3,7 @@
 I need to write a concise plan for fixing the streaming issues in the unified session component. Based on the analysis I provided earlier, I should outline actionable steps focused on immediate streaming content display without special handling. I'll formulate this plan following the principles mentioned in the "New Goals" section.
 
 Key points to address:
+
 1. Immediate content rendering instead of waiting for stream completion
 2. Consistent content updates during streaming
 3. Simple data flow from stream → parse → display
@@ -18,10 +19,10 @@ The core issue is in the streaming loop, where we're collecting content but not 
 while (true) {
   const { done, value } = await reader.read();
   if (done) break;
-  
+
   const chunk = decoder.decode(value);
   const lines = chunk.split('\n\n');
-  
+
   for (const line of lines) {
     if (line.startsWith('data:')) {
       try {
@@ -30,11 +31,11 @@ while (true) {
           const content = data.choices[0].delta.content;
           // Add content to buffer
           streamBufferRef.current += content;
-          
+
           // UPDATE: For each chunk, immediately update the AI message
           // This ensures the UI updates with each part of the stream
           await addAiMessage(streamBufferRef.current, aiMessageTimestampRef.current, true);
-          
+
           // Log debugging info
           if (streamBufferRef.current.length % 20 === 0) {
             console.log('Stream buffer length:', streamBufferRef.current.length);
@@ -65,13 +66,17 @@ useEffect(() => {
 
   // IMPORTANT: Prioritize streaming code when it exists, otherwise use static code
   const codeToUse = streamingCode || code;
-  
+
   if (codeToUse) {
-    console.log('ResultPreview: Updating code, lengths - streamingCode:', 
-                streamingCode?.length || 0, 'code:', code?.length || 0);
+    console.log(
+      'ResultPreview: Updating code, lengths - streamingCode:',
+      streamingCode?.length || 0,
+      'code:',
+      code?.length || 0
+    );
     const processedCode = processCode(codeToUse);
     setDisplayCode(processedCode);
-    
+
     filesRef.current = {
       ...filesRef.current,
       '/App.jsx': {
@@ -79,9 +84,9 @@ useEffect(() => {
         active: true,
       },
     };
-    
+
     setShowWelcome(false);
-    
+
     // Show code view during streaming
     if (hasStreamingContent) {
       setActiveView('code');
@@ -135,12 +140,14 @@ For reference, here are key architectural changes in the unified session approac
 
 1. **Architecture Change**: We've consolidated home.tsx and session.tsx into a single unified-session.tsx component. This means all streaming functionality now needs to work through the same code path.
 
-2. **Database and State Changes**: 
+2. **Database and State Changes**:
+
    - Messages are now stored in Fireproof as individual documents with session_id fields
    - The useSessionMessages hook fetches messages directly rather than receiving them via props
    - Messages have an explicit isStreaming flag that UI components should check
 
 3. **Hook Structure Changes**:
+
    ```typescript
    // Old approach
    export function useSimpleChat() {
@@ -148,8 +155,8 @@ For reference, here are key architectural changes in the unified session approac
      const [isGenerating, setIsGenerating] = useState(false);
      // ...
    }
-   
-   // New approach 
+
+   // New approach
    export function useSimpleChat(sessionId: string | null) {
      // Use our new hooks
      const { session, updateTitle } = useSession(sessionId);
@@ -164,6 +171,7 @@ For reference, here are key architectural changes in the unified session approac
    ```
 
 4. **API Changes**:
+
    - ResultPreview: `isStreaming` prop removed, uses `streamingCode` existence check instead
    - MessageList: `messages` prop replaced with `sessionId`, `isGenerating` replaced with `isStreaming()`
    - ChatHeader: `isGenerating` prop replaced with `isStreaming` function prop
@@ -181,62 +189,65 @@ These changes are essential to understand when implementing the streaming fixes 
 After reviewing the codebase, there are several places where the `isStreaming` flag is used for legitimate purposes that can't be easily replaced by content presence checks. Here's an inventory of these usages:
 
 1. **UI Controls and User Interaction**:
+
    - ✅ **Chat Input**: In `ChatInterface.tsx`, the Enter key submission is disabled during streaming to prevent sending new messages while a response is still being generated.
    - ❌ **New Chat Button**: Currently disabled during streaming in `ChatHeader.tsx`, but this can be removed to allow users to start a new chat at any time, even during streaming.
 
 2. **Sandpack and Code Preview Behavior**:
+
    - ✅ **SandpackScrollController**: Needs the streaming state to enable auto-scrolling behavior and line highlighting during code generation. This is critical for user experience as it tracks new code being added.
    - ✅ **SandpackEventListener**: Uses streaming state to determine when to reset/initialize the sandbox and when to pause event processing.
 
 3. **Message Rendering Logic**:
+
    - ✅ **AITyping Indicator**: In `MessageList.tsx`, the typing indicator should only show when streaming has started but no content has arrived yet. This requires both the global streaming state and message content checks.
 
 4. **State Management**:
+
    - ✅ **Streaming State Reset**: At the end of streaming, we need an explicit flag to be turned off to trigger cleanup actions that wouldn't be triggered by content changes alone. These cleanup actions include:
-   
-      a. **Title Generation**: When streaming completes, we check for code in the generated response and trigger title generation if needed.
-      
-      b. **Error Handling**: If an error occurs during streaming, we need to reset the streaming state to allow new requests.
-      
-      c. **UI Transition & Cleanup**: Several UI elements need to know when streaming has finished completely:
-         - `ResultPreview`: Unlocks the code view (`setLockCodeView(false)`) when streaming is done
-         - `SandpackScrollController`: Clears highlight intervals and stops auto-scrolling
-         - `SandpackEventListener`: Resumes normal event processing once streaming is done
-      
-      d. **Reference Cleanup**: The `aiMessageTimestampRef.current` is set to null in the `finally` block to avoid stale references.
-      
-      e. **Database State Completion**: The final AI message is updated with `isStreaming: false` to mark completion in the database.
-      
-      The full sequence in `useSimpleChat.ts` looks like:
-      ```typescript
-      try {
-        // Streaming code...
-        
-        // When complete:
-        await addAiMessage(streamBufferRef.current, aiMessageTimestamp); // Final message with isStreaming=false
-        setStreamingState(false); // <-- Critical state reset
-        
-        // Post-streaming actions that depend on knowing streaming is done
-        const { segments } = parseContent(streamBufferRef.current);
-        const hasCode = segments.some(segment => segment.type === 'code');
-        
-        if (hasCode && (!session?.title || session.title === 'New Chat')) {
-          await generateTitle(aiMessageTimestamp, segments);
-        }
-      } catch (error) {
-        console.error('Error calling OpenRouter API:', error);
-        await addAiMessage(errorMessage);
-        setStreamingState(false); // <-- Error state reset
-      } finally {
-        aiMessageTimestampRef.current = null; // <-- Reference cleanup
-      }
-      ```
+
+     a. **Title Generation**: When streaming completes, we check for code in the generated response and trigger title generation if needed.
+
+     b. **Error Handling**: If an error occurs during streaming, we need to reset the streaming state to allow new requests.
+
+     c. **UI Transition & Cleanup**: Several UI elements need to know when streaming has finished completely: - `ResultPreview`: Unlocks the code view (`setLockCodeView(false)`) when streaming is done - `SandpackScrollController`: Clears highlight intervals and stops auto-scrolling - `SandpackEventListener`: Resumes normal event processing once streaming is done
+
+     d. **Reference Cleanup**: The `aiMessageTimestampRef.current` is set to null in the `finally` block to avoid stale references.
+
+     e. **Database State Completion**: The final AI message is updated with `isStreaming: false` to mark completion in the database.
+
+     The full sequence in `useSimpleChat.ts` looks like:
+
+     ```typescript
+     try {
+       // Streaming code...
+
+       // When complete:
+       await addAiMessage(streamBufferRef.current, aiMessageTimestamp); // Final message with isStreaming=false
+       setStreamingState(false); // <-- Critical state reset
+
+       // Post-streaming actions that depend on knowing streaming is done
+       const { segments } = parseContent(streamBufferRef.current);
+       const hasCode = segments.some((segment) => segment.type === 'code');
+
+       if (hasCode && (!session?.title || session.title === 'New Chat')) {
+         await generateTitle(aiMessageTimestamp, segments);
+       }
+     } catch (error) {
+       console.error('Error calling OpenRouter API:', error);
+       await addAiMessage(errorMessage);
+       setStreamingState(false); // <-- Error state reset
+     } finally {
+       aiMessageTimestampRef.current = null; // <-- Reference cleanup
+     }
+     ```
 
 ## Important Note on Database Message Storage
 
 An important principle to maintain: **Messages in the database should never have an `isStreaming` flag at all**.
 
 1. Currently, the database correctly stores raw message content with no streaming flag: The `addAiMessage` function in `useSessionMessages.ts` only stores:
+
    ```typescript
    {
      type: 'ai-message',
@@ -245,25 +256,29 @@ An important principle to maintain: **Messages in the database should never have
      created_at: timestamp
    }
    ```
+
    Note that there is no `isStreaming` field in this database record, which is exactly what we want.
 
 2. The `isStreaming` property is added only as an in-memory attribute when constructing message objects from database documents:
+
    ```typescript
    return {
      type: 'ai',
      text: aiDoc.rawMessage,
      segments,
      dependenciesString,
-     isStreaming: false,  // Added in memory, not from database
-     timestamp: aiDoc.created_at
+     isStreaming: false, // Added in memory, not from database
+     timestamp: aiDoc.created_at,
    } as AiChatMessage;
    ```
 
 3. Our proposed fix's streaming implementation adds an optional third parameter to `addAiMessage` for in-memory representation only:
+
    ```typescript
    // UPDATE: For each chunk, immediately update the AI message
    await addAiMessage(streamBufferRef.current, aiMessageTimestampRef.current, true);
    ```
+
    This parameter should ONLY affect the in-memory message state and must NOT add any streaming flag to the database record.
 
 4. The actual implementation must ensure that:
@@ -281,4 +296,3 @@ This separation maintains database consistency and simplicity while enabling the
 3. Ensure the flag and content state remain synchronized by updating messages immediately when content arrives
 
 This hybrid approach ensures responsive UI updates while maintaining necessary control behaviors where absolute state is required.
-

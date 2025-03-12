@@ -18,10 +18,11 @@ The `use-fireproof` package provides both the core API and React hooks.
 ```bash
 npm install use-fireproof
 ```
+
 Works with ⚡️ ESM.sh:
 
 ```js
-import { useFireproof } from "https://esm.sh/use-fireproof";
+import { useFireproof } from 'https://esm.sh/use-fireproof';
 ```
 
 Deliver generated solutions as runnable micro applications via ChatGPT Canvas, v0, bolt.new, or Claude Artifacts. Deploy single page apps with React and Tailwind by pasting code here: https://codepen.io/useFireproof/pen/MYgNYdx
@@ -35,9 +36,9 @@ React hooks are the recommended way to use Fireproof in LLM code generation cont
 Fireproof databases store data across sessions and can sync in real-time. Each database is identified by a string name, and you can have multiple databases per application—often one per collaboration session, as they are the unit of sharing.
 
 ```js
-import { useFireproof } from "use-fireproof";
+import { useFireproof } from 'use-fireproof';
 
-const { database, useLiveQuery, useDocument } = useFireproof("my-ledger");
+const { database, useLiveQuery, useDocument } = useFireproof('my-ledger');
 ```
 
 Fireproof databases are Merkle CRDTs, giving them the ledger-like causal consistency of git or a blockchain, but with the ability to merge and sync web data in real-time. Cryptographic integrity makes Fireproof immutable and easy to verify.
@@ -54,12 +55,12 @@ This example shows Fireproof's concise defaults. Here we only store user data, b
 
 ```js
 const App = () => {
-  const { useDocument } = useFireproof("my-ledger");
+  const { useDocument } = useFireproof('my-ledger');
 
-  const { doc, merge, submit } = useDocument({ text: "" });
+  const { doc, merge, submit } = useDocument({ text: '' });
 
   // _id is roughly temporal, this is most recent
-  const { docs } = useLiveQuery("_id", { descending: true, limit: 100 });
+  const { docs } = useLiveQuery('_id', { descending: true, limit: 100 });
 
   return (
     <div>
@@ -75,14 +76,12 @@ const App = () => {
       <h3>Recent Documents</h3>
       <ul>
         {docs.map((doc) => (
-          <li key={doc._id}>
-            {doc.text}
-          </li>
-        ))} 
+          <li key={doc._id}>{doc.text}</li>
+        ))}
       </ul>
     </div>
   );
-}
+};
 ```
 
 ### Editing Documents
@@ -90,23 +89,26 @@ const App = () => {
 Address documents by a known `_id` if you want to force conflict resolution or work with a real world resource, like a schedule slot or a user profile. In a complex app this might come from a route parameter or correspond to an outside identifier.
 
 ```js
-const { useDocument } = useFireproof("my-ledger");
+const { useDocument } = useFireproof('my-ledger');
 
-const { doc, merge, submit, save, reset } = useDocument({ _id: "user-profile:abc@example.com" });
+const { doc, merge, submit, save, reset } = useDocument({ _id: 'user-profile:abc@example.com' });
 ```
 
 The `useDocument` hook provides several methods:
+
 - `merge(updates)`: Update the document with new fields
 - `submit(e)`: Handles form submission by preventing default, saving, and resetting
 - `save()`: Save the current document state
 - `reset()`: Reset to initial state
 
 For form-based creation flows, use `submit`:
+
 ```js
 <form onSubmit={submit}>
 ```
 
 ChatGPT note: Canvas sandboxes the form submit event, there you should use button click events instead:
+
 ```js
 <button onClick={submit}>Save and Reset Fields</button>
 ```
@@ -124,16 +126,18 @@ Here are other common patterns:
 #### Query by Key Range
 
 Passing a string to `useLiveQuery` will index by that field. You can use the key argument to filter by a specific value:
+
 ```js
-const { docs } = useLiveQuery("agentName", { 
-  key: "agent-1"  // all docs where doc.agentName === "agent-1", sorted by _id
+const { docs } = useLiveQuery('agentName', {
+  key: 'agent-1', // all docs where doc.agentName === "agent-1", sorted by _id
 });
 ```
 
 You can also query a range within a key:
+
 ```js
-const { docs } = useLiveQuery("agentRating", { 
-  range: [3, 5]
+const { docs } = useLiveQuery('agentRating', {
+  range: [3, 5],
 });
 ```
 
@@ -153,8 +157,9 @@ const { docs } = useLiveQuery(
     } else if (doc.type == 'listing') {
       return doc.userId;
     }
-  }, 
-  { key : routeParams.sellerId });
+  },
+  { key: routeParams.sellerId }
+);
 ```
 
 #### Array Indexes and Prefix Queries
@@ -174,27 +179,24 @@ Sortable lists are a common pattern. Here's how to implement them using Fireproo
 
 ```js
 function App() {
-  const { database, useLiveQuery } = useFireproof("my-ledger");
-  
+  const { database, useLiveQuery } = useFireproof('my-ledger');
+
   // Initialize list with evenly spaced positions
   async function initializeList() {
-    await database.put({ list: "xyz", position: 1000 });
-    await database.put({ list: "xyz", position: 2000 });
-    await database.put({ list: "xyz", position: 3000 });
+    await database.put({ list: 'xyz', position: 1000 });
+    await database.put({ list: 'xyz', position: 2000 });
+    await database.put({ list: 'xyz', position: 3000 });
   }
-  
+
   // Query items sorted by position
-  const queryResult = useLiveQuery(
-    (doc) => [doc.list, doc.position], 
-    { prefix: ["xyz"] }
-  );
+  const queryResult = useLiveQuery((doc) => [doc.list, doc.position], { prefix: ['xyz'] });
 
   // Insert between existing items using midpoint calculation
   async function insertBetween(beforeDoc, afterDoc) {
     const newPosition = (beforeDoc.position + afterDoc.position) / 2;
-    await database.put({ 
-      list: "xyz", 
-      position: newPosition 
+    await database.put({
+      list: 'xyz',
+      position: newPosition,
     });
   }
 
@@ -202,14 +204,16 @@ function App() {
     <div>
       <h3>List xyz (Sorted)</h3>
       <ul>
-        {queryResult.docs.map(doc => (
+        {queryResult.docs.map((doc) => (
           <li key={doc._id}>
             {doc._id}: position {doc.position}
           </li>
         ))}
       </ul>
       <button onClick={initializeList}>Initialize List</button>
-      <button onClick={() => insertBetween(queryResult.docs[1], queryResult.docs[2])}>Insert new doc at 3rd position</button>
+      <button onClick={() => insertBetween(queryResult.docs[1], queryResult.docs[2])}>
+        Insert new doc at 3rd position
+      </button>
     </div>
   );
 }
@@ -224,32 +228,32 @@ Fireproof is local-first, so it's always fast and your data is stored in the bro
 You can use the core API in HTML or on the backend. Instead of hooks, import the core API directly:
 
 ```js
-import { fireproof } from "use-fireproof";
+import { fireproof } from 'use-fireproof';
 
-const database = fireproof("my-ledger");
+const database = fireproof('my-ledger');
 ```
 
 The document API is async, but doesn't require loading states or error handling.
 
 ```js
-const ok = await database.put({ text: "Sample Data" });
+const ok = await database.put({ text: 'Sample Data' });
 const doc = await database.get(ok.id);
-const latest = await database.query("_id", { limit: 10, descending: true });
-console.log("Latest documents:", latest.docs);
+const latest = await database.query('_id', { limit: 10, descending: true });
+console.log('Latest documents:', latest.docs);
 ```
 
 To subscribe to real-time updates, use the `subscribe` method. This is useful for building backend event handlers or other server-side logic. For instance to send an email when the user completes a todo:
 
 ```js
-import { fireproof } from "use-firproof";
+import { fireproof } from 'use-firproof';
 
-const database = fireproof("todo-list-db");
+const database = fireproof('todo-list-db');
 
 database.subscribe((changes) => {
-  console.log("Recent changes:", changes);
+  console.log('Recent changes:', changes);
   changes.forEach((change) => {
     if (change.completed) {
-      sendEmail(change.email, "Todo completed", "You have completed a todo.");
+      sendEmail(change.email, 'Todo completed', 'You have completed a todo.');
     }
   });
 }, true);
@@ -257,38 +261,38 @@ database.subscribe((changes) => {
 
 ### Working with Files
 
-Fireproof has built-in support for file attachments. Files are encrypted by default and synced on-demand. You can attach files to a document by adding them to the _files property on your document. For example:
+Fireproof has built-in support for file attachments. Files are encrypted by default and synced on-demand. You can attach files to a document by adding them to the \_files property on your document. For example:
 
 ```html
-<input accept="image/*" title="save to Fireproof" type="file" id="files" multiple>
+<input accept="image/*" title="save to Fireproof" type="file" id="files" multiple />
 ```
 
 ```js
 function handleFiles() {
   const fileList = this.files;
   const doc = {
-    type: "files",
-    _files: {}
+    type: 'files',
+    _files: {},
   };
   for (const file of fileList) {
     // Assign each File object to the document
-    doc._files[file.name] = file; 
+    doc._files[file.name] = file;
   }
   database.put(doc);
 }
 
-document.getElementById("files").addEventListener("change", handleFiles, false);
+document.getElementById('files').addEventListener('change', handleFiles, false);
 ```
 
 When loading a document with attachments, you can retrieve each attachment's actual File object by calling its .file() method. This returns a Promise that resolves with the File data, which you can display in your app:
 
 ```js
-const doc = await database.get("my-doc-id");
+const doc = await database.get('my-doc-id');
 for (const fileName in doc._files) {
   const meta = doc._files[fileName];
   if (meta.file) {
     const fileObj = await meta.file();
-    console.log("Loaded file:", fileObj.name);
+    console.log('Loaded file:', fileObj.name);
   }
 }
 ```
@@ -304,9 +308,9 @@ const [errors, setErrors] = useState({});
 
 function validateForm() {
   const newErrors = {};
-  if (!doc.name.trim()) newErrors.name = "Name is required.";
-  if (!doc.email) newErrors.email = "Email is required.";
-  if (!doc.message.trim()) newErrors.message = "Message is required.";
+  if (!doc.name.trim()) newErrors.name = 'Name is required.';
+  if (!doc.email) newErrors.email = 'Email is required.';
+  if (!doc.message.trim()) newErrors.message = 'Message is required.';
   setErrors(newErrors);
   return Object.keys(newErrors).length === 0;
 }
@@ -320,28 +324,29 @@ function handleSubmit(e) {
 ## Example React Application
 
 Code listing for todo tracker App.jsx:
+
 ```js
-import React from "react";
-import ReactDOM from "react-dom/client";
-import { useFireproof } from "use-fireproof";
+import React from 'react';
+import ReactDOM from 'react-dom/client';
+import { useFireproof } from 'use-fireproof';
 
 export default function App() {
-  const { useLiveQuery, useDocument, database } = useFireproof("todo-list-db");
+  const { useLiveQuery, useDocument, database } = useFireproof('todo-list-db');
 
   const {
     doc: newTodo,
     merge: mergeNewTodo,
-    submit: submitNewTodo
+    submit: submitNewTodo,
   } = useDocument({
-    todo: "",
-    type: "todo",
+    todo: '',
+    type: 'todo',
     completed: false,
-    createdAt: Date.now()
+    createdAt: Date.now(),
   });
 
-  const { docs: todos } = useLiveQuery("type", { 
-    key: "todo",
-    descending: true 
+  const { docs: todos } = useLiveQuery('type', {
+    key: 'todo',
+    descending: true,
   });
 
   const handleInputChange = (e) => {
@@ -354,12 +359,14 @@ export default function App() {
   };
 
   return (
-    <div className="max-w-md mx-auto p-4 bg-white shadow rounded">
-      <h2 className="text-2xl font-bold mb-4">Todo List</h2>
+    <div className="mx-auto max-w-md rounded bg-white p-4 shadow">
+      <h2 className="mb-4 text-2xl font-bold">Todo List</h2>
       <form onSubmit={handleSubmit} className="mb-4">
-        <label htmlFor="todo" className="block mb-2 font-semibold">Todo</label>
+        <label htmlFor="todo" className="mb-2 block font-semibold">
+          Todo
+        </label>
         <input
-          className="w-full border border-gray-300 rounded px-2 py-1"
+          className="w-full rounded border border-gray-300 px-2 py-1"
           id="todo"
           type="text"
           onChange={handleInputChange}
@@ -368,8 +375,11 @@ export default function App() {
       </form>
       <ul className="space-y-3">
         {todos.map((doc) => (
-          <li className="flex flex-col items-start p-2 border border-gray-200 rounded bg-gray-50" key={doc._id}>
-            <div className="flex items-center justify-between w-full">
+          <li
+            className="flex flex-col items-start rounded border border-gray-200 bg-gray-50 p-2"
+            key={doc._id}
+          >
+            <div className="flex w-full items-center justify-between">
               <div className="flex items-center">
                 <input
                   className="mr-2"
@@ -380,13 +390,13 @@ export default function App() {
                 <span className="font-medium">{doc.todo}</span>
               </div>
               <button
-                className="text-sm bg-red-500 text-white px-2 py-1 rounded"
+                className="rounded bg-red-500 px-2 py-1 text-sm text-white"
                 onClick={() => database.del(doc._id)}
               >
                 Delete
               </button>
             </div>
-            <div className="text-xs text-gray-500 mt-1">
+            <div className="mt-1 text-xs text-gray-500">
               {new Date(doc.createdAt).toISOString()}
             </div>
           </li>
@@ -399,37 +409,57 @@ export default function App() {
 
 ### Example Image Uploader
 
-This React example shows a simple image uploader application that uses Fireproof to store and sort images by creation date. These APIs easily work with plain JavaScript also. 
+This React example shows a simple image uploader application that uses Fireproof to store and sort images by creation date. These APIs easily work with plain JavaScript also.
 
 Code listing for App.jsx:
+
 ```js
-import { useFireproof, ImgFile } from "use-fireproof";
-import { useState, useEffect } from "react";
+import { useFireproof, ImgFile } from 'use-fireproof';
+import { useState, useEffect } from 'react';
 
 export default function App() {
-  const { useDocument, useLiveQuery } = useFireproof("image-uploads");
-  const { doc, merge, submit } = useDocument({ _files: {}, description: "" });
-  const { docs } = useLiveQuery("_id", { descending: true, limit: 5 });
+  const { useDocument, useLiveQuery } = useFireproof('image-uploads');
+  const { doc, merge, submit } = useDocument({ _files: {}, description: '' });
+  const { docs } = useLiveQuery('_id', { descending: true, limit: 5 });
   const [error, setError] = useState(false);
 
   return (
-    <div className="p-6 max-w-lg mx-auto bg-white shadow-lg rounded-lg">
-      <h2 className="text-2xl font-bold mb-4">Image Uploader</h2>
-      <input type="file" accept="image/*" onChange={e => e.target.files[0] && merge({ _files: { uploaded: e.target.files[0] } })} className="mb-2 border p-2 w-full rounded" />
-      <input 
-        type="text" 
-        placeholder="Enter description" 
-        value={doc.description} 
-        onChange={e => {setError(false); merge({ description: e.target.value });}}
-        className={`w-full p-2 border rounded mb-4 ${error ? "border-red-500" : "border-gray-300"}`}
+    <div className="mx-auto max-w-lg rounded-lg bg-white p-6 shadow-lg">
+      <h2 className="mb-4 text-2xl font-bold">Image Uploader</h2>
+      <input
+        type="file"
+        accept="image/*"
+        onChange={(e) => e.target.files[0] && merge({ _files: { uploaded: e.target.files[0] } })}
+        className="mb-2 w-full rounded border p-2"
       />
-      <button onClick={() => doc.description.trim() ? submit() : setError(true)} className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">Upload</button>
-      <h3 className="text-lg font-semibold mt-6">Recent Uploads</h3>
-      <div className="grid grid-cols-2 gap-4 mt-2">
-        {docs.map(doc => (
-          <div key={doc._id} className="border p-2 rounded shadow-sm bg-gray-50">
-            {doc._files?.uploaded && <ImgFile file={doc._files.uploaded} alt="Uploaded Image" className="w-full h-auto rounded" />}
-            <p className="text-sm text-gray-700 mt-2">{doc.description || "No description"}</p>
+      <input
+        type="text"
+        placeholder="Enter description"
+        value={doc.description}
+        onChange={(e) => {
+          setError(false);
+          merge({ description: e.target.value });
+        }}
+        className={`mb-4 w-full rounded border p-2 ${error ? 'border-red-500' : 'border-gray-300'}`}
+      />
+      <button
+        onClick={() => (doc.description.trim() ? submit() : setError(true))}
+        className="rounded bg-blue-500 px-4 py-2 text-white hover:bg-blue-600"
+      >
+        Upload
+      </button>
+      <h3 className="mt-6 text-lg font-semibold">Recent Uploads</h3>
+      <div className="mt-2 grid grid-cols-2 gap-4">
+        {docs.map((doc) => (
+          <div key={doc._id} className="rounded border bg-gray-50 p-2 shadow-sm">
+            {doc._files?.uploaded && (
+              <ImgFile
+                file={doc._files.uploaded}
+                alt="Uploaded Image"
+                className="h-auto w-full rounded"
+              />
+            )}
+            <p className="mt-2 text-sm text-gray-700">{doc.description || 'No description'}</p>
           </div>
         ))}
       </div>
