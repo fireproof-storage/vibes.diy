@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react';
 
 interface SandpackScrollControllerProps {
-  isStreaming: boolean;
+  isStreaming: () => boolean;
 }
 
 const SandpackScrollController: React.FC<SandpackScrollControllerProps> = ({ isStreaming }) => {
@@ -68,7 +68,7 @@ const SandpackScrollController: React.FC<SandpackScrollControllerProps> = ({ isS
     };
 
     const highlightLastLine = () => {
-      if (!primaryScroller || !isStreaming) return;
+      if (!primaryScroller || !isStreaming()) return;
 
       document.querySelectorAll('.cm-line-highlighted').forEach((el) => {
         el.classList.remove('cm-line-highlighted');
@@ -115,7 +115,7 @@ const SandpackScrollController: React.FC<SandpackScrollControllerProps> = ({ isS
 
         const newHeight = primaryScroller.scrollHeight;
 
-        if (isStreaming) {
+        if (isStreaming()) {
           highlightLastLine();
         } else {
           document.querySelectorAll('.cm-line-highlighted').forEach((el) => {
@@ -161,12 +161,12 @@ const SandpackScrollController: React.FC<SandpackScrollControllerProps> = ({ isS
 
         primaryScroller.addEventListener('scroll', handleScroll);
 
-        if (isStreaming) {
+        if (isStreaming()) {
           highlightLastLine();
         }
       }
 
-      if (isStreaming) {
+      if (isStreaming()) {
         highlightIntervalRef.current = setInterval(highlightLastLine, 10);
       }
 
@@ -193,7 +193,7 @@ const SandpackScrollController: React.FC<SandpackScrollControllerProps> = ({ isS
   }, [isStreaming]);
 
   useEffect(() => {
-    if (!isStreaming && highlightIntervalRef.current) {
+    if (!isStreaming() && highlightIntervalRef.current) {
       clearInterval(highlightIntervalRef.current);
       highlightIntervalRef.current = null;
 

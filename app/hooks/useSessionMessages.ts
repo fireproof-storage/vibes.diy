@@ -41,24 +41,57 @@ export function useSessionMessages(sessionId: string | null) {
   const { database, useLiveQuery } = useFireproof(FIREPROOF_CHAT_HISTORY);
   
   // Query for messages by their 'type' index
-  // Using a simpler approach to avoid TypeScript errors with custom filter functions
   const { docs } = useLiveQuery('type', { 
     key: 'message',
     limit: 100
   });
   
+  // Debug log to check what docs are returned from Fireproof
+  console.log('useSessionMessages: Fireproof docs returned:', docs?.length || 0, 
+              'sessionId:', sessionId);
+  
   const [messages, setMessages] = useState<ChatMessage[]>([]);
 
   // Transform query results into messages
   useEffect(() => {
-    if (!docs || docs.length === 0 || !sessionId) return;
+    if (!docs || docs.length === 0 || !sessionId) {
+      console.log('useSessionMessages: No docs, empty docs, or no sessionId:', {
+        docsLength: docs?.length || 0,
+        sessionId
+      });
+      return;
+    }
+    
+    // Debug log for the filtering process
+    console.log('useSessionMessages: Processing docs for session:', sessionId, 
+                'Total docs:', docs.length);
+    
+    // Log all session IDs to debug filtering
+    const allSessionIds = docs.map((doc: any) => doc.session_id).filter(Boolean);
+    console.log('useSessionMessages: All session IDs in docs:', allSessionIds);
     
     // Filter for this session's messages and convert them to chat messages
-    const sortedMessages = docs
-      // First filter for this session (manually, since we can't use complex queries yet)
-      .filter((doc: any) => 
-        isMessageDocument(doc) && doc.session_id === sessionId
-      )
+    const docsForThisSession = docs.filter((doc: any) => 
+      isMessageDocument(doc) && doc.session_id === sessionId
+    );
+    console.log('useSessionMessages: Docs for this session:', docsForThisSession.length);
+    
+    // Deduplicate messages - this is critical to prevent duplicate UI elements
+    // Use a Map to only keep the latest message with a given timestamp
+    const messagesByTimestamp = new Map();
+    docsForThisSession.forEach((doc: any) => {
+      // For messages with the same timestamp, keep the one with the most recent _rev
+      const existingDoc = messagesByTimestamp.get(doc.timestamp);
+      if (!existingDoc || (doc._rev && existingDoc._rev && doc._rev > existingDoc._rev)) {
+        messagesByTimestamp.set(doc.timestamp, doc);
+      }
+    });
+    
+    // Convert the Map values back to an array
+    const uniqueDocs = Array.from(messagesByTimestamp.values());
+    console.log('useSessionMessages: After deduplication:', uniqueDocs.length, 'messages');
+    
+    const sortedMessages = uniqueDocs
       // Sort by timestamp
       .sort((a: any, b: any) => (a.timestamp || 0) - (b.timestamp || 0))
       // Map to the appropriate message type
@@ -86,6 +119,10 @@ export function useSessionMessages(sessionId: string | null) {
         }
       });
     
+    // Log the results of filtering and transformation
+    console.log('useSessionMessages: Filtered messages for session:', 
+                sessionId, 'Count:', sortedMessages.length);
+    
     setMessages(sortedMessages);
   }, [docs, sessionId]);
 
@@ -95,6 +132,9 @@ export function useSessionMessages(sessionId: string | null) {
     
     try {
       const timestamp = Date.now();
+      console.log('useSessionMessages: Adding user message to session:', 
+                  sessionId, 'Text:', text.substring(0, 30) + '...');
+      
       await database.put({
         type: 'message',
         session_id: sessionId,
@@ -103,6 +143,7 @@ export function useSessionMessages(sessionId: string | null) {
         timestamp
       } as UserMessageDocument);
       
+      console.log('useSessionMessages: Successfully added user message at timestamp:', timestamp);
       return timestamp;
     } catch (error) {
       console.error('Error adding user message:', error);
@@ -116,13 +157,49 @@ export function useSessionMessages(sessionId: string | null) {
     
     try {
       const now = timestamp || Date.now();
-      await database.put({
-        type: 'message',
-        session_id: sessionId,
-        message_type: 'ai',
-        raw_content: rawContent,
-        timestamp: now
-      } as AiMessageDocument);
+      
+      // First, check if we already know about this message in our local state
+      let existingMessageId = null;
+      
+      // Store a reference to the last AI message ID and timestamp for this session
+      if (timestamp) {
+        // Check if we have an existing AI message with this timestamp in our current docs
+        if (docs) {
+          const existingMessage = docs.find((doc: any) => 
+            doc.type === 'message' && 
+            doc.session_id === sessionId && 
+            doc.message_type === 'ai' && 
+            doc.timestamp === now
+          );
+          
+          if (existingMessage) {
+            existingMessageId = existingMessage._id;
+          }
+        }
+      }
+      
+      if (existingMessageId) {
+        // Update the existing message by providing its ID
+        await database.put({
+          _id: existingMessageId,
+          type: 'message',
+          session_id: sessionId,
+          message_type: 'ai',
+          raw_content: rawContent,
+          timestamp: now
+        });
+        console.log('useSessionMessages: Updated existing AI message with ID:', existingMessageId);
+      } else {
+        // Create a new message
+        const result = await database.put({
+          type: 'message',
+          session_id: sessionId,
+          message_type: 'ai',
+          raw_content: rawContent,
+          timestamp: now
+        } as AiMessageDocument);
+        console.log('useSessionMessages: Created new AI message with ID:', result.id);
+      }
       
       return now;
     } catch (error) {

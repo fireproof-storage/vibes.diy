@@ -188,7 +188,7 @@ export default memo(MessageList, (prevProps, nextProps) => {
   // Don't re-render if these props haven't changed
   return (
     prevProps.sessionId === nextProps.sessionId &&
-    prevProps.isStreaming === nextProps.isStreaming &&
+    prevProps.isStreaming() === nextProps.isStreaming() &&
     prevProps.isShrinking === nextProps.isShrinking &&
     prevProps.isExpanding === nextProps.isExpanding
   );

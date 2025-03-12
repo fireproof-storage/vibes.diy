@@ -8,6 +8,7 @@ import { useSimpleChat } from '../hooks/useSimpleChat';
 import { parseContent, parseDependencies } from '../utils/segmentParser';
 import AppLayout from '../components/AppLayout';
 import { FIREPROOF_CHAT_HISTORY } from '../config/env';
+import { useSession } from '../hooks/useSession';
 
 export function meta() {
   return [
@@ -52,9 +53,39 @@ export default function Home() {
   const [isSharedApp, setIsSharedApp] = useState<boolean>(false);
   const [sessionId, setSessionId] = useState<string | null>(null);
   const navigate = useNavigate();
+  const sessionCreationAttemptedRef = useRef(false);
+
+  // Create a new session when first loaded
+  const { createSession } = useSession(null);
+  
+  // Create a session automatically when the component loads
+  useEffect(() => {
+    if (!sessionId && !sessionCreationAttemptedRef.current) {
+      console.log('Home: No sessionId found, creating new session');
+      sessionCreationAttemptedRef.current = true;
+      
+      const createNewSession = async () => {
+        try {
+          const newSessionId = await createSession('New Chat');
+          console.log('Home: Created new session with ID:', newSessionId);
+          if (newSessionId) {
+            setSessionId(newSessionId);
+          }
+        } catch (error) {
+          console.error('Error creating new session:', error);
+        }
+      };
+      
+      createNewSession();
+    }
+  }, [createSession]);  // Remove sessionId from dependencies
 
   // Use the simple chat hook with sessionId
   const chatState = useSimpleChat(sessionId);
+  
+  // Debug logs to check chat state and messages
+  console.log('Home: chatState initialized with messages:', chatState.messages.length);
+  console.log('Home: isStreaming:', chatState.isStreaming());
 
   // Helper function to extract dependencies from segments
   const getDependencies = useCallback(() => {
@@ -82,6 +113,11 @@ export default function Home() {
 
   // Extract code and dependencies when AI message completes
   useEffect(() => {
+    // Debug log for messages update
+    console.log('Home: Messages updated, count:', chatState.messages.length, 
+                'Latest message type:', chatState.messages.length > 0 ? 
+                chatState.messages[chatState.messages.length - 1].type : 'none');
+    
     // Find the last AI message
     const lastAiMessage = [...chatState.messages].reverse().find(
       (msg) => msg.type === 'ai' && !msg.isStreaming
@@ -170,6 +206,8 @@ export default function Home() {
   // Handle the case where a new session has been created
   useEffect(() => {
     if (sessionId && chatState.messages.length > 0) {
+      console.log('Home: Session created, navigating to session page. Messages:', 
+                 chatState.messages.length, 'SessionId:', sessionId);
       // Navigate to the new session page
       navigate(`/session/${sessionId}`);
     }
@@ -180,7 +218,7 @@ export default function Home() {
       chatPanel={
         <ChatInterface
           chatState={chatState}
-          sessionId={null}
+          sessionId={sessionId}
           onSessionCreated={handleSessionCreated}
         />
       }
@@ -189,7 +227,7 @@ export default function Home() {
           code={state.generatedCode}
           dependencies={state.dependencies}
           streamingCode={chatState.getCurrentCode()}
-          isStreaming={chatState.isStreaming()}
+          isStreaming={chatState.isStreaming}
           isSharedApp={isSharedApp}
           shareStatus={shareStatus}
           onShare={handleShare}

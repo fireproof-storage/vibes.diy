@@ -14,7 +14,7 @@ import SandpackScrollController from './SandpackScrollController';
 interface ResultPreviewProps {
   code: string;
   streamingCode?: string;
-  isStreaming?: boolean;
+  isStreaming: () => boolean;
   dependencies?: Record<string, string>;
   onShare?: () => void;
   shareStatus?: string;
@@ -94,7 +94,7 @@ const defaultCode = '';
 function ResultPreview({
   code,
   streamingCode = '',
-  isStreaming = false,
+  isStreaming,
   dependencies = {},
   onShare,
   shareStatus,
@@ -155,19 +155,12 @@ function ResultPreview({
   }, [onScreenshotCaptured]);
 
   useEffect(() => {
-    if (!isStreaming) {
-      const codeWithWhitespace =
-        cleanCodeBeforeImport(code || defaultCode) +
-        '\n\n\n\n\n\n\n\n\n\n' +
-        '\n\n\n\n\n\n\n\n\n\n' +
-        '\n';
+    if (code) {
+      const codeWithWhitespace = cleanCodeBeforeImport(code) + '\n\n\n\n\n\n\n\n\n\n';
       setDisplayCode(codeWithWhitespace);
 
       filesRef.current = {
-        '/index.html': {
-          code: indexHtml,
-          hidden: true,
-        },
+        ...filesRef.current,
         '/App.jsx': {
           code: codeWithWhitespace,
           active: true,
@@ -181,7 +174,7 @@ function ResultPreview({
   }, [code, isStreaming, sessionId]);
 
   useEffect(() => {
-    if (isStreaming) {
+    if (isStreaming()) {
       if (streamingCode) {
         const codeWithWhitespace = cleanCodeBeforeImport(streamingCode) + '\n\n\n\n\n\n\n\n\n\n';
         setDisplayCode(codeWithWhitespace);
@@ -198,17 +191,13 @@ function ResultPreview({
         setActiveView('code');
         setLockCodeView(true);
       }
-    }
-  }, [streamingCode, isStreaming]);
-
-  useEffect(() => {
-    if (!isStreaming) {
+    } else if (code) {
       setLockCodeView(false);
     }
-  }, [isStreaming]);
+  }, [code, isStreaming, streamingCode]);
 
   useEffect(() => {
-    if (isStreaming && streamingCode) {
+    if (isStreaming() && streamingCode) {
       justFinishedStreamingRef.current = true;
     }
   }, [isStreaming, streamingCode]);
@@ -219,7 +208,7 @@ function ResultPreview({
     }
   }, [bundlingComplete]);
 
-  const shouldSpin = !isStreaming && justFinishedStreamingRef.current && !bundlingComplete;
+  const shouldSpin = !isStreaming() && justFinishedStreamingRef.current && !bundlingComplete;
 
   const spinningIconClass = shouldSpin ? 'animate-spin-slow' : '';
 
@@ -238,7 +227,7 @@ function ResultPreview({
   const sandpackKey = useMemo(() => {
     // Using Date.now() causes unnecessary remounts on every render
     // Instead, use the actual content that should trigger a remount
-    const key = `${sessionId || 'default'}-${isStreaming ? 'streaming' : 'static'}-${code.length}`;
+    const key = `${sessionId || 'default'}-${isStreaming() ? 'streaming' : 'static'}-${code.length}`;
     return key;
   }, [sessionId, isStreaming, code]);
 
@@ -397,8 +386,9 @@ function ResultPreview({
               }}
               setBundlingComplete={setBundlingComplete}
               isStreaming={isStreaming}
+              onScreenshotCaptured={onScreenshotCaptured}
             />
-            {isStreaming && <SandpackScrollController isStreaming={isStreaming} />}
+            {isStreaming() && <SandpackScrollController isStreaming={isStreaming} />}
             <SandpackLayout className="h-full" style={{ height: 'calc(100vh - 49px)' }}>
               <div
                 style={{

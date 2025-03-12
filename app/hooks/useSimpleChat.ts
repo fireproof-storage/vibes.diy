@@ -171,11 +171,15 @@ export function useSimpleChat(sessionId: string | null) {
    */
   async function sendMessage(): Promise<void> {
     if (input.trim()) {
+      console.log('useSimpleChat: Starting sendMessage with input:', input.substring(0, 30) + '...');
+      console.log('useSimpleChat: Current sessionId:', sessionId);
+      
       // Reset state for new message
       streamBufferRef.current = '';
 
       try {
         // Add user message
+        console.log('useSimpleChat: Adding user message to session');
         await addUserMessage(input);
         
         // Clear input
@@ -183,8 +187,10 @@ export function useSimpleChat(sessionId: string | null) {
 
         // Build message history
         const messageHistory = buildMessageHistory();
+        console.log('useSimpleChat: Message history built, count:', messageHistory.length);
 
         // Call OpenRouter API with streaming enabled
+        console.log('useSimpleChat: Calling OpenRouter API');
         const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
           method: 'POST',
           headers: {
@@ -229,6 +235,11 @@ export function useSimpleChat(sessionId: string | null) {
         await updateAiMessage('', true, aiMessageTimestamp);
 
         // Process the stream
+        const updateThrottleMs = 500; // Increase to 500ms to reduce database writes
+        let lastUpdateTime = 0;
+        let contentChanged = false;
+        let lastContentLength = 0;
+
         while (true) {
           const { done, value } = await reader.read();
           if (done) break;
@@ -251,6 +262,9 @@ export function useSimpleChat(sessionId: string | null) {
                   const content = data.choices[0].delta.content;
                   // Add only the actual content to the buffer
                   streamBufferRef.current += content;
+                  
+                  // Mark that content has changed and needs an update
+                  contentChanged = true;
                 }
               } catch (e) {
                 console.error('Error parsing SSE JSON:', e);
@@ -258,23 +272,43 @@ export function useSimpleChat(sessionId: string | null) {
             }
           }
           
-          // Update the AI message with the current buffer
-          await updateAiMessage(streamBufferRef.current, true, aiMessageTimestamp);
+          // Update the AI message with the current buffer - but with improved throttling
+          const now = Date.now();
+          const currentLength = streamBufferRef.current.length;
+          
+          // Only update if:
+          // 1. Content has changed AND time threshold passed, OR
+          // 2. Significant content change (100+ chars) since last update
+          if ((contentChanged && now - lastUpdateTime > updateThrottleMs) || 
+              (currentLength - lastContentLength > 100)) {
+            
+            console.log(`useSimpleChat: Updating AI stream (${currentLength} chars)`);
+            await updateAiMessage(streamBufferRef.current, true, aiMessageTimestamp);
+            
+            lastUpdateTime = now;
+            contentChanged = false;
+            lastContentLength = currentLength;
+          }
         }
 
         // Streaming is done, finalize the AI message
-        console.log('Finalizing AI message', streamBufferRef.current);
+        console.log('Finalizing AI message', streamBufferRef.current.substring(0, 50) + '...');
         await updateAiMessage(streamBufferRef.current, false, aiMessageTimestamp);
 
         // Generate a title if this is the first response with code
         const { segments } = parseContent(streamBufferRef.current);
         const hasCode = segments.some(segment => segment.type === 'code');
         
+        console.log('useSimpleChat: Response has code:', hasCode, 
+                   'Session title:', session?.title || 'none');
+        
         if (hasCode && (!session?.title || session.title === 'New Chat')) {
+          console.log('useSimpleChat: Generating title for session');
           await generateTitle(aiMessageTimestamp, segments);
         }
       } catch (error) {
         // Handle errors
+        console.error('Error calling OpenRouter API:', error);
         const errorMessage = 'Sorry, there was an error generating the component. Please try again.';
         if (aiMessageTimestampRef.current) {
           // Update the error message in the existing AI message
@@ -283,9 +317,9 @@ export function useSimpleChat(sessionId: string | null) {
           // Create a new AI message with the error
           await updateAiMessage(errorMessage);
         }
-        console.error('Error calling OpenRouter API:', error);
       } finally {
         aiMessageTimestampRef.current = null;
+        console.log('useSimpleChat: sendMessage completed');
       }
     }
   }
