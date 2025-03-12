@@ -210,11 +210,12 @@ function ChatInterface({ chatState, sessionId, onSessionCreated, onNewChat }: Ch
       <MessageList
         sessionId={sessionId || null}
         isStreaming={() => streamingState}
+        currentSegments={currentSegments}
         isShrinking={isShrinking}
         isExpanding={isExpanding}
       />
     );
-  }, [sessionId, messages, streamingState, isShrinking, isExpanding]);
+  }, [sessionId, messages, streamingState, isShrinking, isExpanding, currentSegments]);
 
   // Render the quick suggestions conditionally
   const quickSuggestions = useMemo(

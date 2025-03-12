@@ -187,11 +187,8 @@ export function useSimpleChat(sessionId: string | null) {
    */
   async function sendMessage(): Promise<void> {
     if (input.trim()) {
-      console.log(
-        'useSimpleChat: Starting sendMessage with input:',
-        input.substring(0, 30) + '...'
-      );
-      console.log('useSimpleChat: Current sessionId:', sessionId);
+      logDebug(`Starting sendMessage with input: ${input.substring(0, 30)}...`);
+      logDebug(`Current sessionId: ${sessionId}`);
 
       // Reset state for new message
       streamBufferRef.current = '';
@@ -199,7 +196,7 @@ export function useSimpleChat(sessionId: string | null) {
 
       try {
         // Add user message
-        console.log('useSimpleChat: Adding user message to session');
+        logDebug('Adding user message to session');
         await addUserMessage(input);
 
         // Clear input
@@ -207,10 +204,10 @@ export function useSimpleChat(sessionId: string | null) {
 
         // Build message history
         const messageHistory = buildMessageHistory();
-        console.log('useSimpleChat: Message history built, count:', messageHistory.length);
+        logDebug(`Message history built, count: ${messageHistory.length}`);
 
         // Call OpenRouter API with streaming enabled
-        console.log('useSimpleChat: Calling OpenRouter API');
+        logDebug('Calling OpenRouter API');
         const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
           method: 'POST',
           headers: {
@@ -285,15 +282,7 @@ export function useSimpleChat(sessionId: string | null) {
                     aiMessageTimestampRef.current
                   );
 
-                  // Log every 20 characters for debugging
-                  if (streamBufferRef.current.length % 20 === 0) {
-                    console.log(
-                      'Stream buffer length:',
-                      streamBufferRef.current.length,
-                      'Sample:',
-                      streamBufferRef.current.substring(streamBufferRef.current.length - 20)
-                    );
-                  }
+                  // No need for log every 20 characters - removed for cleaner logs
                 }
               } catch (e) {
                 console.error('Error parsing SSE JSON:', e);
@@ -303,7 +292,7 @@ export function useSimpleChat(sessionId: string | null) {
         }
 
         // Streaming is done, NOW write the complete AI message to database
-        console.log('Finalizing AI message', streamBufferRef.current.substring(0, 50) + '...');
+        logDebug(`Finalizing AI message (${streamBufferRef.current.length} chars)`);
         await addAiMessage(streamBufferRef.current, aiMessageTimestamp, false);
         setStreamingState(false);
 
@@ -311,15 +300,10 @@ export function useSimpleChat(sessionId: string | null) {
         const { segments } = parseContent(streamBufferRef.current);
         const hasCode = segments.some((segment) => segment.type === 'code');
 
-        console.log(
-          'useSimpleChat: Response has code:',
-          hasCode,
-          'Session title:',
-          session?.title || 'none'
-        );
+        logDebug(`Response has code: ${hasCode}, Session title: ${session?.title || 'none'}`);
 
         if (hasCode && (!session?.title || session.title === 'New Chat')) {
-          console.log('useSimpleChat: Generating title for session');
+          logDebug('Generating title for session');
           await generateTitle(aiMessageTimestamp, segments);
         }
       } catch (error) {
@@ -332,7 +316,7 @@ export function useSimpleChat(sessionId: string | null) {
         setStreamingState(false);
       } finally {
         aiMessageTimestampRef.current = null;
-        console.log('useSimpleChat: sendMessage completed');
+        logDebug('sendMessage completed');
       }
     }
   }
@@ -369,20 +353,16 @@ export function useSimpleChat(sessionId: string | null) {
         // Add sample of content for debugging
         console.debug(`  Sample: "${segment.content.substring(0, Math.min(30, segment.content.length))}..."`);
       });
-    } else if (rawMessage.trim().length > 0) {
-      // If we have text but no segments, still update the message
-      // This ensures we don't wait too long before showing content
-      console.debug(`🔍 TEXT WITHOUT SEGMENTS: "${rawMessage.substring(0, Math.min(50, rawMessage.length))}..."`);
-      
-      // Create a simple markdown segment with the content if none were parsed
-      // This ensures content is shown immediately rather than waiting for a complete segment
-      if (segments.length === 0 && rawMessage.trim().length > 0) {
-        segments.push({
-          type: 'markdown',
-          content: rawMessage,
-        });
-        console.debug('🔍 CREATED FALLBACK MARKDOWN SEGMENT from raw message text');
-      }
+    }
+
+    // CRITICAL FIX: Always create a simple markdown segment with the full content 
+    // if no segments were parsed. This ensures content is shown immediately.
+    if (segments.length === 0 && rawMessage.trim().length > 0) {
+      segments.push({
+        type: 'markdown',
+        content: rawMessage,
+      });
+      console.debug('🔍 CREATED FALLBACK MARKDOWN SEGMENT from raw message text');
     }
 
     // Use addAiMessage with isStreaming=true to update in-memory message

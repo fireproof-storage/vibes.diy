@@ -1,8 +1,9 @@
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState, useMemo, useCallback, useRef } from 'react';
 import { useFireproof } from 'use-fireproof';
 import { FIREPROOF_CHAT_HISTORY } from '../config/env';
-import type { ChatMessage, UserChatMessage, AiChatMessage } from '../types/chat';
+import type { ChatMessage, AiChatMessage, UserChatMessage } from '../types/chat';
 import { parseContent } from '../utils/segmentParser';
+import { debugLog as logDebug } from '../utils/debugLogging';
 
 /**
  * Message storage design (per human.md):
@@ -13,40 +14,36 @@ import { parseContent } from '../utils/segmentParser';
  * - All message documents include session_id to link them to a session
  */
 
-// Base message document with common fields
-interface BaseMessageDocument {
-  _id?: string;
+// Define document types internally since we don't have a separate file
+interface MessageDocument {
   type: 'user-message' | 'ai-message';
   session_id: string;
   created_at: number;
 }
 
-// User message document stores text directly
-interface UserMessageDocument extends BaseMessageDocument {
+interface UserMessageDocument extends MessageDocument {
   type: 'user-message';
   prompt: string;
 }
 
-// AI message document stores raw stream content
-interface AiMessageDocument extends BaseMessageDocument {
+interface AiMessageDocument extends MessageDocument {
   type: 'ai-message';
-  rawMessage: string; // Raw stream content before parsing
+  rawMessage: string;
 }
 
-// Union type for all message documents
-type MessageDocument = UserMessageDocument | AiMessageDocument;
-
-// Type guard for message documents
-function isMessageDocument(doc: any): doc is MessageDocument {
-  return (doc.type === 'user-message' || doc.type === 'ai-message') && doc.session_id !== undefined;
-}
-
-// Direct stdout logging for both browser and test environments
-function logDebug(message: string) {
-  console.debug(`🔍 SESSION_MESSAGES: ${message}`);
-}
+// Helper to check if a document is a message document
+const isMessageDocument = (doc: any): boolean => {
+  return (
+    doc && 
+    (doc.type === 'user-message' || doc.type === 'ai-message') && 
+    typeof doc.session_id === 'string'
+  );
+};
 
 export function useSessionMessages(sessionId: string | null) {
+  // Use ref to track prior sessionId for comparison
+  const prevSessionIdRef = useRef<string | null>(null);
+  
   const { database, useLiveQuery } = useFireproof(FIREPROOF_CHAT_HISTORY);
 
   // Query for all message document types
@@ -56,41 +53,52 @@ export function useSessionMessages(sessionId: string | null) {
   });
 
   // Debug log to check what docs are returned from Fireproof
-  console.log(
-    'useSessionMessages: Fireproof docs returned:',
-    docs?.length || 0,
-    'sessionId:',
-    sessionId
-  );
+  logDebug(`Fireproof docs returned: ${docs?.length || 0}, sessionId: ${sessionId}`);
 
   const [messages, setMessages] = useState<ChatMessage[]>([]);
 
   // Add state for current streaming message (memory only)
   const [streamingMessage, setStreamingMessage] = useState<AiChatMessage | null>(null);
 
-  // Transform query results into messages
+  // Memoize parseContent to avoid regenerating in multiple places
+  const parseMessageContent = useCallback((rawContent: string) => {
+    return parseContent(rawContent);
+  }, []);
+  
+  // Transform query results into messages - this is the main source of issues
   useEffect(() => {
-    if (!docs || docs.length === 0 || !sessionId) {
-      console.log('useSessionMessages: No docs, empty docs, or no sessionId:', {
-        docsLength: docs?.length || 0,
-        sessionId,
-      });
+    if (!docs) {
+      logDebug('No docs available yet, waiting for data');
+      return;
+    }
+    
+    // Only process docs when needed - check if sessionId changed
+    const sessionIdChanged = sessionId !== prevSessionIdRef.current;
+    prevSessionIdRef.current = sessionId;
+    
+    // Exit early if no docs or no sessionId, preserving existing messages
+    if (docs.length === 0 || !sessionId) {
+      logDebug(`No docs found or no sessionId: { docsLength: ${docs?.length || 0}, sessionId: '${sessionId}' }`);
+      // Only reset messages if we have a session ID but no docs
+      // This allows virtual messages to persist when no sessionId exists
+      if (sessionId && sessionIdChanged) {
+        logDebug('Clearing messages because sessionId exists but no docs found');
+        setMessages([]);
+      }
       return;
     }
 
-    // Debug log for the filtering process
-    console.log(
-      'useSessionMessages: Processing docs for session:',
-      sessionId,
-      'Total docs:',
-      docs.length
-    );
+    // Skip reprocessing if sessionId hasn't changed
+    if (!sessionIdChanged && messages.length > 0) {
+      logDebug('SessionId unchanged, skipping reprocessing of messages');
+      return;
+    }
 
     // Filter for this session's messages
     const docsForThisSession = docs.filter(
       (doc: any) => isMessageDocument(doc) && doc.session_id === sessionId
     );
-    console.log('useSessionMessages: Docs for this session:', docsForThisSession.length);
+    logDebug(`Filtered ${docsForThisSession.length} docs for session: ${sessionId}`);
 
     const sortedMessages = docsForThisSession
       // Sort by created_at time
@@ -107,7 +115,7 @@ export function useSessionMessages(sessionId: string | null) {
         } else {
           const aiDoc = doc as AiMessageDocument;
           // Parse raw content for AI messages
-          const { segments, dependenciesString } = parseContent(aiDoc.rawMessage);
+          const { segments, dependenciesString } = parseMessageContent(aiDoc.rawMessage);
 
           return {
             type: 'ai',
@@ -120,189 +128,14 @@ export function useSessionMessages(sessionId: string | null) {
         }
       });
 
-    // Log the results of filtering and transformation
-    console.log(
-      'useSessionMessages: Filtered messages for session:',
-      sessionId,
-      'Count:',
-      sortedMessages.length
-    );
-
+    logDebug(`Transformed ${sortedMessages.length} messages for session: ${sessionId}`);
     setMessages(sortedMessages);
-  }, [docs, sessionId]);
-
-  // Add a new user message
-  const addUserMessage = async (text: string) => {
-    if (!sessionId) return null;
-
-    try {
-      const created_at = Date.now();
-      console.log(
-        'useSessionMessages: Adding user message to session:',
-        sessionId,
-        'Text:',
-        text.substring(0, 30) + '...'
-      );
-
-      const result = await database.put({
-        type: 'user-message',
-        session_id: sessionId,
-        prompt: text,
-        created_at,
-      } as UserMessageDocument);
-
-      console.log('useSessionMessages: Successfully added user message with ID:', result.id);
-      return created_at;
-    } catch (error) {
-      console.error('Error adding user message:', error);
-      return null;
-    }
-  };
-
-  // Add or update AI message with two modes:
-  // 1. During streaming (isStreaming=true): Only update in-memory state, no database write
-  // 2. Final message (isStreaming=false): Write to database and clear streaming state
-  const addAiMessage = async (
-    rawMessage: string,
-    created_at?: number,
-    isStreaming: boolean = false
-  ) => {
-    if (!sessionId) return null;
-
-    try {
-      const timestamp = created_at || Date.now();
-
-      if (isStreaming) {
-        // STREAMING MODE: Only update in-memory state, no database write
-        console.log('useSessionMessages: Updating streaming message in memory only');
-        const { segments, dependenciesString } = parseContent(rawMessage);
-
-        // Enhanced debugging for streaming message updates
-        console.debug(
-          `🔍 ADD_AI_MESSAGE (streaming=true): Raw length=${rawMessage.length}, segments=${segments.length}`
-        );
-        
-        if (segments.length > 0) {
-          console.debug('🔍 SEGMENTS CREATED DURING STREAMING:');
-          segments.forEach((segment, i) => {
-            console.debug(
-              `  Segment ${i}: type=${segment.type}, length=${segment.content.length}, ` +
-              `has content=${Boolean(segment.content && segment.content.trim().length > 0)}`
-            );
-          });
-        }
-
-        setStreamingMessage({
-          type: 'ai',
-          text: rawMessage,
-          segments,
-          dependenciesString,
-          isStreaming: true,
-          timestamp,
-        } as AiChatMessage);
-
-        return timestamp;
-      } else {
-        // FINAL MESSAGE: Write to database and clear streaming state
-        console.log('useSessionMessages: Writing final AI message to database');
-
-        const result = await database.put({
-          type: 'ai-message',
-          session_id: sessionId,
-          rawMessage,
-          created_at: timestamp,
-        } as AiMessageDocument);
-
-        // Clear streaming message when done
-        setStreamingMessage(null);
-        console.log('useSessionMessages: Created new AI message with ID:', result.id);
-
-        return timestamp;
-      }
-    } catch (error) {
-      console.error('Error with AI message:', error);
-      return null;
-    }
-  };
-
-  // Combine database messages with streaming message
-  const combinedMessages = useMemo(() => {
-    // If no streaming message, just return the database messages
-    if (!streamingMessage) return messages;
-
-    // Debug the content we're working with
-    console.debug(
-      `🔍 COMBINING MESSAGES: db msgs=${messages.length}, streaming has ${streamingMessage.segments?.length || 0} segments`
-    );
-
-    // Enhanced check for streaming content - improved to catch even small valid content
-    let hasStreamingContent =
-      streamingMessage.text.length > 0 &&
-      (Array.isArray(streamingMessage.segments) && 
-       streamingMessage.segments.length > 0 && 
-       streamingMessage.segments.some(segment => 
-         segment && segment.content && segment.content.trim().length > 0
-       ));
-
-    // Enhanced debugging
-    console.debug(`🔍 STREAMING MESSAGE TEXT: "${streamingMessage.text.substring(0, 50)}..."`);
-    console.debug(`🔍 HAS STREAMING CONTENT: ${hasStreamingContent}`);
-    
-    if (streamingMessage.segments && streamingMessage.segments.length > 0) {
-      console.debug('🔍 STREAMING MESSAGE SEGMENTS:');
-      streamingMessage.segments.forEach((segment, i) => {
-        if (segment && segment.content) {
-          console.debug(
-            `  Segment ${i}: type=${segment.type}, content=${segment.content.substring(0, Math.min(30, segment.content.length))}...`
-          );
-        } else {
-          console.debug(`  Segment ${i}: type=${segment?.type || 'undefined'}, content=undefined or empty`);
-        }
-      });
-    }
-
-    // IMPORTANT: Even with apparently no content, if we're streaming and have text,
-    // include the message to ensure early updates are visible
-    if (!hasStreamingContent && streamingMessage.text.trim().length > 0) {
-      console.debug('🔍 STREAMING MESSAGE HAS TEXT BUT NO PARSED SEGMENTS WITH CONTENT');
-      console.debug('   Forcing inclusion of the streaming message to fix update lag');
-      
-      // Update streaming flag
-      streamingMessage.isStreaming = true;
-      hasStreamingContent = true;
-    } else if (!hasStreamingContent) {
-      console.debug('🔍 STREAMING MESSAGE HAS NO CONTENT, skipping');
-      return messages;
-    }
-
-    console.debug(`🔍 STREAMING MESSAGE HAS CONTENT, adding to combined messages`);
-
-    // Check if the streaming message already exists in the database messages
-    const streamingMessageExists = messages.some(
-      (msg) => msg.type === 'ai' && msg.timestamp === streamingMessage.timestamp
-    );
-
-    if (streamingMessageExists) {
-      // Replace the database version with the streaming version
-      console.debug('🔍 REPLACING existing message with streaming version');
-      return messages.map((msg) => {
-        if (msg.type === 'ai' && msg.timestamp === streamingMessage.timestamp) {
-          return streamingMessage;
-        }
-        return msg;
-      });
-    } else {
-      // Add the streaming message to the list
-      console.debug('🔍 ADDING new streaming message to list');
-      return [...messages, streamingMessage];
-    }
-  }, [messages, streamingMessage]);
+  }, [docs, sessionId, parseMessageContent]);
 
   // Function to update streaming message directly (for external components)
-  const updateStreamingMessage = (rawMessage: string, timestamp: number) => {
+  const updateStreamingMessage = useCallback((rawMessage: string, timestamp: number) => {
     console.debug(`🔍 UPDATE STREAMING: msg length=${rawMessage.length}, timestamp=${timestamp}`);
-
-    const { segments, dependenciesString } = parseContent(rawMessage);
+    const { segments, dependenciesString } = parseMessageContent(rawMessage);
 
     // Log what we're about to set as the streaming message
     console.debug(`🔍 SETTING STREAMING MESSAGE: ${segments.length} segments`);
@@ -325,33 +158,153 @@ export function useSessionMessages(sessionId: string | null) {
       isStreaming: true,
       timestamp,
     } as AiChatMessage);
-  };
+  }, [parseMessageContent]);
+
+  // Add a new user message
+  const addUserMessage = useCallback(async (text: string) => {
+    try {
+      const created_at = Date.now();
+      
+      // If sessionId is null, create a virtual message in memory only
+      if (!sessionId) {
+        logDebug(`Creating virtual user message (no sessionId available)`);
+        // Use functional update to avoid stale closure issues
+        setMessages(prevMessages => [
+          ...prevMessages,
+          {
+            type: 'user',
+            text,
+            timestamp: created_at
+          } as UserChatMessage
+        ]);
+        return created_at;
+      }
+
+      logDebug(`Adding user message to session: ${sessionId}`);
+      const result = await database.put({
+        type: 'user-message',
+        session_id: sessionId,
+        prompt: text,
+        created_at,
+      } as UserMessageDocument);
+
+      logDebug(`Successfully added user message with ID: ${result.id}`);
+      return created_at;
+    } catch (error) {
+      console.error('Error adding user message:', error);
+      return null;
+    }
+  }, [sessionId, database]);
+
+  // Add or update AI message with two modes:
+  // 1. During streaming (isStreaming=true): Only update in-memory state, no database write
+  // 2. Final message (isStreaming=false): Write to database and clear streaming state
+  const addAiMessage = useCallback(async (
+    rawMessage: string,
+    created_at?: number,
+    isStreaming: boolean = false
+  ) => {
+    const timestamp = created_at || Date.now();
+
+    if (isStreaming) {
+      // STREAMING MODE: Always update in-memory state even without sessionId
+      logDebug('Updating streaming message in memory only');
+      const { segments, dependenciesString } = parseMessageContent(rawMessage);
+
+      // Enhanced debugging for streaming message updates
+      console.debug(
+        `🔍 ADD_AI_MESSAGE (streaming=true): Raw length=${rawMessage.length}, segments=${segments.length}`
+      );
+      
+      if (segments.length > 0) {
+        segments.forEach((segment, i) => {
+          console.debug(
+            `  Segment ${i}: type=${segment.type}, length=${segment.content.length}, ` +
+            `has content=${Boolean(segment.content && segment.content.trim().length > 0)}`
+          );
+        });
+      }
+
+      setStreamingMessage({
+        type: 'ai',
+        text: rawMessage,
+        segments,
+        dependenciesString,
+        isStreaming: true,
+        timestamp,
+      } as AiChatMessage);
+
+      return timestamp;
+    } else {
+      // FINAL MESSAGE: Needs a sessionId to write to database
+      if (!sessionId) {
+        logDebug('Cannot save final message: sessionId is null');
+        return null;
+      }
+      
+      // Write to database and clear streaming state
+      logDebug('Writing final AI message to database');
+
+      const result = await database.put({
+        type: 'ai-message',
+        session_id: sessionId,
+        rawMessage,
+        created_at: timestamp,
+      } as AiMessageDocument);
+
+      // Clear streaming message when done
+      setStreamingMessage(null);
+      logDebug(`Created new AI message with ID: ${result.id}`);
+
+      return timestamp;
+    }
+  }, [sessionId, database, parseMessageContent]);
+
+  // Combine database messages with streaming message - this is a key source of issues
+  const combinedMessages = useMemo(() => {
+    // If no streaming message, just return the database messages
+    if (!streamingMessage) return messages;
+
+    // Enhanced check for streaming content - simplified to catch ANY valid content
+    const hasStreamingContent = streamingMessage.text.trim().length > 0;
+    
+    // IMPORTANT CHANGE: Always include streaming message if it has ANY text content
+    if (!hasStreamingContent) {
+      return messages;
+    }
+
+    // If no sessionId, we might not have database messages, just add the streaming message
+    if (!sessionId || messages.length === 0) {
+      return [streamingMessage];
+    }
+
+    // Check if the streaming message already exists in the database messages
+    const streamingMessageExists = messages.some(
+      (msg) => msg.type === 'ai' && msg.timestamp === streamingMessage.timestamp
+    );
+
+    if (streamingMessageExists) {
+      // Replace the database version with the streaming version
+      return messages.map((msg) => {
+        if (msg.type === 'ai' && msg.timestamp === streamingMessage.timestamp) {
+          return streamingMessage;
+        }
+        return msg;
+      });
+    } else {
+      // Add the streaming message to the list
+      return [...messages, streamingMessage];
+    }
+  }, [messages, streamingMessage, sessionId]);
 
   const isLoading = !docs;
 
-  logDebug(`Returning ${combinedMessages.length} messages, sessionId=${sessionId}, isLoading=${isLoading}`);
-  if (combinedMessages.length > 0) {
-    combinedMessages.forEach((msg, i) => {
-      if (msg.type === 'ai') {
-        const aiMsg = msg as AiChatMessage;
-        logDebug(`  Message ${i}: type=${msg.type}, isStreaming=${aiMsg.isStreaming}, segments=${aiMsg.segments?.length || 0}, text length=${msg.text?.length || 0}`);
-        
-        if (aiMsg.segments && aiMsg.segments.length > 0) {
-          aiMsg.segments.forEach((segment, j) => {
-            logDebug(`    Segment ${j}: type=${segment.type}, content length=${segment.content?.length || 0}`);
-          });
-        }
-      } else {
-        logDebug(`  Message ${i}: type=${msg.type}, text length=${msg.text?.length || 0}`);
-      }
-    });
-  }
-
-  return {
+  // Return a stable object to ensure references don't change unnecessarily
+  return useMemo(() => ({
     messages: combinedMessages,
     isLoading,
     addUserMessage,
     addAiMessage,
-    updateStreamingMessage, // New direct update function
-  };
+    updateStreamingMessage,
+  }), [combinedMessages, isLoading, addUserMessage, addAiMessage, updateStreamingMessage]);
 }

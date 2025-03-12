@@ -1,5 +1,5 @@
 import { useEffect, useRef, memo, useCallback, useMemo } from 'react';
-import type { ChatMessage, AiChatMessage } from '../types/chat';
+import type { ChatMessage, AiChatMessage, Segment } from '../types/chat';
 import ReactMarkdown from 'react-markdown';
 import StructuredMessage from './StructuredMessage';
 import { useSessionMessages } from '../hooks/useSessionMessages';
@@ -13,6 +13,7 @@ function writeToStdout(message: string) {
 interface MessageListProps {
   sessionId: string | null;
   isStreaming: () => boolean;
+  currentSegments?: () => Segment[];
   isShrinking?: boolean;
   isExpanding?: boolean;
 }
@@ -74,6 +75,7 @@ const Message = memo(
 function MessageList({
   sessionId,
   isStreaming,
+  currentSegments,
   isShrinking = false,
   isExpanding = false,
 }: MessageListProps) {
@@ -110,7 +112,7 @@ function MessageList({
     );
 
     // IMPORTANT: Check if any AI message has segments with actual content
-    const hasAnyContent = messages.some(
+    let hasAnyContent = messages.some(
       (msg) => {
         if (msg.type === 'ai') {
           const aiMsg = msg as AiChatMessage;
@@ -152,6 +154,33 @@ function MessageList({
       }
     );
 
+    // Also check currentSegments prop if available
+    if (!hasAnyContent && currentSegments) {
+      const segments = currentSegments();
+      writeToStdout(`🔍 CHECKING CURRENT SEGMENTS: count=${segments.length}`);
+      
+      if (segments.length > 0) {
+        segments.forEach((segment, i) => {
+          if (segment) {
+            const contentPreview = segment.content 
+              ? `${segment.content.substring(0, 20)}${segment.content.length > 20 ? '...' : ''}`
+              : '[empty]';
+              
+            writeToStdout(
+              `  Segment ${i}: type=${segment.type}, length=${segment.content?.length || 0}, ` +
+              `content="${contentPreview}"`
+            );
+          }
+        });
+        
+        hasAnyContent = segments.some(segment => 
+          segment && segment.content && segment.content.trim().length > 0
+        );
+        
+        writeToStdout(`🔍 Current segments has content: ${hasAnyContent}`);
+      }
+    }
+
     // We only want to show the typing indicator if there's no content at all
     const shouldShowTypingIndicator = !hasAnyContent;
 
@@ -161,7 +190,7 @@ function MessageList({
     );
 
     return shouldShowTypingIndicator;
-  }, [isStreaming, messages]);
+  }, [isStreaming, messages, currentSegments]);
 
   // Memoize the message list to prevent unnecessary re-renders
   const messageElements = useMemo(() => {
@@ -272,10 +301,15 @@ function MessageList({
 // Only re-render when necessary to improve performance
 export default memo(MessageList, (prevProps, nextProps) => {
   // Don't re-render if these props haven't changed
+  const prevSegments = prevProps.currentSegments ? prevProps.currentSegments() : [];
+  const nextSegments = nextProps.currentSegments ? nextProps.currentSegments() : [];
+  const segmentsEqual = prevSegments.length === nextSegments.length;
+  
   return (
     prevProps.sessionId === nextProps.sessionId &&
     prevProps.isStreaming() === nextProps.isStreaming() &&
     prevProps.isShrinking === nextProps.isShrinking &&
-    prevProps.isExpanding === nextProps.isExpanding
+    prevProps.isExpanding === nextProps.isExpanding &&
+    segmentsEqual
   );
 });

@@ -244,3 +244,5 @@ pnpm test
 
 to run all tests.
 
+see the file ./no-message.txt for browser logs from a stream that didnt show as live messages. but otherwise worked.
+
