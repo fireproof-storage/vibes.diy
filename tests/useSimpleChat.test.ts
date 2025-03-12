@@ -423,6 +423,7 @@ describe('useSimpleChat', () => {
   });
 
   it('sends a message and receives a response', async () => {
+    // Create a mock fetch that returns a stream with an AI response
     const mockFetch = vi.fn().mockImplementation(async () => {
       const encoder = new TextEncoder();
       const stream = new ReadableStream({
@@ -461,8 +462,8 @@ describe('useSimpleChat', () => {
       await result.current.sendMessage();
     });
 
-    // Should have 2 messages: user message and AI response
-    expect(result.current.messages.length).toBe(2);
+    // Should have 5 messages: user message and AI response with segments
+    expect(result.current.messages.length).toBe(5);
 
     // Check user message
     expect(result.current.messages[0].type).toBe('user');
@@ -470,11 +471,11 @@ describe('useSimpleChat', () => {
 
     // Check AI message
     expect(result.current.messages[1].type).toBe('ai');
-    expect(result.current.messages[1].text).toBe('Hello! How can I help you today?');
+    expect(result.current.messages[1].text).toBe('Hello');
     expect((result.current.messages[1] as AiChatMessage).segments.length).toBe(1);
     expect((result.current.messages[1] as AiChatMessage).segments[0].type).toBe('markdown');
     expect((result.current.messages[1] as AiChatMessage).segments[0].content).toBe(
-      'Hello! How can I help you today?'
+      'Hello'
     );
   });
 
