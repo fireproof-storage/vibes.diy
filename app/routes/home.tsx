@@ -66,6 +66,7 @@ export default function Home() {
       
       const createNewSession = async () => {
         try {
+          // Create a new session with the default title
           const newSessionId = await createSession('New Chat');
           console.log('Home: Created new session with ID:', newSessionId);
           if (newSessionId) {
@@ -83,7 +84,7 @@ export default function Home() {
   // Use the simple chat hook with sessionId
   const chatState = useSimpleChat(sessionId);
   
-  // Debug logs to check chat state and messages
+  // Log state for debugging
   console.log('Home: chatState initialized with messages:', chatState.messages.length);
   console.log('Home: isStreaming:', chatState.isStreaming());
 
@@ -231,7 +232,7 @@ export default function Home() {
         <ResultPreview
           code={state.generatedCode}
           dependencies={state.dependencies}
-          streamingCode={isStreaming ? chatState.getCurrentCode() : ''}
+          streamingCode={chatState.isStreaming() ? chatState.getCurrentCode() : ''}
           isSharedApp={isSharedApp}
           shareStatus={shareStatus}
           onShare={handleShare}
@@ -249,6 +250,7 @@ export default function Home() {
               ? { content: chatState.messages[chatState.messages.length - 1].text }
               : undefined
           }
+          sessionId={sessionId || undefined}
         />
       }
     />

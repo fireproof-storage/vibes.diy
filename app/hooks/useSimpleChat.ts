@@ -14,7 +14,7 @@ const CHOSEN_MODEL = 'anthropic/claude-3.7-sonnet';
 export function useSimpleChat(sessionId: string | null) {
   // Use our new hooks
   const { session, updateTitle } = useSession(sessionId);
-  const { messages, addUserMessage, updateAiMessage, isLoading: messagesLoading } = useSessionMessages(sessionId);
+  const { messages, addUserMessage, addAiMessage, isLoading: messagesLoading } = useSessionMessages(sessionId);
   
   // Core state
   const [input, setInput] = useState<string>('');
@@ -26,6 +26,7 @@ export function useSimpleChat(sessionId: string | null) {
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const aiMessageTimestampRef = useRef<number | null>(null);
+  const [streamingState, setStreamingState] = useState<boolean>(false);
 
   // Initialize system prompt
   useEffect(() => {
@@ -61,8 +62,8 @@ export function useSimpleChat(sessionId: string | null) {
 
   // Check if any AI message is currently streaming
   const isStreaming = useCallback((): boolean => {
-    return messages.some(msg => msg.type === 'ai' && (msg as AiChatMessage).isStreaming);
-  }, [messages]);
+    return streamingState;
+  }, [streamingState]);
 
   // Function to build conversation history for the prompt
   function buildMessageHistory() {
@@ -176,6 +177,7 @@ export function useSimpleChat(sessionId: string | null) {
       
       // Reset state for new message
       streamBufferRef.current = '';
+      setStreamingState(true);
 
       try {
         // Add user message
@@ -227,19 +229,11 @@ export function useSimpleChat(sessionId: string | null) {
 
         const decoder = new TextDecoder();
         
-        // Create a timestamp for this AI message
+        // Create a timestamp for this AI message - we'll use it when storing the final message
         const aiMessageTimestamp = Date.now();
         aiMessageTimestampRef.current = aiMessageTimestamp;
-        
-        // Store an initial empty AI message
-        await updateAiMessage('', true, aiMessageTimestamp);
 
         // Process the stream
-        const updateThrottleMs = 1000; // Increase to 1000ms to reduce database writes
-        let lastUpdateTime = 0;
-        let contentChanged = false;
-        let lastContentLength = 0;
-
         while (true) {
           const { done, value } = await reader.read();
           if (done) break;
@@ -262,38 +256,18 @@ export function useSimpleChat(sessionId: string | null) {
                   const content = data.choices[0].delta.content;
                   // Add only the actual content to the buffer
                   streamBufferRef.current += content;
-                  
-                  // Mark that content has changed and needs an update
-                  contentChanged = true;
                 }
               } catch (e) {
                 console.error('Error parsing SSE JSON:', e);
               }
             }
           }
-          
-          // Update the AI message with the current buffer - but with improved throttling
-          const now = Date.now();
-          const currentLength = streamBufferRef.current.length;
-          
-          // Only update if:
-          // 1. Content has changed AND time threshold passed, OR
-          // 2. Significant content change (250+ chars) since last update
-          if ((contentChanged && now - lastUpdateTime > updateThrottleMs) || 
-              (currentLength - lastContentLength > 250)) {
-            
-            console.log(`useSimpleChat: Updating AI stream (${currentLength} chars)`);
-            await updateAiMessage(streamBufferRef.current, true, aiMessageTimestamp);
-            
-            lastUpdateTime = now;
-            contentChanged = false;
-            lastContentLength = currentLength;
-          }
         }
 
-        // Streaming is done, finalize the AI message
+        // Streaming is done, add the complete AI message
         console.log('Finalizing AI message', streamBufferRef.current.substring(0, 50) + '...');
-        await updateAiMessage(streamBufferRef.current, false, aiMessageTimestamp);
+        await addAiMessage(streamBufferRef.current, aiMessageTimestamp);
+        setStreamingState(false);
 
         // Generate a title if this is the first response with code
         const { segments } = parseContent(streamBufferRef.current);
@@ -310,13 +284,9 @@ export function useSimpleChat(sessionId: string | null) {
         // Handle errors
         console.error('Error calling OpenRouter API:', error);
         const errorMessage = 'Sorry, there was an error generating the component. Please try again.';
-        if (aiMessageTimestampRef.current) {
-          // Update the error message in the existing AI message
-          await updateAiMessage(errorMessage, false, aiMessageTimestampRef.current);
-        } else {
-          // Create a new AI message with the error
-          await updateAiMessage(errorMessage);
-        }
+        // Add error message as AI message
+        await addAiMessage(errorMessage);
+        setStreamingState(false);
       } finally {
         aiMessageTimestampRef.current = null;
         console.log('useSimpleChat: sendMessage completed');

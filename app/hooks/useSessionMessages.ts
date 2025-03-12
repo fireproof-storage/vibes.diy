@@ -4,6 +4,15 @@ import { FIREPROOF_CHAT_HISTORY } from '../config/env';
 import type { ChatMessage, UserChatMessage, AiChatMessage } from '../types/chat';
 import { parseContent } from '../utils/segmentParser';
 
+/**
+ * Message storage design (per human.md):
+ * - Session documents are stored with useDocument in useSession hook (type: 'session')
+ * - User messages are stored as separate documents (type: 'user-message')
+ * - AI messages are only stored as complete messages after streaming (type: 'ai-message')
+ * - All documents use created_at: Date.now() instead of timestamp
+ * - All message documents include session_id to link them to a session
+ */
+
 // Base message document with common fields
 interface BaseMessageDocument {
   _id?: string;
