@@ -1,0 +1,228 @@
+{"dependencies": {}}
+
+I'll create a calculator app with basic arithmetic operations that stores calculation history using Fireproof. The app will have a synthwave orange theme and support viewing previous calculations.
+
+```js
+import { React } from "react";
+import { useFireproof } from "use-fireproof";
+
+export default function App() {
+  const { useLiveQuery, useDocument, database } = useFireproof("calculator-app");
+  
+  // For the current calculation
+  const { doc, merge } = useDocument({ 
+    display: "0", 
+    firstOperand: null,
+    operator: null,
+    waitingForSecondOperand: false,
+    type: "current"
+  });
+  
+  // For the history
+  const { docs: history } = useLiveQuery("type", { 
+    key: "history", 
+    descending: true, 
+    limit: 10 
+  });
+  
+  const inputDigit = (digit) => {
+    if (doc.waitingForSecondOperand) {
+      merge({ 
+        display: String(digit), 
+        waitingForSecondOperand: false 
+      });
+    } else {
+      merge({ 
+        display: doc.display === "0" ? String(digit) : doc.display + digit 
+      });
+    }
+  };
+  
+  const inputDecimal = () => {
+    if (doc.waitingForSecondOperand) {
+      merge({ 
+        display: "0.", 
+        waitingForSecondOperand: false 
+      });
+      return;
+    }
+    
+    if (!doc.display.includes(".")) {
+      merge({ display: doc.display + "." });
+    }
+  };
+  
+  const handleOperator = (nextOperator) => {
+    const inputValue = parseFloat(doc.display);
+    
+    if (doc.firstOperand === null) {
+      merge({ 
+        firstOperand: inputValue, 
+        operator: nextOperator,
+        waitingForSecondOperand: true
+      });
+    } else if (doc.operator) {
+      const result = calculate();
+      
+      // Save calculation to history
+      database.put({
+        type: "history",
+        calculation: `${doc.firstOperand} ${doc.operator} ${inputValue} = ${result}`,
+        timestamp: Date.now()
+      });
+      
+      merge({
+        display: String(result),
+        firstOperand: result,
+        operator: nextOperator,
+        waitingForSecondOperand: true
+      });
+    }
+  };
+  
+  const calculate = () => {
+    if (doc.operator && doc.firstOperand !== null) {
+      const inputValue = parseFloat(doc.display);
+      let result;
+      
+      switch(doc.operator) {
+        case '+':
+          result = doc.firstOperand + inputValue;
+          break;
+        case '-':
+          result = doc.firstOperand - inputValue;
+          break;
+        case '*':
+          result = doc.firstOperand * inputValue;
+          break;
+        case '/':
+          result = doc.firstOperand / inputValue;
+          break;
+        default:
+          return inputValue;
+      }
+      
+      return result;
+    }
+    
+    return parseFloat(doc.display);
+  };
+  
+  const performCalculation = () => {
+    if (doc.operator && doc.firstOperand !== null) {
+      const inputValue = parseFloat(doc.display);
+      const result = calculate();
+      
+      // Save calculation to history
+      database.put({
+        type: "history",
+        calculation: `${doc.firstOperand} ${doc.operator} ${inputValue} = ${result}`,
+        timestamp: Date.now()
+      });
+      
+      merge({
+        display: String(result),
+        firstOperand: null,
+        operator: null,
+        waitingForSecondOperand: false
+      });
+    }
+  };
+  
+  const resetCalculator = () => {
+    merge({ 
+      display: "0", 
+      firstOperand: null,
+      operator: null,
+      waitingForSecondOperand: false 
+    });
+  };
+  
+  const addDemoData = async () => {
+    await database.put({
+      type: "history",
+      calculation: "2 + 3 = 5",
+      timestamp: Date.now() - 5000
+    });
+    await database.put({
+      type: "history",
+      calculation: "10 * 5 = 50",
+      timestamp: Date.now() - 4000
+    });
+    await database.put({
+      type: "history",
+      calculation: "100 / 4 = 25",
+      timestamp: Date.now() - 3000
+    });
+  };
+  
+  return (
+    <div className="max-w-md mx-auto p-6 bg-black text-white rounded-xl shadow-lg">
+      <h1 className="text-2xl font-bold text-center mb-4 text-orange-500">Synthwave Calculator</h1>
+      
+      <div className="mb-6">
+        <i className="block mb-4 text-orange-300 text-sm">
+          This calculator app lets you perform basic arithmetic operations and automatically saves your calculation history. Just tap the numbers and operators to build your calculation, then press equals to see the result. Your previous calculations will appear below.
+        </i>
+      </div>
+      
+      <div className="bg-gray-900 p-4 rounded-lg mb-4 text-right">
+        <div className="text-3xl font-mono text-orange-400 break-all">{doc.display}</div>
+      </div>
+      
+      <div className="grid grid-cols-4 gap-2">
+        <button onClick={resetCalculator} className="col-span-2 p-4 rounded-lg bg-orange-700 hover:bg-orange-600 text-white font-bold">AC</button>
+        <button onClick={() => handleOperator('/')} className="p-4 rounded-lg bg-orange-600 hover:bg-orange-500 text-white font-bold">/</button>
+        <button onClick={() => handleOperator('*')} className="p-4 rounded-lg bg-orange-600 hover:bg-orange-500 text-white font-bold">×</button>
+        
+        {[7, 8, 9].map(digit => (
+          <button key={digit} onClick={() => inputDigit(digit)} className="p-4 rounded-lg bg-gray-800 hover:bg-gray-700 text-white">{digit}</button>
+        ))}
+        <button onClick={() => handleOperator('-')} className="p-4 rounded-lg bg-orange-600 hover:bg-orange-500 text-white font-bold">-</button>
+        
+        {[4, 5, 6].map(digit => (
+          <button key={digit} onClick={() => inputDigit(digit)} className="p-4 rounded-lg bg-gray-800 hover:bg-gray-700 text-white">{digit}</button>
+        ))}
+        <button onClick={() => handleOperator('+')} className="p-4 rounded-lg bg-orange-600 hover:bg-orange-500 text-white font-bold">+</button>
+        
+        {[1, 2, 3].map(digit => (
+          <button key={digit} onClick={() => inputDigit(digit)} className="p-4 rounded-lg bg-gray-800 hover:bg-gray-700 text-white">{digit}</button>
+        ))}
+        <button onClick={performCalculation} className="p-4 rounded-lg bg-orange-500 hover:bg-orange-400 text-white font-bold">=</button>
+        
+        <button onClick={() => inputDigit(0)} className="col-span-2 p-4 rounded-lg bg-gray-800 hover:bg-gray-700 text-white">0</button>
+        <button onClick={inputDecimal} className="p-4 rounded-lg bg-gray-800 hover:bg-gray-700 text-white">.</button>
+      </div>
+      
+      <div className="mt-8">
+        <div className="flex justify-between items-center">
+          <h2 className="text-xl text-orange-500 font-bold">History</h2>
+          <button onClick={addDemoData} className="px-3 py-1 bg-orange-600 hover:bg-orange-500 text-white rounded-lg text-sm">Demo data</button>
+        </div>
+        <ul className="mt-2 border border-gray-800 rounded-lg p-2 bg-gray-900">
+          {history.length > 0 ? (
+            history.map(entry => (
+              <li key={entry._id} className="py-1 border-b border-gray-800 last:border-none text-orange-300">
+                {entry.calculation}
+              </li>
+            ))
+          ) : (
+            <li className="text-gray-500">No history yet. Make some calculations!</li>
+          )}
+        </ul>
+      </div>
+    </div>
+  );
+}
+```
+
+This calculator app features:
+
+1. Real-time calculation with a large display
+2. All basic operations: addition, subtraction, multiplication, and division
+3. Calculation history stored in Fireproof with timestamps
+4. Orange synthwave styling with glowing effects
+5. A "Demo data" button to add example calculations to the history
+6. Input validation and sequential operation support
+
+The app stores both the current calculator state and a history of calculations in Fireproof, making your calculation history persist between sessions.
