@@ -47,7 +47,6 @@ function ChatHeader({ onOpenSidebar, onNewChat, isStreaming }: ChatHeaderProps) 
           type="button"
           onClick={handleNewChat}
           className="peer bg-accent-02-light dark:bg-accent-02-dark hover:bg-accent-03-light dark:hover:bg-accent-03-dark flex cursor-pointer items-center justify-center rounded-full p-2.5 text-white transition-colors"
-          disabled={isStreaming()}
           aria-label="New Chat"
           title="New Chat"
         >
