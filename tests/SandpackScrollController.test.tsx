@@ -50,7 +50,7 @@ describe('SandpackScrollController', () => {
   
   it('renders without crashing', () => {
     render(
-      <SandpackScrollController isStreaming={() => false} />
+      <SandpackScrollController isStreaming={false} />
     );
     
     // Check that the highlight style is added
@@ -60,7 +60,7 @@ describe('SandpackScrollController', () => {
   
   it('renders with streaming enabled', () => {
     render(
-      <SandpackScrollController isStreaming={() => true} />
+      <SandpackScrollController isStreaming={true} />
     );
     
     // Component renders without errors
@@ -70,7 +70,7 @@ describe('SandpackScrollController', () => {
   
   it('adds highlight style to the document', () => {
     render(
-      <SandpackScrollController isStreaming={() => false} />
+      <SandpackScrollController isStreaming={false} />
     );
     
     const styleElement = document.getElementById('highlight-style');
