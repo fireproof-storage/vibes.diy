@@ -1,7 +1,7 @@
 import React from 'react';
 import { render, screen, waitFor } from '@testing-library/react';
 import { vi, describe, it, expect, beforeEach } from 'vitest';
-import Session from '../app/routes/session';
+import UnifiedSession from '../app/routes/unified-session';
 import * as segmentParser from '../app/utils/segmentParser';
 import * as useSimpleChatModule from '../app/hooks/useSimpleChat';
 import type { ChatMessage, Segment } from '../app/types/chat';
@@ -9,6 +9,8 @@ import type { ChatMessage, Segment } from '../app/types/chat';
 // Mock useParams hook from react-router
 vi.mock('react-router', () => ({
   useParams: () => ({ sessionId: 'test-session-id' }),
+  useNavigate: () => vi.fn(),
+  useLocation: () => ({ search: '' }),
 }));
 
 // Define types for mock components
@@ -16,13 +18,13 @@ interface ChatInterfaceProps {
   chatState: any;
   sessionId: string | null;
   onNewChat: () => void;
+  onSessionCreated?: (sessionId: string) => void;
 }
 
 interface ResultPreviewProps {
   code: string;
   dependencies: Record<string, string>;
   streamingCode: string;
-  isStreaming: boolean;
   isSharedApp: boolean;
   completedMessage: string;
   currentStreamContent: string;
@@ -38,7 +40,7 @@ interface AppLayoutProps {
 
 // Mock components used in the Session component
 vi.mock('../app/ChatInterface', () => ({
-  default: ({ chatState, sessionId, onNewChat }: ChatInterfaceProps) => (
+  default: ({ chatState, sessionId, onNewChat, onSessionCreated }: ChatInterfaceProps) => (
     <div data-testid="mock-chat-interface">Chat Interface Component</div>
   ),
 }));
@@ -48,7 +50,6 @@ vi.mock('../app/components/ResultPreview/ResultPreview', () => ({
     code, 
     dependencies, 
     streamingCode, 
-    isStreaming, 
     isSharedApp, 
     completedMessage,
     currentStreamContent,
@@ -87,6 +88,28 @@ vi.mock('use-fireproof', () => ({
   useFireproof: () => ({
     database: {},
     useLiveQuery: () => ({ docs: [] }),
+    useDocument: () => ({
+      doc: {},
+      merge: vi.fn(),
+      save: vi.fn().mockResolvedValue({ id: 'test-id' }),
+    }),
+  }),
+}));
+
+// Mock the useSession hook
+vi.mock('../app/hooks/useSession', () => ({
+  useSession: () => ({
+    session: null,
+    loading: false,
+    error: null,
+    loadSession: vi.fn(),
+    updateTitle: vi.fn(),
+    updateMetadata: vi.fn(),
+    addScreenshot: vi.fn(),
+    createSession: vi.fn().mockResolvedValue('test-session-id'),
+    database: {
+      put: vi.fn().mockResolvedValue({ ok: true }),
+    },
   }),
 }));
 
@@ -173,8 +196,8 @@ describe('Session Route Integration', () => {
   });
 
   it('displays the correct number of code lines in the preview', async () => {
-    // Render the Session component directly
-    render(<Session />);
+    // Render the UnifiedSession component directly
+    render(<UnifiedSession />);
 
     // Wait for and verify the code line count is displayed
     await waitFor(() => {
@@ -184,16 +207,11 @@ describe('Session Route Integration', () => {
   });
 
   it('should provide a share button that copies link to clipboard', async () => {
-    // Render the Session component
-    render(<Session />);
+    // Render the UnifiedSession component
+    render(<UnifiedSession />);
     
     // Try to find the share button
-    let shareButton;
-    try {
-      shareButton = await screen.findByTestId('share-button');
-    } catch (error) {
-      // This test should fail because sharing is not implemented in session.tsx
-      expect(shareButton).toBeDefined();
-    }
+    const shareButton = await screen.findByTestId('share-button');
+    expect(shareButton).toBeInTheDocument();
   });
 }); 

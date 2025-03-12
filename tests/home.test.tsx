@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
-import Home from '../app/routes/home';
+import UnifiedSession from '../app/routes/unified-session';
 
 // Mock dependencies
 vi.mock('../app/hooks/useSimpleChat', () => ({
@@ -53,6 +53,13 @@ vi.mock('use-fireproof', () => ({
   }),
 }));
 
+// Mock React Router hooks
+vi.mock('react-router', () => ({
+  useParams: () => ({}),
+  useNavigate: () => vi.fn(),
+  useLocation: () => ({ search: '' }),
+}));
+
 // Mock our ChatInterface
 vi.mock('../app/ChatInterface', () => {
   return {
@@ -75,8 +82,8 @@ vi.mock('../app/components/ResultPreview/ResultPreview', () => {
 
 describe('Home Route', () => {
   it('should render the chat interface and result preview', () => {
-    // Render the home component
-    render(<Home />);
+    // Render the unified session component
+    render(<UnifiedSession />);
 
     // Check that the main components are rendered
     expect(screen.getByTestId('chat-interface')).toBeInTheDocument();

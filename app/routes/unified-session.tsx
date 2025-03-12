@@ -1,8 +1,7 @@
 import { useEffect, useState, useCallback, useMemo, useRef } from 'react';
-import { useNavigate } from 'react-router';
+import { useParams, useNavigate, useLocation } from 'react-router';
 import ChatInterface from '../ChatInterface';
 import ResultPreview from '../components/ResultPreview/ResultPreview';
-import { useFireproof } from 'use-fireproof';
 import type { ChatMessage, AiChatMessage, Segment, SessionDocument } from '../types/chat';
 import { useSimpleChat } from '../hooks/useSimpleChat';
 import { parseContent, parseDependencies } from '../utils/segmentParser';
@@ -44,33 +43,67 @@ function decodeStateFromUrl(encoded: string) {
   }
 }
 
-export default function Home() {
+export default function UnifiedSession() {
+  // Get sessionId from URL params if it exists
+  const { sessionId: urlSessionId } = useParams<{ sessionId: string }>();
+  const navigate = useNavigate();
+  const location = useLocation();
+  
+  // Track whether we're in a shared app context
+  const [isSharedApp, setIsSharedApp] = useState<boolean>(false);
+  
+  // State for current session
+  const [sessionId, setSessionId] = useState<string | null>(urlSessionId || null);
   const [state, setState] = useState({
     generatedCode: '',
     dependencies: {} as Record<string, string>,
   });
   const [shareStatus, setShareStatus] = useState<string>('');
-  const [isSharedApp, setIsSharedApp] = useState<boolean>(false);
-  const [sessionId, setSessionId] = useState<string | null>(null);
-  const navigate = useNavigate();
   const sessionCreationAttemptedRef = useRef(false);
 
-  // Create a new session when first loaded
-  const { createSession } = useSession(null);
+  // Initialize session management hook with current sessionId
+  const { createSession, session } = useSession(sessionId);
   
-  // Create a session automatically when the component loads
+  // Use the simple chat hook with current sessionId
+  const chatState = useSimpleChat(sessionId);
+
+  // Log state for debugging
+  console.log('UnifiedSession: initialized with sessionId:', sessionId);
+  console.log('UnifiedSession: chatState has messages:', chatState.messages.length);
+  console.log('UnifiedSession: isStreaming:', chatState.isStreaming());
+
+  // Check if there's a state parameter in the URL (for shared apps)
   useEffect(() => {
-    if (!sessionId && !sessionCreationAttemptedRef.current) {
-      console.log('Home: No sessionId found, creating new session');
+    const searchParams = new URLSearchParams(location.search);
+    const encodedState = searchParams.get('state');
+    
+    if (encodedState) {
+      const decodedState = decodeStateFromUrl(encodedState);
+      if (decodedState.code) {
+        setState({
+          generatedCode: decodedState.code,
+          dependencies: decodedState.dependencies,
+        });
+        setIsSharedApp(true);
+      }
+    }
+  }, [location.search]);
+
+  // Create a new session when loaded without sessionId
+  useEffect(() => {
+    if (!urlSessionId && !sessionCreationAttemptedRef.current) {
+      console.log('UnifiedSession: No sessionId in URL, creating new session');
       sessionCreationAttemptedRef.current = true;
       
       const createNewSession = async () => {
         try {
           // Create a new session with the default title
           const newSessionId = await createSession('New Chat');
-          console.log('Home: Created new session with ID:', newSessionId);
+          console.log('UnifiedSession: Created new session with ID:', newSessionId);
           if (newSessionId) {
             setSessionId(newSessionId);
+            // Update URL without full page reload
+            navigate(`/session/${newSessionId}`, { replace: true });
           }
         } catch (error) {
           console.error('Error creating new session:', error);
@@ -79,14 +112,7 @@ export default function Home() {
       
       createNewSession();
     }
-  }, [createSession]);  // Remove sessionId from dependencies
-
-  // Use the simple chat hook with sessionId
-  const chatState = useSimpleChat(sessionId);
-  
-  // Log state for debugging
-  console.log('Home: chatState initialized with messages:', chatState.messages.length);
-  console.log('Home: isStreaming:', chatState.isStreaming());
+  }, [urlSessionId, createSession, navigate]);
 
   // Helper function to extract dependencies from segments
   const getDependencies = useCallback(() => {
@@ -101,30 +127,20 @@ export default function Home() {
     return {};
   }, [chatState.messages]);
 
-  // Check if we're currently streaming content
-  const isStreaming = useMemo(() => {
-    return chatState.isStreaming();
-  }, [chatState.isStreaming]);
-
-  // Update handleCodeGenerated to work with the new hook
+  // Handle code generation from chat interface with stable callback reference
   const handleCodeGenerated = useCallback(
     (code: string, dependencies: Record<string, string> = {}) => {
       setState({
         generatedCode: code,
-        dependencies: dependencies || {},
+        dependencies,
       });
     },
-    [setState]
+    []
   );
 
   // Extract code and dependencies when AI message completes
   useEffect(() => {
-    // Debug log for messages update
-    console.log('Home: Messages updated, count:', chatState.messages.length, 
-                'Latest message type:', chatState.messages.length > 0 ? 
-                chatState.messages[chatState.messages.length - 1].type : 'none');
-    
-    // Find the last AI message
+    // Find the last AI message that is not streaming
     const lastAiMessage = [...chatState.messages].reverse().find(
       (msg) => msg.type === 'ai' && !msg.isStreaming
     );
@@ -140,33 +156,32 @@ export default function Home() {
     }
   }, [chatState.messages, chatState.getCurrentCode, getDependencies, handleCodeGenerated]);
 
-  // Handle new session creation (for navigation)
-  const handleSessionCreated = useCallback(
-    (newSessionId: string) => {
-      if (newSessionId) {
-        // Navigate to the session page
-        navigate(`/session/${newSessionId}`);
-      }
-    },
-    [navigate]
-  );
+  // Handle session creation
+  const handleSessionCreated = useCallback((newSessionId: string) => {
+    setSessionId(newSessionId);
+    // Update URL without full page reload
+    navigate(`/session/${newSessionId}`, { replace: true });
+  }, [navigate]);
 
-  // Check for state in URL on component mount
-  useEffect(() => {
-    const hash = window.location.hash;
-    if (hash?.startsWith('#state=')) {
-      const encodedState = hash.substring(7); // Remove '#state='
-      const decodedState = decodeStateFromUrl(encodedState);
-      if (decodedState.code) {
-        setState({
-          generatedCode: decodedState.code,
-          dependencies: decodedState.dependencies,
-        });
-        setIsSharedApp(true);
-      }
-    }
-  }, []);
+  // Handle new chat creation
+  const handleNewChat = useCallback(() => {
+    // Reset session creation flag
+    sessionCreationAttemptedRef.current = false;
+    
+    // Navigate to home to create a new session
+    navigate('/', { replace: true });
+    
+    // Reset state
+    setSessionId(null);
+    setState({
+      generatedCode: '',
+      dependencies: {},
+    });
+    setShareStatus('');
+    setIsSharedApp(false);
+  }, [navigate]);
 
+  // Handle sharing functionality
   function handleShare() {
     if (!state.generatedCode) {
       alert('Generate an app first before sharing!');
@@ -175,57 +190,45 @@ export default function Home() {
 
     const encoded = encodeStateToUrl(state.generatedCode, state.dependencies);
     if (encoded) {
-      const shareUrl = `${window.location.origin}${window.location.pathname}#state=${encoded}`;
-
-      // Use optional chaining for Web Share API check
-      const canUseShareApi = Boolean(navigator && 'share' in navigator);
-
-      if (canUseShareApi) {
-        navigator
-          .share({
-            title: 'Fireproof App',
-            text: 'Check out this app I built with Fireproof App Builder!',
-            url: shareUrl,
-          })
-          .catch(() => {
-            copyToClipboard(shareUrl);
-          });
-      } else {
-        copyToClipboard(shareUrl);
-      }
-    }
-  }
-
-  function copyToClipboard(text: string) {
-    navigator.clipboard
-      .writeText(text)
-      .then(() => {
-        setShareStatus('Copied to clipboard!');
-        setTimeout(() => setShareStatus(''), 2000);
-      })
-      .catch((err) => {
-        console.error('Error copying to clipboard:', err);
-        setShareStatus('Could not copy to clipboard. Try manually copying the URL.');
-      });
-  }
-
-  // Handle the case where a new session has been created
-  useEffect(() => {
-    // Only navigate to session page if we have a completed AI message and a title
-    if (sessionId && chatState.messages.length > 0 && !chatState.isStreaming()) {
-      const hasCompletedAiMessage = chatState.messages.some(msg => 
-        msg.type === 'ai' && !(msg as AiChatMessage).isStreaming
-      );
+      // Create a sharable URL with the encoded state
+      const shareUrl = `${window.location.origin}/shared?state=${encoded}`;
       
-      if (hasCompletedAiMessage && chatState.title && chatState.title !== 'New Chat') {
-        console.log('Home: AI response completed, updating URL without reload. SessionId:', sessionId);
-        
-        // Update the URL without triggering navigation/reload
-        const newUrl = `/session/${sessionId}`;
-        window.history.pushState({ sessionId }, '', newUrl);
+      copyToClipboard(shareUrl);
+      setShareStatus('Share URL copied to clipboard!');
+      
+      // Reset status after a brief delay
+      setTimeout(() => {
+        setShareStatus('');
+      }, 3000);
+    }
+  }
+
+  // Copy text to clipboard
+  function copyToClipboard(text: string) {
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(text)
+        .then(() => {
+          console.log('Text copied to clipboard');
+        })
+        .catch((err) => {
+          console.error('Failed to copy text: ', err);
+        });
+    } else {
+      // Fallback for older browsers
+      try {
+        const textArea = document.createElement('textarea');
+        textArea.value = text;
+        textArea.style.position = 'fixed';
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textArea);
+      } catch (err) {
+        console.error('Fallback: Could not copy text: ', err);
       }
     }
-  }, [sessionId, chatState.messages, chatState.isStreaming, chatState.title]);
+  }
 
   return (
     <AppLayout
@@ -234,6 +237,7 @@ export default function Home() {
           chatState={chatState}
           sessionId={sessionId}
           onSessionCreated={handleSessionCreated}
+          onNewChat={handleNewChat}
         />
       }
       previewPanel={
@@ -258,9 +262,8 @@ export default function Home() {
               ? { content: chatState.messages[chatState.messages.length - 1].text }
               : undefined
           }
-          sessionId={sessionId || undefined}
         />
       }
     />
   );
-}
+} 

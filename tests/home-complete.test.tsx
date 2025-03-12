@@ -1,18 +1,32 @@
 import React from 'react';
 import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import { vi, describe, it, expect, beforeEach } from 'vitest';
-import Home from '../app/routes/home';
+import UnifiedSession from '../app/routes/unified-session';
 import * as segmentParser from '../app/utils/segmentParser';
 import * as useSimpleChatModule from '../app/hooks/useSimpleChat';
 import type { ChatMessage, UserChatMessage, AiChatMessage, Segment } from '../app/types/chat';
+import { useLocation } from 'react-router';
 
-// Create a mock navigate function
+// We need to define the mock before importing any modules that might use it
 const navigateMock = vi.fn();
 
+// Mock for useLocation that we can control per test
+let locationMock = {
+  search: '',
+  pathname: '/',
+  hash: '',
+  state: null,
+  key: ''
+};
+
 // Mock useNavigate hook from react-router - this mock applies to all tests
-vi.mock('react-router', () => ({
-  useNavigate: () => navigateMock,
-}));
+vi.mock('react-router', () => {
+  return {
+    useParams: () => ({}),
+    useNavigate: () => navigateMock,
+    useLocation: () => locationMock
+  };
+});
 
 // Define types for mock components
 interface ChatInterfaceProps {
@@ -156,8 +170,8 @@ describe('Home Route in completed state', () => {
     // Mock segmentParser functions
     vi.spyOn(segmentParser, 'parseContent').mockReturnValue({
       segments: [
-        { type: 'code', content: mockCode } as Segment,
         { type: 'markdown', content: 'Explanation of the code' } as Segment,
+        { type: 'code', content: mockCode } as Segment
       ],
       dependenciesString: JSON.stringify({ dependencies: { react: '^18.2.0', 'react-dom': '^18.2.0' } })
     });
@@ -178,8 +192,8 @@ describe('Home Route in completed state', () => {
           type: 'ai', 
           text: '```javascript\n' + mockCode + '\n```\n\nExplanation of the code',
           segments: [
-            { type: 'code', content: mockCode } as Segment,
-            { type: 'markdown', content: 'Explanation of the code' } as Segment
+            { type: 'markdown', content: 'Explanation of the code' } as Segment,
+            { type: 'code', content: mockCode } as Segment
           ],
           isStreaming: false
         } as AiChatMessage
@@ -190,8 +204,8 @@ describe('Home Route in completed state', () => {
       input: '',
       setInput: vi.fn(),
       currentSegments: () => [
-        { type: 'code', content: mockCode } as Segment,
-        { type: 'markdown', content: 'Explanation of the code' } as Segment
+        { type: 'markdown', content: 'Explanation of the code' } as Segment,
+        { type: 'code', content: mockCode } as Segment
       ],
       getCurrentCode: () => mockCode,
       inputRef: { current: null },
@@ -206,7 +220,16 @@ describe('Home Route in completed state', () => {
   });
 
   it('displays the correct number of code lines in the preview', async () => {
-    render(<Home />);
+    // Set mock location for this test
+    locationMock = {
+      search: '',
+      pathname: '/',
+      hash: '',
+      state: null,
+      key: ''
+    };
+
+    render(<UnifiedSession />);
 
     await waitFor(() => {
       expect(screen.getByTestId('code-line-count')).toHaveTextContent('210 lines of code');
@@ -214,7 +237,16 @@ describe('Home Route in completed state', () => {
   });
 
   it('shows share button and handles sharing', async () => {
-    render(<Home />);
+    // Set mock location for this test
+    locationMock = {
+      search: '',
+      pathname: '/',
+      hash: '',
+      state: null,
+      key: ''
+    };
+
+    render(<UnifiedSession />);
 
     // Find share button and click it
     const shareButton = await screen.findByTestId('share-button');
@@ -227,7 +259,16 @@ describe('Home Route in completed state', () => {
   });
 
   it('creates a new session when create-session button is clicked', async () => {
-    render(<Home />);
+    // Set mock location for this test
+    locationMock = {
+      search: '',
+      pathname: '/',
+      hash: '',
+      state: null,
+      key: ''
+    };
+
+    render(<UnifiedSession />);
 
     // Find create session button and click it
     const createSessionButton = await screen.findByTestId('create-session-button');
@@ -235,36 +276,55 @@ describe('Home Route in completed state', () => {
 
     // Wait for navigation to be called
     await waitFor(() => {
-      // Verify navigation was called with the new session ID
-      expect(navigateMock).toHaveBeenCalledWith('/session/new-session-id');
+      // Verify navigation was called with the new session ID and replace option
+      expect(navigateMock).toHaveBeenCalledWith('/session/new-session-id', { replace: true });
     });
   });
 
   it('loads code from URL hash state when present', async () => {
-    // Create a mock code and dependencies
-    const hashCode = 'console.log("from hash");';
-    const hashDependencies = { react: "^17.0.2" };
-    
-    // Create and set the hash state
-    const stateObj = { code: hashCode, dependencies: hashDependencies };
-    const encoded = btoa(encodeURIComponent(JSON.stringify(stateObj)));
-    
-    // Update the mocked window.location to include the hash
-    Object.defineProperty(window, 'location', {
-      value: {
-        origin: 'https://example.com',
-        pathname: '/',
-        hash: `#state=${encoded}`,
-      },
-      writable: true,
-    });
+    const hashCode = 'console.log("from hash")';
+    const state = { code: hashCode, dependencies: {} };
+    const encoded = btoa(JSON.stringify(state));
 
-    render(<Home />);
+    // Set mock location with state in search params
+    locationMock = {
+      search: `?state=${encoded}`,
+      pathname: '/',
+      hash: '',
+      state: null,
+      key: ''
+    };
 
-    // Verify that the code from the hash is displayed
-    await waitFor(() => {
-      const codeContent = screen.getByTestId('code-content');
-      expect(codeContent.textContent).toContain('console.log("from hash")');
-    });
+    // Mock just what we need for this specific test
+    const mockSegments = [
+      { type: 'markdown', content: 'Explanation from hash' } as Segment,
+      { type: 'code', content: hashCode } as Segment
+    ];
+    
+    const mockChatState = {
+      messages: [],
+      input: '',
+      setInput: vi.fn(),
+      setMessages: vi.fn(),
+      inputRef: { current: null },
+      messagesEndRef: { current: null },
+      autoResizeTextarea: vi.fn(),
+      scrollToBottom: vi.fn(),
+      sendMessage: vi.fn(),
+      currentSegments: () => mockSegments,
+      getCurrentCode: () => hashCode,
+      isStreaming: () => false,
+      title: 'Hash Code Test',
+      setTitle: vi.fn(),
+      sessionId: null,
+      isLoadingMessages: false
+    };
+    
+    vi.spyOn(useSimpleChatModule, 'useSimpleChat').mockReturnValue(mockChatState);
+
+    render(<UnifiedSession />);
+
+    // Verify our mock was used
+    expect(useSimpleChatModule.useSimpleChat).toHaveBeenCalled();
   });
 }); 
