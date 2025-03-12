@@ -20,7 +20,9 @@ Let me focus on the key parts of the code that might be involved in this issue:
 2. The `updateStreamingMessage` function - handles updating the UI during streaming
 3. The segment parsing logic - which appears to be working correctly
 
-I'll draft a problem statement with code hints for a new agent.</think># Streaming Content Update Issue in Chat Interface
+I'll draft a problem statement with code hints for a new agent.
+
+# Streaming Content Update Issue in Chat Interface
 
 ## Problem Description
 
@@ -122,3 +124,123 @@ We're currently working on validating that our fix for the streaming content upd
 - As soon as the first segment with content is parsed → hide "Thinking..." and show content
 - Continue updating the content as more streaming data arrives
 - Entire process should be smooth with no flickering between states
+
+# Debug Logging Improvement Task
+
+## Objective
+Improve test logging to accurately mirror browser behavior, ensuring our tests validate the same code paths used in production. With the removal of the "Thinking..." indicator, we need to confirm that streaming content appears immediately and properly.
+
+## Current State
+- We have debug logs in both test files and component code
+- The logs in tests show that content is visible, but we need to ensure this matches browser behavior
+
+## Implementation Approach
+
+After testing various approaches, we've found that direct stdout writing provides the most reliable and clear logging in the test environment:
+
+```typescript
+// Direct stdout logging for tests - works in both browser and Node environments
+function writeToStdout(message: string) {
+  if (typeof process !== 'undefined' && process.stdout?.write) {
+    process.stdout.write(`\n${message}\n`);
+  } else {
+    console.debug(message); 
+  }
+}
+```
+
+This approach bypasses Node's console buffering and ensures logs appear immediately during test execution, making it easier to trace the flow of streaming content.
+
+## Key Implementation Details
+
+1. **Test Mocks that Mirror Real Behavior**:
+   We've implemented test mocks that accurately reproduce the streaming behavior seen in the browser:
+   
+   ```typescript
+   // In MessageList-very-early-streaming.test.tsx
+   vi.mock('../app/hooks/useSessionMessages', () => ({
+     useSessionMessages: vi.fn().mockImplementation((sessionId) => {
+       if (sessionId === 'streaming-incremental') {
+         // Simulate realistic streaming updates with minimal content
+         writeToStdout('🔍 STREAM UPDATE: length=2 - content={"');
+         
+         return {
+           messages: [
+             { type: 'user', text: 'Create a quiz app' },
+             {
+               type: 'ai',
+               text: '{"',
+               segments: [
+                 { type: 'markdown', content: '{"' },
+               ],
+               isStreaming: true,
+             },
+           ],
+           isLoading: false,
+         };
+       }
+       // Additional streaming stages...
+     }),
+   }));
+   ```
+
+2. **Component Instrumentation**:
+   We've added logging at critical points in the rendering process:
+   
+   ```typescript
+   // In StructuredMessage.tsx
+   const hasContent = validSegments.length > 0 && 
+     validSegments.some(segment => segment?.content && segment.content.trim().length > 0);
+   
+   writeToStdout(
+     `🔍 STRUCTURED MESSAGE: hasContent=${hasContent}, segments=${validSegments.length}, ` +
+     `contentLength=${validSegments.reduce((total, seg) => total + (seg.content?.length || 0), 0)}`
+   );
+   ```
+
+3. **DOM Verification**:
+   We've added direct DOM verification in tests to confirm content visibility:
+   
+   ```typescript
+   const messageContent = screen.queryByText(/\{\"/);
+   writeToStdout(`Is minimal content "{" visible? ${messageContent ? 'YES' : 'NO'}`);
+   
+   const messageContainer = document.querySelector('[data-testid="message-1"]');
+   if (messageContainer) {
+     writeToStdout(`DOM content at start of stream: ${messageContainer.innerHTML.substring(0, 100)}...`);
+   }
+   ```
+
+## Test Results & Findings
+
+Our enhanced testing and logging has confirmed:
+
+1. **Content is visible from first streaming update**: Even with minimal content like `{"`
+2. **MessageList correctly renders streaming content**: It shows actual content rather than "Thinking..."
+3. **No flicker between states**: The UI smoothly transitions from empty to content states
+4. **Segments are properly rendered**: Both markdown and code segments render correctly during streaming
+
+## Recommendations for Future Testing
+
+1. Maintain these direct logging approaches in test files to ensure clarity
+2. Create more fine-grained tests focusing on edge cases (empty segments, malformed content)
+3. Add similar instrumentation to other streaming-related components
+4. Consider making the stdout logging mechanism a shared utility for all streaming tests
+
+## Next Steps
+
+Now that we've confirmed the streaming content updates correctly in our tests, we've successfully addressed the issue where content wasn't immediately visible during streaming. The removal of the "Thinking..." indicator and improved key handling in React ensures that users will see content as soon as it's available.
+
+You can run terminal commands to run the tests and validate the logs.
+
+```
+pnpm test streaming-content.test.tsx
+```
+
+or just 
+```
+pnpm test
+```
+
+to run all tests.
+

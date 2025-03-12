@@ -41,6 +41,11 @@ function isMessageDocument(doc: any): doc is MessageDocument {
   return (doc.type === 'user-message' || doc.type === 'ai-message') && doc.session_id !== undefined;
 }
 
+// Direct stdout logging for both browser and test environments
+function logDebug(message: string) {
+  console.debug(`🔍 SESSION_MESSAGES: ${message}`);
+}
+
 export function useSessionMessages(sessionId: string | null) {
   const { database, useLiveQuery } = useFireproof(FIREPROOF_CHAT_HISTORY);
 
@@ -322,9 +327,29 @@ export function useSessionMessages(sessionId: string | null) {
     } as AiChatMessage);
   };
 
+  const isLoading = !docs;
+
+  logDebug(`Returning ${combinedMessages.length} messages, sessionId=${sessionId}, isLoading=${isLoading}`);
+  if (combinedMessages.length > 0) {
+    combinedMessages.forEach((msg, i) => {
+      if (msg.type === 'ai') {
+        const aiMsg = msg as AiChatMessage;
+        logDebug(`  Message ${i}: type=${msg.type}, isStreaming=${aiMsg.isStreaming}, segments=${aiMsg.segments?.length || 0}, text length=${msg.text?.length || 0}`);
+        
+        if (aiMsg.segments && aiMsg.segments.length > 0) {
+          aiMsg.segments.forEach((segment, j) => {
+            logDebug(`    Segment ${j}: type=${segment.type}, content length=${segment.content?.length || 0}`);
+          });
+        }
+      } else {
+        logDebug(`  Message ${i}: type=${msg.type}, text length=${msg.text?.length || 0}`);
+      }
+    });
+  }
+
   return {
     messages: combinedMessages,
-    isLoading: !docs,
+    isLoading,
     addUserMessage,
     addAiMessage,
     updateStreamingMessage, // New direct update function

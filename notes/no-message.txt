@@ -1,0 +1,854 @@
+[vite] connecting...
+useSession.ts:11 useSession: initialized with sessionId: null
+useSession.ts:11 useSession: initialized with sessionId: null
+useSessionMessages.ts:54 useSessionMessages: Fireproof docs returned: 0 sessionId: null
+unified-session.tsx:71 UnifiedSession: initialized with sessionId: null
+unified-session.tsx:72 UnifiedSession: chatState has messages: 0
+unified-session.tsx:73 UnifiedSession: isStreaming: false
+hook.js:377 useSession: initialized with sessionId: null
+hook.js:377 useSession: initialized with sessionId: null
+hook.js:377 useSessionMessages: Fireproof docs returned: 0 sessionId: null
+hook.js:377 UnifiedSession: initialized with sessionId: null
+hook.js:377 UnifiedSession: chatState has messages: 0
+hook.js:377 UnifiedSession: isStreaming: false
+2ChatInterface.tsx:194 🔍 CHAT INTERFACE: Creating MessageList with isStreaming()=false, streamingState=false
+useSessionMessages.ts:54 useSessionMessages: Fireproof docs returned: 0 sessionId: null
+hook.js:377 useSessionMessages: Fireproof docs returned: 0 sessionId: null
+useSessionMessages.ts:69 useSessionMessages: No docs, empty docs, or no sessionId: Object
+useSession.ts:27 useSession: session document: Object
+useSession.ts:27 useSession: session document: Object
+useSessionMessages.ts:69 useSessionMessages: No docs, empty docs, or no sessionId: Object
+unified-session.tsx:95 UnifiedSession: No sessionId in URL, but NOT creating new session yet
+hook.js:377 useSessionMessages: No docs, empty docs, or no sessionId: Object
+hook.js:377 useSession: session document: Object
+hook.js:377 useSession: session document: Object
+hook.js:377 useSessionMessages: No docs, empty docs, or no sessionId: Object
+useSession.ts:11 useSession: initialized with sessionId: null
+useSession.ts:11 useSession: initialized with sessionId: null
+useSessionMessages.ts:54 useSessionMessages: Fireproof docs returned: 0 sessionId: null
+unified-session.tsx:71 UnifiedSession: initialized with sessionId: null
+unified-session.tsx:72 UnifiedSession: chatState has messages: 0
+unified-session.tsx:73 UnifiedSession: isStreaming: false
+hook.js:377 useSession: initialized with sessionId: null
+hook.js:377 useSession: initialized with sessionId: null
+hook.js:377 useSessionMessages: Fireproof docs returned: 0 sessionId: null
+hook.js:377 UnifiedSession: initialized with sessionId: null
+hook.js:377 UnifiedSession: chatState has messages: 0
+hook.js:377 UnifiedSession: isStreaming: false
+useSessionMessages.ts:54 useSessionMessages: Fireproof docs returned: 0 sessionId: null
+hook.js:377 useSessionMessages: Fireproof docs returned: 0 sessionId: null
+useSessionMessages.ts:69 useSessionMessages: No docs, empty docs, or no sessionId: Object
+useSession.ts:27 useSession: session document: Object
+useSession.ts:27 useSession: session document: Object
+useSessionMessages.ts:69 useSessionMessages: No docs, empty docs, or no sessionId: Object
+useSession.ts:11 useSession: initialized with sessionId: null
+useSession.ts:11 useSession: initialized with sessionId: null
+useSessionMessages.ts:54 useSessionMessages: Fireproof docs returned: 0 sessionId: null
+unified-session.tsx:71 UnifiedSession: initialized with sessionId: null
+unified-session.tsx:72 UnifiedSession: chatState has messages: 0
+unified-session.tsx:73 UnifiedSession: isStreaming: false
+hook.js:377 useSession: initialized with sessionId: null
+hook.js:377 useSession: initialized with sessionId: null
+hook.js:377 useSessionMessages: Fireproof docs returned: 0 sessionId: null
+hook.js:377 UnifiedSession: initialized with sessionId: null
+hook.js:377 UnifiedSession: chatState has messages: 0
+hook.js:377 UnifiedSession: isStreaming: false
+useSession.ts:11 useSession: initialized with sessionId: null
+useSession.ts:11 useSession: initialized with sessionId: null
+useSessionMessages.ts:54 useSessionMessages: Fireproof docs returned: 0 sessionId: null
+unified-session.tsx:71 UnifiedSession: initialized with sessionId: null
+unified-session.tsx:72 UnifiedSession: chatState has messages: 0
+unified-session.tsx:73 UnifiedSession: isStreaming: false
+hook.js:377 useSession: initialized with sessionId: null
+hook.js:377 useSession: initialized with sessionId: null
+hook.js:377 useSessionMessages: Fireproof docs returned: 0 sessionId: null
+hook.js:377 UnifiedSession: initialized with sessionId: null
+hook.js:377 UnifiedSession: chatState has messages: 0
+hook.js:377 UnifiedSession: isStreaming: false
+useSession.ts:27 useSession: session document: Object
+useSession.ts:27 useSession: session document: Object
+useSession.ts:11 useSession: initialized with sessionId: null
+useSession.ts:11 useSession: initialized with sessionId: null
+useSessionMessages.ts:54 useSessionMessages: Fireproof docs returned: 0 sessionId: null
+unified-session.tsx:71 UnifiedSession: initialized with sessionId: null
+unified-session.tsx:72 UnifiedSession: chatState has messages: 0
+unified-session.tsx:73 UnifiedSession: isStreaming: false
+hook.js:377 useSession: initialized with sessionId: null
+hook.js:377 useSession: initialized with sessionId: null
+hook.js:377 useSessionMessages: Fireproof docs returned: 0 sessionId: null
+hook.js:377 UnifiedSession: initialized with sessionId: null
+hook.js:377 UnifiedSession: chatState has messages: 0
+hook.js:377 UnifiedSession: isStreaming: false
+client:865 [vite] connected.
+useSession.ts:11 useSession: initialized with sessionId: null
+useSession.ts:11 useSession: initialized with sessionId: null
+useSessionMessages.ts:54 useSessionMessages: Fireproof docs returned: 0 sessionId: null
+unified-session.tsx:71 UnifiedSession: initialized with sessionId: null
+unified-session.tsx:72 UnifiedSession: chatState has messages: 0
+unified-session.tsx:73 UnifiedSession: isStreaming: false
+useSession.ts:11 useSession: initialized with sessionId: null
+useSession.ts:11 useSession: initialized with sessionId: null
+useSessionMessages.ts:54 useSessionMessages: Fireproof docs returned: 0 sessionId: null
+unified-session.tsx:71 UnifiedSession: initialized with sessionId: null
+unified-session.tsx:72 UnifiedSession: chatState has messages: 0
+unified-session.tsx:73 UnifiedSession: isStreaming: false
+useSession.ts:27 useSession: session document: {type: 'session', title: 'New Chat', timestamp: 1741806552110}
+useSession.ts:27 useSession: session document: {type: 'session', title: 'New Chat', timestamp: 1741806552111}
+useSession.ts:11 useSession: initialized with sessionId: null
+useSession.ts:11 useSession: initialized with sessionId: null
+useSessionMessages.ts:54 useSessionMessages: Fireproof docs returned: 0 sessionId: null
+unified-session.tsx:71 UnifiedSession: initialized with sessionId: null
+unified-session.tsx:72 UnifiedSession: chatState has messages: 0
+unified-session.tsx:73 UnifiedSession: isStreaming: false
+useSession.ts:11 useSession: initialized with sessionId: null
+useSession.ts:11 useSession: initialized with sessionId: null
+useSessionMessages.ts:54 useSessionMessages: Fireproof docs returned: 0 sessionId: null
+unified-session.tsx:71 UnifiedSession: initialized with sessionId: null
+unified-session.tsx:72 UnifiedSession: chatState has messages: 0
+unified-session.tsx:73 UnifiedSession: isStreaming: false
+useSimpleChat.ts:185 useSimpleChat: Starting sendMessage with input: Create a todo app with due dat...
+useSimpleChat.ts:189 useSimpleChat: Current sessionId: null
+useSimpleChat.ts:197 useSimpleChat: Adding user message to session
+useSession.ts:11 useSession: initialized with sessionId: null
+useSession.ts:11 useSession: initialized with sessionId: null
+useSessionMessages.ts:54 useSessionMessages: Fireproof docs returned: 0 sessionId: null
+unified-session.tsx:71 UnifiedSession: initialized with sessionId: null
+unified-session.tsx:72 UnifiedSession: chatState has messages: 0
+unified-session.tsx:73 UnifiedSession: isStreaming: true
+useSession.ts:11 useSession: initialized with sessionId: null
+useSession.ts:11 useSession: initialized with sessionId: null
+useSessionMessages.ts:54 useSessionMessages: Fireproof docs returned: 0 sessionId: null
+unified-session.tsx:71 UnifiedSession: initialized with sessionId: null
+unified-session.tsx:72 UnifiedSession: chatState has messages: 0
+unified-session.tsx:73 UnifiedSession: isStreaming: true
+ChatInterface.tsx:194 🔍 CHAT INTERFACE: Creating MessageList with isStreaming()=true, streamingState=true
+ChatInterface.tsx:194 🔍 CHAT INTERFACE: Creating MessageList with isStreaming()=true, streamingState=true
+useSessionMessages.ts:54 useSessionMessages: Fireproof docs returned: 0 sessionId: null
+MessageList.tsx:13 🔍 MESSAGE LIST DEBUG: Total messages=0, isStreaming=true
+MessageList.tsx:13 🔍 DECISION: hasAnyContent=false, showTypingIndicator=true
+MessageList.tsx:13 🔍 MESSAGE LIST DEBUG: Total messages=0, isStreaming=true
+MessageList.tsx:13 🔍 DECISION: hasAnyContent=false, showTypingIndicator=true
+useSessionMessages.ts:54 useSessionMessages: Fireproof docs returned: 0 sessionId: null
+useSession.ts:27 useSession: session document: {type: 'session', title: 'New Chat', timestamp: 1741806552110}
+useSession.ts:27 useSession: session document: {type: 'session', title: 'New Chat', timestamp: 1741806552111}
+useSimpleChat.ts:205 useSimpleChat: Message history built, count: 0
+useSimpleChat.ts:208 useSimpleChat: Calling OpenRouter API
+useSession.ts:11 useSession: initialized with sessionId: null
+useSession.ts:11 useSession: initialized with sessionId: null
+useSessionMessages.ts:54 useSessionMessages: Fireproof docs returned: 0 sessionId: null
+unified-session.tsx:71 UnifiedSession: initialized with sessionId: null
+unified-session.tsx:72 UnifiedSession: chatState has messages: 0
+unified-session.tsx:73 UnifiedSession: isStreaming: true
+useSession.ts:11 useSession: initialized with sessionId: null
+useSession.ts:11 useSession: initialized with sessionId: null
+useSessionMessages.ts:54 useSessionMessages: Fireproof docs returned: 0 sessionId: null
+unified-session.tsx:71 UnifiedSession: initialized with sessionId: null
+unified-session.tsx:72 UnifiedSession: chatState has messages: 0
+unified-session.tsx:73 UnifiedSession: isStreaming: true
+useSession.ts:27 useSession: session document: {type: 'session', title: 'New Chat', timestamp: 1741806552110}
+useSession.ts:27 useSession: session document: {type: 'session', title: 'New Chat', timestamp: 1741806552111}
+useSession.ts:11 useSession: initialized with sessionId: null
+useSession.ts:11 useSession: initialized with sessionId: null
+useSessionMessages.ts:54 useSessionMessages: Fireproof docs returned: 0 sessionId: null
+unified-session.tsx:71 UnifiedSession: initialized with sessionId: null
+unified-session.tsx:72 UnifiedSession: chatState has messages: 0
+unified-session.tsx:73 UnifiedSession: isStreaming: true
+useSession.ts:11 useSession: initialized with sessionId: null
+useSession.ts:11 useSession: initialized with sessionId: null
+useSessionMessages.ts:54 useSessionMessages: Fireproof docs returned: 0 sessionId: null
+unified-session.tsx:71 UnifiedSession: initialized with sessionId: null
+unified-session.tsx:72 UnifiedSession: chatState has messages: 0
+unified-session.tsx:73 UnifiedSession: isStreaming: true
+useSimpleChat.ts:275 🔍 STREAM CONTENT UPDATE: length=2
+useSimpleChat.ts:346 🔍 UPDATE_STREAMING: length=2 timestamp=1741806569478
+segmentParser.ts:15 Parsing content, length: 2
+segmentParser.ts:18 === BEGINNING OF CONTENT ===
+segmentParser.ts:19 {"
+segmentParser.ts:20 === END OF CONTENT ===
+segmentParser.ts:92 🔍 SEGMENTS PARSED: 1 segments from text length 2
+segmentParser.ts:95   Segment 0: type=markdown, length=2
+useSimpleChat.ts:358 🔍 PARSED 1 SEGMENTS for streaming message
+useSimpleChat.ts:363   Segment 0: type=markdown, length=2
+useSimpleChat.ts:365   Sample: "{"..."
+useSimpleChat.ts:275 🔍 STREAM CONTENT UPDATE: length=30
+useSimpleChat.ts:346 🔍 UPDATE_STREAMING: length=30 timestamp=1741806569478
+segmentParser.ts:15 Parsing content, length: 30
+segmentParser.ts:18 === BEGINNING OF CONTENT ===
+segmentParser.ts:19 {"dependencies": {}}
+
+Here's a
+segmentParser.ts:20 === END OF CONTENT ===
+segmentParser.ts:92 🔍 SEGMENTS PARSED: 1 segments from text length 10
+segmentParser.ts:95   Segment 0: type=markdown, length=10
+useSimpleChat.ts:358 🔍 PARSED 1 SEGMENTS for streaming message
+useSimpleChat.ts:363   Segment 0: type=markdown, length=10
+useSimpleChat.ts:365   Sample: "
+
+Here's a..."
+useSimpleChat.ts:275 🔍 STREAM CONTENT UPDATE: length=69
+useSimpleChat.ts:346 🔍 UPDATE_STREAMING: length=69 timestamp=1741806569478
+segmentParser.ts:15 Parsing content, length: 69
+segmentParser.ts:18 === BEGINNING OF CONTENT ===
+segmentParser.ts:19 {"dependencies": {}}
+
+Here's a Todo app with due dates and completion
+segmentParser.ts:20 === END OF CONTENT ===
+segmentParser.ts:92 🔍 SEGMENTS PARSED: 1 segments from text length 49
+segmentParser.ts:95   Segment 0: type=markdown, length=49
+useSimpleChat.ts:358 🔍 PARSED 1 SEGMENTS for streaming message
+useSimpleChat.ts:363   Segment 0: type=markdown, length=49
+useSimpleChat.ts:365   Sample: "
+
+Here's a Todo app with due d..."
+useSimpleChat.ts:275 🔍 STREAM CONTENT UPDATE: length=103
+useSimpleChat.ts:346 🔍 UPDATE_STREAMING: length=103 timestamp=1741806569478
+segmentParser.ts:15 Parsing content, length: 103
+segmentParser.ts:18 === BEGINNING OF CONTENT ===
+segmentParser.ts:19 {"dependencies": {}}
+
+Here's a Todo app with due dates and completion tracking using Fireproof for data
+segmentParser.ts:20 === END OF CONTENT ===
+segmentParser.ts:92 🔍 SEGMENTS PARSED: 1 segments from text length 83
+segmentParser.ts:95   Segment 0: type=markdown, length=83
+useSimpleChat.ts:358 🔍 PARSED 1 SEGMENTS for streaming message
+useSimpleChat.ts:363   Segment 0: type=markdown, length=83
+useSimpleChat.ts:365   Sample: "
+
+Here's a Todo app with due d..."
+useSimpleChat.ts:275 🔍 STREAM CONTENT UPDATE: length=144
+useSimpleChat.ts:346 🔍 UPDATE_STREAMING: length=144 timestamp=1741806569478
+segmentParser.ts:15 Parsing content, length: 144
+segmentParser.ts:18 === BEGINNING OF CONTENT ===
+segmentParser.ts:19 {"dependencies": {}}
+
+Here's a Todo app with due dates and completion tracking using Fireproof for data persistence. The app has a modern orange
+segmentParser.ts:20 === END OF CONTENT ===
+segmentParser.ts:92 🔍 SEGMENTS PARSED: 1 segments from text length 124
+segmentParser.ts:95   Segment 0: type=markdown, length=124
+useSimpleChat.ts:358 🔍 PARSED 1 SEGMENTS for streaming message
+useSimpleChat.ts:363   Segment 0: type=markdown, length=124
+useSimpleChat.ts:365   Sample: "
+
+Here's a Todo app with due d..."
+useSimpleChat.ts:275 🔍 STREAM CONTENT UPDATE: length=164
+useSimpleChat.ts:346 🔍 UPDATE_STREAMING: length=164 timestamp=1741806569478
+segmentParser.ts:15 Parsing content, length: 164
+segmentParser.ts:18 === BEGINNING OF CONTENT ===
+segmentParser.ts:19 {"dependencies": {}}
+
+Here's a Todo app with due dates and completion tracking using Fireproof for data persistence. The app has a modern orange synthwave vibe with
+segmentParser.ts:20 === END OF CONTENT ===
+segmentParser.ts:92 🔍 SEGMENTS PARSED: 1 segments from text length 144
+segmentParser.ts:95   Segment 0: type=markdown, length=144
+useSimpleChat.ts:358 🔍 PARSED 1 SEGMENTS for streaming message
+useSimpleChat.ts:363   Segment 0: type=markdown, length=144
+useSimpleChat.ts:365   Sample: "
+
+Here's a Todo app with due d..."
+useSimpleChat.ts:275 🔍 STREAM CONTENT UPDATE: length=190
+useSimpleChat.ts:346 🔍 UPDATE_STREAMING: length=190 timestamp=1741806569478
+segmentParser.ts:15 Parsing content, length: 190
+segmentParser.ts:18 === BEGINNING OF CONTENT ===
+segmentParser.ts:19 {"dependencies": {}}
+
+Here's a Todo app with due dates and completion tracking using Fireproof for data persistence. The app has a modern orange synthwave vibe with Tailwind styling.
+
+```jsx
+segmentParser.ts:20 === END OF CONTENT ===
+segmentParser.ts:92 🔍 SEGMENTS PARSED: 2 segments from text length 170
+segmentParser.ts:95   Segment 0: type=markdown, length=164
+segmentParser.ts:95   Segment 1: type=code, length=3
+useSimpleChat.ts:358 🔍 PARSED 2 SEGMENTS for streaming message
+useSimpleChat.ts:363   Segment 0: type=markdown, length=164
+useSimpleChat.ts:365   Sample: "
+
+Here's a Todo app with due d..."
+useSimpleChat.ts:363   Segment 1: type=code, length=3
+useSimpleChat.ts:365   Sample: "jsx..."
+useSimpleChat.ts:275 🔍 STREAM CONTENT UPDATE: length=231
+useSimpleChat.ts:346 🔍 UPDATE_STREAMING: length=231 timestamp=1741806569478
+segmentParser.ts:15 Parsing content, length: 231
+segmentParser.ts:18 === BEGINNING OF CONTENT ===
+segmentParser.ts:19 {"dependencies": {}}
+
+Here's a Todo app with due dates and completion tracking using Fireproof for data persistence. The app has a modern orange synthwave vibe with Tailwind styling.
+
+```jsx
+import React, { useState } from "react";
+segmentParser.ts:20 === END OF CONTENT ===
+segmentParser.ts:92 🔍 SEGMENTS PARSED: 2 segments from text length 211
+segmentParser.ts:95   Segment 0: type=markdown, length=164
+segmentParser.ts:95   Segment 1: type=code, length=40
+useSimpleChat.ts:358 🔍 PARSED 2 SEGMENTS for streaming message
+useSimpleChat.ts:363   Segment 0: type=markdown, length=164
+useSimpleChat.ts:365   Sample: "
+
+Here's a Todo app with due d..."
+useSimpleChat.ts:363   Segment 1: type=code, length=40
+useSimpleChat.ts:365   Sample: "import React, { useState } fro..."
+useSimpleChat.ts:275 🔍 STREAM CONTENT UPDATE: length=265
+useSimpleChat.ts:346 🔍 UPDATE_STREAMING: length=265 timestamp=1741806569478
+segmentParser.ts:15 Parsing content, length: 265
+segmentParser.ts:18 === BEGINNING OF CONTENT ===
+segmentParser.ts:19 {"dependencies": {}}
+
+Here's a Todo app with due dates and completion tracking using Fireproof for data persistence. The app has a modern orange synthwave vibe with Tailwind styling.
+
+```jsx
+import React, { useState } from "react";
+import { useFireproof } from "use
+segmentParser.ts:20 === END OF CONTENT ===
+segmentParser.ts:92 🔍 SEGMENTS PARSED: 2 segments from text length 245
+segmentParser.ts:95   Segment 0: type=markdown, length=164
+segmentParser.ts:95   Segment 1: type=code, length=74
+useSimpleChat.ts:358 🔍 PARSED 2 SEGMENTS for streaming message
+useSimpleChat.ts:363   Segment 0: type=markdown, length=164
+useSimpleChat.ts:365   Sample: "
+
+Here's a Todo app with due d..."
+useSimpleChat.ts:363   Segment 1: type=code, length=74
+useSimpleChat.ts:365   Sample: "import React, { useState } fro..."
+useSimpleChat.ts:275 🔍 STREAM CONTENT UPDATE: length=277
+useSimpleChat.ts:346 🔍 UPDATE_STREAMING: length=277 timestamp=1741806569478
+segmentParser.ts:15 Parsing content, length: 277
+segmentParser.ts:18 === BEGINNING OF CONTENT ===
+segmentParser.ts:19 {"dependencies": {}}
+
+Here's a Todo app with due dates and completion tracking using Fireproof for data persistence. The app has a modern orange synthwave vibe with Tailwind styling.
+
+```jsx
+import React, { useState } from "react";
+import { useFireproof } from "use-fireproof";
+segmentParser.ts:20 === END OF CONTENT ===
+segmentParser.ts:92 🔍 SEGMENTS PARSED: 2 segments from text length 257
+segmentParser.ts:95   Segment 0: type=markdown, length=164
+segmentParser.ts:95   Segment 1: type=code, length=86
+useSimpleChat.ts:358 🔍 PARSED 2 SEGMENTS for streaming message
+useSimpleChat.ts:363   Segment 0: type=markdown, length=164
+useSimpleChat.ts:365   Sample: "
+
+Here's a Todo app with due d..."
+useSimpleChat.ts:363   Segment 1: type=code, length=86
+useSimpleChat.ts:365   Sample: "import React, { useState } fro..."
+useSimpleChat.ts:275 🔍 STREAM CONTENT UPDATE: length=317
+useSimpleChat.ts:346 🔍 UPDATE_STREAMING: length=317 timestamp=1741806569478
+segmentParser.ts:15 Parsing content, length: 317
+segmentParser.ts:18 === BEGINNING OF CONTENT ===
+segmentParser.ts:19 {"dependencies": {}}
+
+Here's a Todo app with due dates and completion tracking using Fireproof for data persistence. The app has a modern orange synthwave vibe with Tailwind styling.
+
+```jsx
+import React, { useState } from "react";
+import { useFireproof } from "use-fireproof";
+
+export default function TodoApp() {
+  
+segmentParser.ts:20 === END OF CONTENT ===
+segmentParser.ts:92 🔍 SEGMENTS PARSED: 2 segments from text length 297
+segmentParser.ts:95   Segment 0: type=markdown, length=164
+segmentParser.ts:95   Segment 1: type=code, length=126
+useSimpleChat.ts:358 🔍 PARSED 2 SEGMENTS for streaming message
+useSimpleChat.ts:363   Segment 0: type=markdown, length=164
+useSimpleChat.ts:365   Sample: "
+
+Here's a Todo app with due d..."
+useSimpleChat.ts:363   Segment 1: type=code, length=126
+useSimpleChat.ts:365   Sample: "import React, { useState } fro..."
+useSimpleChat.ts:275 🔍 STREAM CONTENT UPDATE: length=351
+useSimpleChat.ts:346 🔍 UPDATE_STREAMING: length=351 timestamp=1741806569478
+segmentParser.ts:15 Parsing content, length: 351
+segmentParser.ts:18 === BEGINNING OF CONTENT ===
+segmentParser.ts:19 {"dependencies": {}}
+
+Here's a Todo app with due dates and completion tracking using Fireproof for data persistence. The app has a modern orange synthwave vibe with Tailwind styling.
+
+```jsx
+import React, { useState } from "react";
+import { useFireproof } from "use-fireproof";
+
+export default function TodoApp() {
+  const { useDocument, useLiveQuery,
+segmentParser.ts:20 === END OF CONTENT ===
+segmentParser.ts:92 🔍 SEGMENTS PARSED: 2 segments from text length 331
+segmentParser.ts:95   Segment 0: type=markdown, length=164
+segmentParser.ts:95   Segment 1: type=code, length=160
+useSimpleChat.ts:358 🔍 PARSED 2 SEGMENTS for streaming message
+useSimpleChat.ts:363   Segment 0: type=markdown, length=164
+useSimpleChat.ts:365   Sample: "
+
+Here's a Todo app with due d..."
+useSimpleChat.ts:363   Segment 1: type=code, length=160
+useSimpleChat.ts:365   Sample: "import React, { useState } fro..."
+useSimpleChat.ts:275 🔍 STREAM CONTENT UPDATE: length=381
+useSimpleChat.ts:346 🔍 UPDATE_STREAMING: length=381 timestamp=1741806569478
+segmentParser.ts:15 Parsing content, length: 381
+segmentParser.ts:18 === BEGINNING OF CONTENT ===
+segmentParser.ts:19 {"dependencies": {}}
+
+Here's a Todo app with due dates and completion tracking using Fireproof for data persistence. The app has a modern orange synthwave vibe with Tailwind styling.
+
+```jsx
+import React, { useState } from "react";
+import { useFireproof } from "use-fireproof";
+
+export default function TodoApp() {
+  const { useDocument, useLiveQuery, database } = useFireproof("to
+segmentParser.ts:20 === END OF CONTENT ===
+segmentParser.ts:92 🔍 SEGMENTS PARSED: 2 segments from text length 361
+segmentParser.ts:95   Segment 0: type=markdown, length=164
+segmentParser.ts:95   Segment 1: type=code, length=190
+useSimpleChat.ts:358 🔍 PARSED 2 SEGMENTS for streaming message
+useSimpleChat.ts:363   Segment 0: type=markdown, length=164
+useSimpleChat.ts:365   Sample: "
+
+Here's a Todo app with due d..."
+useSimpleChat.ts:363   Segment 1: type=code, length=190
+useSimpleChat.ts:365   Sample: "import React, { useState } fro..."
+useSimpleChat.ts:275 🔍 STREAM CONTENT UPDATE: length=411
+useSimpleChat.ts:346 🔍 UPDATE_STREAMING: length=411 timestamp=1741806569478
+segmentParser.ts:15 Parsing content, length: 411
+segmentParser.ts:18 === BEGINNING OF CONTENT ===
+segmentParser.ts:19 {"dependencies": {}}
+
+Here's a Todo app with due dates and completion tracking using Fireproof for data persistence. The app has a modern orange synthwave vibe with Tailwind styling.
+
+```jsx
+import React, { useState } from "react";
+import { useFireproof } from "use-fireproof";
+
+export default function TodoApp() {
+  const { useDocument, useLiveQuery, database } = useFireproof("todo-app");
+  const { doc, merge
+segmentParser.ts:20 === END OF CONTENT ===
+segmentParser.ts:92 🔍 SEGMENTS PARSED: 2 segments from text length 391
+segmentParser.ts:95   Segment 0: type=markdown, length=164
+segmentParser.ts:95   Segment 1: type=code, length=220
+useSimpleChat.ts:358 🔍 PARSED 2 SEGMENTS for streaming message
+useSimpleChat.ts:363   Segment 0: type=markdown, length=164
+useSimpleChat.ts:365   Sample: "
+
+Here's a Todo app with due d..."
+useSimpleChat.ts:363   Segment 1: type=code, length=220
+useSimpleChat.ts:365   Sample: "import React, { useState } fro..."
+useSimpleChat.ts:275 🔍 STREAM CONTENT UPDATE: length=438
+useSimpleChat.ts:346 🔍 UPDATE_STREAMING: length=438 timestamp=1741806569478
+segmentParser.ts:15 Parsing content, length: 438
+segmentParser.ts:18 === BEGINNING OF CONTENT ===
+segmentParser.ts:19 {"dependencies": {}}
+
+Here's a Todo app with due dates and completion tracking using Fireproof for data persistence. The app has a modern orange synthwave vibe with Tailwind styling.
+
+```jsx
+import React, { useState } from "react";
+import { useFireproof } from "use-fireproof";
+
+export default function TodoApp() {
+  const { useDocument, useLiveQuery, database } = useFireproof("todo-app");
+  const { doc, merge, submit } = useDocument({ 
+segmentParser.ts:20 === END OF CONTENT ===
+segmentParser.ts:92 🔍 SEGMENTS PARSED: 2 segments from text length 418
+segmentParser.ts:95   Segment 0: type=markdown, length=164
+segmentParser.ts:95   Segment 1: type=code, length=247
+useSimpleChat.ts:358 🔍 PARSED 2 SEGMENTS for streaming message
+useSimpleChat.ts:363   Segment 0: type=markdown, length=164
+useSimpleChat.ts:365   Sample: "
+
+Here's a Todo app with due d..."
+useSimpleChat.ts:363   Segment 1: type=code, length=247
+useSimpleChat.ts:365   Sample: "import React, { useState } fro..."
+useSimpleChat.ts:275 🔍 STREAM CONTENT UPDATE: length=459
+useSimpleChat.ts:346 🔍 UPDATE_STREAMING: length=459 timestamp=1741806569478
+segmentParser.ts:15 Parsing content, length: 459
+segmentParser.ts:18 === BEGINNING OF CONTENT ===
+segmentParser.ts:19 {"dependencies": {}}
+
+Here's a Todo app with due dates and completion tracking using Fireproof for data persistence. The app has a modern orange synthwave vibe with Tailwind styling.
+
+```jsx
+import React, { useState } from "react";
+import { useFireproof } from "use-fireproof";
+
+export default function TodoApp() {
+  const { useDocument, useLiveQuery, database } = useFireproof("todo-app");
+  const { doc, merge, submit } = useDocument({ 
+    title: "", 
+    
+segmentParser.ts:20 === END OF CONTENT ===
+segmentParser.ts:92 🔍 SEGMENTS PARSED: 2 segments from text length 439
+segmentParser.ts:95   Segment 0: type=markdown, length=164
+segmentParser.ts:95   Segment 1: type=code, length=268
+useSimpleChat.ts:358 🔍 PARSED 2 SEGMENTS for streaming message
+useSimpleChat.ts:363   Segment 0: type=markdown, length=164
+useSimpleChat.ts:365   Sample: "
+
+Here's a Todo app with due d..."
+useSimpleChat.ts:363   Segment 1: type=code, length=268
+useSimpleChat.ts:365   Sample: "import React, { useState } fro..."
+useSimpleChat.ts:275 🔍 STREAM CONTENT UPDATE: length=487
+useSimpleChat.ts:346 🔍 UPDATE_STREAMING: length=487 timestamp=1741806569478
+segmentParser.ts:15 Parsing content, length: 487
+segmentParser.ts:18 === BEGINNING OF CONTENT ===
+segmentParser.ts:19 {"dependencies": {}}
+
+Here's a Todo app with due dates and completion tracking using Fireproof for data persistence. The app has a modern orange synthwave vibe with Tailwind styling.
+
+```jsx
+import React, { useState } from "react";
+import { useFireproof } from "use-fireproof";
+
+export default function TodoApp() {
+  const { useDocument, useLiveQuery, database } = useFireproof("todo-app");
+  const { doc, merge, submit } = useDocument({ 
+    title: "", 
+    dueDate: "", 
+    completed:
+segmentParser.ts:20 === END OF CONTENT ===
+segmentParser.ts:92 🔍 SEGMENTS PARSED: 2 segments from text length 467
+segmentParser.ts:95   Segment 0: type=markdown, length=164
+segmentParser.ts:95   Segment 1: type=code, length=296
+useSimpleChat.ts:358 🔍 PARSED 2 SEGMENTS for streaming message
+useSimpleChat.ts:363   Segment 0: type=markdown, length=164
+useSimpleChat.ts:365   Sample: "
+
+Here's a Todo app with due d..."
+useSimpleChat.ts:363   Segment 1: type=code, length=296
+useSimpleChat.ts:365   Sample: "import React, { useState } fro..."
+useSimpleChat.ts:275 🔍 STREAM CONTENT UPDATE: length=516
+useSimpleChat.ts:346 🔍 UPDATE_STREAMING: length=516 timestamp=1741806569478
+segmentParser.ts:15 Parsing content, length: 516
+segmentParser.ts:18 === BEGINNING OF CONTENT ===
+segmentParser.ts:19 {"dependencies": {}}
+
+Here's a Todo app with due dates and completion tracking using Fireproof for data persistence. The app has a modern orange synthwave vibe with Tailwind styling.
+
+```jsx
+import React, { useState } from "react";
+import { useFireproof } from "use-fireproof";
+
+export default function TodoApp() {
+  const { useDocument, useLiveQuery, database } = useFireproof("todo-app");
+  const { doc, merge, submit } = useDocument({ 
+    title: "", 
+    dueDate: "", 
+    completed: false, 
+    createdAt: Date.
+segmentParser.ts:20 === END OF CONTENT ===
+segmentParser.ts:92 🔍 SEGMENTS PARSED: 2 segments from text length 496
+segmentParser.ts:95   Segment 0: type=markdown, length=164
+segmentParser.ts:95   Segment 1: type=code, length=325
+useSimpleChat.ts:358 🔍 PARSED 2 SEGMENTS for streaming message
+useSimpleChat.ts:363   Segment 0: type=markdown, length=164
+useSimpleChat.ts:365   Sample: "
+
+Here's a Todo app with due d..."
+useSimpleChat.ts:363   Segment 1: type=code, length=325
+useSimpleChat.ts:365   Sample: "import React, { useState } fro..."
+useSimpleChat.ts:275 🔍 STREAM CONTENT UPDATE: length=538
+useSimpleChat.ts:346 🔍 UPDATE_STREAMING: length=538 timestamp=1741806569478
+segmentParser.ts:15 Parsing content, length: 538
+segmentParser.ts:18 === BEGINNING OF CONTENT ===
+segmentParser.ts:19 {"dependencies": {}}
+
+Here's a Todo app with due dates and completion tracking using Fireproof for data persistence. The app has a modern orange synthwave vibe with Tailwind styling.
+
+```jsx
+import React, { useState } from "react";
+import { useFireproof } from "use-fireproof";
+
+export default function TodoApp() {
+  const { useDocument, useLiveQuery, database } = useFireproof("todo-app");
+  const { doc, merge, submit } = useDocument({ 
+    title: "", 
+    dueDate: "", 
+    completed: false, 
+    createdAt: Date.now()
+  });
+
+  const [
+segmentParser.ts:20 === END OF CONTENT ===
+segmentParser.ts:92 🔍 SEGMENTS PARSED: 2 segments from text length 518
+segmentParser.ts:95   Segment 0: type=markdown, length=164
+segmentParser.ts:95   Segment 1: type=code, length=347
+useSimpleChat.ts:358 🔍 PARSED 2 SEGMENTS for streaming message
+useSimpleChat.ts:363   Segment 0: type=markdown, length=164
+useSimpleChat.ts:365   Sample: "
+
+Here's a Todo app with due d..."
+useSimpleChat.ts:363   Segment 1: type=code, length=347
+useSimpleChat.ts:365   Sample: "import React, { useState } fro..."
+useSimpleChat.ts:275 🔍 STREAM CONTENT UPDATE: length=575
+useSimpleChat.ts:346 🔍 UPDATE_STREAMING: length=575 timestamp=1741806569478
+segmentParser.ts:15 Parsing content, length: 575
+segmentParser.ts:18 === BEGINNING OF CONTENT ===
+segmentParser.ts:19 {"dependencies": {}}
+
+Here's a Todo app with due dates and completion tracking using Fireproof for data persistence. The app has a modern orange synthwave vibe with Tailwind styling.
+
+```jsx
+import React, { useState } from "react";
+import { useFireproof } from "use-fireproof";
+
+export default function TodoApp() {
+  const { useDocument, useLiveQuery, database } = useFireproof("todo-app");
+  const { doc, merge, submit } = useDocument({ 
+    title: "", 
+    dueDate: "", 
+    completed: false, 
+    createdAt: Date.now()
+  });
+
+  const [filter, setFilter] = useState("all");
+segmentParser.ts:20 === END OF CONTENT ===
+segmentParser.ts:92 🔍 SEGMENTS PARSED: 2 segments from text length 555
+segmentParser.ts:95   Segment 0: type=markdown, length=164
+segmentParser.ts:95   Segment 1: type=code, length=384
+useSimpleChat.ts:358 🔍 PARSED 2 SEGMENTS for streaming message
+useSimpleChat.ts:363   Segment 0: type=markdown, length=164
+useSimpleChat.ts:365   Sample: "
+
+Here's a Todo app with due d..."
+useSimpleChat.ts:363   Segment 1: type=code, length=384
+useSimpleChat.ts:365   Sample: "import React, { useState } fro..."
+useSimpleChat.ts:275 🔍 STREAM CONTENT UPDATE: length=609
+useSimpleChat.ts:346 🔍 UPDATE_STREAMING: length=609 timestamp=1741806569478
+segmentParser.ts:15 Parsing content, length: 609
+segmentParser.ts:18 === BEGINNING OF CONTENT ===
+segmentParser.ts:19 {"dependencies": {}}
+
+Here's a Todo app with due dates and completion tracking using Fireproof for data persistence. The app has a modern orange synthwave vibe with Tailwind styling.
+
+```jsx
+import React, { useState } from "react";
+import { useFireproof } from "use-fireproof";
+
+export default function TodoApp() {
+  const { useDocument, useLiveQuery, database } = useFireproof("todo-app");
+  const { doc, merge, submit } = useDocument({ 
+    title: "", 
+    dueDate: "", 
+    completed: false, 
+    createdAt: Date.now()
+  });
+
+  const [filter, setFilter] = useState("all"); // all, active, completed
+  const
+segmentParser.ts:20 === END OF CONTENT ===
+segmentParser.ts:92 🔍 SEGMENTS PARSED: 2 segments from text length 589
+segmentParser.ts:95   Segment 0: type=markdown, length=164
+segmentParser.ts:95   Segment 1: type=code, length=418
+useSimpleChat.ts:358 🔍 PARSED 2 SEGMENTS for streaming message
+useSimpleChat.ts:363   Segment 0: type=markdown, length=164
+useSimpleChat.ts:365   Sample: "
+
+Here's a Todo app with due d..."
+useSimpleChat.ts:363   Segment 1: type=code, length=418
+useSimpleChat.ts:365   Sample: "import React, { useState } fro..."
+useSimpleChat.ts:275 🔍 STREAM CONTENT UPDATE: length=632
+useSimpleChat.ts:346 🔍 UPDATE_STREAMING: length=632 timestamp=1741806569478
+segmentParser.ts:15 Parsing content, length: 632
+segmentParser.ts:18 === BEGINNING OF CONTENT ===
+segmentParser.ts:19 {"dependencies": {}}
+
+Here's a Todo app with due dates and completion tracking using Fireproof for data persistence. The app has a modern orange synthwave vibe with Tailwind styling.
+
+```jsx
+import React, { useState } from "react";
+import { useFireproof } from "use-fireproof";
+
+export default function TodoApp() {
+  const { useDocument, useLiveQuery, database } = useFireproof("todo-app");
+  const { doc, merge, submit } = useDocument({ 
+    title: "", 
+    dueDate: "", 
+    completed: false, 
+    createdAt: Date.now()
+  });
+
+  const [filter, setFilter] = useState("all"); // all, active, completed
+  const { docs: todos } = useL
+segmentParser.ts:20 === END OF CONTENT ===
+segmentParser.ts:92 🔍 SEGMENTS PARSED: 2 segments from text length 612
+segmentParser.ts:95   Segment 0: type=markdown, length=164
+segmentParser.ts:95   Segment 1: type=code, length=441
+useSimpleChat.ts:358 🔍 PARSED 2 SEGMENTS for streaming message
+useSimpleChat.ts:363   Segment 0: type=markdown, length=164
+useSimpleChat.ts:365   Sample: "
+
+Here's a Todo app with due d..."
+useSimpleChat.ts:363   Segment 1: type=code, length=441
+useSimpleChat.ts:365   Sample: "import React, { useState } fro..."
+useSimpleChat.ts:275 🔍 STREAM CONTENT UPDATE: length=655
+useSimpleChat.ts:346 🔍 UPDATE_STREAMING: length=655 timestamp=1741806569478
+segmentParser.ts:15 Parsing content, length: 655
+segmentParser.ts:18 === BEGINNING OF CONTENT ===
+segmentParser.ts:19 {"dependencies": {}}
+
+Here's a Todo app with due dates and completion tracking using Fireproof for data persistence. The app has a modern orange synthwave vibe with Tailwind styling.
+
+```jsx
+import React, { useState } from "react";
+import { useFireproof } from "use-fireproof";
+
+export default function TodoApp() {
+  const { useDocument, useLiveQuery, database } = useFireproof("todo-app");
+  const { doc, merge, submit } = useDocument({ 
+    title: "", 
+    dueDate: "", 
+    completed: false, 
+    createdAt: Date.now()
+  });
+
+  const [filter, setFilter] = useState("all"); // all, active, completed
+  const { docs: todos } = useLiveQuery("createdAt", {
+segmentParser.ts:20 === END OF CONTENT ===
+segmentParser.ts:92 🔍 SEGMENTS PARSED: 2 segments from text length 635
+segmentParser.ts:95   Segment 0: type=markdown, length=164
+segmentParser.ts:95   Segment 1: type=code, length=464
+useSimpleChat.ts:358 🔍 PARSED 2 SEGMENTS for streaming message
+useSimpleChat.ts:363   Segment 0: type=markdown, length=164
+useSimpleChat.ts:365   Sample: "
+
+Here's a Todo app with due d..."
+useSimpleChat.ts:363   Segment 1: type=code, length=464
+useSimpleChat.ts:365   Sample: "import React, { useState } fro..."
+useSimpleChat.ts:275 🔍 STREAM CONTENT UPDATE: length=690
+useSimpleChat.ts:346 🔍 UPDATE_STREAMING: length=690 timestamp=1741806569478
+segmentParser.ts:15 Parsing content, length: 690
+segmentParser.ts:18 === BEGINNING OF CONTENT ===
+segmentParser.ts:19 {"dependencies": {}}
+
+Here's a Todo app with due dates and completion tracking using Fireproof for data persistence. The app has a modern orange synthwave vibe with Tailwind styling.
+
+```jsx
+import React, { useState } from "react";
+import { useFireproof } from "use-fireproof";
+
+export default function TodoApp() {
+  const { useDocument, useLiveQuery, database } = useFireproof("todo-app");
+  const { doc, merge, submit } = useDocument({ 
+    title: "", 
+    dueDate: "", 
+    completed: false, 
+    createdAt: Date.now()
+  });
+
+  const [filter, setFilter] = useState("all"); // all, active, completed
+  const { docs: todos } = useLiveQuery("createdAt", { descending: true });
+
+  const filt
+segmentParser.ts:20 === END OF CONTENT ===
+segmentParser.ts:92 🔍 SEGMENTS PARSED: 2 segments from text length 670
+segmentParser.ts:95   Segment 0: type=markdown, length=164
+segmentParser.ts:95   Segment 1: type=code, length=499
+useSimpleChat.ts:358 🔍 PARSED 2 SEGMENTS for streaming message
+useSimpleChat.ts:363   Segment 0: type=markdown, length=164
+useSimpleChat.ts:365   Sample: "
+
+Here's a Todo app with due d..."
+useSimpleChat.ts:363   Segment 1: type=code, length=499
+useSimpleChat.ts:365   Sample: "import React, { useState } fro..."
+useSimpleChat.ts:275 🔍 STREAM CONTENT UPDATE: length=724
+useSimpleChat.ts:346 🔍 UPDATE_STREAMING: length=724 timestamp=1741806569478
+segmentParser.ts:15 Parsing content, length: 724
+segmentParser.ts:18 === BEGINNING OF CONTENT ===
+segmentParser.ts:19 {"dependencies": {}}
+
+Here's a Todo app with due dates and completion tracking using Fireproof for data persistence. The app has a modern orange synthwave vibe with Tailwind styling.
+
+```jsx
+import React, { useState } from "react";
+import { useFireproof } from "use-fireproof";
+
+export default function TodoApp() {
+  const { useDocument, useLiveQuery, database } = useFireproof("todo-app");
+  const { doc, merge, submit } = useDocument({ 
+    title: "", 
+    dueDate: "", 
+    completed: false, 
+    createdAt: Date.now()
+  });
+
+  const [filter, setFilter] = useState("all"); // all, active, completed
+  const { docs: todos } = useLiveQuery("createdAt", { descending: true });
+
+  const filteredTodos = todos.filter(todo => {
+segmentParser.ts:20 === END OF CONTENT ===
+segmentParser.ts:92 🔍 SEGMENTS PARSED: 2 segments from text length 704
+segmentParser.ts:95   Segment 0: type=markdown, length=164
+segmentParser.ts:95   Segment 1: type=code, length=533
+useSimpleChat.ts:358 🔍 PARSED 2 SEGMENTS for streaming message
+useSimpleChat.ts:363   Segment 0: type=markdown, length=164
+useSimpleChat.ts:365   Sample: "
+
+Here's a Todo app with due d..."
+useSimpleChat.ts:363   Segment 1: type=code, length=533
+useSimpleChat.ts:365   Sample: "import React, { useState } fro..."
+useSimpleChat.ts:275 🔍 STREAM CONTENT UPDATE: length=751
+useSimpleChat.ts:346 🔍 UPDATE_STREAMING: length=751 timestamp=1741806569478
+segmentParser.ts:15 Parsing content, length: 751
+segmentParser.ts:18 === BEGINNING OF CONTENT ===
+segmentParser.ts:19 {"dependencies": {}}
+
+Here's a Todo app with due dates and completion tracking using Fireproof for data persistence. The app has a modern orange synthwave vibe with Tailwind styling.
+
+```jsx
+import React, { useState } from "react";
+import { useFireproof } from "use-fireproof";
+
+export default function TodoApp() {
+  const { useDocument, useLiveQuery, database } = useFireproof("todo-app");
+  const { doc, merge, submit } = useDocument({ 
+    title: "", 
+    dueDate: "", 
+    completed: false, 
+    createdAt: Date.now()
+  });
+
+  const [filter, setFilter] = useState("all"); // all, active, completed
+  const { docs: todos } = useLiveQuery("createdAt", { descending: true });
+
+  const filteredTodos = todos.filter(todo => {
+    if (filter === "active
+segmentParser.ts:20 === END OF CONTENT ===
+segmentParser.ts:92 🔍 SEGMENTS PARSED: 2 segments from text length 731
+segmentParser.ts:95   Segment 0: type=markdown, length=164
+segmentParser.ts:95   Segment 1: type=code, length=560
+useSimpleChat.ts:358 🔍 PARSED 2 SEGMENTS for streaming message
+useSimpleChat.ts:363   Segment 0: type=markdown, length=164
+useSimpleChat.ts:365   Sample: "
+
+Here's a Todo app with due d..."
+useSimpleChat.ts:363   Segment 1: type=code, length=560
+useSimpleChat.ts:365   Sample: "import React, { useState } fro..."
+useSimpleChat.ts:275 🔍 STREAM CONTENT UPDATE: length=777
+useSimpleChat.ts:346 🔍 UPDATE_STREAMING: length=777 timestamp=1741806569478
+segmentParser.ts:15 Parsing content, length: 777
+segmentParser.ts:18 === BEGINNING OF CONTENT ===
+segmentParser.ts:19 {"dependencies": {}}
+
+Here's a Todo app with due dates and completion tracking using Fireproof for data persistence. The app has a modern orange synthwave vibe with Tailwind styling.
+
+```jsx
+import React, { useState } from "react";
+import { useFireproof } from "use-fireproof";
+
+export default function TodoApp() {
+  const { useDocument, useLiveQuery, database } = useFireproof("todo-app");
+  const { doc, merge, submit } = useDocument({ 
+    title: "", 
+    dueDate: "", 
+    completed: false, 
+    createdAt: Date.now()
+  });
+
+  const [filter, setFilter] = useState("all"); // all, active, completed
+  const { docs: todos } = useLiveQuery("createdAt", { descending: true });
+
+  const filteredTodos = todos.filter(todo => {
+    if (filter === "active") return !todo.completed;
+segmentParser.ts:20 === END OF CONTENT ===
+segmentParser.ts:92 🔍 SEGMENTS PARSED: 2 segments from text length 757
+segmentParser.ts:95   Segment 0: type=markdown, length=164
+segmentParser.ts:95   Segment 1: type=code, length=586
+useSimpleChat.ts:358 🔍 PARSED 2 SEGMENTS for strea

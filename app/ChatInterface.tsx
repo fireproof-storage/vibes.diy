@@ -42,6 +42,10 @@ function encodeTitle(title: string): string {
     .replace(/%20/g, '-');
 }
 
+function logDebug(message: string) {
+  console.debug(`🔍 CHAT_INTERFACE: ${message}`);
+}
+
 function ChatInterface({ chatState, sessionId, onSessionCreated, onNewChat }: ChatInterfaceProps) {
   // Extract commonly used values from chatState to avoid repetition
   const {
@@ -190,20 +194,27 @@ function ChatInterface({ chatState, sessionId, onSessionCreated, onNewChat }: Ch
 
   // Memoize the MessageList component to prevent unnecessary re-renders
   const memoizedMessageList = useMemo(() => {
-    // Log the streaming state for debugging
-    console.debug(
-      `🔍 CHAT INTERFACE: Creating MessageList with isStreaming()=${isStreaming()}, streamingState=${streamingState}`
-    );
+    logDebug(`Creating MessageList with sessionId=${sessionId}, messages=${messages.length}, isStreaming=${streamingState}`);
+    if (messages.length > 0) {
+      messages.forEach((msg, i) => {
+        if (msg.type === 'ai') {
+          const aiMsg = msg as AiChatMessage;
+          logDebug(`  Message ${i}: type=${msg.type}, isStreaming=${aiMsg.isStreaming}, segments=${aiMsg.segments?.length || 0}, text length=${msg.text?.length || 0}`);
+        } else {
+          logDebug(`  Message ${i}: type=${msg.type}, text length=${msg.text?.length || 0}`);
+        }
+      });
+    }
 
     return (
       <MessageList
         sessionId={sessionId || null}
-        isStreaming={isStreaming}
+        isStreaming={() => streamingState}
         isShrinking={isShrinking}
         isExpanding={isExpanding}
       />
     );
-  }, [sessionId, isStreaming, isShrinking, isExpanding, streamingState]);
+  }, [sessionId, messages, streamingState, isShrinking, isExpanding]);
 
   // Render the quick suggestions conditionally
   const quickSuggestions = useMemo(

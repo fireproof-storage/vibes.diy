@@ -176,6 +176,11 @@ export function useSimpleChat(sessionId: string | null) {
     return null;
   }
 
+  // Near the top of the file, add a debug logging function
+  function logDebug(message: string) {
+    console.debug(`🔍 SIMPLE_CHAT: ${message}`);
+  }
+
   /**
    * Send a message and process the AI response
    * Returns a promise that resolves when the entire process is complete, including title generation
@@ -382,6 +387,21 @@ export function useSimpleChat(sessionId: string | null) {
 
     // Use addAiMessage with isStreaming=true to update in-memory message
     addAiMessage(rawMessage, timestamp, true).catch(console.error);
+
+    // After parsing segments, add logging about state updates
+    logDebug(`Setting ${segments.length} segments to message state`);
+    logDebug(`Current messages count: ${messages.length}`);
+
+    // In any function that updates messages state, add:
+    logDebug(`Updating messages state with ${messages.length} messages`);
+    messages.forEach((msg, i) => {
+      if (msg.type === 'ai') {
+        const aiMsg = msg as AiChatMessage;
+        logDebug(`  Message ${i}: type=${msg.type}, isStreaming=${aiMsg.isStreaming}, segments=${aiMsg.segments?.length || 0}, text length=${msg.text?.length || 0}`);
+      } else {
+        logDebug(`  Message ${i}: type=${msg.type}, text length=${msg.text?.length || 0}`);
+      }
+    });
   }
 
   return {

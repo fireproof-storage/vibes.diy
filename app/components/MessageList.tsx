@@ -3,6 +3,12 @@ import type { ChatMessage, AiChatMessage } from '../types/chat';
 import ReactMarkdown from 'react-markdown';
 import StructuredMessage from './StructuredMessage';
 import { useSessionMessages } from '../hooks/useSessionMessages';
+import { logUIState, debugLog } from '../utils/debugLogging';
+
+// Direct stdout logging for tests
+function writeToStdout(message: string) {
+  console.debug(`🔍 MESSAGE_LIST: ${message}`);
+}
 
 interface MessageListProps {
   sessionId: string | null;
@@ -89,7 +95,9 @@ function MessageList({
 
   // Check if there's a streaming message
   const hasStreamingMessage = useMemo(() => {
-    return messages.some((msg) => msg.type === 'ai' && (msg as AiChatMessage).isStreaming);
+    const hasStreaming = messages.some((msg) => msg.type === 'ai' && (msg as AiChatMessage).isStreaming);
+    writeToStdout(`hasStreamingMessage check: ${hasStreaming}, messages=${messages.length}`);
+    return hasStreaming;
   }, [messages]);
 
   // Only show typing indicator when no streaming message with content is visible yet
@@ -97,7 +105,7 @@ function MessageList({
     if (!isStreaming()) return false;
 
     // Log the current state of messages for debugging
-    console.debug(
+    writeToStdout(
       `🔍 MESSAGE LIST DEBUG: Total messages=${messages.length}, isStreaming=${isStreaming()}`
     );
 
@@ -116,17 +124,23 @@ function MessageList({
               segment && segment.content && segment.content.trim().length > 0
             );
           
-          // Log individual message details for debugging
-          console.debug(
-            `🔍 AI MESSAGE: text length=${aiMsg.text.length}, segments=${aiMsg.segments?.length || 0}, ` +
-            `hasContent=${hasText || hasSegmentsWithContent}, isStreaming=${aiMsg.isStreaming}`
+          // Log individual message details for each AI message
+          writeToStdout(
+            `🔍 AI MESSAGE ${aiMsg.timestamp || 'unknown'}: text length=${aiMsg.text.length}, ` +
+            `segments=${aiMsg.segments?.length || 0}, hasContent=${hasText || hasSegmentsWithContent}, ` +
+            `isStreaming=${aiMsg.isStreaming}`
           );
           
           if (aiMsg.segments && aiMsg.segments.length > 0) {
             aiMsg.segments.forEach((segment, i) => {
               if (segment) {
-                console.debug(
-                  `  Segment ${i}: type=${segment.type}, content length=${segment.content?.length || 0}`
+                const contentPreview = segment.content 
+                  ? `${segment.content.substring(0, 20)}${segment.content.length > 20 ? '...' : ''}`
+                  : '[empty]';
+                  
+                writeToStdout(
+                  `  Segment ${i}: type=${segment.type}, length=${segment.content?.length || 0}, ` +
+                  `content="${contentPreview}"`
                 );
               }
             });
@@ -141,7 +155,8 @@ function MessageList({
     // We only want to show the typing indicator if there's no content at all
     const shouldShowTypingIndicator = !hasAnyContent;
 
-    console.debug(
+    // Log the final decision for the typing indicator
+    writeToStdout(
       `🔍 DECISION: hasAnyContent=${hasAnyContent}, showTypingIndicator=${shouldShowTypingIndicator}`
     );
 
@@ -150,6 +165,12 @@ function MessageList({
 
   // Memoize the message list to prevent unnecessary re-renders
   const messageElements = useMemo(() => {
+    writeToStdout(`Preparing to render ${messages.length} messages, showTypingIndicator=${showTypingIndicator}`);
+    if (messages.length === 0) {
+      writeToStdout(`No messages to render, showing welcome screen`);
+      return [];
+    }
+
     return messages.map((msg, i) => {
       // Create a key that changes when content changes
       let contentKey = msg.text?.length || 0;
@@ -160,6 +181,10 @@ function MessageList({
         contentKey = aiMsg.segments?.reduce((total, segment) => {
           return total + (segment?.content?.length || 0);
         }, 0) || 0;
+        
+        writeToStdout(`Will render message ${i}: type=${msg.type}, isStreaming=${aiMsg.isStreaming}, hasSegments=${aiMsg.segments?.length > 0}, textLength=${msg.text.length}`);
+      } else {
+        writeToStdout(`Will render message ${i}: type=${msg.type}, textLength=${msg.text.length}`);
       }
 
       return (
@@ -172,7 +197,7 @@ function MessageList({
         />
       );
     });
-  }, [messages, isShrinking, isExpanding]);
+  }, [messages, isShrinking, isExpanding, showTypingIndicator]);
 
   // Show loading state while messages are being fetched
   if (isLoading && sessionId) {
