@@ -19,6 +19,16 @@ const StructuredMessage = memo(({ segments, isStreaming }: StructuredMessageProp
     `🔍 STRUCTURED MESSAGE: Rendering with ${validSegments.length} segments, isStreaming=${isStreaming}`
   );
 
+  // Add more detailed logging about each segment
+  if (validSegments.length > 0) {
+    validSegments.forEach((segment, i) => {
+      console.debug(
+        `🔍 SEGMENT ${i}: type=${segment.type}, content length=${segment.content?.length || 0}, ` +
+        `has content=${Boolean(segment.content && segment.content.trim().length > 0)}`
+      );
+    });
+  }
+
   // Count number of lines in code segments
   const codeLines = validSegments
     .filter((segment) => segment.type === 'code')
@@ -27,7 +37,7 @@ const StructuredMessage = memo(({ segments, isStreaming }: StructuredMessageProp
   // CRITICAL: We always want to show something if there's any content at all
   const hasContent =
     validSegments.length > 0 &&
-    validSegments.some((segment) => segment.content && segment.content.trim().length > 0);
+    validSegments.some((segment) => segment?.content && segment.content.trim().length > 0);
 
   console.debug(`🔍 STRUCTURED MESSAGE: hasContent=${hasContent}`);
 
@@ -41,7 +51,7 @@ const StructuredMessage = memo(({ segments, isStreaming }: StructuredMessageProp
       ) : (
         // Map and render each segment that has content
         validSegments
-          .filter((segment) => segment.content && segment.content.trim().length > 0)
+          .filter((segment) => segment?.content && segment.content.trim().length > 0)
           .map((segment, index) => {
             if (segment.type === 'markdown') {
               return (

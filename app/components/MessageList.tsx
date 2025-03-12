@@ -132,12 +132,39 @@ function MessageList({
 
     // IMPORTANT: Check if any AI message has segments with actual content
     const hasAnyContent = messages.some(
-      (msg) =>
-        msg.type === 'ai' &&
-        ((msg as AiChatMessage).text.length > 0 ||
-          (msg as AiChatMessage).segments?.some(
-            (segment) => segment.content && segment.content.trim().length > 0
-          ))
+      (msg) => {
+        if (msg.type === 'ai') {
+          const aiMsg = msg as AiChatMessage;
+          const hasText = aiMsg.text.length > 0;
+          
+          // Check if the message has any segments with actual content
+          const hasSegmentsWithContent = 
+            Array.isArray(aiMsg.segments) && 
+            aiMsg.segments.length > 0 && 
+            aiMsg.segments.some(segment => 
+              segment && segment.content && segment.content.trim().length > 0
+            );
+          
+          // Log individual message details for debugging
+          console.debug(
+            `🔍 AI MESSAGE: text length=${aiMsg.text.length}, segments=${aiMsg.segments?.length || 0}, ` +
+            `hasContent=${hasText || hasSegmentsWithContent}, isStreaming=${aiMsg.isStreaming}`
+          );
+          
+          if (aiMsg.segments && aiMsg.segments.length > 0) {
+            aiMsg.segments.forEach((segment, i) => {
+              if (segment) {
+                console.debug(
+                  `  Segment ${i}: type=${segment.type}, content length=${segment.content?.length || 0}`
+                );
+              }
+            });
+          }
+          
+          return hasText || hasSegmentsWithContent;
+        }
+        return false;
+      }
     );
 
     // We only want to show the typing indicator if there's no content at all

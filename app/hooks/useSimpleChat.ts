@@ -356,10 +356,28 @@ export function useSimpleChat(sessionId: string | null) {
 
     // Log what segments we parsed
     console.debug(`🔍 PARSED ${segments.length} SEGMENTS for streaming message`);
+    
+    // Enhanced logging for debugging
     if (segments.length > 0) {
       segments.forEach((segment, i) => {
         console.debug(`  Segment ${i}: type=${segment.type}, length=${segment.content.length}`);
+        // Add sample of content for debugging
+        console.debug(`  Sample: "${segment.content.substring(0, Math.min(30, segment.content.length))}..."`);
       });
+    } else if (rawMessage.trim().length > 0) {
+      // If we have text but no segments, still update the message
+      // This ensures we don't wait too long before showing content
+      console.debug(`🔍 TEXT WITHOUT SEGMENTS: "${rawMessage.substring(0, Math.min(50, rawMessage.length))}..."`);
+      
+      // Create a simple markdown segment with the content if none were parsed
+      // This ensures content is shown immediately rather than waiting for a complete segment
+      if (segments.length === 0 && rawMessage.trim().length > 0) {
+        segments.push({
+          type: 'markdown',
+          content: rawMessage,
+        });
+        console.debug('🔍 CREATED FALLBACK MARKDOWN SEGMENT from raw message text');
+      }
     }
 
     // Use addAiMessage with isStreaming=true to update in-memory message

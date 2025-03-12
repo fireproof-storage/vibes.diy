@@ -172,6 +172,21 @@ export function useSessionMessages(sessionId: string | null) {
         console.log('useSessionMessages: Updating streaming message in memory only');
         const { segments, dependenciesString } = parseContent(rawMessage);
 
+        // Enhanced debugging for streaming message updates
+        console.debug(
+          `🔍 ADD_AI_MESSAGE (streaming=true): Raw length=${rawMessage.length}, segments=${segments.length}`
+        );
+        
+        if (segments.length > 0) {
+          console.debug('🔍 SEGMENTS CREATED DURING STREAMING:');
+          segments.forEach((segment, i) => {
+            console.debug(
+              `  Segment ${i}: type=${segment.type}, length=${segment.content.length}, ` +
+              `has content=${Boolean(segment.content && segment.content.trim().length > 0)}`
+            );
+          });
+        }
+
         setStreamingMessage({
           type: 'ai',
           text: rawMessage,
@@ -215,12 +230,42 @@ export function useSessionMessages(sessionId: string | null) {
       `🔍 COMBINING MESSAGES: db msgs=${messages.length}, streaming has ${streamingMessage.segments?.length || 0} segments`
     );
 
-    const hasStreamingContent =
+    // Enhanced check for streaming content - improved to catch even small valid content
+    let hasStreamingContent =
       streamingMessage.text.length > 0 &&
-      (streamingMessage.segments?.some((s) => s.content && s.content.trim().length > 0) || false);
+      (Array.isArray(streamingMessage.segments) && 
+       streamingMessage.segments.length > 0 && 
+       streamingMessage.segments.some(segment => 
+         segment && segment.content && segment.content.trim().length > 0
+       ));
 
-    // If the streaming message has no content, just return the database messages
-    if (!hasStreamingContent) {
+    // Enhanced debugging
+    console.debug(`🔍 STREAMING MESSAGE TEXT: "${streamingMessage.text.substring(0, 50)}..."`);
+    console.debug(`🔍 HAS STREAMING CONTENT: ${hasStreamingContent}`);
+    
+    if (streamingMessage.segments && streamingMessage.segments.length > 0) {
+      console.debug('🔍 STREAMING MESSAGE SEGMENTS:');
+      streamingMessage.segments.forEach((segment, i) => {
+        if (segment && segment.content) {
+          console.debug(
+            `  Segment ${i}: type=${segment.type}, content=${segment.content.substring(0, Math.min(30, segment.content.length))}...`
+          );
+        } else {
+          console.debug(`  Segment ${i}: type=${segment?.type || 'undefined'}, content=undefined or empty`);
+        }
+      });
+    }
+
+    // IMPORTANT: Even with apparently no content, if we're streaming and have text,
+    // include the message to ensure early updates are visible
+    if (!hasStreamingContent && streamingMessage.text.trim().length > 0) {
+      console.debug('🔍 STREAMING MESSAGE HAS TEXT BUT NO PARSED SEGMENTS WITH CONTENT');
+      console.debug('   Forcing inclusion of the streaming message to fix update lag');
+      
+      // Update streaming flag
+      streamingMessage.isStreaming = true;
+      hasStreamingContent = true;
+    } else if (!hasStreamingContent) {
       console.debug('🔍 STREAMING MESSAGE HAS NO CONTENT, skipping');
       return messages;
     }
@@ -256,6 +301,16 @@ export function useSessionMessages(sessionId: string | null) {
 
     // Log what we're about to set as the streaming message
     console.debug(`🔍 SETTING STREAMING MESSAGE: ${segments.length} segments`);
+    
+    // Enhanced debugging for segments
+    if (segments.length > 0) {
+      segments.forEach((segment, i) => {
+        console.debug(
+          `🔍 STREAMING SEGMENT ${i}: type=${segment.type}, content length=${segment.content.length}, ` +
+          `has content=${Boolean(segment.content && segment.content.trim().length > 0)}`
+        );
+      });
+    }
 
     setStreamingMessage({
       type: 'ai',
