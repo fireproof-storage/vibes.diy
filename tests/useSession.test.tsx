@@ -34,6 +34,25 @@ vi.mock('use-fireproof', () => {
         merge: mockMergeSession,
         save: mockSaveSession,
       }),
+      // Add useLiveQuery mock
+      useLiveQuery: () => ({
+        docs: [
+          {
+            _id: 'message-1',
+            type: 'user',
+            text: 'Test message',
+            session_id: 'test-session-id',
+            timestamp: Date.now(),
+          },
+          {
+            _id: 'message-2',
+            type: 'ai',
+            text: 'AI response',
+            session_id: 'test-session-id',
+            timestamp: Date.now(),
+          },
+        ],
+      }),
     }),
   };
 });
@@ -51,17 +70,17 @@ describe('useSession', () => {
     expect(result.current.session).toBeDefined();
     expect(result.current.session?._id).toBe('test-session-id');
     expect(result.current.session?.title).toBe('Test Session');
-    expect(result.current.loading).toBe(false);
-    expect(result.current.error).toBeNull();
+    expect(result.current.docs).toBeDefined();
+    expect(result.current.docs.length).toBe(2);
   });
 
   test('should create a new session', async () => {
-    const { result } = renderHook(() => useSession(null));
+    const { result } = renderHook(() => useSession(undefined));
 
     // Create a new session
     let sessionId;
     await act(async () => {
-      sessionId = await result.current.createSession('New Test Session');
+      sessionId = await result.current.createSession?.('New Test Session');
     });
 
     // Check if session was created
@@ -90,7 +109,7 @@ describe('useSession', () => {
     // Update metadata
     const metadata = { title: 'Metadata Title', timestamp: 12345 };
     await act(async () => {
-      await result.current.updateMetadata(metadata);
+      await result.current.updateMetadata?.(metadata);
     });
 
     // Verify merge and save were called with correct data

@@ -23,6 +23,7 @@ function MessageList({
         <Message
           key={msg._id || 'streaming' + i}
           message={msg}
+          isStreaming={isStreaming}
           isShrinking={isShrinking}
           isExpanding={isExpanding}
         />
@@ -39,6 +40,8 @@ function MessageList({
       console.error('Error scrolling:', error);
     }
   }, [messages, isStreaming]);
+
+  console.log('MessageList messages', messages);
 
   return (
     <div

@@ -8,6 +8,7 @@ interface MessageProps {
   message: ChatMessageDocument;
   isShrinking: boolean;
   isExpanding: boolean;
+  isStreaming: boolean;
 }
 
 // Helper function to get animation classes
@@ -16,20 +17,19 @@ const getAnimationClasses = (isShrinking: boolean, isExpanding: boolean): string
 };
 
 // AI Message component (simplified without animation handling)
-const AIMessage = memo(({ message }: { message: AiChatMessageDocument }) => {
-  const { segments } = parseContent(message.text);
+const AIMessage = memo(
+  ({ message, isStreaming }: { message: AiChatMessageDocument; isStreaming: boolean }) => {
+    const { segments } = parseContent(message.text);
 
-  // Cast to AiChatMessage to access isStreaming property
-  const enhancedMessage = message as unknown as AiChatMessage;
-
-  return (
-    <div className="mb-4 flex flex-row justify-start px-4">
-      <div className="max-w-[85%] rounded-lg bg-white px-4 py-2 text-gray-900 dark:bg-gray-800 dark:text-gray-100">
-        <StructuredMessage segments={segments || []} isStreaming={enhancedMessage.isStreaming} />
+    return (
+      <div className="mb-4 flex flex-row justify-start px-4">
+        <div className="max-w-[85%] rounded-lg bg-white px-4 py-2 text-gray-900 dark:bg-gray-800 dark:text-gray-100">
+          <StructuredMessage segments={segments || []} isStreaming={isStreaming} />
+        </div>
       </div>
-    </div>
-  );
-});
+    );
+  }
+);
 
 // User Message component (simplified without animation handling)
 const UserMessage = memo(({ message }: { message: ChatMessageDocument }) => {
@@ -45,11 +45,11 @@ const UserMessage = memo(({ message }: { message: ChatMessageDocument }) => {
 });
 
 // Main Message component that handles animation and decides which subcomponent to render
-const Message = memo(({ message, isShrinking, isExpanding }: MessageProps) => {
+const Message = memo(({ message, isShrinking, isExpanding, isStreaming }: MessageProps) => {
   return (
     <div className={getAnimationClasses(isShrinking, isExpanding)}>
       {message.type === 'ai' ? (
-        <AIMessage message={message as AiChatMessageDocument} />
+        <AIMessage message={message as AiChatMessageDocument} isStreaming={isStreaming} />
       ) : (
         <UserMessage message={message} />
       )}

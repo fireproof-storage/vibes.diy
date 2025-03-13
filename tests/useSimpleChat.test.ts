@@ -41,6 +41,23 @@ vi.mock('../app/prompts', () => ({
 
 // Mock the useSession hook
 vi.mock('../app/hooks/useSession', () => {
+  const mockDocs = [
+    {
+      _id: 'ai-message-1',
+      type: 'ai',
+      text: 'AI test message',
+      session_id: 'test-session-id',
+      timestamp: Date.now(),
+    },
+    {
+      _id: 'user-message-1',
+      type: 'user',
+      text: 'User test message',
+      session_id: 'test-session-id',
+      timestamp: Date.now(),
+    },
+  ];
+
   return {
     useSession: () => ({
       session: {
@@ -49,6 +66,7 @@ vi.mock('../app/hooks/useSession', () => {
         timestamp: Date.now(),
         type: 'session',
       },
+      docs: mockDocs,
       updateTitle: vi.fn().mockImplementation(async (title) => Promise.resolve()),
       loadSession: vi.fn().mockImplementation(async () => Promise.resolve()),
       createSession: vi.fn().mockImplementation(async () => Promise.resolve('new-session-id')),
@@ -57,6 +75,22 @@ vi.mock('../app/hooks/useSession', () => {
       error: null,
       addScreenshot: vi.fn(),
       database: {},
+      userMessage: {
+        text: '',
+        _id: 'user-message-draft',
+        type: 'user',
+        session_id: 'test-session-id',
+      },
+      aiMessage: {
+        text: '',
+        _id: 'ai-message-draft',
+        type: 'ai',
+        session_id: 'test-session-id',
+      },
+      mergeUserMessage: vi.fn().mockImplementation((data) => {}),
+      submitUserMessage: vi.fn().mockImplementation(() => Promise.resolve()),
+      mergeAiMessage: vi.fn().mockImplementation((data) => {}),
+      submitAiMessage: vi.fn().mockImplementation(() => Promise.resolve()),
     }),
   };
 });

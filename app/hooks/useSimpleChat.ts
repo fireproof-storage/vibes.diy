@@ -42,13 +42,11 @@ export function useSimpleChat(sessionId: string | undefined): ChatState {
     mergeUserMessage({ text: input });
   }
 
-  // Initialize system prompt - only called when needed
-
   // Process docs into messages for the UI
-  const messages = [aiMessage, ...docs].filter(
-    (doc: any) => doc.type === 'ai' || doc.type === 'user'
-  ) as unknown as ChatMessageDocument[];
+  const filteredDocs = docs.filter((doc: any) => doc.type === 'ai' || doc.type === 'user');
 
+  const messages = (aiMessage.text.length > 0 ? [aiMessage, ...filteredDocs] : filteredDocs) as unknown as ChatMessageDocument[];
+  
   function buildMessageHistory() {
     return messages.map((msg) => ({
       role: msg.type === 'user' ? ('user' as const) : ('assistant' as const),
@@ -96,7 +94,12 @@ export function useSimpleChat(sessionId: string | undefined): ChatState {
       .then(() => {
         const messageHistory = buildMessageHistory();
         // Use the locally captured system prompt value, not the state variable
-        return callOpenRouterAPI(CHOSEN_MODEL, currentSystemPrompt, messageHistory, userMessage.text);
+        return callOpenRouterAPI(
+          CHOSEN_MODEL,
+          currentSystemPrompt,
+          messageHistory,
+          userMessage.text
+        );
       })
       .then((response) => {
         return processStream(response, (content) => {
