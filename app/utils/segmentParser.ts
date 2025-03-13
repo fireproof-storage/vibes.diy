@@ -27,13 +27,16 @@ export function parseContent(text: string): {
     text = text.substring(text.indexOf(depsFormat2[1]) + depsFormat2[1].length).trim();
   }
 
-  // Look for code blocks delimited by ```js or ```jsx
-  const codeBlockMatch = text.match(/(.*?)\s*```(?:js|jsx)\s*\n([\s\S]*?)```\s*([\s\S]*)/s);
+  // First look for complete code blocks delimited by ```js or ```jsx and a closing ```
+  const completeCodeBlockMatch = text.match(/(.*?)\s*```(?:js|jsx)\s*\n([\s\S]*?)```\s*([\s\S]*)/s);
+  
+  // Then check for incomplete code blocks with just the opening delimiter
+  const incompleteCodeBlockMatch = text.match(/(.*?)\s*```(?:js|jsx)\s*\n([\s\S]*?)$/s);
 
-  if (codeBlockMatch) {
-    const beforeCode = codeBlockMatch[1]?.trim();
-    const codeContent = codeBlockMatch[2]?.trim();
-    const afterCode = codeBlockMatch[3]?.trim();
+  if (completeCodeBlockMatch) {
+    const beforeCode = completeCodeBlockMatch[1]?.trim();
+    const codeContent = completeCodeBlockMatch[2]?.trim();
+    const afterCode = completeCodeBlockMatch[3]?.trim();
 
     // Add the markdown content before the code block if it exists
     if (beforeCode) {
@@ -56,6 +59,26 @@ export function parseContent(text: string): {
       segments.push({
         type: 'markdown',
         content: afterCode,
+      });
+    }
+  } else if (incompleteCodeBlockMatch) {
+    // Handle incomplete code blocks (missing closing delimiter)
+    const beforeCode = incompleteCodeBlockMatch[1]?.trim();
+    const codeContent = incompleteCodeBlockMatch[2]?.trim();
+
+    // Add the markdown content before the code block if it exists
+    if (beforeCode) {
+      segments.push({
+        type: 'markdown',
+        content: beforeCode,
+      });
+    }
+
+    // Add the incomplete code block
+    if (codeContent) {
+      segments.push({
+        type: 'code',
+        content: codeContent,
       });
     }
   } else {
