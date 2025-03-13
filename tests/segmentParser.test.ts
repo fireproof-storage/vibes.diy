@@ -123,7 +123,7 @@ function SearchResults({ searches }) {
 
     // Test each fixture file
     Object.entries(fixtureExpectations).forEach(([filename, expectedTypes]) => {
-      const fixturePath = path.join(__dirname, filename);
+      const fixturePath = path.join(__dirname, 'fixtures', filename);
       expect(fs.existsSync(fixturePath)).toBe(true);
 
       const content = fs.readFileSync(fixturePath, 'utf-8');
