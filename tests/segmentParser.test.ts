@@ -119,6 +119,7 @@ function SearchResults({ searches }) {
       'hard-message.txt': ['markdown', 'code', 'markdown'],
       'long-message.txt': ['markdown', 'code', 'markdown'],
       'long-message2.txt': ['markdown', 'code', 'markdown'],
+      'prefix-easy.txt': ['markdown', 'code'],
     };
 
     // Test each fixture file

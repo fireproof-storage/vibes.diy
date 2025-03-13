@@ -1,0 +1,11 @@
+{"dependencies": {}}
+
+I'll create an "Exoplanet Tracker" app that lets users log and track potential exoplanets they've discovered or are interested in. This combines astronomy with note-taking in an orange synthwave aesthetic.
+
+```js
+import React, { useState } from "react";
+import { useFireproof } from "use-fireproof";
+
+export default function ExoplanetTracker() {
+  const { useDocument, useLiveQuery, database } = useFireproof("exoplanet-tracker");
+  const [activeTab, setActiveTab] = useState("list"); // UI state only
