@@ -1,46 +1,17 @@
-import { useEffect, useState, useCallback, useMemo, useRef } from 'react';
+import { useEffect, useState } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router';
 import ChatInterface from '../ChatInterface';
 import ResultPreview from '../components/ResultPreview/ResultPreview';
-import type { ChatMessageDocument } from '../types/chat';
-// import type { ChatMessage, AiChatMessage, Segment, SessionDocument } from '../types/chat';
 import { useSimpleChat } from '../hooks/useSimpleChat';
 import AppLayout from '../components/AppLayout';
+import { copyToClipboard, encodeStateToUrl, decodeStateFromUrl } from '../utils/sharing';
 
-// import { useSession } from '../hooks/useSession';
 
 export function meta() {
   return [
     { title: 'Fireproof App Builder' },
     { name: 'description', content: 'Build React components with AI' },
   ];
-}
-
-// Utility functions for URL state encoding/decoding
-function encodeStateToUrl(code: string, dependencies: Record<string, string>) {
-  try {
-    const stateObj = { code, dependencies };
-    const jsonStr = JSON.stringify(stateObj);
-    const encoded = btoa(encodeURIComponent(jsonStr));
-    return encoded;
-  } catch (error) {
-    console.error('Error encoding state to URL:', error);
-    return '';
-  }
-}
-
-function decodeStateFromUrl(encoded: string) {
-  try {
-    const jsonStr = decodeURIComponent(atob(encoded));
-    const stateObj = JSON.parse(jsonStr);
-    return {
-      code: stateObj.code || '',
-      dependencies: stateObj.dependencies || {},
-    };
-  } catch (error) {
-    console.error('Error decoding state from URL:', error);
-    return { code: '', dependencies: {} };
-  }
 }
 
 export default function UnifiedSession() {
@@ -53,36 +24,10 @@ export default function UnifiedSession() {
 
   const chatState = useSimpleChat(urlSessionId);
   
-  // Create a compatible version of chatState for ChatInterface
-  const compatibleChatState = useMemo(() => {
-    // Create a proper React.Dispatch<SetStateAction<string>> function
-    const setInputCompat = ((value: string | ((prevState: string) => string)) => {
-      const newValue = typeof value === 'function' ? value(chatState.input) : value;
-      chatState.setInput(newValue);
-    }) as React.Dispatch<React.SetStateAction<string>>;
-    
-    return {
-      docs: chatState.docs as unknown as ChatMessageDocument[],
-      input: chatState.input,
-      setInput: setInputCompat,
-      isStreaming: chatState.isStreaming,
-      inputRef: chatState.inputRef,
-      sendMessage: chatState.sendMessage,
-      title: chatState.title,
-      sessionId: chatState.sessionId
-    };
-  }, [chatState]);
-
-  // Log state for debugging
-  console.log('UnifiedSession: initialized with sessionId:', chatState.sessionId);
-  console.log('UnifiedSession: chatState has docs:', chatState.docs.length);
-  console.log('UnifiedSession: isStreaming:', chatState.isStreaming);
-
   // Check if there's a state parameter in the URL (for shared apps)
   useEffect(() => {
     const searchParams = new URLSearchParams(location.search);
     const encodedState = searchParams.get('state');
-
     if (encodedState) {
       const decodedState = decodeStateFromUrl(encodedState);
       if (decodedState.code) {
@@ -91,126 +36,28 @@ export default function UnifiedSession() {
     }
   }, [location.search]);
 
-  // Create a new session when loaded without sessionId
-  // useEffect(() => {
-  //   if (!urlSessionId ) {
-  //     // this should run when the stream completes
-  //   }
-  // }, [urlSessionId, navigate]);
-
-  // Helper function to extract dependencies from segments
-  // const getDependencies = useCallback(() => {
-  //   const lastAiMessage = [...chatState.messages]
-  //     .reverse()
-  //     .find((msg): msg is AiChatMessage => msg.type === 'ai');
-
-  //   if (lastAiMessage?.dependenciesString) {
-  //     return parseDependencies(lastAiMessage.dependenciesString);
-  //   }
-
-  //   return {};
-  // }, [chatState.messages]);
-
-  // Handle code generation from chat interface with stable callback reference
-  // const handleCodeGenerated = useCallback(
-  //   (code: string, dependencies: Record<string, string> = {}) => {
-  //     setState({
-  //       generatedCode: code,
-  //       dependencies,
-  //     });
-  //   },
-  //   []
-  // );
-
-  // Extract code and dependencies when AI message completes
-  // useEffect(() => {
-  //   // Find the last AI message that is not streaming
-  //   const lastAiMessage = [...chatState.messages]
-  //     .reverse()
-  //     .find((msg) => msg.type === 'ai' && !msg.isStreaming);
-
-  //   // If we found a completed AI message, extract code and dependencies
-  //   if (lastAiMessage && lastAiMessage.type === 'ai') {
-  //     const code = chatState.getCurrentCode();
-  //     if (code) {
-  //       // Extract dependencies from segments
-  //       const dependencies = getDependencies() || {};
-  //       handleCodeGenerated(code, dependencies);
-  //     }
-  //   }
-  // }, [chatState.messages, chatState.getCurrentCode, getDependencies, handleCodeGenerated]);
-
-  // Handle session creation
-  // const handleSessionCreated = useCallback(
-  //   (newSessionId: string) => {
-  //     setSessionId(newSessionId);
-  //     // Update URL without full page reload
-  //     navigate(`/session/${newSessionId}`, { replace: true });
-  //   },
-  //   [navigate]
-  // );
-
-  // Handle new chat creation
-  // const handleNewChat = useCallback(() => {
-
-  //   // Navigate to home to create a new session
-  //   navigate('/', { replace: true });
-
-  // }, [navigate]);
-
-  // Handle sharing functionality
   function handleShare() {
     if (!chatState.selectedCode.content) {
       alert('Generate an app first before sharing!');
       return;
     }
-
     const encoded = encodeStateToUrl(chatState.selectedCode.content, chatState.selectedDependencies);
     if (encoded) {
-      // Create a sharable URL with the encoded state
-      const shareUrl = `${window.location.origin}/shared?state=${encoded}`;
-
-      copyToClipboard(shareUrl);
+      copyToClipboard(`${window.location.origin}/shared?state=${encoded}`);
       setShareStatus('Share URL copied to clipboard!');
-
-      // Reset status after a brief delay
       setTimeout(() => {
         setShareStatus('');
       }, 3000);
     }
   }
 
-  // Copy text to clipboard
-  function copyToClipboard(text: string) {
-    if (navigator.clipboard) {
-      navigator.clipboard
-        .writeText(text)
-        .then(() => {
-          console.log('Text copied to clipboard');
-        })
-        .catch((err) => {
-          console.error('Failed to copy text: ', err);
-        });
-    } else {
-      // Fallback for older browsers
-      try {
-        const textArea = document.createElement('textarea');
-        textArea.value = text;
-        textArea.style.position = 'fixed';
-        document.body.appendChild(textArea);
-        textArea.focus();
-        textArea.select();
-        document.execCommand('copy');
-        document.body.removeChild(textArea);
-      } catch (err) {
-        console.error('Fallback: Could not copy text: ', err);
-      }
-    }
-  }
-
   return (
     <AppLayout
-      chatPanel={<ChatInterface chatState={compatibleChatState} />}
+      chatPanel={
+        <ChatInterface 
+          chatState={chatState}
+        />
+      }
       previewPanel={
         <ResultPreview
           sessionId={chatState.sessionId}

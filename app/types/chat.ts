@@ -34,7 +34,7 @@ export interface ChatInterfaceProps {
   chatState: {
     docs: ChatMessageDocument[];
     input: string;
-    setInput: React.Dispatch<React.SetStateAction<string>>;
+    setInput: (input: string) => void;
     isStreaming: boolean;
     inputRef: React.RefObject<HTMLTextAreaElement | null>;
     sendMessage: () => Promise<void>;

@@ -1,8 +1,8 @@
 import { useState, useRef, useCallback, useEffect, useMemo } from 'react';
-import type { ChatMessage, Segment } from '../types/chat';
+import type { Segment, ChatMessageDocument } from '../types/chat';
 import { makeBaseSystemPrompt } from '../prompts';
 import { parseContent, parseDependencies } from '../utils/segmentParser';
-import { useSession, type AiChatMessageDocument } from './useSession';
+import { useSession } from './useSession';
 import { generateTitle } from '../utils/titleGenerator';
 import { processStream, callOpenRouterAPI } from '../utils/streamHandler';
 
@@ -34,9 +34,10 @@ export function useSimpleChat(sessionId: string | undefined) {
   const selectedResponseDoc = (isStreaming
     ? aiMessage
     : docs.find((doc: any) => doc.type === 'ai' && doc._id === selectedResponseId) ||
-      docs.find((doc: any) => doc.type === 'ai')) as unknown as AiChatMessageDocument;
+      docs.find((doc: any) => doc.type === 'ai')) as unknown as ChatMessageDocument;
 
   function setInput(input: string) {
+    // is this is wrong I dont want to be right
     mergeUserMessage({ text: input });
   }
 
@@ -45,7 +46,7 @@ export function useSimpleChat(sessionId: string | undefined) {
   // Process docs into messages for the UI
   const messages = docs.filter(
     (doc: any) => doc.type === 'ai' || doc.type === 'user'
-  ) as unknown as ChatMessage[];
+  ) as unknown as ChatMessageDocument[];
 
   function buildMessageHistory() {
     return messages.map((msg) => ({
@@ -118,7 +119,7 @@ export function useSimpleChat(sessionId: string | undefined) {
 
   return {
     sessionId,
-    docs,
+    docs: messages,
     selectedResponseDoc,
     selectedSegments,
     selectedCode,
