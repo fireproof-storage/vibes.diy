@@ -8,24 +8,23 @@ export type Segment = {
 };
 
 // ===== Document Types =====
-// Base message document types for Fireproof storage
-export type UserChatMessageDocument = {
-  type: 'user';
+
+export type BaseChatMessageDocument = {
+  _id?: string;
   session_id: string;
   text: string;
   created_at: number;
 };
 
-export type AiChatMessageDocument = {
-  type: 'ai';
-  session_id: string;
-  text: string; // Raw text content
-  created_at: number;
+export type UserChatMessageDocument = BaseChatMessageDocument & {
+  type: 'user';
 };
 
-export type ChatMessageDocument = (UserChatMessageDocument | AiChatMessageDocument) & {
-  _id?: string;
+export type AiChatMessageDocument = BaseChatMessageDocument & {
+  type: 'ai';
 };
+
+export type ChatMessageDocument = UserChatMessageDocument | AiChatMessageDocument;
 
 /**
  * Base document interface with common properties

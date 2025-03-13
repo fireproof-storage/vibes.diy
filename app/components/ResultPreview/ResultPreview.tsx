@@ -19,7 +19,7 @@ function ResultPreview({
   const [activeView, setActiveView] = useState<'preview' | 'code'>(initialView);
   const [displayCode, setDisplayCode] = useState(code || defaultCode);
   const [bundlingComplete, setBundlingComplete] = useState(true);
-  const [showWelcome, setShowWelcome] = useState(true);
+
   const [lockCodeView, setLockCodeView] = useState(false);
   const filesRef = useRef<SandpackFiles>({
     '/index.html': {
@@ -31,6 +31,8 @@ function ResultPreview({
       active: true,
     },
   });
+
+  const showWelcome = code.length === 0;
 
   useEffect(() => {
     const handleMessage = (event: MessageEvent) => {
@@ -62,7 +64,6 @@ function ResultPreview({
         },
       };
 
-      setShowWelcome(false);
     }
   }, [code]);
 
@@ -82,7 +83,6 @@ function ResultPreview({
         bundlingComplete={bundlingComplete}
         isStreaming={isStreaming}
         onShare={onShare}
-        setShowWelcome={setShowWelcome}
       />
 
       {showWelcome ? (

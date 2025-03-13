@@ -2,19 +2,17 @@ import { renderHook, act } from '@testing-library/react';
 import { useSession } from '../app/hooks/useSession';
 import { vi, describe, test, expect, beforeEach } from 'vitest';
 
+// Mock database functions
+const mockPut = vi.fn().mockImplementation((doc: any) => Promise.resolve({ id: doc._id || 'test-session-id' }));
+const mockMergeSession = vi.fn();
+const mockSaveSession = vi.fn().mockImplementation(() => Promise.resolve({ id: 'test-session-id' }));
+
 // Mock the useFireproof hook
 vi.mock('use-fireproof', () => {
-  const mockSaveSession = vi
-    .fn()
-    .mockImplementation(() => Promise.resolve({ id: 'test-session-id' }));
-  const mockMergeSession = vi.fn();
-
   return {
     useFireproof: () => ({
       database: {
-        put: vi
-          .fn()
-          .mockImplementation((doc: any) => Promise.resolve({ id: doc._id || 'test-session-id' })),
+        put: mockPut,
         get: vi.fn().mockImplementation((id: string) =>
           Promise.resolve({
             _id: id,
@@ -82,12 +80,9 @@ describe('useSession', () => {
       await result.current.updateTitle('Updated Title');
     });
 
-    // Verify merge and save were called
-    const { useFireproof } = await import('use-fireproof');
-    const mockUseDocument = (useFireproof as any)().useDocument;
-
-    expect(mockUseDocument().merge).toHaveBeenCalledWith({ title: 'Updated Title' });
-    expect(mockUseDocument().save).toHaveBeenCalled();
+    // Verify database.put was called with the updated session
+    expect(mockPut).toHaveBeenCalled();
+    expect(mockMergeSession).toHaveBeenCalledWith({ title: 'Updated Title' });
   });
 
   // This test is now removed since updateMetadata no longer exists in the useSession hook

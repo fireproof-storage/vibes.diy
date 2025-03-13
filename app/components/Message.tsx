@@ -20,7 +20,7 @@ const getAnimationClasses = (isShrinking: boolean, isExpanding: boolean): string
 const AIMessage = memo(
   ({ message, isStreaming }: { message: AiChatMessageDocument; isStreaming: boolean }) => {
     const { segments } = parseContent(message.text);
-
+    console.log('segments', isStreaming, message._id, segments.length);
     return (
       <div className="mb-4 flex flex-row justify-start px-4">
         <div className="max-w-[85%] rounded-lg bg-white px-4 py-2 text-gray-900 dark:bg-gray-800 dark:text-gray-100">
