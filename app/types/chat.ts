@@ -74,22 +74,3 @@ export interface ChatInterfaceProps {
   onSessionCreated?: (newSessionId: string) => void;
   onNewChat?: () => void;
 }
-
-// Base message document interface from useSessionMessages
-export interface MessageDocument {
-  type: 'user-message' | 'ai-message';
-  session_id: string;
-  created_at: number;
-}
-
-// User message document interface from useSessionMessages
-export interface UserMessageDocument extends MessageDocument {
-  type: 'user-message';
-  prompt: string;
-}
-
-// AI message document interface from useSessionMessages
-export interface AiMessageDocument extends MessageDocument {
-  type: 'ai-message';
-  rawMessage: string;
-}
