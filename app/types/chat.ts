@@ -1,4 +1,5 @@
 import type { DocTypes } from 'use-fireproof';
+import type { GroupedSession } from '../hooks/sidebar/useSessionList';
 
 // ===== Content Segment Types =====
 export type Segment = {
@@ -26,12 +27,42 @@ export type ChatMessageDocument = (UserChatMessageDocument | AiChatMessageDocume
   _id?: string;
 };
 
+/**
+ * Base document interface with common properties
+ */
+export interface DocBase {
+  _id: string;
+}
+
+/**
+ * Document type for screenshot entries
+ */
+export interface ScreenshotDocument extends DocBase {
+  type: 'screenshot';
+  session_id: string;
+  _files?: {
+    screenshot: { file: () => Promise<File>; type: string };
+  };
+}
+
+// Note: We already have a SessionDocument interface, so merged the properties
 export interface SessionDocument extends DocTypes {
   _id?: string;
   type: 'session'; // Document type for Fireproof queries
   title?: string;
   created_at: number;
+  messages?: Array<{
+    text: string;
+    type: 'user' | 'ai';
+    code?: string;
+    dependencies?: Record<string, string>;
+  }>;
 }
+
+/**
+ * Union type for documents returned by query
+ */
+export type SessionOrScreenshot = SessionDocument | ScreenshotDocument;
 
 // ===== UI Enhanced Types =====
 // Enhanced types with additional UI properties
@@ -75,3 +106,13 @@ export interface ChatInterfaceProps {
   onSessionCreated?: (newSessionId: string) => void;
   onNewChat?: () => void;
 }
+
+/**
+ * Props for the SessionSidebar component
+ */
+export interface SessionSidebarProps {
+  isVisible: boolean;
+  onClose: () => void;
+}
+
+export type { GroupedSession };

@@ -23,6 +23,10 @@ export default function UnifiedSession() {
 
   const chatState = useSimpleChat(urlSessionId);
 
+
+  
+
+
   // Check if there's a state parameter in the URL (for shared apps)
   useEffect(() => {
     const searchParams = new URLSearchParams(location.search);

@@ -1,71 +1,9 @@
-import { useEffect, useRef, memo, useMemo, useState } from 'react';
+import { useEffect, useRef, memo, useMemo } from 'react';
 import { Link } from 'react-router';
-import { useSessionList, type GroupedSession } from '../hooks/sidebar/useSessionList';
-
-function ImgFile({
-  file,
-  alt,
-  className,
-}: {
-  file: { file: () => Promise<File>; type: string };
-  alt: string;
-  className: string;
-}) {
-  const [imgDataUrl, setImgDataUrl] = useState('');
-  useEffect(() => {
-    if (file.type && /image/.test(file.type)) {
-      file.file().then((file: File) => {
-        const src = URL.createObjectURL(file);
-        setImgDataUrl(src);
-        return () => URL.revokeObjectURL(src);
-      });
-    }
-  }, [file]);
-  return imgDataUrl ? (
-    <img className={`${className} max-h-60 max-w-full object-contain`} alt={alt} src={imgDataUrl} />
-  ) : null;
-}
-
-// Add these type definitions at the top of the file
-interface DocBase {
-  _id: string;
-}
-
-interface ScreenshotDocument extends DocBase {
-  type: 'screenshot';
-  session_id: string;
-  _files?: {
-    screenshot: { file: () => Promise<File>; type: string };
-  };
-}
-
-// Modify SessionDocument to include optional type
-interface SessionDocument extends DocBase {
-  type?: 'session'; // Make it optional since existing docs might not have it
-  title?: string;
-  created_at: number;
-  messages?: Array<{
-    text: string;
-    type: 'user' | 'ai';
-    code?: string;
-    dependencies?: Record<string, string>;
-  }>;
-}
-
-// Union type for documents returned by query
-type SessionOrScreenshot = SessionDocument | ScreenshotDocument;
-
-// Helper function to encode titles for URLs
-function encodeTitle(title: string): string {
-  return encodeURIComponent(title || 'untitled-chat')
-    .toLowerCase()
-    .replace(/%20/g, '-');
-}
-
-interface SessionSidebarProps {
-  isVisible: boolean;
-  onClose: () => void;
-}
+import { useSessionList } from '../hooks/sidebar/useSessionList';
+import { ImgFile } from './SessionSidebar/ImgFile';
+import { encodeTitle } from './SessionSidebar/utils';
+import type { SessionSidebarProps, SessionOrScreenshot, SessionDocument } from '../types/chat';
 
 /**
  * Component that displays a collapsible sidebar with chat session history
