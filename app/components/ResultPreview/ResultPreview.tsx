@@ -19,6 +19,7 @@ function ResultPreview({
   const [activeView, setActiveView] = useState<'preview' | 'code'>(initialView);
   const [displayCode, setDisplayCode] = useState(code || defaultCode);
   const [bundlingComplete, setBundlingComplete] = useState(true);
+  const [previewReady, setPreviewReady] = useState(false);
 
   const [lockCodeView, setLockCodeView] = useState(false);
   const filesRef = useRef<SandpackFiles>({
@@ -38,6 +39,7 @@ function ResultPreview({
     const handleMessage = ({ data }: MessageEvent) => {
       if (data) {
         if (data.type === 'preview-loaded') {
+          setPreviewReady(true);
           setActiveView('preview');
         } else if (data.type === 'screenshot' && data.screenshot) {
           if (onScreenshotCaptured) {
@@ -78,6 +80,7 @@ function ResultPreview({
 
       <ResultPreviewToolbar
         showWelcome={showWelcome}
+        previewReady={previewReady}
         activeView={activeView}
         setActiveView={setActiveView}
         bundlingComplete={bundlingComplete}

@@ -2,6 +2,7 @@ import React from 'react';
 
 interface ResultPreviewToolbarProps {
   showWelcome: boolean;
+  previewReady: boolean;
   activeView: 'preview' | 'code';
   setActiveView: (view: 'preview' | 'code') => void;
   bundlingComplete: boolean;
@@ -11,6 +12,7 @@ interface ResultPreviewToolbarProps {
 
 const ResultPreviewToolbar: React.FC<ResultPreviewToolbarProps> = ({
   showWelcome,
+  previewReady,
   activeView,
   setActiveView,
   bundlingComplete,
@@ -19,7 +21,7 @@ const ResultPreviewToolbar: React.FC<ResultPreviewToolbarProps> = ({
 }) => {
   return (
     <div className="border-light-decorative-00 dark:border-dark-decorative-00 bg-light-background-00 dark:bg-dark-background-00 flex min-h-[4rem] items-center justify-between border-b px-6 py-4">
-      {!showWelcome ? (
+      {!showWelcome && previewReady ? (
         <div className="bg-light-decorative-00 dark:bg-dark-decorative-00 flex space-x-1 rounded-lg p-1 shadow-sm">
           <button
             type="button"
