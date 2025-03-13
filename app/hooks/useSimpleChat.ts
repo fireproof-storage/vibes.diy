@@ -22,7 +22,8 @@ export function useSimpleChat(sessionId: string | undefined): ChatState {
     mergeUserMessage,
     submitUserMessage,
     mergeAiMessage,
-    submitAiMessage,
+    saveAiMessage,
+    database,
     aiMessage,
   } = useSession(sessionId);
   // const [input, setInput] = useState<string>('');
@@ -105,18 +106,21 @@ export function useSimpleChat(sessionId: string | undefined): ChatState {
       })
       .then((response) => {
         return processStream(response, (content) => {
-          console.log('>', content);
           streamBufferRef.current += content;
+          console.log('>', streamBufferRef.current.length);
           mergeAiMessage({ text: streamBufferRef.current });
         });
       })
-      .then(() => {
-        console.log('saving final message', streamBufferRef.current);
-        mergeAiMessage({ text: streamBufferRef.current });
+      .then(async () => {
+        console.log('saving final message', streamBufferRef.current.length);
+        aiMessage.text = streamBufferRef.current;
+        // mergeAiMessage({ text: streamBufferRef.current });
         console.log('ai message', aiMessage);
-        return submitAiMessage();
+        const ok = await database.put(aiMessage);
+        console.log('ok', ok);
       })
       .then(() => {
+        console.log('generating title', aiMessage.text.length);
         const { segments } = parseContent(aiMessage.text);
         if (!session?.title) {
           return generateTitle(segments, CHOSEN_MODEL).then(updateTitle);

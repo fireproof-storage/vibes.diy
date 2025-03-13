@@ -19,7 +19,7 @@ export function useSession(routedSessionId: string | undefined) {
     (routedSessionId
       ? { _id: routedSessionId }
       : {
-          _id: `${Date.now().toString(36).padStart(9, '0')}${Math.random().toString(36).slice(2, 11).padEnd(9, '0')}`,
+          _id: `${Date.now().toString(36).padStart(9, 'f')}${Math.random().toString(36).slice(2, 11).padEnd(9, '0')}`,
           type: 'session',
           title: '',
           created_at: Date.now(),
@@ -94,6 +94,7 @@ export function useSession(routedSessionId: string | undefined) {
   return {
     session,
     docs,
+    database,
     updateTitle,
     addScreenshot,
     userMessage,
@@ -103,5 +104,6 @@ export function useSession(routedSessionId: string | undefined) {
     aiMessage,
     submitAiMessage,
     mergeAiMessage,
+    saveAiMessage,
   };
 }
