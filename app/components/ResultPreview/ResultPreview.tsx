@@ -21,7 +21,7 @@ function ResultPreview({
   const [previewReady, setPreviewReady] = useState(false);
 
   const filesRef = useRef<SandpackFiles>({});
-  const showWelcome = !code || code.length === 0;
+  const showWelcome = !isStreaming && (!code || code.length === 0);
 
   const sandpackKey = useMemo(() => {
     if (showWelcome) return `${sessionId || 'default'}-welcome`;

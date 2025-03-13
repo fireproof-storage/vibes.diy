@@ -12,6 +12,7 @@ const SandpackScrollController: React.FC<SandpackScrollControllerProps> = ({ isS
   const animationFrameRef = useRef<number | null>(null);
   const isHighlighting = useRef(false);
   const lastLineRef = useRef<HTMLElement | null>(null);
+  const scrollThreshold = useRef(40); // Smaller threshold for more responsive scrolling
 
   useEffect(() => {
     let primaryScroller: HTMLElement | null = null;
@@ -22,7 +23,7 @@ const SandpackScrollController: React.FC<SandpackScrollControllerProps> = ({ isS
       style.textContent = `
         .cm-line-highlighted {
           position: relative !important;
-          border-left: 3px solid rgba(0, 137, 249, 0.4) !important;
+          border-left: 3px solid rgba(0, 137, 249, 0.6) !important; /* Slightly more visible border */
           color: inherit !important;
         }
         
@@ -33,17 +34,22 @@ const SandpackScrollController: React.FC<SandpackScrollControllerProps> = ({ isS
           left: 0 !important;
           right: 0 !important;
           bottom: 0 !important;
-          background: linear-gradient(60deg, rgba(0, 128, 255, 0.15), rgba(224, 255, 255, 0.25), rgba(0, 183, 255, 0.15)) !important;
-          background-size: 200% 200% !important;
-          animation: sparkleFlow 2s ease-in-out infinite !important;
+          background: linear-gradient(
+            90deg, 
+            rgba(0, 128, 255, 0.12) 0%, 
+            rgba(224, 255, 255, 0.2) 50%, 
+            rgba(0, 183, 255, 0.12) 100%
+          ) !important;
+          background-size: 200% 100% !important;
+          animation: sparkleFlow 1.8s ease-in-out infinite !important; /* Slightly faster animation */
           pointer-events: none !important;
           z-index: -1 !important;
         }
         
         @keyframes sparkleFlow {
-          0% { background-position: 0% 50%; opacity: 0.9; }
-          50% { background-position: 100% 50%; opacity: 0.7; }
-          100% { background-position: 0% 50%; opacity: 0.5; }
+          0% { background-position: 0% 50%; opacity: 0.7; }
+          50% { background-position: 100% 50%; opacity: 0.85; } /* Higher peak opacity */
+          100% { background-position: 0% 50%; opacity: 0.7; }
         }
       `;
       document.head.appendChild(style);
@@ -53,55 +59,75 @@ const SandpackScrollController: React.FC<SandpackScrollControllerProps> = ({ isS
       if (!primaryScroller) return;
       isScrolling.current = true;
 
-      // First immediate jump to get close
-      primaryScroller.scrollTop = primaryScroller.scrollHeight;
-      
-      // Then use requestAnimationFrame for smooth final adjustment
+      // Use requestAnimationFrame for smoother scrolling
       requestAnimationFrame(() => {
-        if (primaryScroller) {
-          // Use scrollIntoView for smoother scrolling
-          const lastElement = primaryScroller.lastElementChild;
-          if (lastElement && lastElement instanceof HTMLElement) {
-            lastElement.scrollIntoView({ block: 'end' });
-          } else {
-            primaryScroller.scrollTop = primaryScroller.scrollHeight;
-          }
-          
-          lastScrollHeight.current = primaryScroller.scrollHeight;
-          lastScrollPosition.current = primaryScroller.scrollTop;
+        if (!primaryScroller) {
+          isScrolling.current = false;
+          return;
         }
-        isScrolling.current = false;
+        
+        // First immediate jump to get close
+        primaryScroller.scrollTop = primaryScroller.scrollHeight;
+        
+        // Then use another requestAnimationFrame for smooth final adjustment
+        requestAnimationFrame(() => {
+          if (primaryScroller) {
+            // Use scrollIntoView for smoother scrolling
+            const lastElement = primaryScroller.lastElementChild;
+            if (lastElement && lastElement instanceof HTMLElement) {
+              lastElement.scrollIntoView({ block: 'end', behavior: 'auto' });
+            } else {
+              primaryScroller.scrollTop = primaryScroller.scrollHeight;
+            }
+            
+            lastScrollHeight.current = primaryScroller.scrollHeight;
+            lastScrollPosition.current = primaryScroller.scrollTop;
+          }
+          isScrolling.current = false;
+        });
       });
     };
 
     const highlightLastLine = () => {
       if (!primaryScroller || !isStreaming) return;
 
-      // Remove highlight from previous line if it exists
-      if (lastLineRef.current) {
-        lastLineRef.current.classList.remove('cm-line-highlighted');
-        lastLineRef.current = null;
-      }
+      // Only update if streaming is active
+      if (!isStreaming) return;
 
-      // Find all code lines
+      // Avoid duplicate DOM operations
       const lines = Array.from(document.querySelectorAll('.cm-line'));
       if (lines.length === 0) return;
 
       // Find the last non-empty line
       let lastLine = null;
+      let lastLineIndex = -1;
+
       for (let i = lines.length - 1; i >= 0; i--) {
         const line = lines[i] as HTMLElement;
         const content = line.textContent || '';
         if (content.trim() && !content.includes('END OF CODE')) {
           lastLine = line;
+          lastLineIndex = i;
           break;
         }
       }
 
-      // Apply highlight to the found line
-      if (lastLine) {
+      // Only update DOM if necessary (either no line highlighted or different line needs highlighting)
+      if (lastLine && (lastLineRef.current !== lastLine)) {
+        // Remove highlight from previous line if it exists and is different
+        if (lastLineRef.current) {
+          lastLineRef.current.classList.remove('cm-line-highlighted');
+        }
+        
+        // Apply highlight to the found line
         lastLine.classList.add('cm-line-highlighted');
         lastLineRef.current = lastLine;
+        
+        // If this line is near the bottom, ensure it's visible
+        const isNearEnd = lastLineIndex > lines.length - 5;
+        if (isNearEnd && !hasUserScrolled.current) {
+          scrollToBottom();
+        }
       }
     };
 
@@ -132,8 +158,16 @@ const SandpackScrollController: React.FC<SandpackScrollControllerProps> = ({ isS
     const setupContentObserver = () => {
       if (!primaryScroller) return;
 
-      const contentObserver = new MutationObserver(() => {
+      const contentObserver = new MutationObserver((mutations) => {
         if (!primaryScroller) return;
+
+        // Check if we've had any meaningful content changes
+        const hasContentChanged = mutations.some(mutation => {
+          return mutation.type === 'childList' || 
+                 (mutation.type === 'characterData' && mutation.target.textContent?.trim().length);
+        });
+
+        if (!hasContentChanged) return;
 
         const newHeight = primaryScroller.scrollHeight;
         
@@ -142,12 +176,15 @@ const SandpackScrollController: React.FC<SandpackScrollControllerProps> = ({ isS
           startHighlighting();
         }
 
-        // More aggressive auto-scrolling during streaming
-        if (newHeight !== lastScrollHeight.current || isStreaming) {
+        // More intelligent auto-scrolling during streaming
+        if (newHeight !== lastScrollHeight.current) {
           const isNearBottom =
-            primaryScroller.scrollTop + primaryScroller.clientHeight > lastScrollHeight.current - 50;
+            primaryScroller.scrollTop + primaryScroller.clientHeight > 
+            lastScrollHeight.current - scrollThreshold.current;
 
-          if (!hasUserScrolled.current || isNearBottom || isStreaming) {
+          // Auto-scroll if user hasn't scrolled up or is near bottom
+          if (!hasUserScrolled.current || isNearBottom || 
+              (isStreaming && primaryScroller.scrollTop > lastScrollPosition.current)) {
             scrollToBottom();
           }
         }
@@ -159,17 +196,22 @@ const SandpackScrollController: React.FC<SandpackScrollControllerProps> = ({ isS
         if (isScrolling.current || !primaryScroller) return;
 
         const currentPosition = primaryScroller.scrollTop;
-        if (Math.abs(currentPosition - lastScrollPosition.current) > 10) {
+        const scrollChange = Math.abs(currentPosition - lastScrollPosition.current);
+        
+        // Detect manual scrolling with more sensitivity
+        if (scrollChange > 5) {
           hasUserScrolled.current = true;
-          lastScrollPosition.current = currentPosition;
-
+          
           // Reset user scroll flag if they've scrolled close to the bottom
-          if (
+          const isAtBottom = 
             primaryScroller.scrollTop + primaryScroller.clientHeight >=
-            primaryScroller.scrollHeight - 50
-          ) {
+            primaryScroller.scrollHeight - scrollThreshold.current;
+            
+          if (isAtBottom) {
             hasUserScrolled.current = false;
           }
+          
+          lastScrollPosition.current = currentPosition;
         }
       };
 

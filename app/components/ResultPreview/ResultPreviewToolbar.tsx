@@ -41,7 +41,7 @@ const ResultPreviewToolbar: React.FC<ResultPreviewToolbarProps> = ({
   const showSwitcher = code.length > 0;
 
   return (
-    <div className="border-light-decorative-00 dark:border-dark-decorative-00 bg-light-background-00 dark:bg-dark-background-00 flex min-h-[4rem] items-center justify-between border-b px-6 py-4">
+    <div className="border-light-decorative-00 dark:border-dark-decorative-00 bg-light-background-00 dark:bg-dark-background-00 flex h-[4rem] items-center justify-between border-b px-6 py-4">
       {showSwitcher ? (
         <div className="bg-light-decorative-00 dark:bg-dark-decorative-00 flex space-x-1 rounded-lg p-1 shadow-sm">
           <button
