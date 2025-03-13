@@ -10,6 +10,8 @@ const SandpackScrollController: React.FC<SandpackScrollControllerProps> = ({ isS
   const isScrolling = useRef(false);
   const hasUserScrolled = useRef(false);
   const highlightIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const animationFrameRef = useRef<number | null>(null);
+  const isHighlighting = useRef(false);
 
   useEffect(() => {
     let primaryScroller: HTMLElement | null = null;
@@ -20,7 +22,7 @@ const SandpackScrollController: React.FC<SandpackScrollControllerProps> = ({ isS
       style.textContent = `
         .cm-line-highlighted {
           position: relative !important;
-          border-left: 3px solid rgba(0, 137, 249, 0.27) !important;
+          border-left: 3px solid rgba(0, 137, 249, 0.4) !important;
           color: inherit !important;
         }
         
@@ -45,7 +47,7 @@ const SandpackScrollController: React.FC<SandpackScrollControllerProps> = ({ isS
         }
         
         @keyframes sparkleAppear {
-          0% { opacity: 0.8; }
+          0% { opacity: 0.9; }
           50% { opacity: 0.8; }
           100% { opacity: 0.1; }
         }
@@ -91,6 +93,16 @@ const SandpackScrollController: React.FC<SandpackScrollControllerProps> = ({ isS
       }
     };
 
+    // Use requestAnimationFrame for highlighting
+    const animateHighlight = () => {
+      if (!isStreaming) return;
+      
+      highlightLastLine();
+      
+      // Schedule next frame
+      animationFrameRef.current = requestAnimationFrame(animateHighlight);
+    };
+
     const checkForScroller = setInterval(() => {
       if (primaryScroller) {
         clearInterval(checkForScroller);
@@ -116,7 +128,8 @@ const SandpackScrollController: React.FC<SandpackScrollControllerProps> = ({ isS
         const newHeight = primaryScroller.scrollHeight;
 
         if (isStreaming) {
-          highlightLastLine();
+          // No need to call highlightLastLine here as it's continuously
+          // handled by requestAnimationFrame
         } else {
           document.querySelectorAll('.cm-line-highlighted').forEach((el) => {
             el.classList.remove('cm-line-highlighted');
@@ -162,19 +175,19 @@ const SandpackScrollController: React.FC<SandpackScrollControllerProps> = ({ isS
         primaryScroller.addEventListener('scroll', handleScroll);
 
         if (isStreaming) {
-          highlightLastLine();
+          // Start animation frame-based highlighting
+          if (!isHighlighting.current) {
+            isHighlighting.current = true;
+            animationFrameRef.current = requestAnimationFrame(animateHighlight);
+          }
         }
-      }
-
-      if (isStreaming) {
-        highlightIntervalRef.current = setInterval(highlightLastLine, 10);
       }
 
       return () => {
         clearInterval(checkForScroller);
-        if (highlightIntervalRef.current) {
-          clearInterval(highlightIntervalRef.current);
-          highlightIntervalRef.current = null;
+        if (animationFrameRef.current) {
+          cancelAnimationFrame(animationFrameRef.current);
+          animationFrameRef.current = null;
         }
         contentObserver.disconnect();
         primaryScroller?.removeEventListener('scroll', handleScroll);
@@ -185,17 +198,21 @@ const SandpackScrollController: React.FC<SandpackScrollControllerProps> = ({ isS
 
     return () => {
       clearInterval(checkForScroller);
-      if (highlightIntervalRef.current) {
-        clearInterval(highlightIntervalRef.current);
-        highlightIntervalRef.current = null;
+      if (animationFrameRef.current) {
+        cancelAnimationFrame(animationFrameRef.current);
+        animationFrameRef.current = null;
+        isHighlighting.current = false;
       }
     };
   }, [isStreaming]);
 
   useEffect(() => {
-    if (!isStreaming && highlightIntervalRef.current) {
-      clearInterval(highlightIntervalRef.current);
-      highlightIntervalRef.current = null;
+    if (!isStreaming) {
+      if (animationFrameRef.current) {
+        cancelAnimationFrame(animationFrameRef.current);
+        animationFrameRef.current = null;
+        isHighlighting.current = false;
+      }
 
       document.querySelectorAll('.cm-line-highlighted').forEach((el) => {
         el.classList.remove('cm-line-highlighted');
