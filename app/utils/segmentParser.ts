@@ -26,7 +26,7 @@ export function parseContent(text: string): {
     // Remove the dependencies part from the text
     text = text.substring(text.indexOf(depsFormat2[1]) + depsFormat2[1].length).trim();
   }
-  
+
   // Look for code blocks delimited by ```js or ```jsx
   const codeBlockMatch = text.match(/(.*?)\s*```(?:js|jsx)\s*\n([\s\S]*?)```\s*([\s\S]*)/s);
 
@@ -34,7 +34,7 @@ export function parseContent(text: string): {
     const beforeCode = codeBlockMatch[1]?.trim();
     const codeContent = codeBlockMatch[2]?.trim();
     const afterCode = codeBlockMatch[3]?.trim();
-    
+
     // Add the markdown content before the code block if it exists
     if (beforeCode) {
       segments.push({
@@ -42,7 +42,7 @@ export function parseContent(text: string): {
         content: beforeCode,
       });
     }
-    
+
     // Add the code block
     if (codeContent) {
       segments.push({
@@ -50,7 +50,7 @@ export function parseContent(text: string): {
         content: codeContent,
       });
     }
-    
+
     // Add the markdown content after the code block if it exists
     if (afterCode) {
       segments.push({

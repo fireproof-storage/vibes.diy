@@ -104,7 +104,6 @@ export interface ChatInterfaceProps {
   chatState: ChatState;
   sessionId?: string | null;
   onSessionCreated?: (newSessionId: string) => void;
-  onNewChat?: () => void;
 }
 
 /**

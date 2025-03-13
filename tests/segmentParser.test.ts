@@ -117,18 +117,18 @@ function SearchResults({ searches }) {
       'easy-message3.txt': ['markdown', 'code', 'markdown'],
       'hard-message.txt': ['markdown', 'code', 'markdown'],
       'long-message.txt': ['markdown', 'code', 'markdown'],
-      'long-message2.txt': ['markdown', 'code', 'markdown']
+      'long-message2.txt': ['markdown', 'code', 'markdown'],
     };
-    
+
     // Test each fixture file
     Object.entries(fixtureExpectations).forEach(([filename, expectedTypes]) => {
       const fixturePath = path.join(__dirname, filename);
       expect(fs.existsSync(fixturePath)).toBe(true);
-      
+
       const content = fs.readFileSync(fixturePath, 'utf-8');
       const result = parseContent(content);
-      const actualTypes = result.segments.map(segment => segment.type);
-      
+      const actualTypes = result.segments.map((segment) => segment.type);
+
       expect([filename, ...actualTypes]).toEqual([filename, ...expectedTypes]);
     });
   });

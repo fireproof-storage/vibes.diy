@@ -1,0 +1,311 @@
+{"dependencies": {}}
+
+## Fireproof Fractal Explorer
+
+Here's a fractal explorer app where users can save interesting fractal configurations they discover. The app uses the Mandelbrot set algorithm with customizable parameters.
+
+```js
+import React, { useRef, useEffect, useState } from "react";
+import { useFireproof } from "use-fireproof";
+
+export default function FractalExplorer() {
+  const { database, useLiveQuery, useDocument } = useFireproof("fractal-explorer");
+  const canvasRef = useRef(null);
+  const [dimensions, setDimensions] = useState({ width: 400, height: 400 });
+  const [selectedFractal, setSelectedFractal] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
+  
+  // For new fractal configurations
+  const { doc, merge, submit } = useDocument({
+    name: "",
+    type: "fractal",
+    createdAt: Date.now(),
+    maxIterations: 100,
+    centerX: -0.5,
+    centerY: 0,
+    zoom: 2.5,
+    colorShift: 0
+  });
+
+  // Get saved fractals
+  const { docs: savedFractals } = useLiveQuery("type", { key: "fractal", descending: true });
+
+  // Generate the fractal
+  const generateFractal = (config) => {
+    setIsLoading(true);
+    const canvas = canvasRef.current;
+    const ctx = canvas.getContext("2d");
+    const { width, height } = canvas;
+    const imageData = ctx.createImageData(width, height);
+    const data = imageData.data;
+    
+    const { maxIterations, centerX, centerY, zoom, colorShift } = config;
+    
+    // Calculate the fractal (Mandelbrot set)
+    for (let x = 0; x < width; x++) {
+      for (let y = 0; y < height; y++) {
+        const real = centerX + (x - width / 2) * (3.5 / zoom) / width;
+        const imag = centerY + (y - height / 2) * (3.5 / zoom) / height;
+        
+        let zr = 0;
+        let zi = 0;
+        let n = 0;
+        
+        while (n < maxIterations && zr * zr + zi * zi < 4) {
+          const newZr = zr * zr - zi * zi + real;
+          zi = 2 * zr * zi + imag;
+          zr = newZr;
+          n++;
+        }
+        
+        const i = (y * width + x) * 4;
+        if (n === maxIterations) {
+          data[i] = 0;
+          data[i + 1] = 0;
+          data[i + 2] = 0;
+        } else {
+          // Colorize based on iteration count
+          const hue = (n / maxIterations * 360 + colorShift) % 360;
+          const saturation = 1;
+          const value = n < maxIterations ? 1.0 : 0;
+          
+          // HSV to RGB conversion
+          const c = value * saturation;
+          const h = hue / 60;
+          const x = c * (1 - Math.abs((h % 2) - 1));
+          
+          let r, g, b;
+          if (h >= 0 && h < 1) { [r, g, b] = [c, x, 0]; }
+          else if (h >= 1 && h < 2) { [r, g, b] = [x, c, 0]; }
+          else if (h >= 2 && h < 3) { [r, g, b] = [0, c, x]; }
+          else if (h >= 3 && h < 4) { [r, g, b] = [0, x, c]; }
+          else if (h >= 4 && h < 5) { [r, g, b] = [x, 0, c]; }
+          else { [r, g, b] = [c, 0, x]; }
+          
+          const m = value - c;
+          [r, g, b] = [r + m, g + m, b + m];
+          
+          data[i] = r * 255;
+          data[i + 1] = g * 255;
+          data[i + 2] = b * 255;
+        }
+        data[i + 3] = 255; // Alpha
+      }
+    }
+    
+    ctx.putImageData(imageData, 0, 0);
+    setIsLoading(false);
+  };
+
+  // Generate demo data
+  const addDemoData = async () => {
+    await database.put({
+      name: "Classic Mandelbrot",
+      type: "fractal",
+      createdAt: Date.now(),
+      maxIterations: 80,
+      centerX: -0.5,
+      centerY: 0,
+      zoom: 2.5,
+      colorShift: 0
+    });
+    await database.put({
+      name: "Spiral Pattern",
+      type: "fractal",
+      createdAt: Date.now(),
+      maxIterations: 150,
+      centerX: -0.761574,
+      centerY: -0.0847596,
+      zoom: 100,
+      colorShift: 120
+    });
+    await database.put({
+      name: "Deep Zoom",
+      type: "fractal",
+      createdAt: Date.now(),
+      maxIterations: 200,
+      centerX: -1.7499599955,
+      centerY: 0.00000075,
+      zoom: 10000,
+      colorShift: 240
+    });
+  };
+
+  // Handle form changes
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    merge({ [name]: name === "name" ? value : parseFloat(value) });
+  };
+
+  // Handle loading saved fractal
+  const handleLoadFractal = (fractal) => {
+    setSelectedFractal(fractal);
+    merge(fractal);
+  };
+
+  // Update canvas when parameters change
+  useEffect(() => {
+    generateFractal(doc);
+  }, [doc.maxIterations, doc.centerX, doc.centerY, doc.zoom, doc.colorShift]);
+
+  // Adjust canvas to parent container
+  useEffect(() => {
+    const updateDimensions = () => {
+      const container = canvasRef.current?.parentElement;
+      if (container) {
+        const { width } = container.getBoundingClientRect();
+        setDimensions({ width, height: width });
+      }
+    };
+    
+    updateDimensions();
+    window.addEventListener("resize", updateDimensions);
+    return () => window.removeEventListener("resize", updateDimensions);
+  }, []);
+
+  return (
+    <div className="max-w-5xl mx-auto p-4 bg-black text-orange-300">
+      <h1 className="text-3xl font-bold mb-4 text-orange-500">Fractal Explorer</h1>
+      <p className="mb-6 italic">
+        <i>Explore the infinite world of Mandelbrot fractals! Adjust parameters like center position, zoom level, and color shift to discover unique patterns. When you find something beautiful, save it with a name to your collection. Use the controls below to manipulate the fractal, then click "Save Configuration" to store it.</i>
+      </p>
+      
+      <div className="flex flex-col md:flex-row gap-6">
+        <div className="md:w-3/5">
+          <div className="relative bg-gray-900 rounded-lg overflow-hidden shadow-lg border-2 border-orange-500">
+            <canvas 
+              ref={canvasRef} 
+              width={dimensions.width} 
+              height={dimensions.height} 
+              className="w-full"
+            />
+            {isLoading && (
+              <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50">
+                <div className="text-orange-400 text-xl">Rendering...</div>
+              </div>
+            )}
+          </div>
+          
+          <div className="mt-4 grid grid-cols-2 gap-3">
+            <div className="bg-gray-900 p-3 rounded-lg">
+              <label className="block text-sm mb-1">Center X</label>
+              <input
+                type="number"
+                name="centerX"
+                value={doc.centerX}
+                onChange={handleChange}
+                step="0.1"
+                className="w-full bg-gray-800 text-orange-300 p-2 rounded"
+              />
+            </div>
+            <div className="bg-gray-900 p-3 rounded-lg">
+              <label className="block text-sm mb-1">Center Y</label>
+              <input
+                type="number"
+                name="centerY"
+                value={doc.centerY}
+                onChange={handleChange}
+                step="0.1"
+                className="w-full bg-gray-800 text-orange-300 p-2 rounded"
+              />
+            </div>
+            <div className="bg-gray-900 p-3 rounded-lg">
+              <label className="block text-sm mb-1">Zoom Level</label>
+              <input
+                type="number"
+                name="zoom"
+                value={doc.zoom}
+                onChange={handleChange}
+                min="0.5"
+                step="0.5"
+                className="w-full bg-gray-800 text-orange-300 p-2 rounded"
+              />
+            </div>
+            <div className="bg-gray-900 p-3 rounded-lg">
+              <label className="block text-sm mb-1">Iterations</label>
+              <input
+                type="number"
+                name="maxIterations"
+                value={doc.maxIterations}
+                onChange={handleChange}
+                min="1"
+                max="1000"
+                className="w-full bg-gray-800 text-orange-300 p-2 rounded"
+              />
+            </div>
+            <div className="bg-gray-900 p-3 rounded-lg">
+              <label className="block text-sm mb-1">Color Shift</label>
+              <input
+                type="number"
+                name="colorShift"
+                value={doc.colorShift}
+                onChange={handleChange}
+                min="0"
+                max="360"
+                className="w-full bg-gray-800 text-orange-300 p-2 rounded"
+              />
+            </div>
+            <div className="bg-gray-900 p-3 rounded-lg">
+              <label className="block text-sm mb-1">Name</label>
+              <input
+                type="text"
+                name="name"
+                value={doc.name}
+                onChange={handleChange}
+                placeholder="My awesome fractal"
+                className="w-full bg-gray-800 text-orange-300 p-2 rounded"
+              />
+            </div>
+          </div>
+          
+          <button 
+            onClick={submit}
+            disabled={!doc.name}
+            className="mt-4 bg-orange-600 hover:bg-orange-700 text-white font-bold py-2 px-4 rounded w-full disabled:opacity-50"
+          >
+            Save Configuration
+          </button>
+        </div>
+        
+        <div className="md:w-2/5">
+          <div className="bg-gray-900 p-4 rounded-lg shadow-lg border border-orange-500">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xl font-bold">Saved Fractals</h2>
+              <button
+                onClick={addDemoData}
+                className="text-sm bg-purple-700 hover:bg-purple-800 text-white py-1 px-3 rounded"
+              >
+                Demo Data
+              </button>
+            </div>
+            
+            <div className="max-h-96 overflow-y-auto pr-2">
+              {savedFractals.length === 0 ? (
+                <p className="text-gray-500 italic">No saved fractals yet</p>
+              ) : (
+                <ul className="space-y-2">
+                  {savedFractals.map(fractal => (
+                    <li 
+                      key={fractal._id}
+                      className={`p-3 rounded-lg cursor-pointer transition-colors ${selectedFractal?._id === fractal._id ? 'bg-orange-900' : 'bg-gray-800 hover:bg-gray-700'}`}
+                      onClick={() => handleLoadFractal(fractal)}
+                    >
+                      <div className="font-medium">{fractal.name}</div>
+                      <div className="text-xs opacity-75 mt-1">
+                        <span className="inline-block mr-3">Zoom: {fractal.zoom}x</span>
+                        <span className="inline-block">Iterations: {fractal.maxIterations}</span>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+```
+
+This app lets users explore the Mandelbrot set fractal by adjusting parameters like center position, zoom level, and color patterns. Users can save interesting configurations they discover to revisit them later. The app uses Fireproof to persist these configurations, making them available across sessions.

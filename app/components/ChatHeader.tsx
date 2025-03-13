@@ -4,20 +4,10 @@ import { useNavigate } from 'react-router';
 interface ChatHeaderProps {
   onOpenSidebar: () => void;
   title: string;
-  onNewChat?: () => void;
-  isStreaming?: () => boolean;
 }
 
-function ChatHeader({ onOpenSidebar, title, onNewChat, isStreaming }: ChatHeaderProps) {
+function ChatHeader({ onOpenSidebar, title }: ChatHeaderProps) {
   const navigate = useNavigate();
-
-  const handleNewChat = () => {
-    if (onNewChat) {
-      onNewChat();
-    } else {
-      navigate('/');
-    }
-  };
 
   return (
     <div className="border-light-decorative-00 dark:border-dark-decorative-00 bg-light-background-00 dark:bg-dark-background-00 flex min-h-[4rem] items-center justify-between border-b px-6 py-4">
@@ -49,7 +39,9 @@ function ChatHeader({ onOpenSidebar, title, onNewChat, isStreaming }: ChatHeader
       <div className="relative">
         <button
           type="button"
-          onClick={handleNewChat}
+          onClick={() => {
+            document.location = '/';
+          }}
           className="peer bg-accent-02-light dark:bg-accent-02-dark hover:bg-accent-03-light dark:hover:bg-accent-03-dark flex cursor-pointer items-center justify-center rounded-full p-2.5 text-white transition-colors"
           aria-label="New Chat"
           title="New Chat"
@@ -82,10 +74,6 @@ function ChatHeader({ onOpenSidebar, title, onNewChat, isStreaming }: ChatHeader
 // Use React.memo with a custom comparison function to ensure the component only
 // re-renders when its props actually change
 export default memo(ChatHeader, (prevProps, nextProps) => {
-  // Only re-render if title or openSidebar or onNewChat changes
-  return (
-    prevProps.onOpenSidebar === nextProps.onOpenSidebar &&
-    prevProps.title === nextProps.title &&
-    prevProps.onNewChat === nextProps.onNewChat
-  );
+  // Only re-render if title or openSidebar or title changes
+  return prevProps.onOpenSidebar === nextProps.onOpenSidebar && prevProps.title === nextProps.title;
 });

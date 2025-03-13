@@ -1,5 +1,4 @@
 import { useEffect, useRef, memo, useMemo } from 'react';
-import { Link } from 'react-router';
 import { useSessionList } from '../hooks/sidebar/useSessionList';
 import { ImgFile } from './SessionSidebar/ImgFile';
 import { encodeTitle } from './SessionSidebar/utils';
@@ -56,15 +55,10 @@ function SessionSidebar({ isVisible, onClose }: SessionSidebarProps) {
           key={session._id}
           className="cursor-pointer border-b border-gray-200 p-3 hover:bg-gray-100 dark:border-gray-700 dark:hover:bg-gray-800"
         >
-          <Link
-            to={`/chat/${session._id}/${encodedTitle}`}
+          <a
+            href={`/chat/${session._id}/${encodedTitle}`}
             className="block"
-            onClick={() => {
-              // Close the sidebar on mobile
-              if (window.innerWidth < 768) {
-                onClose();
-              }
-            }}
+            onClick={() => onClose()}
           >
             <div className="text-sm font-semibold text-gray-900 dark:text-white">{title}</div>
             <div className="mt-1 text-xs text-gray-500 dark:text-gray-400">
@@ -81,7 +75,7 @@ function SessionSidebar({ isVisible, onClose }: SessionSidebarProps) {
                   />
                 )
             )}
-          </Link>
+          </a>
         </li>
       );
     });

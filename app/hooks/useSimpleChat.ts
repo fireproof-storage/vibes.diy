@@ -6,8 +6,8 @@ import { useSession } from './useSession';
 import { generateTitle } from '../utils/titleGenerator';
 import { processStream, callOpenRouterAPI } from '../utils/streamHandler';
 
-const CHOSEN_MODEL = 'anthropic/claude-3.7-sonnet';
-
+const CODING_MODEL = 'anthropic/claude-3.7-sonnet';
+const TITLE_MODEL = 'google/gemini-2.0-flash-lite-001';
 /**
  * Simplified chat hook that focuses on data-driven state management
  * Uses session-based architecture with individual message documents
@@ -47,7 +47,7 @@ export function useSimpleChat(sessionId: string | undefined): ChatState {
   const filteredDocs = docs.filter((doc: any) => doc.type === 'ai' || doc.type === 'user');
 
   const messages = (aiMessage.text.length > 0
-    ? [ ...filteredDocs, aiMessage]
+    ? [...filteredDocs, aiMessage]
     : filteredDocs) as unknown as ChatMessageDocument[];
 
   function buildMessageHistory() {
@@ -83,7 +83,7 @@ export function useSimpleChat(sessionId: string | undefined): ChatState {
         currentSystemPrompt = 'Test system prompt';
         setSystemPrompt(currentSystemPrompt);
       } else {
-        currentSystemPrompt = await makeBaseSystemPrompt(CHOSEN_MODEL);
+        currentSystemPrompt = await makeBaseSystemPrompt(CODING_MODEL);
         setSystemPrompt(currentSystemPrompt);
       }
     }
@@ -98,7 +98,7 @@ export function useSimpleChat(sessionId: string | undefined): ChatState {
         const messageHistory = buildMessageHistory();
         // Use the locally captured system prompt value, not the state variable
         return callOpenRouterAPI(
-          CHOSEN_MODEL,
+          CODING_MODEL,
           currentSystemPrompt,
           messageHistory,
           userMessage.text
@@ -123,7 +123,7 @@ export function useSimpleChat(sessionId: string | undefined): ChatState {
         console.log('generating title', aiMessage.text.length);
         const { segments } = parseContent(aiMessage.text);
         if (!session?.title) {
-          return generateTitle(segments, CHOSEN_MODEL).then(updateTitle);
+          return generateTitle(segments, TITLE_MODEL).then(updateTitle);
         }
       })
       .catch((error) => {
@@ -135,7 +135,7 @@ export function useSimpleChat(sessionId: string | undefined): ChatState {
   }
 
   return {
-    sessionId,
+    sessionId: session._id,
     docs: messages,
     selectedResponseDoc,
     selectedSegments,
@@ -146,6 +146,6 @@ export function useSimpleChat(sessionId: string | undefined): ChatState {
     isStreaming,
     sendMessage,
     inputRef,
-    title: session?.title || 'New Chat',
+    title: session?.title || '',
   };
 }

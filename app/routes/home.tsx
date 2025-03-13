@@ -5,6 +5,7 @@ import ResultPreview from '../components/ResultPreview/ResultPreview';
 import { useSimpleChat } from '../hooks/useSimpleChat';
 import AppLayout from '../components/AppLayout';
 import { copyToClipboard, encodeStateToUrl, decodeStateFromUrl } from '../utils/sharing';
+import { encodeTitle } from '~/components/SessionSidebar/utils';
 
 export function meta() {
   return [
@@ -21,11 +22,16 @@ export default function UnifiedSession() {
 
   const [shareStatus, setShareStatus] = useState<string>('');
 
+  console.log('urlSessionId', urlSessionId);
   const chatState = useSimpleChat(urlSessionId);
 
-
-  
-
+  useEffect(() => {
+    if (chatState.title) {
+      console.log('chatState.title', chatState.title);
+      const encodedTitle = encodeTitle(chatState.title);
+      navigate(`/chat/${chatState.sessionId}/${encodedTitle}`, { replace: true });
+    }
+  }, [chatState.title]);
 
   // Check if there's a state parameter in the URL (for shared apps)
   useEffect(() => {
