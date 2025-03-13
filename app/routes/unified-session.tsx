@@ -36,13 +36,13 @@ export default function UnifiedSession() {
   }, [location.search]);
 
   function handleShare() {
-    if (!chatState.selectedCode.content) {
+    if (!chatState.selectedCode?.content) {
       alert('Generate an app first before sharing!');
       return;
     }
     const encoded = encodeStateToUrl(
       chatState.selectedCode.content,
-      chatState.selectedDependencies
+      chatState.selectedDependencies || {}
     );
     if (encoded) {
       copyToClipboard(`${window.location.origin}/shared?state=${encoded}`);
@@ -55,12 +55,12 @@ export default function UnifiedSession() {
 
   return (
     <AppLayout
-      chatPanel={<ChatInterface chatState={chatState} />}
+      chatPanel={<ChatInterface {...chatState} />}
       previewPanel={
         <ResultPreview
-          sessionId={chatState.sessionId}
-          code={chatState.selectedCode.content}
-          dependencies={chatState.selectedDependencies}
+          sessionId={chatState.sessionId || ''}
+          code={chatState.selectedCode?.content || ''}
+          dependencies={chatState.selectedDependencies || {}}
           isStreaming={chatState.isStreaming}
           onShare={handleShare}
         />

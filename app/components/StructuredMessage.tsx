@@ -97,6 +97,4 @@ const StructuredMessage = memo(({ segments, isStreaming }: StructuredMessageProp
   );
 });
 
-StructuredMessage.displayName = 'StructuredMessage';
-
 export default StructuredMessage;

@@ -1,6 +1,6 @@
 import { useEffect, useRef, memo, useMemo } from 'react';
 import Message, { WelcomeScreen } from './Message';
-import type { ChatMessage, AiChatMessage, ChatMessageDocument } from '../types/chat';
+import type { ChatMessageDocument } from '../types/chat';
 
 interface MessageListProps {
   messages: ChatMessageDocument[];
@@ -21,9 +21,8 @@ function MessageList({
     return messages.map((msg, i) => {
       return (
         <Message
-          key={msg._id}
+          key={msg._id || 'streaming' + i}
           message={msg}
-          index={i}
           isShrinking={isShrinking}
           isExpanding={isExpanding}
         />
@@ -62,10 +61,16 @@ function MessageList({
   );
 }
 export default memo(MessageList, (prevProps, nextProps) => {
-  return (
+  // Reference equality check for animation flags
+  const animationStateEqual =
     prevProps.isStreaming === nextProps.isStreaming &&
     prevProps.isShrinking === nextProps.isShrinking &&
-    prevProps.isExpanding === nextProps.isExpanding &&
-    prevProps.messages === nextProps.messages
-  );
+    prevProps.isExpanding === nextProps.isExpanding;
+
+  // Content equality check for messages
+  const messagesEqual =
+    prevProps.messages.length === nextProps.messages.length &&
+    prevProps.messages.every((msg, i) => msg._id === nextProps.messages[i]._id);
+
+  return animationStateEqual && messagesEqual;
 });

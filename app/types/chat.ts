@@ -53,17 +53,23 @@ export type AiChatMessage = ChatMessage & {
 };
 
 // ===== Component Props =====
+export interface ChatState {
+  docs: ChatMessageDocument[];
+  input: string;
+  setInput: (input: string) => void;
+  isStreaming: boolean;
+  inputRef: React.RefObject<HTMLTextAreaElement | null>;
+  sendMessage: () => Promise<void>;
+  title: string;
+  sessionId?: string | null;
+  selectedResponseDoc?: ChatMessageDocument;
+  selectedSegments?: Segment[];
+  selectedCode?: Segment;
+  selectedDependencies?: Record<string, string>;
+}
+
 export interface ChatInterfaceProps {
-  chatState: {
-    docs: ChatMessageDocument[];
-    input: string;
-    setInput: (input: string) => void;
-    isStreaming: boolean;
-    inputRef: React.RefObject<HTMLTextAreaElement | null>;
-    sendMessage: () => Promise<void>;
-    title: string;
-    sessionId?: string | null;
-  };
+  chatState: ChatState;
   sessionId?: string | null;
   onSessionCreated?: (newSessionId: string) => void;
   onNewChat?: () => void;

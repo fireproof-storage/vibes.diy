@@ -1,50 +1,58 @@
 import { memo } from 'react';
 import ReactMarkdown from 'react-markdown';
 import StructuredMessage from './StructuredMessage';
-import type {
-  ChatMessageDocument,
-  AiChatMessageDocument,
-  Segment,
-  ChatMessage,
-  AiChatMessage,
-} from '../types/chat';
-
+import type { ChatMessageDocument, AiChatMessageDocument, AiChatMessage } from '../types/chat';
+import { parseContent } from '~/utils/segmentParser';
 
 interface MessageProps {
   message: ChatMessageDocument;
-  index: number;
   isShrinking: boolean;
   isExpanding: boolean;
 }
 
-// Individual message component to optimize rendering
-const Message = memo(({ message, isShrinking, isExpanding }: MessageProps) => {
-  const isAI = message.type === 'ai';
-  const isUser = message.type === 'user';
+// Helper function to get animation classes
+const getAnimationClasses = (isShrinking: boolean, isExpanding: boolean): string => {
+  return isShrinking ? 'animate-width-shrink' : isExpanding ? 'animate-width-expand' : '';
+};
 
-  // Extract the specific properties for AI messages
-  const aiMessage = message as AiChatMessageDocument;
+// AI Message component (simplified without animation handling)
+const AIMessage = memo(({ message }: { message: AiChatMessageDocument }) => {
+  const { segments } = parseContent(message.text);
+
+  // Cast to AiChatMessage to access isStreaming property
+  const enhancedMessage = message as unknown as AiChatMessage;
 
   return (
-    <div className={`flex flex-row ${isAI ? 'justify-start' : 'justify-end'} mb-4 px-4`}>
-      <div
-        className={`max-w-[85%] rounded-lg px-4 py-2 ${
-          isAI
-            ? 'bg-white text-gray-900 dark:bg-gray-800 dark:text-gray-100'
-            : 'bg-blue-500 text-white dark:bg-blue-600 dark:text-white'
-        } ${isShrinking ? 'animate-width-shrink' : isExpanding ? 'animate-width-expand' : ''}`}
-      >
-        {isAI ? (
-          <StructuredMessage
-            segments={aiMessage.segments || []}
-            isStreaming={aiMessage.isStreaming}
-          />
-        ) : (
-          <div className="prose prose-sm dark:prose-invert max-w-none">
-            <ReactMarkdown>{message.text}</ReactMarkdown>
-          </div>
-        )}
+    <div className="mb-4 flex flex-row justify-start px-4">
+      <div className="max-w-[85%] rounded-lg bg-white px-4 py-2 text-gray-900 dark:bg-gray-800 dark:text-gray-100">
+        <StructuredMessage segments={segments || []} isStreaming={enhancedMessage.isStreaming} />
       </div>
+    </div>
+  );
+});
+
+// User Message component (simplified without animation handling)
+const UserMessage = memo(({ message }: { message: ChatMessageDocument }) => {
+  return (
+    <div className="mb-4 flex flex-row justify-end px-4">
+      <div className="max-w-[85%] rounded-lg bg-blue-500 px-4 py-2 text-white dark:bg-blue-600 dark:text-white">
+        <div className="prose prose-sm dark:prose-invert max-w-none">
+          <ReactMarkdown>{message.text}</ReactMarkdown>
+        </div>
+      </div>
+    </div>
+  );
+});
+
+// Main Message component that handles animation and decides which subcomponent to render
+const Message = memo(({ message, isShrinking, isExpanding }: MessageProps) => {
+  return (
+    <div className={getAnimationClasses(isShrinking, isExpanding)}>
+      {message.type === 'ai' ? (
+        <AIMessage message={message as AiChatMessageDocument} />
+      ) : (
+        <UserMessage message={message} />
+      )}
     </div>
   );
 });

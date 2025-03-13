@@ -1,5 +1,5 @@
 import { useState, useRef, useCallback, useEffect, useMemo } from 'react';
-import type { Segment, ChatMessageDocument } from '../types/chat';
+import type { Segment, ChatMessageDocument, ChatState } from '../types/chat';
 import { makeBaseSystemPrompt } from '../prompts';
 import { parseContent, parseDependencies } from '../utils/segmentParser';
 import { useSession } from './useSession';
@@ -11,8 +11,9 @@ const CHOSEN_MODEL = 'anthropic/claude-3.7-sonnet';
 /**
  * Simplified chat hook that focuses on data-driven state management
  * Uses session-based architecture with individual message documents
+ * @returns ChatState object with all chat functionality and state
  */
-export function useSimpleChat(sessionId: string | undefined) {
+export function useSimpleChat(sessionId: string | undefined): ChatState {
   const {
     session,
     updateTitle,
@@ -44,7 +45,7 @@ export function useSimpleChat(sessionId: string | undefined) {
   // Initialize system prompt - only called when needed
 
   // Process docs into messages for the UI
-  const messages = docs.filter(
+  const messages = [aiMessage, ...docs].filter(
     (doc: any) => doc.type === 'ai' || doc.type === 'user'
   ) as unknown as ChatMessageDocument[];
 
@@ -73,37 +74,42 @@ export function useSimpleChat(sessionId: string | undefined) {
   async function sendMessage(): Promise<void> {
     if (!userMessage.text.trim()) return;
 
-    // Check if systemPrompt is empty instead of using a boolean flag
-    if (!systemPrompt) {
+    // First, ensure we have the system prompt
+    // Instead of setting state and immediately using it, get the value and use it directly
+    let currentSystemPrompt = systemPrompt;
+    if (!currentSystemPrompt) {
       if (import.meta.env.MODE === 'test') {
-        setSystemPrompt('Test system prompt');
+        currentSystemPrompt = 'Test system prompt';
+        setSystemPrompt(currentSystemPrompt);
       } else {
-        const prompt = await makeBaseSystemPrompt(CHOSEN_MODEL);
-        setSystemPrompt(prompt);
+        currentSystemPrompt = await makeBaseSystemPrompt(CHOSEN_MODEL);
+        setSystemPrompt(currentSystemPrompt);
       }
     }
 
+    // Reset stream buffer and set streaming state
     streamBufferRef.current = '';
     setIsStreaming(true);
 
-    await submitUserMessage();
-
-    const messageHistory = buildMessageHistory();
-
-    return callOpenRouterAPI(CHOSEN_MODEL, systemPrompt, messageHistory, userMessage.text)
-      .then((response) =>
-        processStream(response, (content) => {
+    // Submit user message first
+    return submitUserMessage()
+      .then(() => {
+        const messageHistory = buildMessageHistory();
+        // Use the locally captured system prompt value, not the state variable
+        return callOpenRouterAPI(CHOSEN_MODEL, currentSystemPrompt, messageHistory, userMessage.text);
+      })
+      .then((response) => {
+        return processStream(response, (content) => {
+          console.log('content', content);
           streamBufferRef.current += content;
           mergeAiMessage({ text: streamBufferRef.current });
-        })
-      )
+        });
+      })
       .then(() => {
-        if (!aiMessage.text) {
-          console.error('No AI message text found');
-          return;
-        }
-        // This code runs after streaming is complete
-        submitAiMessage();
+        mergeAiMessage({ text: streamBufferRef.current });
+        return submitAiMessage();
+      })
+      .then(() => {
         const { segments } = parseContent(aiMessage.text);
         if (!session?.title) {
           return generateTitle(segments, CHOSEN_MODEL).then(updateTitle);
