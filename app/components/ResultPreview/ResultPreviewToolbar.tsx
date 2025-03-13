@@ -7,7 +7,6 @@ interface ResultPreviewToolbarProps {
   bundlingComplete: boolean;
   isStreaming: boolean;
   onShare?: () => void;
-  setShowWelcome: (show: boolean) => void;
 }
 
 const ResultPreviewToolbar: React.FC<ResultPreviewToolbarProps> = ({
@@ -17,7 +16,6 @@ const ResultPreviewToolbar: React.FC<ResultPreviewToolbarProps> = ({
   bundlingComplete,
   isStreaming,
   onShare,
-  setShowWelcome,
 }) => {
   return (
     <div className="border-light-decorative-00 dark:border-dark-decorative-00 bg-light-background-00 dark:bg-dark-background-00 flex min-h-[4rem] items-center justify-between border-b px-6 py-4">
@@ -60,7 +58,6 @@ const ResultPreviewToolbar: React.FC<ResultPreviewToolbarProps> = ({
             type="button"
             onClick={() => {
               setActiveView('code');
-              setShowWelcome(false);
             }}
             className={`flex items-center space-x-1.5 rounded-md px-4 py-1.5 text-sm font-medium transition-colors ${
               activeView === 'code'

@@ -1,6 +1,6 @@
 import React from 'react';
 import { render } from '@testing-library/react';
-import ChatInterface from '../app/ChatInterface';
+import ChatInterface from '../app/components/ChatInterface';
 import { vi, describe, test, expect } from 'vitest';
 import type { ChatState } from '../app/types/chat';
 

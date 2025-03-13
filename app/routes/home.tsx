@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router';
-import ChatInterface from '../ChatInterface';
+import ChatInterface from '../components/ChatInterface';
 import ResultPreview from '../components/ResultPreview/ResultPreview';
 import { useSimpleChat } from '../hooks/useSimpleChat';
 import AppLayout from '../components/AppLayout';

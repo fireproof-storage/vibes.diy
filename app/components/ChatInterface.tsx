@@ -1,11 +1,11 @@
 import { useState, useMemo, useCallback, useRef } from 'react';
 import type { ChangeEvent } from 'react';
-import type { ChatState } from './types/chat';
-import SessionSidebar from './components/SessionSidebar';
-import ChatHeader from './components/ChatHeader';
-import MessageList from './components/MessageList';
-import ChatInput from './components/ChatInput';
-import QuickSuggestions from './components/QuickSuggestions';
+import type { ChatState } from '../types/chat';
+import SessionSidebar from './SessionSidebar';
+import ChatHeader from './ChatHeader';
+import MessageList from './MessageList';
+import ChatInput from './ChatInput';
+import QuickSuggestions from './QuickSuggestions';
 
 function ChatInterface({
   docs: messages,
