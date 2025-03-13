@@ -31,7 +31,7 @@ const AIMessage = memo(
             </svg>
           </div>
         </div>
-        <div className="max-w-[85%] rounded-xl bg-white px-4 py-3 text-gray-900 shadow-md dark:bg-gray-800 dark:text-gray-100">
+        <div className="max-w-[85%] rounded-2xl bg-white px-5 py-3 text-gray-900 shadow-md dark:bg-gray-800 dark:text-gray-100">
           <StructuredMessage segments={segments || []} isStreaming={isStreaming} />
         </div>
       </div>
@@ -55,7 +55,7 @@ const AIMessage = memo(
 const UserMessage = memo(({ message }: { message: ChatMessageDocument }) => {
   return (
     <div className="mb-4 flex flex-row justify-end px-4">
-      <div className="max-w-[85%] rounded-xl bg-blue-600 px-4 py-3 text-white shadow-md dark:bg-blue-600 dark:text-white">
+      <div className="max-w-[85%] rounded-2xl bg-gray-300 px-5 py-3 text-gray-800 shadow-md dark:bg-gray-700 dark:text-gray-100">
         <div className="prose prose-sm dark:prose-invert max-w-none prose-ul:pl-5 prose-ul:list-disc prose-ol:pl-5 prose-ol:list-decimal prose-li:my-0">
           <ReactMarkdown>{message.text}</ReactMarkdown>
         </div>
@@ -117,9 +117,7 @@ export default Message;
 // Welcome screen component shown when no messages are present
 export const WelcomeScreen = memo(() => {
   return (
-    <div className="text-accent-02 mx-auto max-w-2xl space-y-4 px-12 pt-8 text-center italic bg-white rounded-xl shadow-md p-6 dark:bg-gray-800">
-      <h2 className="mb-4 text-xl font-semibold">Welcome to Fireproof App Builder</h2>
-      <p>Ask me to generate a web application for you</p>
+    <div className="text-accent-02 mx-auto max-w-2xl space-y-4 px-12 pt-8 text-center italic">
       <p>
         Quickly create React apps in your browser, no setup required. Apps are sharable, or eject
         them to GitHub for easy deploys.{' '}
