@@ -57,7 +57,7 @@ type SessionOrScreenshot = SessionDocument | ScreenshotDocument;
 
 // Helper function to encode titles for URLs
 function encodeTitle(title: string): string {
-  return encodeURIComponent(title || 'untitled-session')
+  return encodeURIComponent(title || 'untitled-chat')
     .toLowerCase()
     .replace(/%20/g, '-');
 }
@@ -119,7 +119,7 @@ function SessionSidebar({ isVisible, onClose }: SessionSidebarProps) {
           className="cursor-pointer border-b border-gray-200 p-3 hover:bg-gray-100 dark:border-gray-700 dark:hover:bg-gray-800"
         >
           <Link
-            to={`/session/${session._id}/${encodedTitle}`}
+            to={`/chat/${session._id}/${encodedTitle}`}
             className="block"
             onClick={() => {
               // Close the sidebar on mobile

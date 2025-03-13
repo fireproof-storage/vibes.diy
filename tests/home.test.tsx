@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
-import UnifiedSession from '../app/routes/unified-session';
+import UnifiedSession from '../app/routes/home';
 
 // Mock dependencies
 vi.mock('../app/hooks/useSimpleChat', () => ({

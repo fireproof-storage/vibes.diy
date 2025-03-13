@@ -1,7 +1,7 @@
 import React from 'react';
 import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import { vi, describe, it, expect, beforeEach } from 'vitest';
-import UnifiedSession from '../app/routes/unified-session';
+import UnifiedSession from '../app/routes/home';
 import * as segmentParser from '../app/utils/segmentParser';
 import * as useSimpleChatModule from '../app/hooks/useSimpleChat';
 import type { ChatMessage, UserChatMessage, AiChatMessage, Segment } from '../app/types/chat';
@@ -285,7 +285,7 @@ describe('Home Route in completed state', () => {
         if (firstCall) {
           const path = firstCall[0];
           expect(typeof path).toBe('string');
-          expect(path.includes('/session/')).toBe(true);
+          expect(path.includes('/chat/')).toBe(true);
         }
       },
       { timeout: 2000 }

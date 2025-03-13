@@ -15,6 +15,6 @@ describe('Routes', () => {
 
     // Check that the route has a file property that includes unified-session.tsx
     expect(indexRoute).toHaveProperty('file');
-    expect(indexRoute.file).toContain('unified-session.tsx');
+    expect(indexRoute.file).toContain('home.tsx');
   });
 });

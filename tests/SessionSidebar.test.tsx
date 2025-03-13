@@ -136,8 +136,8 @@ describe('SessionSidebar', () => {
     const session2Element = screen.getByText('Test Session 2').closest('a');
 
     // Check that the links have the correct href values
-    expect(session1Element).toHaveAttribute('href', '/session/session1/test-session-1');
-    expect(session2Element).toHaveAttribute('href', '/session/session2/test-session-2');
+    expect(session1Element).toHaveAttribute('href', '/chat/session1/test-session-1');
+    expect(session2Element).toHaveAttribute('href', '/chat/session2/test-session-2');
   });
 
   it('closes sidebar on mobile when a session is clicked', () => {
