@@ -98,39 +98,24 @@ describe('Component Rendering', () => {
 
   describe('ChatHeader', () => {
     it('renders without crashing', () => {
-      render(
-        <ChatHeader
-          onOpenSidebar={onOpenSidebar}
-          title="Test Chat"
-        />
-      );
+      render(<ChatHeader onOpenSidebar={onOpenSidebar} title="Test Chat" />);
       expect(screen.getByText('Test Chat')).toBeInTheDocument();
     });
 
     it('applies tooltip classes correctly', () => {
-      render(
-        <ChatHeader
-          onOpenSidebar={onOpenSidebar}
-          title="Test Chat"
-        />
-      );
+      render(<ChatHeader onOpenSidebar={onOpenSidebar} title="Test Chat" />);
       expect(
         screen.getByText('New Chat', { selector: 'span.pointer-events-none' })
       ).toBeInTheDocument();
     });
 
     it('handles new chat button click', () => {
-      render(
-        <ChatHeader
-          onOpenSidebar={onOpenSidebar}
-          title="Test Chat"
-        />
-      );
-      
+      render(<ChatHeader onOpenSidebar={onOpenSidebar} title="Test Chat" />);
+
       // Just verify the new chat button exists since we can't easily mock document.location
       const newChatButton = screen.getByLabelText('New Chat');
       expect(newChatButton).toBeInTheDocument();
-      
+
       // Note: we can't reliably test the navigation in JSDOM environment
       // In a real browser, clicking this button would navigate to '/'
     });

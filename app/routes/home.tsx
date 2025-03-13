@@ -27,9 +27,10 @@ export default function UnifiedSession() {
 
   useEffect(() => {
     if (chatState.title) {
-      console.log('chatState.title', chatState.title);
-      const encodedTitle = encodeTitle(chatState.title);
-      navigate(`/chat/${chatState.sessionId}/${encodedTitle}`, { replace: true });
+      const newUrl = `/chat/${chatState.sessionId}/${encodeTitle(chatState.title)}`;
+      if (newUrl !== location.pathname) {
+        navigate(newUrl, { replace: true });
+      }
     }
   }, [chatState.title]);
 

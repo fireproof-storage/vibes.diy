@@ -87,7 +87,7 @@ describe('Home Route', () => {
     // Check that the main components are rendered using intrinsic properties
     // Look for welcome text that appears in the home route
     expect(screen.getByText(/Welcome to Fireproof App Builder/i)).toBeInTheDocument();
-    
+
     // Look for any common UI elements that would be present in the home view
     expect(screen.getByText(/Ask me to generate a web application for you/i)).toBeInTheDocument();
   });

@@ -18,17 +18,12 @@ const SandpackEventListener: React.FC<SandpackEventListenerProps> = ({
 
   useEffect(() => {
     setBundlingComplete(false);
-    let startTime = Date.now();
-
-    const resetTimer = () => {
-      startTime = Date.now();
-    };
 
     const unsubscribe = listen((message) => {
       if (message.type === 'start') {
         setBundlingComplete(false);
-        resetTimer();
       } else if (message.type === 'urlchange') {
+        console.log('urlchange', { isStreaming, message });
         setBundlingComplete(true);
 
         if (!isStreaming) {
@@ -36,9 +31,6 @@ const SandpackEventListener: React.FC<SandpackEventListenerProps> = ({
 
           // Screenshot capture logic
           if (onScreenshotCaptured) {
-            const timeElapsed = Date.now() - startTime;
-            const delay = timeElapsed < 1000 ? 1500 - timeElapsed : 500;
-
             setTimeout(() => {
               const sandpackPreview =
                 document.querySelector<HTMLIFrameElement>('.sp-preview-iframe');
@@ -64,7 +56,7 @@ const SandpackEventListener: React.FC<SandpackEventListenerProps> = ({
                   console.error('Failed to capture screenshot:', e);
                 }
               }
-            }, delay);
+            }, 1000);
           }
         }
       }

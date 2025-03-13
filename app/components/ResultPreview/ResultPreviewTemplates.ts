@@ -43,14 +43,29 @@ export const indexHtml = `<!DOCTYPE html>
       function captureScreenshot() {
         html2canvas(document.body).then(canvas => {
           const dataURI = canvas.toDataURL();
-          window.parent.postMessage({ screenshot: dataURI }, '*');
+          window.parent.postMessage({ type: 'screenshot', data: dataURI }, '*');
         });
       }
-      
-      // Automatically capture screenshot when page is fully loaded
-      window.addEventListener('load', function() {
-        // Wait a short moment for any final rendering
-        setTimeout(captureScreenshot, 500);
+
+      function pageIsLoaded() {
+        console.log('ResultPreviewTemplates: pageIsLoaded');
+        window.parent.postMessage({ type: 'preview-loaded' }, '*');
+        setTimeout(captureScreenshot, 100);
+      }
+
+      window.addEventListener('DOMContentLoaded', function() {        
+        const rootElement = document.getElementById('root');
+        if (rootElement) {
+          const observer = new MutationObserver(function(mutations) {
+            if (rootElement.children.length > 0) {
+              pageIsLoaded();
+              observer.disconnect();
+            }
+          });          
+          observer.observe(rootElement, { childList: true, subtree: true });
+        } else {
+          pageIsLoaded();
+        }
       });
     </script>
   </head>

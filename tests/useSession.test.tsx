@@ -3,9 +3,13 @@ import { useSession } from '../app/hooks/useSession';
 import { vi, describe, test, expect, beforeEach } from 'vitest';
 
 // Mock database functions
-const mockPut = vi.fn().mockImplementation((doc: any) => Promise.resolve({ id: doc._id || 'test-session-id' }));
+const mockPut = vi
+  .fn()
+  .mockImplementation((doc: any) => Promise.resolve({ id: doc._id || 'test-session-id' }));
 const mockMergeSession = vi.fn();
-const mockSaveSession = vi.fn().mockImplementation(() => Promise.resolve({ id: 'test-session-id' }));
+const mockSaveSession = vi
+  .fn()
+  .mockImplementation(() => Promise.resolve({ id: 'test-session-id' }));
 
 // Mock the useFireproof hook
 vi.mock('use-fireproof', () => {

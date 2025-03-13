@@ -18,7 +18,6 @@ interface SandpackContentProps {
   setActiveView: (view: 'preview' | 'code') => void;
   setBundlingComplete: (complete: boolean) => void;
   dependencies: Record<string, string>;
-  onScreenshotCaptured?: (screenshotData: string) => void;
 }
 
 const SandpackContent: React.FC<SandpackContentProps> = ({
@@ -29,8 +28,8 @@ const SandpackContent: React.FC<SandpackContentProps> = ({
   sandpackKey,
   setActiveView,
   setBundlingComplete,
-  dependencies,
-  onScreenshotCaptured,
+  dependencies
+  
 }) => {
   const codeEditorRef = useRef<HTMLDivElement>(null);
   const [isDarkMode, setIsDarkMode] = useState(false);
@@ -66,16 +65,7 @@ const SandpackContent: React.FC<SandpackContentProps> = ({
         files={filesContent}
         theme={isDarkMode ? 'dark' : 'light'}
       >
-        <SandpackEventListener
-          setActiveView={(view) => {
-            if (!lockCodeView) {
-              setActiveView(view);
-            }
-          }}
-          setBundlingComplete={setBundlingComplete}
-          isStreaming={isStreaming}
-          onScreenshotCaptured={onScreenshotCaptured}
-        />
+        
         {isStreaming && <SandpackScrollController isStreaming={isStreaming} />}
         <SandpackLayout className="h-full" style={{ height: 'calc(100vh - 49px)' }}>
           <div

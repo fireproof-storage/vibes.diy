@@ -12,7 +12,7 @@ function ResultPreview({
   dependencies = {},
   onShare,
   onScreenshotCaptured,
-  initialView = 'preview',
+  initialView = 'code',
   sessionId,
   isStreaming = false,
 }: ResultPreviewProps) {
@@ -36,6 +36,11 @@ function ResultPreview({
 
   useEffect(() => {
     const handleMessage = (event: MessageEvent) => {
+      console.log('ResultPreview: handleMessage', event.data);
+      if (event.data && event.data.type === 'preview-loaded') {
+        console.log('ResultPreview: preview-loaded!!!!!!!!!!!!!');
+        setActiveView('preview');
+      }
       if (event.data && event.data.screenshot) {
         const screenshotData = event.data.screenshot;
 
@@ -63,7 +68,6 @@ function ResultPreview({
           active: true,
         },
       };
-
     }
   }, [code]);
 
@@ -99,7 +103,6 @@ function ResultPreview({
           setActiveView={setActiveView}
           setBundlingComplete={setBundlingComplete}
           dependencies={dependencies}
-          onScreenshotCaptured={onScreenshotCaptured}
         />
       )}
 
