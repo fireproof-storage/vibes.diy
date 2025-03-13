@@ -77,15 +77,15 @@ describe('ResultPreview', () => {
 
   it('calls onShare when share button is clicked', () => {
     const code = 'console.log("test");';
-    const onShare = vi.fn();
-
-    render(<ResultPreview code={code} onShare={onShare} />);
+    
+    render(<ResultPreview code={code} />);
 
     // Find and click the share button
     const shareButton = screen.getByRole('button', { name: /share/i });
     shareButton.click();
 
-    expect(onShare).toHaveBeenCalled();
+    // Instead of expecting onShare to be called, expect clipboard to be used
+    expect(navigator.clipboard.writeText).toHaveBeenCalled();
   });
 
   it('shows welcome content with empty code', () => {
@@ -96,15 +96,15 @@ describe('ResultPreview', () => {
 
   it('shows a share button when onShare is provided and code is not empty', () => {
     // Use non-empty code to ensure the share button is shown
-    render(<ResultPreview code="const test = 'Hello';" onShare={() => {}} />);
+    render(<ResultPreview code="const test = 'Hello';" />);
 
     const shareButton = screen.getByRole('button', { name: /share/i });
     expect(shareButton).toBeDefined();
   });
 
   it('updates display when code changes', () => {
-    const { rerender } = render(<ResultPreview code="" onShare={() => {}} />);
-    rerender(<ResultPreview code="const test = 'Hello';" onShare={() => {}} />);
+    const { rerender } = render(<ResultPreview code="" />);
+    rerender(<ResultPreview code="const test = 'Hello';" />);
 
     // Just verify it renders without errors
     expect(screen.getAllByTestId('sandpack-provider')[0]).toBeDefined();
@@ -155,15 +155,15 @@ describe('ResultPreview', () => {
   });
 
   it('handles share functionality', () => {
-    const code = 'const test = "Share me";';
-    const onShare = vi.fn();
+    const code = 'console.log("test");';
 
-    render(<ResultPreview code={code} onShare={onShare} />);
+    render(<ResultPreview code={code} />);
 
     const shareButton = screen.getByRole('button', { name: /share app/i });
     fireEvent.click(shareButton);
 
-    expect(onShare).toHaveBeenCalled();
+    // Expect clipboard to be used instead of onShare
+    expect(navigator.clipboard.writeText).toHaveBeenCalled();
   });
 
   it('handles edge case with empty code', () => {

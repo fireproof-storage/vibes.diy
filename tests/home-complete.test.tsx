@@ -102,15 +102,13 @@ vi.mock('../app/ChatInterface', () => ({
 }));
 
 vi.mock('../app/components/ResultPreview/ResultPreview', () => ({
-  default: ({ code, dependencies, isStreaming, onShare, sessionId }: ResultPreviewProps) => (
+  default: ({ code, dependencies, isStreaming, sessionId }: ResultPreviewProps) => (
     <div data-testid="mock-result-preview">
       <div data-testid="code-line-count">{code.split('\n').length} lines of code</div>
       <div data-testid="code-content">{code.substring(0, 50)}...</div>
-      {onShare && (
-        <button data-testid="share-button" onClick={onShare}>
-          Share
-        </button>
-      )}
+      <button data-testid="share-button" onClick={() => navigator.clipboard.writeText(`${window.location.origin}/shared?state=mockState`)}>
+        Share
+      </button>
     </div>
   ),
 }));

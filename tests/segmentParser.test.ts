@@ -110,11 +110,12 @@ function SearchResults({ searches }) {
   });
 
   it('verifies segment types for all fixture files', () => {
-    // Define expected segment types for each fixture file
+    // make subset files for partial parse
     const fixtureExpectations = {
       'easy-message.txt': ['markdown', 'code', 'markdown'],
       'easy-message2.txt': ['markdown', 'code', 'markdown'],
       'easy-message3.txt': ['markdown', 'code', 'markdown'],
+      'easy-message4.txt': ['markdown', 'code', 'markdown'],
       'hard-message.txt': ['markdown', 'code', 'markdown'],
       'long-message.txt': ['markdown', 'code', 'markdown'],
       'long-message2.txt': ['markdown', 'code', 'markdown'],
