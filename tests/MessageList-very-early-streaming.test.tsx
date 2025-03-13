@@ -8,6 +8,7 @@ import {
   logDOMVerification,
   resetStreamingUpdateCount,
 } from '../app/utils/debugLogging';
+import type { UserChatMessage, AiChatMessage } from '../app/types/chat';
 
 // For direct stdout logging that bypasses Node's buffering
 function writeToStdout(message: string) {
@@ -23,87 +24,45 @@ beforeEach(() => {
   writeToStdout('🔍 TEST STARTING: MessageList streaming tests');
 });
 
-// Mock the useSessionMessages hook for streaming tests
-vi.mock('../app/hooks/useSessionMessages', () => ({
-  useSessionMessages: vi.fn().mockImplementation((sessionId) => {
-    if (sessionId === 'streaming-incremental') {
-      // Force log the stream update directly to stdout
-      writeToStdout('🔍 STREAM UPDATE: length=2 - content={"');
-
-      // Return very minimal content first (just like real app)
-      return {
-        messages: [
-          { type: 'user', text: 'Create a quiz app' },
-          {
-            type: 'ai',
-            text: '{"',
-            segments: [{ type: 'markdown', content: '{"' }],
-            isStreaming: true,
-          },
-        ],
-        isLoading: false,
-      };
-    } else if (sessionId === 'streaming-partial') {
-      // Simulate a bit more content now, still just markdown
-      const content = '{"dependencies": {}}\n\nThis quiz app allows users to create';
-      writeToStdout(
-        `🔍 STREAM UPDATE: length=${content.length} - content="${content.substring(0, 30)}..."`
-      );
-
-      return {
-        messages: [
-          { type: 'user', text: 'Create a quiz app' },
-          {
-            type: 'ai',
-            text: content,
-            segments: [{ type: 'markdown', content }],
-            isStreaming: true,
-          },
-        ],
-        isLoading: false,
-      };
-    } else if (sessionId === 'streaming-with-code') {
-      // Simulate adding code segments like in the logs
-      const markdownContent =
-        '{"dependencies": {}}\n\nThis quiz app allows users to create quizzes with timed questions and track scores. Users can create new quizzes, add questions with multiple choice options, and then take quizzes to track their scores.';
-      const codeContent = 'import React, { useState, use';
-
-      writeToStdout(
-        `🔍 STREAM UPDATE: length=${markdownContent.length + codeContent.length + 8} with code segment - markdown=${markdownContent.length} bytes, code=${codeContent.length} bytes`
-      );
-      writeToStdout(
-        `🔍 SEGMENT 0: type=markdown, content="${markdownContent.substring(0, 30)}..."`
-      );
-      writeToStdout(`🔍 SEGMENT 1: type=code, content="${codeContent}"`);
-
-      return {
-        messages: [
-          { type: 'user', text: 'Create a quiz app' },
-          {
-            type: 'ai',
-            text: `${markdownContent}\n\n\`\`\`js\n${codeContent}`,
-            segments: [
-              { type: 'markdown', content: markdownContent },
-              { type: 'code', content: codeContent },
-            ],
-            isStreaming: true,
-          },
-        ],
-        isLoading: false,
-      };
-    } else {
-      return {
-        messages: [],
-        isLoading: false,
-      };
-    }
-  }),
+// Mock the Message component to match real implementation
+vi.mock('../app/components/Message', () => ({
+  default: ({ message }: any) => (
+    <div data-testid={`message-${message._id}`}>
+      {message.segments && message.segments.map((segment: any, i: number) => (
+        <div key={i} data-testid={segment.type}>
+          {segment.content}
+        </div>
+      ))}
+      {message.text && !message.segments?.length && <div>{message.text}</div>}
+    </div>
+  ),
+  WelcomeScreen: () => <div data-testid="welcome-screen">Welcome Screen</div>,
 }));
 
 describe('MessageList Real-World Streaming Tests', () => {
   test('should display minimal content at stream start', () => {
     writeToStdout('🔍 TEST: should display minimal content at stream start');
-    render(<MessageList sessionId="streaming-incremental" isStreaming={() => true} />);
+    
+    const messages = [
+      {
+        type: 'user',
+        text: 'Create a quiz app',
+        _id: 'user-1',
+        session_id: 'test-session',
+        created_at: Date.now(),
+      } as UserChatMessage,
+      {
+        type: 'ai',
+        text: '{"',
+        _id: '1',
+        segments: [{ type: 'markdown', content: '{"' }],
+        isStreaming: true,
+        session_id: 'test-session',
+        created_at: Date.now(),
+      } as AiChatMessage,
+    ];
+    
+    render(<MessageList messages={messages} isStreaming={true} />);
 
     // Check if we see the minimal content in the DOM
     const messageContent = screen.queryByText(/\{\"/);
@@ -125,15 +84,40 @@ describe('MessageList Real-World Streaming Tests', () => {
 
   test('should update UI as more content streams in', () => {
     writeToStdout('🔍 TEST: should update UI as more content streams in');
-    render(<MessageList sessionId="streaming-partial" isStreaming={() => true} />);
+    
+    const content = '{"dependencies": {}}\n\nThis quiz app allows users to create';
+    writeToStdout(
+      `🔍 STREAM UPDATE: length=${content.length} - content="${content.substring(0, 30)}..."`
+    );
+    
+    const messages = [
+      {
+        type: 'user',
+        text: 'Create a quiz app',
+        _id: 'user-2',
+        session_id: 'test-session',
+        created_at: Date.now(),
+      } as UserChatMessage,
+      {
+        type: 'ai',
+        text: content,
+        _id: '2',
+        segments: [{ type: 'markdown', content }],
+        isStreaming: true,
+        session_id: 'test-session',
+        created_at: Date.now(),
+      } as AiChatMessage,
+    ];
+    
+    render(<MessageList messages={messages} isStreaming={true} />);
 
     // Check if we see the content
-    const content = screen.queryByText(/This quiz app allows users to create/);
-    writeToStdout(`Is partial content visible? ${content ? 'YES' : 'NO'}`);
+    const contentElement = screen.queryByText(/This quiz app allows users to create/);
+    writeToStdout(`Is partial content visible? ${contentElement ? 'YES' : 'NO'}`);
 
     // Log what MessageList is deciding to render
     writeToStdout(
-      `MessageList showTypingIndicator check - would return: ${!content ? 'SHOW TYPING' : 'SHOW CONTENT'}`
+      `MessageList showTypingIndicator check - would return: ${!contentElement ? 'SHOW TYPING' : 'SHOW CONTENT'}`
     );
 
     expect(screen.getByText(/This quiz app allows users to create/)).toBeInTheDocument();
@@ -141,22 +125,57 @@ describe('MessageList Real-World Streaming Tests', () => {
 
   test('should display both markdown and code when segments are present', () => {
     writeToStdout('🔍 TEST: should display both markdown and code when segments are present');
-    render(<MessageList sessionId="streaming-with-code" isStreaming={() => true} />);
+    
+    const markdownContent =
+      '{"dependencies": {}}\n\nThis quiz app allows users to create quizzes with timed questions and track scores. Users can create new quizzes, add questions with multiple choice options, and then take quizzes to track their scores.';
+    const codeContent = 'import React, { useState, use';
+
+    writeToStdout(
+      `🔍 STREAM UPDATE: length=${markdownContent.length + codeContent.length + 8} with code segment - markdown=${markdownContent.length} bytes, code=${codeContent.length} bytes`
+    );
+    writeToStdout(
+      `🔍 SEGMENT 0: type=markdown, content="${markdownContent.substring(0, 30)}..."`
+    );
+    writeToStdout(`🔍 SEGMENT 1: type=code, content="${codeContent}"`);
+    
+    const messages = [
+      {
+        type: 'user',
+        text: 'Create a quiz app',
+        _id: 'user-3',
+        session_id: 'test-session',
+        created_at: Date.now(),
+      } as UserChatMessage,
+      {
+        type: 'ai',
+        text: `${markdownContent}\n\n\`\`\`js\n${codeContent}`,
+        _id: '3',
+        segments: [
+          { type: 'markdown', content: markdownContent },
+          { type: 'code', content: codeContent },
+        ],
+        isStreaming: true,
+        session_id: 'test-session',
+        created_at: Date.now(),
+      } as AiChatMessage,
+    ];
+    
+    render(<MessageList messages={messages} isStreaming={true} />);
 
     // Check if we see both types of content
-    const markdownContent = screen.queryByText(/This quiz app allows users/);
-    const codeContent = screen.queryByText(/import React/);
+    const markdownElement = screen.queryByText(/This quiz app allows users/);
+    const codeElement = screen.queryByText(/import React/);
 
-    writeToStdout(`Markdown content visible? ${markdownContent ? 'YES' : 'NO'}`);
-    writeToStdout(`Code content visible? ${codeContent ? 'YES' : 'NO'}`);
+    writeToStdout(`Markdown content visible? ${markdownElement ? 'YES' : 'NO'}`);
+    writeToStdout(`Code content visible? ${codeElement ? 'YES' : 'NO'}`);
 
-    if (markdownContent && codeContent) {
+    if (markdownElement && codeElement) {
       writeToStdout('Both segments rendering correctly in test');
     } else {
       writeToStdout('SEGMENTS MISSING - same issue as in real app?');
     }
 
-    expect(markdownContent).toBeInTheDocument();
-    expect(codeContent).toBeInTheDocument();
+    expect(markdownElement).toBeInTheDocument();
+    expect(codeElement).toBeInTheDocument();
   });
 });
