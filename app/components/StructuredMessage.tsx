@@ -55,7 +55,6 @@ const StructuredMessage = memo(({ segments, isStreaming }: StructuredMessageProp
                 >
                   <div className="mb-2 flex items-center justify-between">
                     <span className="font-mono text-sm text-gray-500 dark:text-gray-400">
-                      
                       {`${codeLines} line${codeLines !== 1 ? 's' : ''} of code`}
                     </span>
 
@@ -65,7 +64,9 @@ const StructuredMessage = memo(({ segments, isStreaming }: StructuredMessageProp
                       }}
                       className="rounded bg-gray-200 px-2 py-1 text-xs transition-colors hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600"
                     >
-                      <code className="text-gray-400 dark:text-gray-600 font-mono mr-3">App.jsx</code>
+                      <code className="mr-3 font-mono text-gray-400 dark:text-gray-600">
+                        App.jsx
+                      </code>
                       Copy
                     </button>
                   </div>

@@ -6,6 +6,7 @@ import type {
   AiChatMessageDocument,
   SessionDocument,
   Segment,
+  ScreenshotDocument,
 } from '../types/chat';
 
 export function useSession(routedSessionId: string | undefined) {
@@ -73,7 +74,7 @@ export function useSession(routedSessionId: string | undefined) {
         type: 'image/png',
         lastModified: Date.now(),
       });
-
+      console.log('add screenshot', session._id);
       await database.put({
         type: 'screenshot',
         session_id: session._id,
@@ -85,16 +86,12 @@ export function useSession(routedSessionId: string | undefined) {
     [session._id, database]
   );
 
-  // const updateAiMessage = useCallback(
-  //   async (rawMessage: string) => {
-  //     await mergeAiMessage({ text: rawMessage });
-  //   },
-  //   [mergeAiMessage]
-  // );
+  // const { docs: screenshots } = useLiveQuery<ScreenshotDocument>((doc) => [doc.session_id, doc.type], { prefix: [ 'screenshot' ] });
 
   return {
     session,
     docs,
+    // screenshots,
     database,
     updateTitle,
     addScreenshot,

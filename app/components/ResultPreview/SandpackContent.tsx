@@ -5,7 +5,6 @@ import {
   SandpackPreview,
   SandpackProvider,
 } from '@codesandbox/sandpack-react';
-import SandpackEventListener from './SandpackEventListener';
 import SandpackScrollController from './SandpackScrollController';
 import type { SandpackFiles } from './ResultPreviewTypes';
 
@@ -13,7 +12,6 @@ interface SandpackContentProps {
   activeView: 'preview' | 'code';
   filesContent: SandpackFiles;
   isStreaming: boolean;
-  lockCodeView: boolean;
   sandpackKey: string;
   setActiveView: (view: 'preview' | 'code') => void;
   setBundlingComplete: (complete: boolean) => void;
@@ -24,7 +22,6 @@ const SandpackContent: React.FC<SandpackContentProps> = ({
   activeView,
   filesContent,
   isStreaming,
-  lockCodeView,
   sandpackKey,
   setActiveView,
   setBundlingComplete,
@@ -73,15 +70,17 @@ const SandpackContent: React.FC<SandpackContentProps> = ({
               width: '100%',
             }}
           >
-            <SandpackPreview
-              showNavigator={false}
-              showOpenInCodeSandbox={false}
-              showRefreshButton={true}
-              showRestartButton={false}
-              showOpenNewtab={false}
-              className="h-full w-full"
-              style={{ height: '100%' }}
-            />
+            {!isStreaming && (
+              <SandpackPreview
+                showNavigator={false}
+                showOpenInCodeSandbox={false}
+                showRefreshButton={true}
+                showRestartButton={false}
+                showOpenNewtab={false}
+                className="h-full w-full"
+                style={{ height: '100%' }}
+              />
+            )}
           </div>
           <div
             style={{

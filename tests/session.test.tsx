@@ -59,7 +59,12 @@ vi.mock('../app/components/ResultPreview/ResultPreview', () => ({
     <div data-testid="mock-result-preview">
       <div data-testid="code-line-count">{code.split('\n').length} lines of code</div>
       <div data-testid="code-content">{code.substring(0, 50)}...</div>
-      <button data-testid="share-button" onClick={() => navigator.clipboard.writeText(`${window.location.origin}/shared?state=mockState`)}>
+      <button
+        data-testid="share-button"
+        onClick={() =>
+          navigator.clipboard.writeText(`${window.location.origin}/shared?state=mockState`)
+        }
+      >
         Share
       </button>
     </div>

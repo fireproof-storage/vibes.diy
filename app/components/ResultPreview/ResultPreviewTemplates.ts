@@ -43,6 +43,7 @@ export const indexHtml = `<!DOCTYPE html>
       function captureScreenshot() {
         html2canvas(document.body).then(canvas => {
           const dataURI = canvas.toDataURL();
+          console.log('ResultPreviewTemplates: Sending screenshot');
           window.parent.postMessage({ type: 'screenshot', data: dataURI }, '*');
         });
       }
@@ -74,8 +75,6 @@ export const indexHtml = `<!DOCTYPE html>
     <script type="module" src="/index.jsx"></script>
   </body>
 </html>`;
-
-export const defaultCode = '';
 
 export const animationStyles = `
   @keyframes spin-slow {

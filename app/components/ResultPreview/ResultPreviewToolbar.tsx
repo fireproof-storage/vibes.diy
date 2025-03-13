@@ -52,7 +52,9 @@ const ResultPreviewToolbar: React.FC<ResultPreviewToolbarProps> = ({
               activeView === 'preview'
                 ? 'bg-light-background-00 dark:bg-dark-background-00 text-light-primary dark:text-dark-primary shadow-sm'
                 : 'text-light-primary dark:text-dark-primary' +
-                  (previewReady ? ' hover:bg-light-decorative-01 dark:hover:bg-dark-decorative-01' : ' opacity-50 cursor-not-allowed')
+                  (previewReady
+                    ? ' hover:bg-light-decorative-01 dark:hover:bg-dark-decorative-01'
+                    : ' cursor-not-allowed opacity-50')
             }`}
             aria-label="Switch to preview"
           >

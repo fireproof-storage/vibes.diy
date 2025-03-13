@@ -1,5 +1,5 @@
 import { useState, useRef, useCallback, useEffect, useMemo } from 'react';
-import type { Segment, ChatMessageDocument, ChatState } from '../types/chat';
+import type { Segment, ChatMessageDocument, ChatState, ScreenshotDocument } from '../types/chat';
 import { makeBaseSystemPrompt } from '../prompts';
 import { parseContent, parseDependencies } from '../utils/segmentParser';
 import { useSession } from './useSession';
@@ -22,11 +22,11 @@ export function useSimpleChat(sessionId: string | undefined): ChatState {
     mergeUserMessage,
     submitUserMessage,
     mergeAiMessage,
-    saveAiMessage,
+    addScreenshot,
+    // screenshots,
     database,
     aiMessage,
   } = useSession(sessionId);
-  // const [input, setInput] = useState<string>('');
   const [systemPrompt, setSystemPrompt] = useState('');
   const streamBufferRef = useRef<string>('');
   const inputRef = useRef<HTMLTextAreaElement>(null);
@@ -38,24 +38,23 @@ export function useSimpleChat(sessionId: string | undefined): ChatState {
     : docs.find((doc: any) => doc.type === 'ai' && doc._id === selectedResponseId) ||
       docs.find((doc: any) => doc.type === 'ai')) as unknown as ChatMessageDocument;
 
-  function setInput(input: string) {
-    // is this is wrong I dont want to be right
+  const setInput = useCallback((input: string) => {
     mergeUserMessage({ text: input });
-  }
+  }, [mergeUserMessage]);
 
   // Process docs into messages for the UI
   const filteredDocs = docs.filter((doc: any) => doc.type === 'ai' || doc.type === 'user');
 
-  const messages = (aiMessage.text.length > 0
+  const messages = (isStreaming && aiMessage.text.length > 0
     ? [...filteredDocs, aiMessage]
     : filteredDocs) as unknown as ChatMessageDocument[];
 
-  function buildMessageHistory() {
+  const buildMessageHistory = useCallback(() => {
     return messages.map((msg) => ({
       role: msg.type === 'user' ? ('user' as const) : ('assistant' as const),
       content: msg.text || '',
     }));
-  }
+  }, [messages]);
 
   const { segments: selectedSegments, dependenciesString: selectedDependenciesString } =
     selectedResponseDoc
@@ -72,7 +71,7 @@ export function useSimpleChat(sessionId: string | undefined): ChatState {
    * Send a message and process the AI response
    * Returns a promise that resolves when the entire process is complete, including title generation
    */
-  async function sendMessage(): Promise<void> {
+  const sendMessage = useCallback(async (): Promise<void> => {
     if (!userMessage.text.trim()) return;
 
     // First, ensure we have the system prompt
@@ -132,10 +131,34 @@ export function useSimpleChat(sessionId: string | undefined): ChatState {
       .finally(() => {
         setIsStreaming(false);
       });
-  }
+  }, [
+    userMessage.text,
+    systemPrompt,
+    setSystemPrompt,
+    streamBufferRef,
+    setIsStreaming,
+    submitUserMessage,
+    buildMessageHistory,
+    mergeAiMessage,
+    aiMessage,
+    database,
+    session?.title,
+    updateTitle
+  ]);
+
+  const addFirstScreenshot = useCallback(async (screenshotData: string) => {
+    const { rows: screenshots } = await database.query((doc: any) => [doc.session_id, doc.type], {
+      prefix: [session._id, 'screenshot'],
+    });
+    console.log('screenshots', screenshots.length);
+    if (screenshots.length === 0) {
+      addScreenshot(screenshotData);
+    }
+  }, [session._id, database, addScreenshot]);
 
   return {
     sessionId: session._id,
+    addScreenshot: addFirstScreenshot,
     docs: messages,
     selectedResponseDoc,
     selectedSegments,

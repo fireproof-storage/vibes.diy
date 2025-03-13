@@ -2,7 +2,8 @@
  * Cleans the code string by removing any content before the first import or export statement
  */
 export function cleanCodeBeforeImport(codeString: string): string {
-  return codeString.replace(/^[\s\S]*?(import|export)/, '$1');
+  return codeString;
+  // return codeString.replace(/^[\s\S]*?(import|export)/, '$1');
 }
 
 /**

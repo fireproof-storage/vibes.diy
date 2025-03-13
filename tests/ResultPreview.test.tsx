@@ -77,7 +77,7 @@ describe('ResultPreview', () => {
 
   it('calls onShare when share button is clicked', () => {
     const code = 'console.log("test");';
-    
+
     render(<ResultPreview code={code} />);
 
     // Find and click the share button

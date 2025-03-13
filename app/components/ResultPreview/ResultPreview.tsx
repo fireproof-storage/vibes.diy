@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
 import type { ResultPreviewProps } from './ResultPreviewTypes';
 import type { SandpackFiles } from './ResultPreviewTypes';
-import { indexHtml, defaultCode, animationStyles } from './ResultPreviewTemplates';
+import { indexHtml, animationStyles } from './ResultPreviewTemplates';
 import { processCodeForDisplay } from './ResultPreviewUtils';
 import WelcomeScreen from './WelcomeScreen';
 import ResultPreviewToolbar from './ResultPreviewToolbar';
@@ -16,23 +16,16 @@ function ResultPreview({
   isStreaming = false,
 }: ResultPreviewProps) {
   const [activeView, setActiveView] = useState<'preview' | 'code'>(initialView);
-  const [displayCode, setDisplayCode] = useState(code || defaultCode);
   const [bundlingComplete, setBundlingComplete] = useState(true);
   const [previewReady, setPreviewReady] = useState(false);
 
-  const [lockCodeView, setLockCodeView] = useState(false);
-  const filesRef = useRef<SandpackFiles>({
-    '/index.html': {
-      code: indexHtml,
-      hidden: true,
-    },
-    '/App.jsx': {
-      code: code || defaultCode,
-      active: true,
-    },
-  });
+  const filesRef = useRef<SandpackFiles>({});
+  const showWelcome = !code || code.length === 0;
 
-  const showWelcome = code.length === 0;
+  const sandpackKey = useMemo(() => {
+    if (showWelcome) return `${sessionId || 'default'}-welcome`;
+    return `${sessionId || 'default'}-${isStreaming ? 'streaming' : 'static'}-${code}`;
+  }, [sessionId, isStreaming, code, showWelcome]);
 
   useEffect(() => {
     const handleMessage = ({ data }: MessageEvent) => {
@@ -40,9 +33,10 @@ function ResultPreview({
         if (data.type === 'preview-loaded') {
           setPreviewReady(true);
           setActiveView('preview');
-        } else if (data.type === 'screenshot' && data.screenshot) {
+        } else if (data.type === 'screenshot' && data.data) {
+          console.log('ResultPreview: Received screenshot');
           if (onScreenshotCaptured) {
-            onScreenshotCaptured(data.screenshot);
+            onScreenshotCaptured(data.data);
           }
         }
       }
@@ -51,13 +45,9 @@ function ResultPreview({
     return () => window.removeEventListener('message', handleMessage);
   }, [onScreenshotCaptured]);
 
-  // Update code when it changes
   useEffect(() => {
-    if (code) {
-      console.log('ResultPreview: Updating code, length:', code?.length || 0);
+    if (!showWelcome) {
       const processedCode = processCodeForDisplay(code);
-      setDisplayCode(processedCode);
-
       filesRef.current = {
         ...filesRef.current,
         '/App.jsx': {
@@ -66,12 +56,39 @@ function ResultPreview({
         },
       };
     }
-  }, [code]);
+  }, [code, showWelcome]);
 
-  // Create a unique key for SandpackProvider that changes when relevant props change
-  const sandpackKey = useMemo(() => {
-    return `${sessionId || 'default'}-${isStreaming ? 'streaming' : 'static' + code}`;
-  }, [sessionId, isStreaming, code]);
+  const previewArea = showWelcome ? (
+    <div className="h-full" style={{ height: 'calc(100vh - 49px)' }}>
+      <WelcomeScreen />
+    </div>
+  ) : (
+    (() => {
+      // Initialize files content here, right before SandpackContent is rendered
+      filesRef.current = {
+        '/index.html': {
+          code: indexHtml,
+          hidden: true,
+        },
+        '/App.jsx': {
+          code: processCodeForDisplay(code),
+          active: true,
+        },
+      };
+
+      return (
+        <SandpackContent
+          activeView={activeView}
+          filesContent={filesRef.current}
+          isStreaming={isStreaming}
+          sandpackKey={sandpackKey}
+          setActiveView={setActiveView}
+          setBundlingComplete={setBundlingComplete}
+          dependencies={dependencies}
+        />
+      );
+    })()
+  );
 
   return (
     <div className="h-full" style={{ overflow: 'hidden' }}>
@@ -87,34 +104,7 @@ function ResultPreview({
         dependencies={dependencies}
       />
 
-      {showWelcome ? (
-        <div className="h-full" style={{ height: 'calc(100vh - 49px)' }}>
-          <WelcomeScreen />
-        </div>
-      ) : (
-        <SandpackContent
-          activeView={activeView}
-          filesContent={filesRef.current}
-          isStreaming={isStreaming}
-          lockCodeView={lockCodeView}
-          sandpackKey={sandpackKey}
-          setActiveView={setActiveView}
-          setBundlingComplete={setBundlingComplete}
-          dependencies={dependencies}
-        />
-      )}
-
-      <div className="result-content">
-        {!showWelcome && (
-          <button
-            data-testid="copy-button"
-            onClick={() => navigator.clipboard.writeText(displayCode)}
-            className="text-light-primary dark:text-dark-primary hover:bg-light-decorative-01 dark:hover:bg-dark-decorative-01 rounded-md px-4 py-1.5 text-sm font-medium transition-colors"
-          >
-            Copy to Clipboard
-          </button>
-        )}
-      </div>
+      {previewArea}
     </div>
   );
 }

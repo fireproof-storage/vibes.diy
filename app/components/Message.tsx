@@ -57,35 +57,37 @@ const UserMessage = memo(({ message }: { message: ChatMessageDocument }) => {
 });
 
 // Main Message component that handles animation and decides which subcomponent to render
-const Message = memo(({ message, isShrinking, isExpanding, isStreaming }: MessageProps) => {
-  return (
-    <div className={getAnimationClasses(isShrinking, isExpanding)}>
-      {message.type === 'ai' ? (
-        <AIMessage message={message as AiChatMessageDocument} isStreaming={isStreaming} />
-      ) : (
-        <UserMessage message={message} />
-      )}
-    </div>
-  );
-}, 
-(prevProps, nextProps) => {
-  // Check for message content changes
-  if (prevProps.message.text !== nextProps.message.text) {
-    return false; // Text changed, need to re-render
+const Message = memo(
+  ({ message, isShrinking, isExpanding, isStreaming }: MessageProps) => {
+    return (
+      <div className={getAnimationClasses(isShrinking, isExpanding)}>
+        {message.type === 'ai' ? (
+          <AIMessage message={message as AiChatMessageDocument} isStreaming={isStreaming} />
+        ) : (
+          <UserMessage message={message} />
+        )}
+      </div>
+    );
+  },
+  (prevProps, nextProps) => {
+    // Check for message content changes
+    if (prevProps.message.text !== nextProps.message.text) {
+      return false; // Text changed, need to re-render
+    }
+
+    // Check for animation or streaming state changes
+    if (
+      prevProps.isShrinking !== nextProps.isShrinking ||
+      prevProps.isExpanding !== nextProps.isExpanding ||
+      prevProps.isStreaming !== nextProps.isStreaming
+    ) {
+      return false; // State changed, need to re-render
+    }
+
+    // If we get here, props are equal enough to skip re-render
+    return true;
   }
-  
-  // Check for animation or streaming state changes
-  if (
-    prevProps.isShrinking !== nextProps.isShrinking ||
-    prevProps.isExpanding !== nextProps.isExpanding ||
-    prevProps.isStreaming !== nextProps.isStreaming
-  ) {
-    return false; // State changed, need to re-render
-  }
-  
-  // If we get here, props are equal enough to skip re-render
-  return true;
-});
+);
 
 export default Message;
 

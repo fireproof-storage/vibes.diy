@@ -15,12 +15,9 @@ export function meta() {
 }
 
 export default function UnifiedSession() {
-  // Get sessionId from URL params if it exists
   const { sessionId: urlSessionId } = useParams<{ sessionId: string }>();
   const navigate = useNavigate();
   const location = useLocation();
-
-  console.log('urlSessionId', urlSessionId);
   const chatState = useSimpleChat(urlSessionId);
 
   useEffect(() => {
@@ -53,6 +50,7 @@ export default function UnifiedSession() {
           code={chatState.selectedCode?.content || ''}
           dependencies={chatState.selectedDependencies || {}}
           isStreaming={chatState.isStreaming}
+          onScreenshotCaptured={chatState.addScreenshot}
         />
       }
     />

@@ -29,7 +29,7 @@ export function parseContent(text: string): {
 
   // First look for complete code blocks delimited by ```js or ```jsx and a closing ```
   const completeCodeBlockMatch = text.match(/(.*?)\s*```(?:js|jsx)\s*\n([\s\S]*?)```\s*([\s\S]*)/s);
-  
+
   // Then check for incomplete code blocks with just the opening delimiter
   const incompleteCodeBlockMatch = text.match(/(.*?)\s*```(?:js|jsx)\s*\n([\s\S]*?)$/s);
 

@@ -92,6 +92,7 @@ export interface ChatState {
   inputRef: React.RefObject<HTMLTextAreaElement | null>;
   sendMessage: () => Promise<void>;
   title: string;
+  addScreenshot: (screenshot: string) => Promise<void>;
   sessionId?: string | null;
   selectedResponseDoc?: ChatMessageDocument;
   selectedSegments?: Segment[];

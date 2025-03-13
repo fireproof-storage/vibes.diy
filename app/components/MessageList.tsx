@@ -41,8 +41,6 @@ function MessageList({
     }
   }, [messages, isStreaming]);
 
-  console.log('MessageList messages', messages);
-
   return (
     <div
       className={`flex-1 overflow-y-auto ${
