@@ -59,65 +59,53 @@ export async function callOpenRouterAPI(
  *
  * @param response - The fetch response object with streaming enabled
  * @param onChunk - Callback function that receives each content chunk as it arrives
- * @param onComplete - Callback function called when streaming is complete
- * @param onError - Callback function called if an error occurs
  * @returns A promise that resolves when streaming is complete
  */
 export async function processStream(
   response: Response,
-  onChunk: (content: string) => void,
-  onComplete: () => void,
-  onError: (error: Error) => void
+  onChunk: (content: string) => void
 ): Promise<void> {
-  try {
-    if (!response.ok) {
-      throw new Error(`HTTP error! Status: ${response.status}`);
-    }
+  if (!response.ok) {
+    throw new Error(`HTTP error! Status: ${response.status}`);
+  }
 
-    const reader = response.body?.getReader();
-    if (!reader) {
-      throw new Error('Response body is not readable');
-    }
+  const reader = response.body?.getReader();
+  if (!reader) {
+    throw new Error('Response body is not readable');
+  }
 
-    const decoder = new TextDecoder();
+  const decoder = new TextDecoder();
 
-    // Process the stream
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
+  // Process the stream
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
 
-      // Decode the chunk
-      const chunk = decoder.decode(value, { stream: true });
+    // Decode the chunk
+    const chunk = decoder.decode(value, { stream: true });
 
-      // Process SSE format
-      const lines = chunk.split('\n');
-      for (const line of lines) {
-        // Skip OpenRouter processing messages
-        if (line.startsWith(': OPENROUTER PROCESSING')) {
-          continue;
-        }
+    // Process SSE format
+    const lines = chunk.split('\n');
+    for (const line of lines) {
+      // Skip OpenRouter processing messages
+      if (line.startsWith(': OPENROUTER PROCESSING')) {
+        continue;
+      }
 
-        if (line.startsWith('data: ') && line !== 'data: [DONE]') {
-          try {
-            const data = JSON.parse(line.substring(6));
-            if (data.choices && data.choices[0]?.delta?.content) {
-              const content = data.choices[0].delta.content;
-              // Call the onChunk callback with the new content
-              onChunk(content);
-            }
-          } catch (e) {
-            console.error('Error parsing SSE JSON:', e);
+      if (line.startsWith('data: ') && line !== 'data: [DONE]') {
+        try {
+          const data = JSON.parse(line.substring(6));
+          if (data.choices && data.choices[0]?.delta?.content) {
+            const content = data.choices[0].delta.content;
+            // Call the onChunk callback with the new content
+            onChunk(content);
           }
+        } catch (e) {
+          console.error('Error parsing SSE JSON:', e);
         }
       }
     }
-
-    // Streaming is complete
-    onComplete();
-  } catch (error) {
-    // Handle and propagate errors
-    const err = error instanceof Error ? error : new Error(String(error));
-    console.error('Error processing stream:', err);
-    onError(err);
   }
+
+  // Function will naturally resolve when streaming is complete
 }

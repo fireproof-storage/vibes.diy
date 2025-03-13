@@ -6,10 +6,11 @@ export type Segment = {
 };
 
 // User message type
-export type UserChatMessage = {
+export type UserChatMessageDocument = {
   type: 'user';
+  session_id: string;
   text: string;
-  timestamp?: number;
+  created_at: number;
 };
 
 // AI message type
@@ -21,32 +22,26 @@ export type AiChatMessageDocument = {
 };
 
 // Union type for all message types
-export type ChatMessage = UserChatMessage | AiChatMessageDocument;
+export type ChatMessageDocument = UserChatMessageDocument | AiChatMessageDocument;
 
 export interface SessionDocument extends DocTypes {
   _id?: string;
   type: 'session'; // Document type for Fireproof queries
   title?: string;
-  prompt?: string;
   created_at: number;
 }
-
 export interface ChatInterfaceProps {
   chatState: {
-    messages: ChatMessage[];
-    setMessages: React.Dispatch<React.SetStateAction<ChatMessage[]>>;
+    docs: ChatMessageDocument[];
     input: string;
     setInput: React.Dispatch<React.SetStateAction<string>>;
-    isGenerating: boolean;
+    isStreaming: boolean;
     inputRef: React.RefObject<HTMLTextAreaElement | null>;
-    messagesEndRef: React.RefObject<HTMLDivElement | null>;
-    autoResizeTextarea: () => void;
-    scrollToBottom: () => void;
     sendMessage: () => Promise<void>;
-    getCurrentCode: () => string;
+    title: string;
+    sessionId?: string | null;
   };
   sessionId?: string | null;
   onSessionCreated?: (newSessionId: string) => void;
   onNewChat?: () => void;
-  onCodeGenerated?: (code: string, dependencies?: Record<string, string>) => void;
 }

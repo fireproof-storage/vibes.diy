@@ -8,24 +8,7 @@ import MessageList from './components/MessageList';
 import ChatInput from './components/ChatInput';
 import QuickSuggestions from './components/QuickSuggestions';
 import { FIREPROOF_CHAT_HISTORY } from './config/env';
-
-// Updated interface to match useSimpleChat's return value
-interface ChatInterfaceProps {
-  chatState: {
-    messages: ChatMessage[];
-    input: string;
-    setInput: React.Dispatch<React.SetStateAction<string>>;
-    isStreaming: boolean;
-    inputRef: React.RefObject<HTMLTextAreaElement | null>;
-    sendMessage: () => Promise<void>;
-
-    title: string;
-    sessionId?: string | null;
-  };
-  sessionId?: string | null;
-  onSessionCreated?: (newSessionId: string) => void;
-  onNewChat?: () => void;
-}
+import type { ChatInterfaceProps } from './types/chat';
 
 // Helper function to encode titles for URLs
 function encodeTitle(title: string): string {
@@ -38,10 +21,22 @@ function logDebug(message: string) {
   console.debug(`🔍 CHAT_INTERFACE: ${message}`);
 }
 
-function ChatInterface({ chatState, onSessionCreated, onNewChat }: ChatInterfaceProps) {
+function ChatInterface({ chatState }: ChatInterfaceProps) {
   // Extract commonly used values from chatState to avoid repetition
-  const { messages, input, setInput, isStreaming, inputRef, sendMessage, sessionId, title } =
-    chatState;
+  const {
+    docs,
+    input,
+    setInput,
+    isStreaming,
+    inputRef,
+    sendMessage,
+    sessionId,
+    title,
+    // selectedResponseDoc,
+    // selectedSegments,
+    // selectedCode,
+    // selectedDependenciesString,
+  } = chatState;
   // State for UI transitions and sharing
   const [isShrinking, setIsShrinking] = useState(false);
   const [isExpanding, setIsExpanding] = useState(false);
@@ -55,30 +50,6 @@ function ChatInterface({ chatState, onSessionCreated, onNewChat }: ChatInterface
   const closeSidebar = useCallback(() => {
     setIsSidebarVisible(false);
   }, []);
-
-  // Save session data when title changes
-  // useEffect(() => {
-  //   // Title is now managed by the useSession hook inside useSimpleChat
-  //   // We no longer need to manually save it
-  // }, []);
-
-  // Create a new chat session
-  // const handleNewChat = useCallback(() => {
-  //   // First trigger animation
-  //   setIsShrinking(true);
-  //   // Then redirect to home page after animation
-  //   setTimeout(() => {
-  //     window.location.href = '/';
-  //   }, 500);
-  // }, []);
-
-  // Compute current streaming message text
-  // const currentStreamedText = useMemo(() => {
-  //   const lastAiMessage = [...messages]
-  //     .reverse()
-  //     .find((msg): msg is AiChatMessage => msg.type === 'ai' && Boolean(msg.isStreaming));
-  //   return lastAiMessage?.text || '';
-  // }, [messages]);
 
   // Function to handle input changes
   const handleInputChange = useCallback(

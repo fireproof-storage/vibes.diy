@@ -1,0 +1,2 @@
+- start in useSimpleChat, its right
+- unified session is uses it correctly, so does ChatInterface

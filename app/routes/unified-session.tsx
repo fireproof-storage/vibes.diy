@@ -2,6 +2,7 @@ import { useEffect, useState, useCallback, useMemo, useRef } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router';
 import ChatInterface from '../ChatInterface';
 import ResultPreview from '../components/ResultPreview/ResultPreview';
+import type { ChatMessageDocument } from '../types/chat';
 // import type { ChatMessage, AiChatMessage, Segment, SessionDocument } from '../types/chat';
 import { useSimpleChat } from '../hooks/useSimpleChat';
 import AppLayout from '../components/AppLayout';
@@ -51,10 +52,30 @@ export default function UnifiedSession() {
   const [shareStatus, setShareStatus] = useState<string>('');
 
   const chatState = useSimpleChat(urlSessionId);
+  
+  // Create a compatible version of chatState for ChatInterface
+  const compatibleChatState = useMemo(() => {
+    // Create a proper React.Dispatch<SetStateAction<string>> function
+    const setInputCompat = ((value: string | ((prevState: string) => string)) => {
+      const newValue = typeof value === 'function' ? value(chatState.input) : value;
+      chatState.setInput(newValue);
+    }) as React.Dispatch<React.SetStateAction<string>>;
+    
+    return {
+      docs: chatState.docs as unknown as ChatMessageDocument[],
+      input: chatState.input,
+      setInput: setInputCompat,
+      isStreaming: chatState.isStreaming,
+      inputRef: chatState.inputRef,
+      sendMessage: chatState.sendMessage,
+      title: chatState.title,
+      sessionId: chatState.sessionId
+    };
+  }, [chatState]);
 
   // Log state for debugging
   console.log('UnifiedSession: initialized with sessionId:', chatState.sessionId);
-  console.log('UnifiedSession: chatState has messages:', chatState.messages.length);
+  console.log('UnifiedSession: chatState has docs:', chatState.docs.length);
   console.log('UnifiedSession: isStreaming:', chatState.isStreaming);
 
   // Check if there's a state parameter in the URL (for shared apps)
@@ -139,12 +160,12 @@ export default function UnifiedSession() {
 
   // Handle sharing functionality
   function handleShare() {
-    if (!chatState.getCurrentCode()) {
+    if (!chatState.selectedCode.content) {
       alert('Generate an app first before sharing!');
       return;
     }
 
-    const encoded = encodeStateToUrl(chatState.getCurrentCode(), chatState.getDependencies());
+    const encoded = encodeStateToUrl(chatState.selectedCode.content, chatState.selectedDependencies);
     if (encoded) {
       // Create a sharable URL with the encoded state
       const shareUrl = `${window.location.origin}/shared?state=${encoded}`;
@@ -189,12 +210,12 @@ export default function UnifiedSession() {
 
   return (
     <AppLayout
-      chatPanel={<ChatInterface chatState={chatState} />}
+      chatPanel={<ChatInterface chatState={compatibleChatState} />}
       previewPanel={
         <ResultPreview
           sessionId={chatState.sessionId}
-          code={chatState.getCurrentCode()}
-          dependencies={chatState.getDependencies()}
+          code={chatState.selectedCode.content}
+          dependencies={chatState.selectedDependencies}
           isStreaming={chatState.isStreaming}
           onShare={handleShare}
         />
