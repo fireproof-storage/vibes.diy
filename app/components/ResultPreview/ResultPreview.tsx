@@ -35,21 +35,17 @@ function ResultPreview({
   const showWelcome = code.length === 0;
 
   useEffect(() => {
-    const handleMessage = (event: MessageEvent) => {
-      console.log('ResultPreview: handleMessage', event.data);
-      if (event.data && event.data.type === 'preview-loaded') {
-        console.log('ResultPreview: preview-loaded!!!!!!!!!!!!!');
-        setActiveView('preview');
-      }
-      if (event.data && event.data.screenshot) {
-        const screenshotData = event.data.screenshot;
-
-        if (onScreenshotCaptured) {
-          onScreenshotCaptured(screenshotData);
+    const handleMessage = ({ data }: MessageEvent) => {
+      if (data) {
+        if (data.type === 'preview-loaded') {
+          setActiveView('preview');
+        } else if (data.type === 'screenshot' && data.screenshot) {
+          if (onScreenshotCaptured) {
+            onScreenshotCaptured(data.screenshot);
+          }
         }
       }
     };
-
     window.addEventListener('message', handleMessage);
     return () => window.removeEventListener('message', handleMessage);
   }, [onScreenshotCaptured]);

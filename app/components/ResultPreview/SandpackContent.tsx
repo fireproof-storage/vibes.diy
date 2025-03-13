@@ -28,8 +28,7 @@ const SandpackContent: React.FC<SandpackContentProps> = ({
   sandpackKey,
   setActiveView,
   setBundlingComplete,
-  dependencies
-  
+  dependencies,
 }) => {
   const codeEditorRef = useRef<HTMLDivElement>(null);
   const [isDarkMode, setIsDarkMode] = useState(false);
@@ -65,7 +64,6 @@ const SandpackContent: React.FC<SandpackContentProps> = ({
         files={filesContent}
         theme={isDarkMode ? 'dark' : 'light'}
       >
-        
         {isStreaming && <SandpackScrollController isStreaming={isStreaming} />}
         <SandpackLayout className="h-full" style={{ height: 'calc(100vh - 49px)' }}>
           <div
