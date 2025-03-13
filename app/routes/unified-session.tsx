@@ -2,11 +2,11 @@ import { useEffect, useState, useCallback, useMemo, useRef } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router';
 import ChatInterface from '../ChatInterface';
 import ResultPreview from '../components/ResultPreview/ResultPreview';
-import type { ChatMessage, AiChatMessage, Segment, SessionDocument } from '../types/chat';
+// import type { ChatMessage, AiChatMessage, Segment, SessionDocument } from '../types/chat';
 import { useSimpleChat } from '../hooks/useSimpleChat';
 import AppLayout from '../components/AppLayout';
 
-import { useSession } from '../hooks/useSession';
+// import { useSession } from '../hooks/useSession';
 
 export function meta() {
   return [
@@ -50,10 +50,6 @@ export default function UnifiedSession() {
 
   const [shareStatus, setShareStatus] = useState<string>('');
 
-  // Initialize session management hook with current sessionId
-  // const { createSession, session } = useSession(sessionId);
-
-  // Use the simple chat hook with current sessionId
   const chatState = useSimpleChat(urlSessionId);
 
   // Log state for debugging
@@ -135,11 +131,10 @@ export default function UnifiedSession() {
 
   // Handle new chat creation
   // const handleNewChat = useCallback(() => {
-   
+
   //   // Navigate to home to create a new session
   //   navigate('/', { replace: true });
 
-  
   // }, [navigate]);
 
   // Handle sharing functionality
@@ -194,18 +189,14 @@ export default function UnifiedSession() {
 
   return (
     <AppLayout
-      chatPanel={
-        <ChatInterface
-          chatState={chatState}
-        />
-      }
+      chatPanel={<ChatInterface chatState={chatState} />}
       previewPanel={
         <ResultPreview
           sessionId={chatState.sessionId}
           code={chatState.getCurrentCode()}
           dependencies={chatState.getDependencies()}
           isStreaming={chatState.isStreaming}
-          onShare={handleShare}          
+          onShare={handleShare}
         />
       }
     />

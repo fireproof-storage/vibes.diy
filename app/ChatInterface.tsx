@@ -18,10 +18,9 @@ interface ChatInterfaceProps {
     isStreaming: boolean;
     inputRef: React.RefObject<HTMLTextAreaElement | null>;
     sendMessage: () => Promise<void>;
-  
+
     title: string;
     sessionId?: string | null;
-
   };
   sessionId?: string | null;
   onSessionCreated?: (newSessionId: string) => void;
@@ -41,16 +40,8 @@ function logDebug(message: string) {
 
 function ChatInterface({ chatState, onSessionCreated, onNewChat }: ChatInterfaceProps) {
   // Extract commonly used values from chatState to avoid repetition
-  const {
-    messages,
-    input,
-    setInput,
-    isStreaming,
-    inputRef,
-    sendMessage,
-    sessionId,
-    title
-  } = chatState;
+  const { messages, input, setInput, isStreaming, inputRef, sendMessage, sessionId, title } =
+    chatState;
   // State for UI transitions and sharing
   const [isShrinking, setIsShrinking] = useState(false);
   const [isExpanding, setIsExpanding] = useState(false);
@@ -64,7 +55,6 @@ function ChatInterface({ chatState, onSessionCreated, onNewChat }: ChatInterface
   const closeSidebar = useCallback(() => {
     setIsSidebarVisible(false);
   }, []);
-
 
   // Save session data when title changes
   // useEffect(() => {
@@ -128,7 +118,9 @@ function ChatInterface({ chatState, onSessionCreated, onNewChat }: ChatInterface
 
   // Memoize the MessageList component to prevent unnecessary re-renders
   const memoizedMessageList = useMemo(() => {
-    logDebug(`Creating MessageList with sessionId=${sessionId}, messages=${messages.length}, isStreaming=${isStreaming}`);
+    logDebug(
+      `Creating MessageList with sessionId=${sessionId}, messages=${messages.length}, isStreaming=${isStreaming}`
+    );
 
     return (
       <MessageList
@@ -142,9 +134,7 @@ function ChatInterface({ chatState, onSessionCreated, onNewChat }: ChatInterface
 
   return (
     <div className="flex h-screen flex-col">
-      <ChatHeader
-        onOpenSidebar={openSidebar} title={title}
-      />
+      <ChatHeader onOpenSidebar={openSidebar} title={title} />
       <div className="flex flex-1 overflow-hidden">
         <div className="flex w-full flex-1 flex-col">
           {memoizedMessageList}

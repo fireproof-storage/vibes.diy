@@ -3,7 +3,7 @@ import type { Segment } from '../types/chat';
 /**
  * Generate a title based on the first two segments (markdown and code)
  * Returns a promise that resolves when the title generation is complete
- * 
+ *
  * @param segments - Array of content segments to analyze
  * @param model - The AI model to use for title generation
  * @param updateTitle - Function to call to update the title in the session
@@ -66,4 +66,4 @@ export async function generateTitle(
   }
 
   return null;
-} 
+}

@@ -49,9 +49,7 @@ vi.mock('../app/hooks/useSessionMessages', () => ({
           {
             type: 'ai',
             text: '```jsx\nimport React from "react";\n```',
-            segments: [
-              { type: 'code', content: 'import React from "react";' },
-            ],
+            segments: [{ type: 'code', content: 'import React from "react";' }],
             isStreaming: true,
           },
         ],
@@ -86,7 +84,7 @@ describe('MessageList Streaming Content', () => {
 
     // Should show the minimal markdown content
     expect(screen.getByText('Here')).toBeInTheDocument();
-    
+
     // Should NOT show "Thinking..." when there's content
     expect(screen.queryByText('Thinking')).not.toBeInTheDocument();
   });
@@ -96,28 +94,28 @@ describe('MessageList Streaming Content', () => {
 
     // Should show the markdown content
     expect(screen.getByText('Here is a todo app')).toBeInTheDocument();
-    
+
     // Code should also be present (but we don't test the exact UI as it may vary)
     expect(screen.queryByText(/import React from "react";/)).toBeInTheDocument();
-    
+
     // Should NOT show "Thinking..." when there's content
     expect(screen.queryByText('Thinking')).not.toBeInTheDocument();
   });
 
   test('shows just code content during streaming if only code segment exists', () => {
     render(<MessageList sessionId="streaming-just-code" isStreaming={() => true} />);
-    
+
     // Code should be present (but we don't test the exact UI as it may vary)
     expect(screen.queryByText(/import React from "react";/)).toBeInTheDocument();
-    
+
     // Should NOT show "Thinking..." when there's content
     expect(screen.queryByText('Thinking')).not.toBeInTheDocument();
   });
 
   test('shows "Processing response..." when no segments are available', () => {
     render(<MessageList sessionId="streaming-no-content" isStreaming={() => true} />);
-    
+
     // Should show "Processing response..." when there's no content
     expect(screen.getByText('Processing response...')).toBeInTheDocument();
   });
-}); 
+});

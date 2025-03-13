@@ -76,7 +76,5 @@ function ChatHeader({ onOpenSidebar, title }: ChatHeaderProps) {
 export default memo(ChatHeader, (prevProps, nextProps) => {
   // Only re-render if isStreaming changes
   // Note: Functions should be memoized by parent components
-  return (
-    prevProps.onOpenSidebar === nextProps.onOpenSidebar
-  );
+  return prevProps.onOpenSidebar === nextProps.onOpenSidebar;
 });

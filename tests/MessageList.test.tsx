@@ -87,7 +87,7 @@ describe('MessageList', () => {
 
     // The welcome message should not be displayed during streaming mode
     expect(screen.queryByText('Welcome to Fireproof App Builder')).not.toBeInTheDocument();
-    
+
     // Verify that we have a container for messages
     const container = document.querySelector('.flex-1.overflow-y-auto');
     expect(container).toBeInTheDocument();
@@ -111,10 +111,10 @@ describe('MessageList', () => {
 
   test('should show "Processing response..." when streaming message has no content', () => {
     render(<MessageList sessionId="streaming-no-content" isStreaming={() => true} />);
-    
+
     // Should show the user message
     expect(screen.getByText('Create a React app')).toBeInTheDocument();
-    
+
     // Should show the placeholder text from StructuredMessage for empty content
     expect(screen.getByText('Processing response...')).toBeInTheDocument();
   });

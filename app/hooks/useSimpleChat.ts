@@ -3,9 +3,9 @@ import type { ChatMessage, Segment } from '../types/chat';
 import { makeBaseSystemPrompt } from '../prompts';
 import { parseContent, parseDependencies } from '../utils/segmentParser';
 import { useSession } from './useSession';
-import { useSessionMessages } from './useSessionMessages';
+
 import { generateTitle } from '../utils/titleGenerator';
-import { processStream, updateStreamingMessage } from '../utils/streamHandler';
+import { processStream, callOpenRouterAPI } from '../utils/streamHandler';
 
 const CHOSEN_MODEL = 'anthropic/claude-3.7-sonnet';
 
@@ -15,8 +15,9 @@ const CHOSEN_MODEL = 'anthropic/claude-3.7-sonnet';
  */
 export function useSimpleChat(sessionId: string | undefined) {
   // Use our new hooks
-  const { session, updateTitle, addUserMessage, docs, updateStreamingMessage: updateStreamingMessageFromSession } = useSession(sessionId);
-  const { messages, isLoading: isLoadingMessages, addAiMessage } = useSessionMessages(session?._id);
+  const { session, updateTitle, addUserMessage, docs, updateAiMessage, saveAiMessage } =
+    useSession(sessionId);
+  // const { messages, isLoading: isLoadingMessages } = useSessionMessages(session?._id);
 
   // Core state
   const [input, setInput] = useState<string>('');
@@ -60,9 +61,7 @@ export function useSimpleChat(sessionId: string | undefined) {
     }
 
     // Otherwise find the last AI message
-    const lastAiMessage = [...messages]
-      .reverse()
-      .find((msg) => msg.type === 'ai');
+    const lastAiMessage = [...messages].reverse().find((msg) => msg.type === 'ai');
 
     // Return segments from the last AI message or empty array
     return lastAiMessage?.segments || [];
@@ -88,105 +87,61 @@ export function useSimpleChat(sessionId: string | undefined) {
    * Returns a promise that resolves when the entire process is complete, including title generation
    */
   async function sendMessage(): Promise<void> {
-    if (input.trim()) {
-      logDebug(`Starting sendMessage with input: ${input.substring(0, 30)}...`);
-      logDebug(`Current sessionId: ${sessionId}`);
+    if (!input.trim()) return;
 
-      // Reset state for new message
-      streamBufferRef.current = '';
-      setIsStreaming(true);
+    logDebug(`Starting sendMessage with input: ${input.substring(0, 30)}...`);
+    logDebug(`Current sessionId: ${sessionId}`);
 
-      try {
-        // Add user message
-        logDebug('Adding user message to session');
-        await addUserMessage(input);
+    // Reset state for new message
+    streamBufferRef.current = '';
+    setIsStreaming(true);
 
-        // Clear input
-        setInput('');
+    // Add user message
+    logDebug('Adding user message to session');
+    await addUserMessage(input);
 
-        // Build message history
-        const messageHistory = buildMessageHistory();
-        logDebug(`Message history built, count: ${messageHistory.length}`);
+    // Clear input
+    setInput('');
 
-        // Call OpenRouter API with streaming enabled
-        logDebug('Calling OpenRouter API');
-        const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-          method: 'POST',
-          headers: {
-            Authorization: `Bearer ${import.meta.env.VITE_OPENROUTER_API_KEY}`,
-            'Content-Type': 'application/json',
-            'HTTP-Referer': window.location.origin,
-            'X-Title': 'Fireproof App Builder',
-          },
-          body: JSON.stringify({
-            model: CHOSEN_MODEL,
-            stream: true,
-            messages: [
-              {
-                role: 'system',
-                content: systemPrompt,
-              },
-              ...messageHistory,
-              {
-                role: 'user',
-                content: input,
-              },
-            ],
-          }),
-        });
+    // Build message history
+    const messageHistory = buildMessageHistory();
+    logDebug(`Message history built, count: ${messageHistory.length}`);
 
-        // Process the stream using our new utility
-        await processStream(
-          response,
-          // On each chunk, update the buffer and process the message
-          (content) => {
-            streamBufferRef.current += content;
-            updateStreamingMessage(
-              streamBufferRef.current, 
-              addAiMessage,
-              messages
-            );
-          },
-          // On complete, finalize the message
-          async () => {
-            // Streaming is done, write the complete AI message to database
-            logDebug(`Finalizing AI message (${streamBufferRef.current.length} chars)`);
-            await addAiMessage(streamBufferRef.current, Date.now(), false);
-            setIsStreaming(false);
+    // Call OpenRouter API with streaming enabled
+    logDebug('Calling OpenRouter API');
+    const response = await callOpenRouterAPI(CHOSEN_MODEL, systemPrompt, messageHistory, input);
 
-            // Generate a title if this is the first response with code
-            const { segments } = parseContent(streamBufferRef.current);
-            const hasCode = segments.some((segment) => segment.type === 'code');
-
-            logDebug(`Response has code: ${hasCode}, Session title: ${session?.title || 'none'}`);
-
-            if (hasCode && (!session?.title || session.title === 'New Chat')) {
-              logDebug('Generating title for session');
-              await generateTitle(segments, CHOSEN_MODEL, updateTitle);
-            }
-          },
-          // On error, handle it
-          (error) => {
-            console.error('Error calling OpenRouter API:', error);
-            const errorMessage =
-              'Sorry, there was an error generating the component. Please try again.';
-            // Add error message as AI message
-            addAiMessage(errorMessage);
-            setIsStreaming(false);
-          }
-        );
-      } catch (error) {
-        // Handle errors
-        console.error('Error in sendMessage:', error);
-        const errorMessage =
-          'Sorry, there was an error generating the component. Please try again.';
-        // Add error message as AI message
-        await addAiMessage(errorMessage);
+    // Process the stream using our new utility
+    await processStream(
+      response,
+      // On each chunk, update the buffer and process the message
+      (content) => {
+        streamBufferRef.current += content;
+        updateAiMessage(streamBufferRef.current);
+      },
+      // On complete, finalize the message
+      async () => {
+        // Streaming is done, write the complete AI message to database
+        logDebug(`Finalizing AI message (${streamBufferRef.current.length} chars)`);
+        // await addAiMessage(streamBufferRef.current, Date.now(), false);
+        saveAiMessage();
         setIsStreaming(false);
-      } finally {
-        logDebug('sendMessage completed');
-      }
-    }
+
+        // Generate a title if this is the first response with code
+        const { segments } = parseContent(streamBufferRef.current);
+        const hasCode = segments.some((segment) => segment.type === 'code');
+
+        logDebug(`Response has code: ${hasCode}, Session title: ${session?.title || 'none'}`);
+
+        if (hasCode && (!session?.title || session.title === 'New Chat')) {
+          logDebug('Generating title for session');
+          await generateTitle(segments, CHOSEN_MODEL, updateTitle);
+        }
+      },
+      () => {}
+    );
+
+    logDebug('sendMessage completed');
   }
 
   // Helper for compatibility with current components
@@ -205,6 +160,8 @@ export function useSimpleChat(sessionId: string | undefined) {
   }, []);
 
   return {
+    sessionId,
+
     messages,
     getDependencies,
     setMessages, // Function to update messages (legacy, to be removed)
@@ -214,13 +171,9 @@ export function useSimpleChat(sessionId: string | undefined) {
 
     isStreaming, // Whether any AI message is currently streaming
     sendMessage, // Function to send a message
-    currentSegments, // Get current segments
     getCurrentCode, // Get current code
     inputRef, // Reference to the input textarea
 
     title: session?.title || 'New Chat', // Current chat title
-
-    sessionId,
-    isLoadingMessages,
   };
 }

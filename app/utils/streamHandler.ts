@@ -1,13 +1,62 @@
-import { parseContent } from './segmentParser';
-
 // Debug logging function
 function logDebug(message: string) {
   console.debug(`🔍 STREAM_HANDLER: ${message}`);
 }
 
 /**
+ * Utility functions for working with the OpenRouter API
+ */
+
+/**
+ * Call OpenRouter API with streaming enabled
+ *
+ * @param model - The model to use (e.g. 'anthropic/claude-3.7-sonnet')
+ * @param systemPrompt - The system prompt
+ * @param messageHistory - Array of previous messages
+ * @param userMessage - The current user message
+ * @returns A Response object with the stream
+ */
+export async function callOpenRouterAPI(
+  model: string,
+  systemPrompt: string,
+  messageHistory: Array<{ role: 'user' | 'assistant'; content: string }>,
+  userMessage: string
+): Promise<Response> {
+  const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${import.meta.env.VITE_OPENROUTER_API_KEY}`,
+      'Content-Type': 'application/json',
+      'HTTP-Referer': window.location.origin,
+      'X-Title': 'Fireproof App Builder',
+    },
+    body: JSON.stringify({
+      model: model,
+      stream: true,
+      messages: [
+        {
+          role: 'system',
+          content: systemPrompt,
+        },
+        ...messageHistory,
+        {
+          role: 'user',
+          content: userMessage,
+        },
+      ],
+    }),
+  });
+
+  if (!response.ok) {
+    throw new Error(`HTTP error! Status: ${response.status}`);
+  }
+
+  return response;
+}
+
+/**
  * Process a streaming response from OpenRouter API
- * 
+ *
  * @param response - The fetch response object with streaming enabled
  * @param onChunk - Callback function that receives each content chunk as it arrives
  * @param onComplete - Callback function called when streaming is complete
@@ -72,69 +121,3 @@ export async function processStream(
     onError(err);
   }
 }
-
-/**
- * Update streaming message with new content
- * This handles parsing the content into segments and logging
- * 
- * @param rawMessage - The complete message content so far
- * @param addAiMessage - Function to add/update the AI message in storage
- */
-export function updateStreamingMessage(
-  rawMessage: string,
-  addAiMessage: (text: string, created_at: number, isStreaming: boolean) => Promise<any>,
-  messages: any[] = []
-): void {
-  console.debug(`🔍 UPDATE_STREAMING: length=${rawMessage.length}`);
-
-  // Only process messages with actual content
-  if (!rawMessage || rawMessage.trim().length === 0) {
-    console.debug('🔍 EMPTY MESSAGE: Skipping empty streaming update');
-    return;
-  }
-
-  // Ensure we properly parse content into segments
-  const { segments, dependenciesString } = parseContent(rawMessage);
-
-  // Log what segments we parsed
-  console.debug(`🔍 PARSED ${segments.length} SEGMENTS for streaming message`);
-
-  // Enhanced logging for debugging
-  if (segments.length > 0) {
-    segments.forEach((segment, i) => {
-      console.debug(`  Segment ${i}: type=${segment.type}, length=${segment.content.length}`);
-      // Add sample of content for debugging
-      console.debug(`  Sample: "${segment.content.substring(0, Math.min(30, segment.content.length))}..."`);
-    });
-  }
-
-  // CRITICAL FIX: Always create a simple markdown segment with the full content 
-  // if no segments were parsed. This ensures content is shown immediately.
-  if (segments.length === 0 && rawMessage.trim().length > 0) {
-    segments.push({
-      type: 'markdown',
-      content: rawMessage,
-    });
-    console.debug('🔍 CREATED FALLBACK MARKDOWN SEGMENT from raw message text');
-  }
-
-  // Use addAiMessage with isStreaming=true to update in-memory message
-  addAiMessage(rawMessage, Date.now(), true).catch(console.error);
-
-  // After parsing segments, add logging about state updates
-  logDebug(`Setting ${segments.length} segments to message state`);
-  
-  if (messages.length > 0) {
-    logDebug(`Current messages count: ${messages.length}`);
-    logDebug(`Updating messages state with ${messages.length} messages`);
-    
-    messages.forEach((msg, i) => {
-      if (msg.type === 'ai') {
-        const aiMsg = msg;
-        logDebug(`  Message ${i}: type=${msg.type}, isStreaming=${aiMsg.isStreaming}, segments=${aiMsg.segments?.length || 0}, text length=${msg.text?.length || 0}`);
-      } else {
-        logDebug(`  Message ${i}: type=${msg.type}, text length=${msg.text?.length || 0}`);
-      }
-    });
-  }
-} 

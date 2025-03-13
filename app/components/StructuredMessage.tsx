@@ -8,7 +8,7 @@ function writeToStdout(message: string) {
   if (typeof process !== 'undefined' && process.stdout?.write) {
     process.stdout.write(`\n${message}\n`);
   } else {
-    console.debug(message); 
+    console.debug(message);
   }
 }
 
@@ -27,16 +27,18 @@ const StructuredMessage = memo(({ segments, isStreaming }: StructuredMessageProp
   // Log segments details on first render and when they change
   useEffect(() => {
     if (validSegments.length > 0) {
-      writeToStdout(`🔍 STRUCTURED MESSAGE: Rendering with ${validSegments.length} segments, isStreaming=${isStreaming}`);
-      
+      writeToStdout(
+        `🔍 STRUCTURED MESSAGE: Rendering with ${validSegments.length} segments, isStreaming=${isStreaming}`
+      );
+
       validSegments.forEach((segment, i) => {
-        const contentPreview = segment.content 
+        const contentPreview = segment.content
           ? `${segment.content.substring(0, 20)}${segment.content.length > 20 ? '...' : ''}`
           : '[empty]';
-          
+
         writeToStdout(
           `🔍 SEGMENT ${i}: type=${segment.type}, content length=${segment.content?.length || 0}, ` +
-          `content="${contentPreview}", has content=${Boolean(segment.content && segment.content.trim().length > 0)}`
+            `content="${contentPreview}", has content=${Boolean(segment.content && segment.content.trim().length > 0)}`
         );
       });
     } else {
@@ -57,7 +59,7 @@ const StructuredMessage = memo(({ segments, isStreaming }: StructuredMessageProp
   // Log UI state decision
   writeToStdout(
     `🔍 STRUCTURED MESSAGE: hasContent=${hasContent}, segments=${validSegments.length}, ` +
-    `contentLength=${validSegments.reduce((total, seg) => total + (seg.content?.length || 0), 0)}`
+      `contentLength=${validSegments.reduce((total, seg) => total + (seg.content?.length || 0), 0)}`
   );
 
   return (

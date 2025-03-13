@@ -1,4 +1,4 @@
-import type { DocTypes } from "use-fireproof";
+import type { DocTypes } from 'use-fireproof';
 // Type definitions for segments
 export type Segment = {
   type: 'markdown' | 'code';
@@ -16,7 +16,7 @@ export type UserChatMessage = {
 export type AiChatMessageDocument = {
   type: 'ai';
   session_id: string;
-  text: string; // Raw text content 
+  text: string; // Raw text content
   created_at: number;
 };
 

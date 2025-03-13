@@ -52,14 +52,17 @@ const Message = memo(
         className={`flex flex-row ${isAI ? 'justify-start' : 'justify-end'} mb-4 px-4`}
       >
         <div
-          className={`rounded-lg px-4 py-2 max-w-[85%] ${
+          className={`max-w-[85%] rounded-lg px-4 py-2 ${
             isAI
               ? 'bg-white text-gray-900 dark:bg-gray-800 dark:text-gray-100'
               : 'bg-blue-500 text-white dark:bg-blue-600 dark:text-white'
           } ${isShrinking ? 'animate-width-shrink' : isExpanding ? 'animate-width-expand' : ''}`}
         >
           {isAI ? (
-            <StructuredMessage segments={aiMessage.segments || []} isStreaming={aiMessage.isStreaming} />
+            <StructuredMessage
+              segments={aiMessage.segments || []}
+              isStreaming={aiMessage.isStreaming}
+            />
           ) : (
             <div className="prose prose-sm dark:prose-invert max-w-none">
               <p>{message.text}</p>
@@ -90,12 +93,12 @@ function MessageList({
     } catch (error) {
       console.error('Error scrolling into view:', error);
     }
-  }, [messages, isStreaming]);  // Added isStreaming as a dependency to scroll during streaming
+  }, [messages, isStreaming]); // Added isStreaming as a dependency to scroll during streaming
 
   // Only show typing indicator when streaming and there are no messages
   const showTypingIndicator = useMemo(() => {
     const shouldShowTypingIndicator = isStreaming && messages.length === 0;
-    
+
     // Log the final decision for the typing indicator
     writeToStdout(
       `🔍 DECISION: messages.length=${messages.length}, isStreaming=${isStreaming}, showTypingIndicator=${shouldShowTypingIndicator}`
@@ -106,7 +109,9 @@ function MessageList({
 
   // Memoize the message list to prevent unnecessary re-renders
   const messageElements = useMemo(() => {
-    writeToStdout(`Preparing to render ${messages.length} messages, showTypingIndicator=${showTypingIndicator}`);
+    writeToStdout(
+      `Preparing to render ${messages.length} messages, showTypingIndicator=${showTypingIndicator}`
+    );
     if (messages.length === 0) {
       writeToStdout(`No messages to render, showing welcome screen`);
       return [];
@@ -115,15 +120,18 @@ function MessageList({
     return messages.map((msg, i) => {
       // Create a key that changes when content changes
       let contentKey = msg.text?.length || 0;
-      
+
       // For AI messages, use segments information
       if (msg.type === 'ai') {
         const aiMsg = msg as AiChatMessage;
-        contentKey = aiMsg.segments?.reduce((total, segment) => {
-          return total + (segment?.content?.length || 0);
-        }, 0) || 0;
-        
-        writeToStdout(`Will render message ${i}: type=${msg.type}, isStreaming=${aiMsg.isStreaming}, hasSegments=${aiMsg.segments?.length > 0}, textLength=${msg.text.length}`);
+        contentKey =
+          aiMsg.segments?.reduce((total, segment) => {
+            return total + (segment?.content?.length || 0);
+          }, 0) || 0;
+
+        writeToStdout(
+          `Will render message ${i}: type=${msg.type}, isStreaming=${aiMsg.isStreaming}, hasSegments=${aiMsg.segments?.length > 0}, textLength=${msg.text.length}`
+        );
       } else {
         writeToStdout(`Will render message ${i}: type=${msg.type}, textLength=${msg.text.length}`);
       }

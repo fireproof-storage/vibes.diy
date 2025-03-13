@@ -149,10 +149,7 @@ function ResultPreview({
     };
 
     if (code) {
-      console.log(
-        'ResultPreview: Updating code, length:',
-        code?.length || 0
-      );
+      console.log('ResultPreview: Updating code, length:', code?.length || 0);
       const processedCode = processCode(code);
       setDisplayCode(processedCode);
 
@@ -204,10 +201,11 @@ function ResultPreview({
             <button
               type="button"
               onClick={() => setActiveView('preview')}
-              className={`flex items-center space-x-1.5 rounded-md px-4 py-1.5 text-sm font-medium transition-colors ${activeView === 'preview'
+              className={`flex items-center space-x-1.5 rounded-md px-4 py-1.5 text-sm font-medium transition-colors ${
+                activeView === 'preview'
                   ? 'bg-light-background-00 dark:bg-dark-background-00 text-light-primary dark:text-dark-primary shadow-sm'
                   : 'text-light-primary dark:text-dark-primary hover:bg-light-decorative-01 dark:hover:bg-dark-decorative-01'
-                }`}
+              }`}
               aria-label="Switch to preview"
             >
               <svg
@@ -239,10 +237,11 @@ function ResultPreview({
                 setActiveView('code');
                 setShowWelcome(false);
               }}
-              className={`flex items-center space-x-1.5 rounded-md px-4 py-1.5 text-sm font-medium transition-colors ${activeView === 'code'
+              className={`flex items-center space-x-1.5 rounded-md px-4 py-1.5 text-sm font-medium transition-colors ${
+                activeView === 'code'
                   ? 'bg-light-background-00 dark:bg-dark-background-00 text-light-primary dark:text-dark-primary shadow-sm'
                   : 'text-light-primary dark:text-dark-primary hover:bg-light-decorative-01 dark:hover:bg-dark-decorative-01'
-                }`}
+              }`}
               aria-label="Switch to code editor"
             >
               <svg

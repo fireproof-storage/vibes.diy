@@ -14,10 +14,9 @@ interface UserMessageDocument {
 export type AiChatMessageDocument = {
   type: 'ai';
   session_id: string;
-  text?: string; // Raw text content 
+  text?: string; // Raw text content
   created_at: number;
 };
-
 
 export function useSession(initialSessionId: string | undefined) {
   const { database, useDocument, useLiveQuery } = useFireproof(FIREPROOF_CHAT_HISTORY);
@@ -26,16 +25,21 @@ export function useSession(initialSessionId: string | undefined) {
     doc: session,
     merge: mergeSession,
     save: saveSession,
-  } = useDocument<SessionDocument>((initialSessionId
-    ? { _id: initialSessionId }
-    : { type: 'session', title: 'New Chat', created_at: Date.now() }) as SessionDocument);
+  } = useDocument<SessionDocument>(
+    (initialSessionId
+      ? { _id: initialSessionId }
+      : { type: 'session', title: 'New Chat', created_at: Date.now() }) as SessionDocument
+  );
 
-
-const { doc: nextAiMessage, merge: mergeAiMessage, save: saveAiMessage } = useDocument<AiChatMessageDocument>({
-  type: 'ai',
-  session_id: session._id,
-  created_at: Date.now()
-});
+  const {
+    doc: nextAiMessage,
+    merge: mergeAiMessage,
+    save: saveAiMessage,
+  } = useDocument<AiChatMessageDocument>({
+    type: 'ai',
+    session_id: session._id,
+    created_at: Date.now(),
+  });
 
   const { docs } = useLiveQuery('session_id', { key: session._id });
 
@@ -55,7 +59,10 @@ const { doc: nextAiMessage, merge: mergeAiMessage, save: saveAiMessage } = useDo
 
       const response = await fetch(screenshotData);
       const blob = await response.blob();
-      const file = new File([blob], 'screenshot.png', { type: 'image/png', lastModified: Date.now() });
+      const file = new File([blob], 'screenshot.png', {
+        type: 'image/png',
+        lastModified: Date.now(),
+      });
 
       await database.put({
         type: 'screenshot',
@@ -72,12 +79,12 @@ const { doc: nextAiMessage, merge: mergeAiMessage, save: saveAiMessage } = useDo
   const addUserMessage = useCallback(
     async (rawMessage: string) => {
       if (!session._id) {
-        await mergeSession({ 
+        await mergeSession({
           prompt: rawMessage,
-          created_at: Date.now()
-        });  
+          created_at: Date.now(),
+        });
       } else {
-       await database.put({
+        await database.put({
           type: 'user',
           session_id: session._id,
           text: rawMessage,
@@ -88,20 +95,20 @@ const { doc: nextAiMessage, merge: mergeAiMessage, save: saveAiMessage } = useDo
     [session._id, database, mergeSession]
   );
 
+  const updateAiMessage = useCallback(
+    async (rawMessage: string) => {
+      await mergeAiMessage({ text: rawMessage });
+    },
+    [mergeAiMessage]
+  );
 
-  const updateStreamingMessage = useCallback(
-      async (rawMessage: string) => {
-        await mergeAiMessage({ text: rawMessage });
-      },
-      [mergeAiMessage]
-    );
-    
   return {
     session,
     docs,
     updateTitle,
     addScreenshot,
     addUserMessage,
-    updateStreamingMessage
+    updateAiMessage,
+    saveAiMessage,
   };
 }

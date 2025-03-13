@@ -474,9 +474,7 @@ describe('useSimpleChat', () => {
     expect(result.current.messages[1].text).toBe('Hello');
     expect((result.current.messages[1] as AiChatMessage).segments.length).toBe(1);
     expect((result.current.messages[1] as AiChatMessage).segments[0].type).toBe('markdown');
-    expect((result.current.messages[1] as AiChatMessage).segments[0].content).toBe(
-      'Hello'
-    );
+    expect((result.current.messages[1] as AiChatMessage).segments[0].content).toBe('Hello');
   });
 
   it('correctly parses markdown and code segments', async () => {
