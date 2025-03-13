@@ -55,12 +55,10 @@ export function useSession(routedSessionId: string | undefined) {
   // Update session title
   const updateTitle = useCallback(
     async (title: string) => {
-      console.log('updateTitle', title);
-      // await saveSession();
+
       session.title = title;
-      const ok = await database.put(session);
+      await database.put(session);
       mergeSession({ title });
-      console.log('updated session', ok, session);
     },
     [mergeSession, saveSession]
   );
