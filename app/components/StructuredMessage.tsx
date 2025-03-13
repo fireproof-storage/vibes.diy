@@ -41,7 +41,7 @@ const StructuredMessage = memo(({ segments, isStreaming }: StructuredMessageProp
               return (
                 <div
                   key={`markdown-${index}`}
-                  className="ai-markdown prose prose-sm dark:prose-invert max-w-none prose-ul:pl-5 prose-ul:list-disc prose-ol:pl-5 prose-ol:list-decimal prose-li:my-0"
+                  className="ai-markdown prose"
                 >
                   <ReactMarkdown>{segment.content || ''}</ReactMarkdown>
                 </div>

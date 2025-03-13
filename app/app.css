@@ -298,8 +298,30 @@ a,
 .ai-markdown ul {
   list-style-type: disc;
   padding-left: 1rem;
+  padding-top: 0.5rem;
 }
 
 .ai-markdown li {
+  margin-bottom: 0.5rem;
+}
+
+.ai-markdown h1 {
+  font-size: 1.8rem;
+  font-weight: 700;
+  margin-top: 1rem;
+  margin-bottom: 1rem;
+}
+
+.ai-markdown h2 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin-top: 1rem;
+  margin-bottom: 0.75rem;
+}
+
+.ai-markdown h3 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin-top: 0.75rem;
   margin-bottom: 0.5rem;
 }
