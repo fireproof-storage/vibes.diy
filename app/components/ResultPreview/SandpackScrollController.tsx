@@ -9,7 +9,6 @@ const SandpackScrollController: React.FC<SandpackScrollControllerProps> = ({ isS
   const lastScrollPosition = useRef(0);
   const isScrolling = useRef(false);
   const hasUserScrolled = useRef(false);
-  const highlightIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const animationFrameRef = useRef<number | null>(null);
   const isHighlighting = useRef(false);
 
@@ -22,7 +21,7 @@ const SandpackScrollController: React.FC<SandpackScrollControllerProps> = ({ isS
       style.textContent = `
         .cm-line-highlighted {
           position: relative !important;
-          border-left: 3px solid rgba(0, 137, 249, 0.4) !important;
+          border-left: 3px solid rgba(0, 137, 249, 0.27) !important;
           color: inherit !important;
         }
         
@@ -47,7 +46,7 @@ const SandpackScrollController: React.FC<SandpackScrollControllerProps> = ({ isS
         }
         
         @keyframes sparkleAppear {
-          0% { opacity: 0.9; }
+          0% { opacity: 0.8; }
           50% { opacity: 0.8; }
           100% { opacity: 0.1; }
         }
@@ -93,13 +92,13 @@ const SandpackScrollController: React.FC<SandpackScrollControllerProps> = ({ isS
       }
     };
 
-    // Use requestAnimationFrame for highlighting
+    // Pure requestAnimationFrame loop for highlighting
     const animateHighlight = () => {
       if (!isStreaming) return;
       
       highlightLastLine();
       
-      // Schedule next frame
+      // Continue the animation loop
       animationFrameRef.current = requestAnimationFrame(animateHighlight);
     };
 
@@ -116,6 +115,12 @@ const SandpackScrollController: React.FC<SandpackScrollControllerProps> = ({ isS
         scrollToBottom();
 
         setupContentObserver();
+        
+        // Start the animation frame loop immediately when scroller is found
+        if (isStreaming && !isHighlighting.current) {
+          isHighlighting.current = true;
+          animationFrameRef.current = requestAnimationFrame(animateHighlight);
+        }
       }
     }, 100);
 
@@ -127,14 +132,8 @@ const SandpackScrollController: React.FC<SandpackScrollControllerProps> = ({ isS
 
         const newHeight = primaryScroller.scrollHeight;
 
-        if (isStreaming) {
-          // No need to call highlightLastLine here as it's continuously
-          // handled by requestAnimationFrame
-        } else {
-          document.querySelectorAll('.cm-line-highlighted').forEach((el) => {
-            el.classList.remove('cm-line-highlighted');
-          });
-        }
+        // Note: We're not calling highlightLastLine here directly as the 
+        // requestAnimationFrame loop handles it continuously
 
         if (newHeight === lastScrollHeight.current) return;
 
@@ -173,14 +172,6 @@ const SandpackScrollController: React.FC<SandpackScrollControllerProps> = ({ isS
         });
 
         primaryScroller.addEventListener('scroll', handleScroll);
-
-        if (isStreaming) {
-          // Start animation frame-based highlighting
-          if (!isHighlighting.current) {
-            isHighlighting.current = true;
-            animationFrameRef.current = requestAnimationFrame(animateHighlight);
-          }
-        }
       }
 
       return () => {
@@ -188,6 +179,7 @@ const SandpackScrollController: React.FC<SandpackScrollControllerProps> = ({ isS
         if (animationFrameRef.current) {
           cancelAnimationFrame(animationFrameRef.current);
           animationFrameRef.current = null;
+          isHighlighting.current = false;
         }
         contentObserver.disconnect();
         primaryScroller?.removeEventListener('scroll', handleScroll);
@@ -217,6 +209,41 @@ const SandpackScrollController: React.FC<SandpackScrollControllerProps> = ({ isS
       document.querySelectorAll('.cm-line-highlighted').forEach((el) => {
         el.classList.remove('cm-line-highlighted');
       });
+    } else if (isStreaming && !isHighlighting.current) {
+      // If streaming starts and we're not already highlighting, start the animation loop
+      function animateHighlight() {
+        const primaryScroller = document.querySelector('.cm-scroller');
+        if (!primaryScroller) return;
+      
+        // Find and highlight the last line
+        document.querySelectorAll('.cm-line-highlighted').forEach((el) => {
+          el.classList.remove('cm-line-highlighted');
+        });
+      
+        const lines = Array.from(document.querySelectorAll('.cm-line'));
+        let lastLine = null;
+      
+        for (let i = lines.length - 1; i >= 0; i--) {
+          const line = lines[i];
+          const content = line.textContent || '';
+          if (content.trim() && !content.includes('END OF CODE')) {
+            lastLine = line;
+            break;
+          }
+        }
+      
+        if (lastLine) {
+          lastLine.classList.add('cm-line-highlighted');
+        }
+      
+        // Continue the animation loop if still streaming
+        if (isStreaming) {
+          animationFrameRef.current = requestAnimationFrame(animateHighlight);
+        }
+      }
+      
+      isHighlighting.current = true;
+      animationFrameRef.current = requestAnimationFrame(animateHighlight);
     }
   }, [isStreaming]);
 

@@ -89,6 +89,7 @@ export interface ChatState {
   input: string;
   setInput: (input: string) => void;
   isStreaming: boolean;
+  codeReady: boolean;
   inputRef: React.RefObject<HTMLTextAreaElement | null>;
   sendMessage: () => Promise<void>;
   title: string;

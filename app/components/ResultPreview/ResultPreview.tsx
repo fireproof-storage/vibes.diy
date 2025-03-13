@@ -14,6 +14,7 @@ function ResultPreview({
   initialView = 'code',
   sessionId,
   isStreaming = false,
+  codeReady = false,
 }: ResultPreviewProps) {
   const [activeView, setActiveView] = useState<'preview' | 'code'>(initialView);
   const [bundlingComplete, setBundlingComplete] = useState(true);
@@ -25,7 +26,7 @@ function ResultPreview({
   const sandpackKey = useMemo(() => {
     if (showWelcome) return `${sessionId || 'default'}-welcome`;
     return `${sessionId || 'default'}-${isStreaming ? 'streaming' : 'static'}-${code}`;
-  }, [sessionId, isStreaming, code, showWelcome]);
+  }, [sessionId, codeReady, code, showWelcome]);
 
   useEffect(() => {
     if (isStreaming) {
@@ -86,7 +87,8 @@ function ResultPreview({
         <SandpackContent
           activeView={activeView}
           filesContent={filesRef.current}
-          isStreaming={isStreaming}
+          isStreaming={!codeReady}
+          codeReady={codeReady}
           sandpackKey={sandpackKey}
           setActiveView={setActiveView}
           setBundlingComplete={setBundlingComplete}

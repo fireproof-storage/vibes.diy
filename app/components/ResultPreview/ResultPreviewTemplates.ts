@@ -48,7 +48,7 @@ export const indexHtml = `<!DOCTYPE html>
       }
 
       function pageIsLoaded() {
-\        window.parent.postMessage({ type: 'preview-loaded' }, '*');
+        window.parent.postMessage({ type: 'preview-loaded' }, '*');
         setTimeout(captureScreenshot, 100);
       }
 
@@ -68,7 +68,7 @@ export const indexHtml = `<!DOCTYPE html>
       });
     </script>
   </head>
-  <body>
+  <body style="margin-bottom: 20px;">
     <div id="root"></div>
     <script type="module" src="/index.jsx"></script>
   </body>

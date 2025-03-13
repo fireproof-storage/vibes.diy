@@ -37,7 +37,6 @@ const StructuredMessage = memo(({ segments, isStreaming }: StructuredMessageProp
           .filter((segment) => segment?.content && segment.content.trim().length > 0)
           .map((segment, index) => {
             if (segment.type === 'markdown') {
-              console.log('markdown', segment.content);
               return (
                 <div
                   key={`markdown-${index}`}

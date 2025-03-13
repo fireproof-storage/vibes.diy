@@ -12,6 +12,7 @@ interface SandpackContentProps {
   activeView: 'preview' | 'code';
   filesContent: SandpackFiles;
   isStreaming: boolean;
+  codeReady: boolean;
   sandpackKey: string;
   setActiveView: (view: 'preview' | 'code') => void;
   setBundlingComplete: (complete: boolean) => void;
@@ -23,6 +24,7 @@ const SandpackContent: React.FC<SandpackContentProps> = ({
   filesContent,
   isStreaming,
   sandpackKey,
+  codeReady,
   setActiveView,
   setBundlingComplete,
   dependencies,

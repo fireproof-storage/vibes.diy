@@ -43,7 +43,7 @@ If you need any npm dependencies, list them at the start of your response in thi
   "another-package": "version"
 }}
 
-Then provide a brief explanation followed by the component code. The component should demonstrate proper Fireproof integration with real-time updates and proper data persistence. 
+Then provide a title and brief explanation followed by the component code. The component should demonstrate proper Fireproof integration with real-time updates and proper data persistence. Follow it with a longer description of the app's purpose and detailed instructions how to use it (with occasional bold or italic for emphasis). 
 
 Begin the component with the import statements. Use react and use-fireproof:
 

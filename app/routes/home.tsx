@@ -50,6 +50,7 @@ export default function UnifiedSession() {
           code={chatState.selectedCode?.content || ''}
           dependencies={chatState.selectedDependencies || {}}
           isStreaming={chatState.isStreaming}
+          codeReady={chatState.codeReady}
           onScreenshotCaptured={chatState.addScreenshot}
         />
       }

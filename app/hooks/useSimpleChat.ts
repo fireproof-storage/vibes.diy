@@ -150,6 +150,10 @@ export function useSimpleChat(sessionId: string | undefined): ChatState {
     }
   }, [session._id, database, addScreenshot]);
 
+  const codeReady = useMemo(() => {
+    return !isStreaming || selectedSegments.length > 2;
+  }, [isStreaming, selectedSegments]);
+
   return {
     sessionId: session._id,
     addScreenshot,
@@ -161,6 +165,7 @@ export function useSimpleChat(sessionId: string | undefined): ChatState {
     input: userMessage.text,
     setInput,
     isStreaming,
+    codeReady,
     sendMessage,
     inputRef,
     title: session?.title || '',

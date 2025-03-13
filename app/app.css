@@ -301,6 +301,12 @@ a,
   padding-top: 0.5rem;
 }
 
+.ai-markdown ol {
+  list-style-type: decimal;
+  padding-left: 1rem;
+  padding-top: 0.5rem;
+}
+
 .ai-markdown li {
   margin-bottom: 0.5rem;
 }

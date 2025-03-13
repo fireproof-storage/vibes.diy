@@ -5,6 +5,7 @@ export interface ResultPreviewProps {
   initialView?: 'code' | 'preview';
   sessionId?: string;
   isStreaming?: boolean;
+  codeReady?: boolean;
 }
 
 export type SandpackFiles = {
