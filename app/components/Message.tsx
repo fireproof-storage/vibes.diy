@@ -28,6 +28,18 @@ const AIMessage = memo(
         </div>
       </div>
     );
+  },
+  (prevProps, nextProps) => {
+    // If either the message text or streaming state changed, we need to re-render
+    // Return false to signal React to re-render the component
+    if (
+      prevProps.message.text !== nextProps.message.text ||
+      prevProps.isStreaming !== nextProps.isStreaming
+    ) {
+      return false;
+    }
+    // Otherwise, skip re-render
+    return true;
   }
 );
 
@@ -55,6 +67,24 @@ const Message = memo(({ message, isShrinking, isExpanding, isStreaming }: Messag
       )}
     </div>
   );
+}, 
+(prevProps, nextProps) => {
+  // Check for message content changes
+  if (prevProps.message.text !== nextProps.message.text) {
+    return false; // Text changed, need to re-render
+  }
+  
+  // Check for animation or streaming state changes
+  if (
+    prevProps.isShrinking !== nextProps.isShrinking ||
+    prevProps.isExpanding !== nextProps.isExpanding ||
+    prevProps.isStreaming !== nextProps.isStreaming
+  ) {
+    return false; // State changed, need to re-render
+  }
+  
+  // If we get here, props are equal enough to skip re-render
+  return true;
 });
 
 export default Message;

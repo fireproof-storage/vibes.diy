@@ -70,10 +70,14 @@ export default memo(MessageList, (prevProps, nextProps) => {
     prevProps.isShrinking === nextProps.isShrinking &&
     prevProps.isExpanding === nextProps.isExpanding;
 
-  // Content equality check for messages
+  // Content equality check for messages - must compare text content
   const messagesEqual =
     prevProps.messages.length === nextProps.messages.length &&
-    prevProps.messages.every((msg, i) => msg._id === nextProps.messages[i]._id);
+    prevProps.messages.every((msg, i) => {
+      const nextMsg = nextProps.messages[i];
+      // Check message ID and text content
+      return msg._id === nextMsg._id && msg.text === nextMsg.text;
+    });
 
   return animationStateEqual && messagesEqual;
 });
