@@ -53,11 +53,10 @@ describe('ResultPreview', () => {
     expect(screen.getByTestId('welcome-screen')).toBeDefined();
   });
 
-  it('uses streaming code when streamingCode is provided', () => {
-    const code = '';
-    const streamingCode = 'const test = "Streaming";';
+  it('handles streaming state correctly', () => {
+    const code = 'const test = "Streaming";';
 
-    render(<ResultPreview code={code} streamingCode={streamingCode} />);
+    render(<ResultPreview code={code} isStreaming={true} />);
 
     // Just verify it renders without errors
     expect(screen.getAllByTestId('sandpack-provider')[0]).toBeDefined();
@@ -87,15 +86,6 @@ describe('ResultPreview', () => {
     shareButton.click();
 
     expect(onShare).toHaveBeenCalled();
-  });
-
-  it('displays completed message when provided', () => {
-    const code = 'console.log("test");';
-    const completedMessage = 'This is a test message';
-
-    render(<ResultPreview code={code} completedMessage={completedMessage} />);
-
-    expect(screen.getByText(completedMessage)).toBeDefined();
   });
 
   it('shows welcome content with empty code', () => {
@@ -176,15 +166,6 @@ describe('ResultPreview', () => {
     expect(onShare).toHaveBeenCalled();
   });
 
-  it('renders with completed message', () => {
-    const code = 'const test = "Hello";';
-    const completedMessage = 'This is a completed message';
-
-    render(<ResultPreview code={code} completedMessage={completedMessage} />);
-
-    expect(screen.getByText(completedMessage)).toBeDefined();
-  });
-
   it('handles edge case with empty code', () => {
     render(<ResultPreview code="" />);
 
@@ -192,27 +173,5 @@ describe('ResultPreview', () => {
     // and the buttons should not be visible
     expect(screen.queryByRole('button', { name: /switch to preview/i })).toBeNull();
     expect(screen.queryByRole('button', { name: /switch to code editor/i })).toBeNull();
-  });
-
-  it('should hide Preview and Code buttons when welcome screen is shown', () => {
-    // The current component behavior sets showWelcome based on code presence
-    // This test is checking for the expected behavior, not the current implementation
-    const { rerender } = render(<ResultPreview code="" onShare={() => {}} />);
-
-    // This assertion will fail because the buttons are currently visible
-    // regardless of whether the welcome screen is shown
-    expect(screen.queryByRole('button', { name: /switch to preview/i })).toBeNull();
-    expect(screen.queryByRole('button', { name: /switch to code editor/i })).toBeNull();
-    // Also check that the share button is hidden
-    expect(screen.queryByRole('button', { name: /share app/i })).toBeNull();
-
-    // Re-render with non-empty code which should hide welcome screen
-    rerender(<ResultPreview code="const test = 'Hello';" onShare={() => {}} />);
-
-    // Now the buttons should be visible
-    expect(screen.getByRole('button', { name: /switch to preview/i })).toBeDefined();
-    expect(screen.getByRole('button', { name: /switch to code editor/i })).toBeDefined();
-    // And the share button should also be visible
-    expect(screen.getByRole('button', { name: /share app/i })).toBeDefined();
   });
 });

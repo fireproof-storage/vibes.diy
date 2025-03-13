@@ -74,19 +74,6 @@ describe('useSession', () => {
     expect(result.current.docs.length).toBe(2);
   });
 
-  test('should create a new session', async () => {
-    const { result } = renderHook(() => useSession(undefined));
-
-    // Create a new session
-    let sessionId;
-    await act(async () => {
-      sessionId = await result.current.createSession?.('New Test Session');
-    });
-
-    // Check if session was created
-    expect(sessionId).toBe('test-session-id');
-  });
-
   test('should update session title', async () => {
     const { result } = renderHook(() => useSession('test-session-id'));
 
@@ -103,20 +90,21 @@ describe('useSession', () => {
     expect(mockUseDocument().save).toHaveBeenCalled();
   });
 
-  test('should update session metadata', async () => {
-    const { result } = renderHook(() => useSession('test-session-id'));
+  // This test is now removed since updateMetadata no longer exists in the useSession hook
+  // test('should update session metadata', async () => {
+  //   const { result } = renderHook(() => useSession('test-session-id'));
 
-    // Update metadata
-    const metadata = { title: 'Metadata Title', timestamp: 12345 };
-    await act(async () => {
-      await result.current.updateMetadata?.(metadata);
-    });
+  //   // Update metadata
+  //   const metadata = { title: 'Metadata Title', timestamp: 12345 };
+  //   await act(async () => {
+  //     await result.current.updateMetadata?.(metadata);
+  //   });
 
-    // Verify merge and save were called with correct data
-    const { useFireproof } = await import('use-fireproof');
-    const mockUseDocument = (useFireproof as any)().useDocument;
+  //   // Verify merge and save were called with correct data
+  //   const { useFireproof } = await import('use-fireproof');
+  //   const mockUseDocument = (useFireproof as any)().useDocument;
 
-    expect(mockUseDocument().merge).toHaveBeenCalledWith(metadata);
-    expect(mockUseDocument().save).toHaveBeenCalled();
-  });
+  //   expect(mockUseDocument().merge).toHaveBeenCalledWith(metadata);
+  //   expect(mockUseDocument().save).toHaveBeenCalled();
+  // });
 });

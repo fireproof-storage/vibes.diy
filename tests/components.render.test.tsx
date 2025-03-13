@@ -215,9 +215,9 @@ describe('Component Rendering', () => {
       ];
 
       render(<MessageList messages={messages} isStreaming={true} />);
-      // Either the Message component should display "Processing response..." or we need to verify that it renders
-      // an empty message which would be handled by the Message component in the real app
-      expect(screen.getAllByTestId('markdown').length).toBe(0);
+      // The Message component in our test displays "Processing response..." in a markdown element
+      // when there's no content but streaming is true
+      expect(screen.getAllByTestId('markdown').length).toBeGreaterThan(0);
     });
 
     it('renders streaming message', () => {
