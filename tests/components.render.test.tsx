@@ -145,7 +145,9 @@ describe('Component Rendering', () => {
   describe('MessageList', () => {
     it('renders empty list', () => {
       const { container } = render(<MessageList messages={[]} isStreaming={false} />);
-      expect(screen.getByText('Welcome to Fireproof App Builder')).toBeInTheDocument();
+      
+      // Update to check for text that actually exists in the WelcomeScreen component
+      expect(screen.getByText(/Quickly create React apps in your browser/i)).toBeInTheDocument();
     });
 
     it('renders messages correctly', () => {

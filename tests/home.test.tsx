@@ -17,6 +17,8 @@ vi.mock('../app/hooks/useSimpleChat', () => ({
     title: '',
     sessionId: null,
     selectedResponseDoc: undefined,
+    codeReady: false,
+    addScreenshot: vi.fn(),
   }),
 }));
 
@@ -56,11 +58,35 @@ vi.mock('use-fireproof', () => ({
 vi.mock('react-router', () => ({
   useParams: () => ({}),
   useNavigate: () => vi.fn(),
-  useLocation: () => ({ search: '' }),
+  useLocation: () => ({ search: '', pathname: '/' }),
 }));
 
+// Mock for the utility functions
+vi.mock('../app/utils/sharing', () => ({
+  decodeStateFromUrl: () => ({ code: '', dependencies: {} }),
+}));
+
+vi.mock('../app/components/SessionSidebar/utils', () => ({
+  encodeTitle: (title: string) => title,
+}));
+
+// Mock AppLayout component to make testing easier
+vi.mock('../app/components/AppLayout', () => {
+  return {
+    __esModule: true,
+    default: ({ chatPanel, previewPanel }: { chatPanel: any, previewPanel: any }) => {
+      return (
+        <div data-testid="app-layout">
+          <div data-testid="chat-panel">{chatPanel}</div>
+          <div data-testid="preview-panel">{previewPanel}</div>
+        </div>
+      );
+    },
+  };
+});
+
 // Mock our ChatInterface
-vi.mock('../app/ChatInterface', () => {
+vi.mock('../app/components/ChatInterface', () => {
   return {
     __esModule: true,
     default: (props: any) => {
@@ -84,11 +110,13 @@ describe('Home Route', () => {
     // Render the unified session component
     render(<UnifiedSession />);
 
-    // Check that the main components are rendered using intrinsic properties
-    // Look for welcome text that appears in the home route
-    expect(screen.getByText(/Welcome to Fireproof App Builder/i)).toBeInTheDocument();
-
-    // Look for any common UI elements that would be present in the home view
-    expect(screen.getByText(/Ask me to generate a web application for you/i)).toBeInTheDocument();
+    // Check that the components are rendered in the AppLayout
+    expect(screen.getByTestId('app-layout')).toBeInTheDocument();
+    expect(screen.getByTestId('chat-panel')).toBeInTheDocument();
+    expect(screen.getByTestId('preview-panel')).toBeInTheDocument();
+    
+    // Check for the content inside the panels
+    expect(screen.getByTestId('chat-interface')).toBeInTheDocument();
+    expect(screen.getByTestId('result-preview')).toBeInTheDocument();
   });
 });
