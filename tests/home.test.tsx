@@ -5,20 +5,18 @@ import UnifiedSession from '../app/routes/unified-session';
 // Mock dependencies
 vi.mock('../app/hooks/useSimpleChat', () => ({
   useSimpleChat: () => ({
-    messages: [],
-    setMessages: vi.fn(),
+    docs: [],
     input: '',
     setInput: vi.fn(),
-    isStreaming: () => false,
+    isStreaming: false,
     inputRef: { current: null },
-    messagesEndRef: { current: null },
-    autoResizeTextarea: vi.fn(),
-    scrollToBottom: vi.fn(),
     sendMessage: vi.fn(),
-    currentSegments: () => [],
-    getCurrentCode: () => '',
+    selectedSegments: [],
+    selectedCode: null,
+    selectedDependencies: {},
     title: '',
-    setTitle: vi.fn(),
+    sessionId: null,
+    selectedResponseDoc: undefined,
   }),
 }));
 

@@ -4,7 +4,7 @@ import { vi, describe, it, expect, beforeEach } from 'vitest';
 import UnifiedSession from '../app/routes/unified-session';
 import * as segmentParser from '../app/utils/segmentParser';
 import * as useSimpleChatModule from '../app/hooks/useSimpleChat';
-import type { ChatMessage, Segment } from '../app/types/chat';
+import type { ChatMessage, Segment, UserChatMessage, AiChatMessage } from '../app/types/chat';
 
 // Mock useParams hook from react-router
 vi.mock('react-router', () => ({
@@ -15,22 +15,24 @@ vi.mock('react-router', () => ({
 
 // Define types for mock components
 interface ChatInterfaceProps {
-  chatState: any;
+  docs: any[];
+  input: string;
+  setInput: (value: string) => void;
+  isStreaming: boolean;
+  inputRef: React.RefObject<HTMLTextAreaElement | null>;
+  sendMessage: () => Promise<void>;
   sessionId: string | null;
-  onNewChat: () => void;
-  onSessionCreated?: (sessionId: string) => void;
+  title: string;
 }
 
 interface ResultPreviewProps {
   code: string;
-  dependencies: Record<string, string>;
-  streamingCode: string;
-  isSharedApp: boolean;
-  completedMessage: string;
-  currentStreamContent: string;
-  currentMessage?: { content: string };
-  shareStatus?: string;
+  dependencies?: Record<string, string>;
   onShare?: () => void;
+  onScreenshotCaptured?: (screenshotData: string) => void;
+  initialView?: 'code' | 'preview';
+  sessionId?: string;
+  isStreaming?: boolean;
 }
 
 interface AppLayoutProps {
@@ -40,7 +42,7 @@ interface AppLayoutProps {
 
 // Mock components used in the Session component
 vi.mock('../app/ChatInterface', () => ({
-  default: ({ chatState, sessionId, onNewChat, onSessionCreated }: ChatInterfaceProps) => (
+  default: ({ docs, input, setInput, isStreaming, inputRef, sendMessage, sessionId, title }: ChatInterfaceProps) => (
     <div data-testid="mock-chat-interface">Chat Interface Component</div>
   ),
 }));
@@ -49,19 +51,13 @@ vi.mock('../app/components/ResultPreview/ResultPreview', () => ({
   default: ({
     code,
     dependencies,
-    streamingCode,
-    isSharedApp,
-    completedMessage,
-    currentStreamContent,
-    currentMessage,
-    shareStatus,
+    isStreaming,
     onShare,
+    sessionId,
   }: ResultPreviewProps) => (
     <div data-testid="mock-result-preview">
       <div data-testid="code-line-count">{code.split('\n').length} lines of code</div>
       <div data-testid="code-content">{code.substring(0, 50)}...</div>
-      <div data-testid="message-content">{completedMessage.substring(0, 50)}</div>
-      {shareStatus && <div data-testid="share-status">{shareStatus}</div>}
       {onShare && (
         <button data-testid="share-button" onClick={onShare}>
           Share
@@ -143,15 +139,16 @@ describe('Session Route Integration', () => {
 
     // Mock useSimpleChat to return chat state with an AI message
     vi.spyOn(useSimpleChatModule, 'useSimpleChat').mockReturnValue({
-      messages: [
+      docs: [
         {
           type: 'user',
           text: 'Create a photo gallery app',
-        },
+          session_id: 'test-session-id',
+          created_at: Date.now(),
+        } as UserChatMessage,
         {
           type: 'ai',
           text: `Here's a photo gallery app with a grid layout and modal view.\n\n\`\`\`\n${mockCode}\n\`\`\``,
-          isStreaming: false,
           segments: [
             {
               type: 'markdown',
@@ -162,17 +159,16 @@ describe('Session Route Integration', () => {
               content: mockCode,
             },
           ],
-          dependenciesString: JSON.stringify({ dependencies: {} }),
-        },
+          isStreaming: false,
+          session_id: 'test-session-id',
+          created_at: Date.now(),
+        } as AiChatMessage,
       ],
       input: '',
       setInput: vi.fn(),
-      setMessages: vi.fn(),
-      isStreaming: () => false,
-      streamingState: false,
-      titleGenerated: true,
+      isStreaming: false,
       sendMessage: vi.fn(),
-      currentSegments: () => [
+      selectedSegments: [
         {
           type: 'markdown',
           content: "Here's a photo gallery app with a grid layout and modal view.",
@@ -182,16 +178,31 @@ describe('Session Route Integration', () => {
           content: mockCode,
         },
       ],
-      getCurrentCode: () => mockCode,
+      selectedCode: {
+        type: 'code',
+        content: mockCode,
+      },
+      selectedDependencies: {},
       inputRef: { current: null },
-      messagesEndRef: { current: null },
-      autoResizeTextarea: vi.fn(),
-      scrollToBottom: vi.fn(),
       title: 'Photo Gallery App',
-      setTitle: vi.fn(),
       sessionId: 'test-session-id',
-      isLoadingMessages: false,
-      updateStreamingMessage: vi.fn(),
+      selectedResponseDoc: {
+        type: 'ai',
+        text: `Here's a photo gallery app with a grid layout and modal view.\n\n\`\`\`\n${mockCode}\n\`\`\``,
+        segments: [
+          {
+            type: 'markdown',
+            content: "Here's a photo gallery app with a grid layout and modal view.",
+          },
+          {
+            type: 'code',
+            content: mockCode,
+          },
+        ],
+        isStreaming: false,
+        session_id: 'test-session-id',
+        created_at: Date.now(),
+      } as AiChatMessage,
     });
   });
 
