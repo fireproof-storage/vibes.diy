@@ -1,10 +1,10 @@
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router';
 import ChatInterface from '../components/ChatInterface';
 import ResultPreview from '../components/ResultPreview/ResultPreview';
 import { useSimpleChat } from '../hooks/useSimpleChat';
 import AppLayout from '../components/AppLayout';
-import { copyToClipboard, encodeStateToUrl, decodeStateFromUrl } from '../utils/sharing';
+import { decodeStateFromUrl } from '../utils/sharing';
 import { encodeTitle } from '~/components/SessionSidebar/utils';
 
 export function meta() {
@@ -19,8 +19,6 @@ export default function UnifiedSession() {
   const { sessionId: urlSessionId } = useParams<{ sessionId: string }>();
   const navigate = useNavigate();
   const location = useLocation();
-
-  const [shareStatus, setShareStatus] = useState<string>('');
 
   console.log('urlSessionId', urlSessionId);
   const chatState = useSimpleChat(urlSessionId);
@@ -46,24 +44,6 @@ export default function UnifiedSession() {
     }
   }, [location.search]);
 
-  function handleShare() {
-    if (!chatState.selectedCode?.content) {
-      alert('Generate an app first before sharing!');
-      return;
-    }
-    const encoded = encodeStateToUrl(
-      chatState.selectedCode.content,
-      chatState.selectedDependencies || {}
-    );
-    if (encoded) {
-      copyToClipboard(`${window.location.origin}/shared?state=${encoded}`);
-      setShareStatus('Share URL copied to clipboard!');
-      setTimeout(() => {
-        setShareStatus('');
-      }, 3000);
-    }
-  }
-
   return (
     <AppLayout
       chatPanel={<ChatInterface {...chatState} />}
@@ -73,7 +53,6 @@ export default function UnifiedSession() {
           code={chatState.selectedCode?.content || ''}
           dependencies={chatState.selectedDependencies || {}}
           isStreaming={chatState.isStreaming}
-          onShare={handleShare}
         />
       }
     />

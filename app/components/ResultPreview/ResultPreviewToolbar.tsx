@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { useState } from 'react';
+import { copyToClipboard, encodeStateToUrl } from '../../utils/sharing';
 
 interface ResultPreviewToolbarProps {
   showWelcome: boolean;
@@ -7,35 +8,58 @@ interface ResultPreviewToolbarProps {
   setActiveView: (view: 'preview' | 'code') => void;
   bundlingComplete: boolean;
   isStreaming: boolean;
-  onShare?: () => void;
+  code: string;
+  dependencies?: Record<string, string>;
 }
 
 const ResultPreviewToolbar: React.FC<ResultPreviewToolbarProps> = ({
-  showWelcome,
   previewReady,
   activeView,
   setActiveView,
   bundlingComplete,
   isStreaming,
-  onShare,
+  code,
+  dependencies = {},
 }) => {
+  const [shareStatus, setShareStatus] = useState<string>('');
+
+  function handleShare() {
+    if (!code) {
+      alert('Generate an app first before sharing!');
+      return;
+    }
+
+    const encoded = encodeStateToUrl(code, dependencies);
+    if (encoded) {
+      copyToClipboard(`${window.location.origin}/shared?state=${encoded}`);
+      setShareStatus('Share URL copied to clipboard!');
+      setTimeout(() => {
+        setShareStatus('');
+      }, 3000);
+    }
+  }
+
+  const showSwitcher = code.length > 0;
+
   return (
     <div className="border-light-decorative-00 dark:border-dark-decorative-00 bg-light-background-00 dark:bg-dark-background-00 flex min-h-[4rem] items-center justify-between border-b px-6 py-4">
-      {!showWelcome && previewReady ? (
+      {showSwitcher ? (
         <div className="bg-light-decorative-00 dark:bg-dark-decorative-00 flex space-x-1 rounded-lg p-1 shadow-sm">
           <button
             type="button"
+            disabled={!previewReady}
             onClick={() => setActiveView('preview')}
             className={`flex items-center space-x-1.5 rounded-md px-4 py-1.5 text-sm font-medium transition-colors ${
               activeView === 'preview'
                 ? 'bg-light-background-00 dark:bg-dark-background-00 text-light-primary dark:text-dark-primary shadow-sm'
-                : 'text-light-primary dark:text-dark-primary hover:bg-light-decorative-01 dark:hover:bg-dark-decorative-01'
+                : 'text-light-primary dark:text-dark-primary' +
+                  (previewReady ? ' hover:bg-light-decorative-01 dark:hover:bg-dark-decorative-01' : ' opacity-50 cursor-not-allowed')
             }`}
             aria-label="Switch to preview"
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
-              className={`h-4 w-4 ${!bundlingComplete && !isStreaming ? 'animate-spin-slow' : ''}`}
+              className={`h-4 w-4 ${!previewReady ? 'animate-spin-slow' : ''}`}
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"
@@ -89,12 +113,15 @@ const ResultPreviewToolbar: React.FC<ResultPreviewToolbarProps> = ({
       ) : (
         <div className="h-10"></div>
       )}
-      {onShare ? (
+      {code ? (
         <div className="flex items-center gap-2">
+          {shareStatus && (
+            <span className="text-sm text-green-600 dark:text-green-400">{shareStatus}</span>
+          )}
           <div className="bg-light-decorative-00 dark:bg-dark-decorative-00 flex space-x-1 rounded-lg p-1 shadow-sm">
             <button
               type="button"
-              onClick={onShare}
+              onClick={handleShare}
               className="text-light-primary dark:text-dark-primary hover:bg-light-decorative-01 dark:hover:bg-dark-decorative-01 flex items-center space-x-1.5 rounded-md px-4 py-1.5 text-sm font-medium transition-colors"
               aria-label="Share app"
             >

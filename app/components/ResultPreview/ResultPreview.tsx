@@ -10,7 +10,6 @@ import SandpackContent from './SandpackContent';
 function ResultPreview({
   code,
   dependencies = {},
-  onShare,
   onScreenshotCaptured,
   initialView = 'code',
   sessionId,
@@ -79,13 +78,13 @@ function ResultPreview({
       <style>{animationStyles}</style>
 
       <ResultPreviewToolbar
-        showWelcome={showWelcome}
         previewReady={previewReady}
         activeView={activeView}
         setActiveView={setActiveView}
         bundlingComplete={bundlingComplete}
         isStreaming={isStreaming}
-        onShare={onShare}
+        code={code}
+        dependencies={dependencies}
       />
 
       {showWelcome ? (
