@@ -294,3 +294,12 @@ a,
     transform: rotate(0deg) scale(1);
   }
 }
+
+.ai-markdown ul {
+  list-style-type: disc;
+  padding-left: 1rem;
+}
+
+.ai-markdown li {
+  margin-bottom: 0.5rem;
+}

@@ -7,5 +7,7 @@ export default {
       // Colors are now defined in app.css using @theme
     },
   },
-  plugins: [],
+  plugins: [
+    require('@tailwindcss/typography')
+  ],
 };

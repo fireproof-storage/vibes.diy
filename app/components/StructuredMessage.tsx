@@ -37,10 +37,11 @@ const StructuredMessage = memo(({ segments, isStreaming }: StructuredMessageProp
           .filter((segment) => segment?.content && segment.content.trim().length > 0)
           .map((segment, index) => {
             if (segment.type === 'markdown') {
+              console.log('markdown', segment.content);
               return (
                 <div
                   key={`markdown-${index}`}
-                  className="prose prose-sm dark:prose-invert max-w-none prose-ul:pl-5 prose-ul:list-disc prose-ol:pl-5 prose-ol:list-decimal prose-li:my-0"
+                  className="ai-markdown prose prose-sm dark:prose-invert max-w-none prose-ul:pl-5 prose-ul:list-disc prose-ol:pl-5 prose-ol:list-decimal prose-li:my-0"
                 >
                   <ReactMarkdown>{segment.content || ''}</ReactMarkdown>
                 </div>
