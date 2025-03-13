@@ -160,6 +160,8 @@ vi.mock('../app/hooks/useSessionMessages', () => {
               aiMessage = {
                 type: 'ai',
                 text: rawContent,
+                session_id: 'test-session-id',
+                created_at: now,
                 segments: [
                   {
                     type: 'markdown' as const,
@@ -188,6 +190,8 @@ export default HelloWorld;`,
               aiMessage = {
                 type: 'ai',
                 text: rawContent,
+                session_id: 'test-session-id',
+                created_at: now,
                 segments: [
                   {
                     type: 'markdown' as const,
@@ -225,6 +229,8 @@ export default Timer;`,
               aiMessage = {
                 type: 'ai',
                 text: rawContent,
+                session_id: 'test-session-id',
+                created_at: now,
                 segments: [
                   { type: 'markdown' as const, content: '# Image Gallery Component' },
                   { type: 'code' as const, content: 'function ImageGallery() { /* ... */ }' },
@@ -249,6 +255,8 @@ export default Timer;`,
               aiMessage = {
                 type: 'ai',
                 text: rawContent,
+                session_id: 'test-session-id',
+                created_at: now,
                 segments: [
                   { type: 'markdown' as const, content: "Here's the photo gallery app:" },
                   {
@@ -271,6 +279,8 @@ export default Timer;`,
               aiMessage = {
                 type: 'ai',
                 text: rawContent,
+                session_id: 'test-session-id',
+                created_at: now,
                 segments: [
                   { type: 'markdown' as const, content: 'I\'ll create an "Exoplanet Tracker" app' },
                   {
@@ -290,6 +300,8 @@ export default Timer;`,
               aiMessage = {
                 type: 'ai',
                 text: rawContent,
+                session_id: 'test-session-id',
+                created_at: now,
                 segments: [
                   { type: 'markdown' as const, content: '# Lyrics Rater App' },
                   {
@@ -309,6 +321,8 @@ export default Timer;`,
               aiMessage = {
                 type: 'ai',
                 text: rawContent,
+                session_id: 'test-session-id',
+                created_at: now,
                 segments,
                 dependenciesString: dependenciesString || '{"dependencies": {}}',
                 isStreaming,

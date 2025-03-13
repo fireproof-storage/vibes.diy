@@ -50,6 +50,7 @@ export type AiChatMessage = ChatMessage & {
   type: 'ai';
   segments?: Segment[];
   isStreaming?: boolean;
+  dependenciesString?: string;
 };
 
 // ===== Component Props =====

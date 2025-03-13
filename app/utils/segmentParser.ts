@@ -11,38 +11,39 @@ export function parseContent(text: string): {
   const segments: Segment[] = [];
   let dependenciesString: string | undefined;
 
-  // Extract dependencies from the first segment (if it exists)
-  const depsMatch = text.match(/^(.*}})/s);
-  if (depsMatch && depsMatch[1]) {
-    dependenciesString = depsMatch[1];
+  // Extract dependencies from the beginning if they exist
+  // Format 1: {"dependencies": {}}
+  // Format 2: {"react": "^18.2.0", "react-dom": "^18.2.0"}}
+  const depsFormat1 = text.match(/^({"dependencies":\s*{}})/);
+  const depsFormat2 = text.match(/^({(?:"[^"]+"\s*:\s*"[^"]+"(?:,\s*)?)+}})/);
+
+  if (depsFormat1 && depsFormat1[1]) {
+    dependenciesString = depsFormat1[1];
     // Remove the dependencies part from the text
-    text = text.slice(depsMatch[1].length);
+    text = text.substring(text.indexOf(depsFormat1[1]) + depsFormat1[1].length).trim();
+  } else if (depsFormat2 && depsFormat2[1]) {
+    dependenciesString = depsFormat2[1];
+    // Remove the dependencies part from the text
+    text = text.substring(text.indexOf(depsFormat2[1]) + depsFormat2[1].length).trim();
   }
-
-  // Find all code blocks using a regular expression
-  // This regex matches code blocks with an optional language specifier
-  const codeBlockPattern = /```(?:[a-zA-Z0-9]+)?([\s\S]*?)```/g;
   
-  let lastIndex = 0;
-  let match;
+  // Look for code blocks delimited by ```js or ```jsx
+  const codeBlockMatch = text.match(/(.*?)\s*```(?:js|jsx)\s*\n([\s\S]*?)```\s*([\s\S]*)/s);
 
-  while ((match = codeBlockPattern.exec(text)) !== null) {
-    const codeBlockStart = match.index;
-    const codeBlockEnd = match.index + match[0].length;
-    const codeContent = match[1].trim(); // This is the content between the backticks
+  if (codeBlockMatch) {
+    const beforeCode = codeBlockMatch[1]?.trim();
+    const codeContent = codeBlockMatch[2]?.trim();
+    const afterCode = codeBlockMatch[3]?.trim();
     
-    // Add markdown segment before the code block if there is any
-    if (codeBlockStart > lastIndex) {
-      const markdownContent = text.substring(lastIndex, codeBlockStart);
-      if (markdownContent.trim()) {
-        segments.push({
-          type: 'markdown',
-          content: markdownContent,
-        });
-      }
+    // Add the markdown content before the code block if it exists
+    if (beforeCode) {
+      segments.push({
+        type: 'markdown',
+        content: beforeCode,
+      });
     }
     
-    // Add the code segment
+    // Add the code block
     if (codeContent) {
       segments.push({
         type: 'code',
@@ -50,22 +51,15 @@ export function parseContent(text: string): {
       });
     }
     
-    lastIndex = codeBlockEnd;
-  }
-  
-  // Add any remaining text as markdown
-  if (lastIndex < text.length) {
-    const markdownContent = text.substring(lastIndex);
-    if (markdownContent.trim()) {
+    // Add the markdown content after the code block if it exists
+    if (afterCode) {
       segments.push({
         type: 'markdown',
-        content: markdownContent,
+        content: afterCode,
       });
     }
-  }
-
-  // If no segments were created, treat the entire content as markdown
-  if (segments.length === 0) {
+  } else {
+    // If no code blocks are found, treat the whole content as markdown
     segments.push({
       type: 'markdown',
       content: text,
