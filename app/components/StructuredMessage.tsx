@@ -1,16 +1,6 @@
-import { memo, useEffect } from 'react';
+import { memo } from 'react';
 import ReactMarkdown from 'react-markdown';
 import type { Segment } from '../types/chat';
-import { logSegmentDetails, logUIState } from '../utils/debugLogging';
-
-// Direct stdout logging for tests
-function writeToStdout(message: string) {
-  if (typeof process !== 'undefined' && process.stdout?.write) {
-    process.stdout.write(`\n${message}\n`);
-  } else {
-    console.debug(message);
-  }
-}
 
 interface StructuredMessageProps {
   segments: Segment[];
@@ -24,28 +14,6 @@ const StructuredMessage = memo(({ segments, isStreaming }: StructuredMessageProp
   // Ensure segments is an array (defensive)
   const validSegments = Array.isArray(segments) ? segments : [];
 
-  // Log segments details on first render and when they change
-  useEffect(() => {
-    if (validSegments.length > 0) {
-      writeToStdout(
-        `🔍 STRUCTURED MESSAGE: Rendering with ${validSegments.length} segments, isStreaming=${isStreaming}`
-      );
-
-      validSegments.forEach((segment, i) => {
-        const contentPreview = segment.content
-          ? `${segment.content.substring(0, 20)}${segment.content.length > 20 ? '...' : ''}`
-          : '[empty]';
-
-        writeToStdout(
-          `🔍 SEGMENT ${i}: type=${segment.type}, content length=${segment.content?.length || 0}, ` +
-            `content="${contentPreview}", has content=${Boolean(segment.content && segment.content.trim().length > 0)}`
-        );
-      });
-    } else {
-      writeToStdout('🔍 STRUCTURED MESSAGE: No segments to render');
-    }
-  }, [validSegments, isStreaming]);
-
   // Count number of lines in code segments
   const codeLines = validSegments
     .filter((segment) => segment.type === 'code')
@@ -55,12 +23,6 @@ const StructuredMessage = memo(({ segments, isStreaming }: StructuredMessageProp
   const hasContent =
     validSegments.length > 0 &&
     validSegments.some((segment) => segment?.content && segment.content.trim().length > 0);
-
-  // Log UI state decision
-  writeToStdout(
-    `🔍 STRUCTURED MESSAGE: hasContent=${hasContent}, segments=${validSegments.length}, ` +
-      `contentLength=${validSegments.reduce((total, seg) => total + (seg.content?.length || 0), 0)}`
-  );
 
   return (
     <div className="structured-message">

@@ -1,7 +1,12 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useFireproof } from 'use-fireproof';
 import { FIREPROOF_CHAT_HISTORY } from '../config/env';
-import type { UserChatMessageDocument, AiChatMessageDocument, SessionDocument, Segment } from '../types/chat';
+import type {
+  UserChatMessageDocument,
+  AiChatMessageDocument,
+  SessionDocument,
+  Segment,
+} from '../types/chat';
 
 export function useSession(routedSessionId: string | undefined) {
   const { database, useDocument, useLiveQuery } = useFireproof(FIREPROOF_CHAT_HISTORY);

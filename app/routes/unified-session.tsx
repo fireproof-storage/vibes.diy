@@ -6,7 +6,6 @@ import { useSimpleChat } from '../hooks/useSimpleChat';
 import AppLayout from '../components/AppLayout';
 import { copyToClipboard, encodeStateToUrl, decodeStateFromUrl } from '../utils/sharing';
 
-
 export function meta() {
   return [
     { title: 'Fireproof App Builder' },
@@ -23,7 +22,7 @@ export default function UnifiedSession() {
   const [shareStatus, setShareStatus] = useState<string>('');
 
   const chatState = useSimpleChat(urlSessionId);
-  
+
   // Check if there's a state parameter in the URL (for shared apps)
   useEffect(() => {
     const searchParams = new URLSearchParams(location.search);
@@ -41,7 +40,10 @@ export default function UnifiedSession() {
       alert('Generate an app first before sharing!');
       return;
     }
-    const encoded = encodeStateToUrl(chatState.selectedCode.content, chatState.selectedDependencies);
+    const encoded = encodeStateToUrl(
+      chatState.selectedCode.content,
+      chatState.selectedDependencies
+    );
     if (encoded) {
       copyToClipboard(`${window.location.origin}/shared?state=${encoded}`);
       setShareStatus('Share URL copied to clipboard!');
@@ -53,11 +55,7 @@ export default function UnifiedSession() {
 
   return (
     <AppLayout
-      chatPanel={
-        <ChatInterface 
-          chatState={chatState}
-        />
-      }
+      chatPanel={<ChatInterface chatState={chatState} />}
       previewPanel={
         <ResultPreview
           sessionId={chatState.sessionId}

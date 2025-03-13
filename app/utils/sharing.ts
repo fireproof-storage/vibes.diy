@@ -50,7 +50,10 @@ export function encodeStateToUrl(code: string, dependencies: Record<string, stri
 /**
  * Decode URL-safe string to application state
  */
-export function decodeStateFromUrl(encoded: string): { code: string; dependencies: Record<string, string> } {
+export function decodeStateFromUrl(encoded: string): {
+  code: string;
+  dependencies: Record<string, string>;
+} {
   try {
     const jsonStr = decodeURIComponent(atob(encoded));
     const stateObj = JSON.parse(jsonStr);
@@ -62,4 +65,4 @@ export function decodeStateFromUrl(encoded: string): { code: string; dependencie
     console.error('Error decoding state from URL:', error);
     return { code: '', dependencies: {} };
   }
-} 
+}

@@ -1,11 +1,13 @@
 import type { DocTypes } from 'use-fireproof';
-// Type definitions for segments
+
+// ===== Content Segment Types =====
 export type Segment = {
   type: 'markdown' | 'code';
   content: string;
 };
 
-// User message type
+// ===== Document Types =====
+// Base message document types for Fireproof storage
 export type UserChatMessageDocument = {
   type: 'user';
   session_id: string;
@@ -13,7 +15,6 @@ export type UserChatMessageDocument = {
   created_at: number;
 };
 
-// AI message type
 export type AiChatMessageDocument = {
   type: 'ai';
   session_id: string;
@@ -21,8 +22,9 @@ export type AiChatMessageDocument = {
   created_at: number;
 };
 
-// Union type for all message types
-export type ChatMessageDocument = UserChatMessageDocument | AiChatMessageDocument;
+export type ChatMessageDocument = (UserChatMessageDocument | AiChatMessageDocument) & {
+  _id?: string;
+};
 
 export interface SessionDocument extends DocTypes {
   _id?: string;
@@ -30,6 +32,27 @@ export interface SessionDocument extends DocTypes {
   title?: string;
   created_at: number;
 }
+
+// ===== UI Enhanced Types =====
+// Enhanced types with additional UI properties
+export type ChatMessage = ChatMessageDocument & {
+  text: string;
+  timestamp?: number;
+};
+
+// User chat message type used in the UI
+export type UserChatMessage = ChatMessage & {
+  type: 'user';
+};
+
+// Enhanced AiChatMessage type with segments for structured display
+export type AiChatMessage = ChatMessage & {
+  type: 'ai';
+  segments?: Segment[];
+  isStreaming?: boolean;
+};
+
+// ===== Component Props =====
 export interface ChatInterfaceProps {
   chatState: {
     docs: ChatMessageDocument[];
@@ -44,4 +67,23 @@ export interface ChatInterfaceProps {
   sessionId?: string | null;
   onSessionCreated?: (newSessionId: string) => void;
   onNewChat?: () => void;
+}
+
+// Base message document interface from useSessionMessages
+export interface MessageDocument {
+  type: 'user-message' | 'ai-message';
+  session_id: string;
+  created_at: number;
+}
+
+// User message document interface from useSessionMessages
+export interface UserMessageDocument extends MessageDocument {
+  type: 'user-message';
+  prompt: string;
+}
+
+// AI message document interface from useSessionMessages
+export interface AiMessageDocument extends MessageDocument {
+  type: 'ai-message';
+  rawMessage: string;
 }

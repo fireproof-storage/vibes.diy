@@ -117,7 +117,6 @@ function SessionSidebar({ isVisible, onClose }: SessionSidebarProps) {
         <li
           key={session._id}
           className="cursor-pointer border-b border-gray-200 p-3 hover:bg-gray-100 dark:border-gray-700 dark:hover:bg-gray-800"
-          data-testid="session-item"
         >
           <Link
             to={`/session/${session._id}/${encodedTitle}`}

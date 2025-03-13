@@ -1,7 +1,14 @@
 import { useEffect, useState, useMemo, useCallback, useRef } from 'react';
 import { useFireproof } from 'use-fireproof';
 import { FIREPROOF_CHAT_HISTORY } from '../config/env';
-import type { ChatMessage, AiChatMessage, UserChatMessage } from '../types/chat';
+import type {
+  ChatMessage,
+  AiChatMessage,
+  UserChatMessage,
+  MessageDocument,
+  UserMessageDocument,
+  AiMessageDocument,
+} from '../types/chat';
 import { parseContent } from '../utils/segmentParser';
 import { debugLog as logDebug } from '../utils/debugLogging';
 
@@ -13,23 +20,6 @@ import { debugLog as logDebug } from '../utils/debugLogging';
  * - All documents use created_at: Date.now() instead of timestamp
  * - All message documents include session_id to link them to a session
  */
-
-// Define document types internally since we don't have a separate file
-interface MessageDocument {
-  type: 'user-message' | 'ai-message';
-  session_id: string;
-  created_at: number;
-}
-
-interface UserMessageDocument extends MessageDocument {
-  type: 'user-message';
-  prompt: string;
-}
-
-interface AiMessageDocument extends MessageDocument {
-  type: 'ai-message';
-  rawMessage: string;
-}
 
 // Helper to check if a document is a message document
 const isMessageDocument = (doc: any): boolean => {
