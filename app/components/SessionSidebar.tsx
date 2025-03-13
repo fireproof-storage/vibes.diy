@@ -50,6 +50,11 @@ function SessionSidebar({ isVisible, onClose }: SessionSidebarProps) {
       const title = session.title || 'New Chat';
       const encodedTitle = encodeTitle(title);
 
+      // first and last screenshots, if they exist, and unique
+      const shownScreenshots = [screenshots[0], screenshots[screenshots.length - 1]]
+        .filter((screenshot) => screenshot !== undefined)
+        .filter((screenshot, index, self) => self.findIndex((t) => t._id === screenshot._id) === index);
+
       return (
         <li
           key={session._id}
@@ -64,7 +69,7 @@ function SessionSidebar({ isVisible, onClose }: SessionSidebarProps) {
             <div className="mt-1 text-xs text-gray-500 dark:text-gray-400">
               {new Date(session.created_at).toLocaleString()}
             </div>
-            {screenshots.map(
+            {shownScreenshots.map(
               (screenshot) =>
                 screenshot._files?.screenshot && (
                   <ImgFile

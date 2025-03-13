@@ -28,7 +28,7 @@ const StructuredMessage = memo(({ segments, isStreaming }: StructuredMessageProp
     <div className="structured-message">
       {!hasContent ? (
         // Show placeholder if there are no segments with content
-        <div className="prose prose-sm dark:prose-invert max-w-none">
+        <div className="prose prose-sm dark:prose-invert max-w-none prose-ul:pl-5 prose-ul:list-disc prose-ol:pl-5 prose-ol:list-decimal prose-li:my-0">
           <p>Processing response...</p>
         </div>
       ) : (
@@ -40,7 +40,7 @@ const StructuredMessage = memo(({ segments, isStreaming }: StructuredMessageProp
               return (
                 <div
                   key={`markdown-${index}`}
-                  className="prose prose-sm dark:prose-invert max-w-none"
+                  className="prose prose-sm dark:prose-invert max-w-none prose-ul:pl-5 prose-ul:list-disc prose-ol:pl-5 prose-ol:list-decimal prose-li:my-0"
                 >
                   <ReactMarkdown>{segment.content || ''}</ReactMarkdown>
                 </div>
@@ -51,7 +51,7 @@ const StructuredMessage = memo(({ segments, isStreaming }: StructuredMessageProp
               return (
                 <div
                   key={`code-${index}`}
-                  className="my-4 rounded-md border border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-800"
+                  className="my-4 rounded-lg border border-gray-200 bg-gray-50 p-4 shadow-sm dark:border-gray-700 dark:bg-gray-800"
                 >
                   <div className="mb-2 flex items-center justify-between">
                     <span className="font-mono text-sm text-gray-500 dark:text-gray-400">
@@ -72,7 +72,7 @@ const StructuredMessage = memo(({ segments, isStreaming }: StructuredMessageProp
                   </div>
 
                   {/* Preview of first few lines */}
-                  <div className="max-h-24 overflow-hidden rounded bg-gray-100 p-2 font-mono text-sm dark:bg-gray-800">
+                  <div className="max-h-24 overflow-hidden rounded bg-gray-200 p-2 font-mono text-sm shadow-inner dark:bg-gray-900">
                     {content
                       .split('\n')
                       .slice(0, 3)

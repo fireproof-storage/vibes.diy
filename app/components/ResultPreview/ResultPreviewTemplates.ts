@@ -43,14 +43,12 @@ export const indexHtml = `<!DOCTYPE html>
       function captureScreenshot() {
         html2canvas(document.body).then(canvas => {
           const dataURI = canvas.toDataURL();
-          console.log('ResultPreviewTemplates: Sending screenshot');
           window.parent.postMessage({ type: 'screenshot', data: dataURI }, '*');
         });
       }
 
       function pageIsLoaded() {
-        console.log('ResultPreviewTemplates: pageIsLoaded');
-        window.parent.postMessage({ type: 'preview-loaded' }, '*');
+\        window.parent.postMessage({ type: 'preview-loaded' }, '*');
         setTimeout(captureScreenshot, 100);
       }
 

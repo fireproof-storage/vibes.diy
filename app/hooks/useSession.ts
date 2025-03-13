@@ -74,14 +74,15 @@ export function useSession(routedSessionId: string | undefined) {
         type: 'image/png',
         lastModified: Date.now(),
       });
-      console.log('add screenshot', session._id);
-      await database.put({
+      const screenshot = {
         type: 'screenshot',
         session_id: session._id,
         _files: {
           screenshot: file,
         },
-      });
+      };
+      console.log('add screenshot', screenshot);
+      await database.put(screenshot);
     },
     [session._id, database]
   );

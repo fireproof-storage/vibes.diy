@@ -36,7 +36,7 @@ export function useSimpleChat(sessionId: string | undefined): ChatState {
   const selectedResponseDoc = (isStreaming
     ? aiMessage
     : docs.find((doc: any) => doc.type === 'ai' && doc._id === selectedResponseId) ||
-      docs.find((doc: any) => doc.type === 'ai')) as unknown as ChatMessageDocument;
+      docs.filter((doc: any) => doc.type === 'ai').reverse()[0]) as unknown as ChatMessageDocument;
 
   const setInput = useCallback((input: string) => {
     mergeUserMessage({ text: input });
@@ -106,20 +106,15 @@ export function useSimpleChat(sessionId: string | undefined): ChatState {
       .then((response) => {
         return processStream(response, (content) => {
           streamBufferRef.current += content;
-          console.log('>', streamBufferRef.current.length);
           mergeAiMessage({ text: streamBufferRef.current });
         });
       })
       .then(async () => {
-        console.log('saving final message', streamBufferRef.current.length);
         aiMessage.text = streamBufferRef.current;
         // mergeAiMessage({ text: streamBufferRef.current });
-        console.log('ai message', aiMessage);
         const ok = await database.put(aiMessage);
-        console.log('ok', ok);
       })
       .then(() => {
-        console.log('generating title', aiMessage.text.length);
         const { segments } = parseContent(aiMessage.text);
         if (!session?.title) {
           return generateTitle(segments, TITLE_MODEL).then(updateTitle);
@@ -148,9 +143,8 @@ export function useSimpleChat(sessionId: string | undefined): ChatState {
 
   const addFirstScreenshot = useCallback(async (screenshotData: string) => {
     const { rows: screenshots } = await database.query((doc: any) => [doc.session_id, doc.type], {
-      prefix: [session._id, 'screenshot'],
+      key: [session._id, 'screenshot'],
     });
-    console.log('screenshots', screenshots.length);
     if (screenshots.length === 0) {
       addScreenshot(screenshotData);
     }
@@ -158,7 +152,7 @@ export function useSimpleChat(sessionId: string | undefined): ChatState {
 
   return {
     sessionId: session._id,
-    addScreenshot: addFirstScreenshot,
+    addScreenshot,
     docs: messages,
     selectedResponseDoc,
     selectedSegments,

@@ -9,6 +9,7 @@ interface MessageProps {
   isShrinking: boolean;
   isExpanding: boolean;
   isStreaming: boolean;
+  setSelectedResponseId?: (id: string) => void;
 }
 
 // Helper function to get animation classes
@@ -20,10 +21,17 @@ const getAnimationClasses = (isShrinking: boolean, isExpanding: boolean): string
 const AIMessage = memo(
   ({ message, isStreaming }: { message: AiChatMessageDocument; isStreaming: boolean }) => {
     const { segments } = parseContent(message.text);
-    console.log('segments', isStreaming, message._id, segments.length);
     return (
       <div className="mb-4 flex flex-row justify-start px-4">
-        <div className="max-w-[85%] rounded-lg bg-white px-4 py-2 text-gray-900 dark:bg-gray-800 dark:text-gray-100">
+        <div className="flex-shrink-0 mr-2">
+          <div className="h-8 w-8 rounded-full bg-accent-02-light dark:bg-accent-02-dark flex items-center justify-center shadow-sm">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 18.657A8 8 0 016.343 7.343S7 9 9 10c0-2 .5-5 2.986-7C14 5 16.09 5.777 17.656 7.343A7.975 7.975 0 0120 13a7.975 7.975 0 01-2.343 5.657z" />
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.879 16.121A3 3 0 1012.015 11L11 14H9c0 .768.293 1.536.879 2.121z" />
+            </svg>
+          </div>
+        </div>
+        <div className="max-w-[85%] rounded-xl bg-white px-4 py-3 text-gray-900 shadow-md dark:bg-gray-800 dark:text-gray-100">
           <StructuredMessage segments={segments || []} isStreaming={isStreaming} />
         </div>
       </div>
@@ -47,8 +55,8 @@ const AIMessage = memo(
 const UserMessage = memo(({ message }: { message: ChatMessageDocument }) => {
   return (
     <div className="mb-4 flex flex-row justify-end px-4">
-      <div className="max-w-[85%] rounded-lg bg-blue-500 px-4 py-2 text-white dark:bg-blue-600 dark:text-white">
-        <div className="prose prose-sm dark:prose-invert max-w-none">
+      <div className="max-w-[85%] rounded-xl bg-blue-600 px-4 py-3 text-white shadow-md dark:bg-blue-600 dark:text-white">
+        <div className="prose prose-sm dark:prose-invert max-w-none prose-ul:pl-5 prose-ul:list-disc prose-ol:pl-5 prose-ol:list-decimal prose-li:my-0">
           <ReactMarkdown>{message.text}</ReactMarkdown>
         </div>
       </div>
@@ -58,9 +66,19 @@ const UserMessage = memo(({ message }: { message: ChatMessageDocument }) => {
 
 // Main Message component that handles animation and decides which subcomponent to render
 const Message = memo(
-  ({ message, isShrinking, isExpanding, isStreaming }: MessageProps) => {
+  ({ message, isShrinking, isExpanding, isStreaming, setSelectedResponseId }: MessageProps) => {
+    const handleClick = () => {
+      console.log('handleClick', message._id);
+      if (setSelectedResponseId && message._id) {
+        setSelectedResponseId(message._id);
+      }
+    };
+
     return (
-      <div className={getAnimationClasses(isShrinking, isExpanding)}>
+      <div 
+        className={`transition-all duration-150 ease-in hover:opacity-95 ${getAnimationClasses(isShrinking, isExpanding)}`}
+        onClick={handleClick}
+      >
         {message.type === 'ai' ? (
           <AIMessage message={message as AiChatMessageDocument} isStreaming={isStreaming} />
         ) : (
@@ -84,6 +102,11 @@ const Message = memo(
       return false; // State changed, need to re-render
     }
 
+    // Check if the setSelectedResponseId function reference changed
+    if (prevProps.setSelectedResponseId !== nextProps.setSelectedResponseId) {
+      return false; // Function reference changed, need to re-render
+    }
+
     // If we get here, props are equal enough to skip re-render
     return true;
   }
@@ -94,7 +117,7 @@ export default Message;
 // Welcome screen component shown when no messages are present
 export const WelcomeScreen = memo(() => {
   return (
-    <div className="text-accent-02 mx-auto max-w-2xl space-y-4 px-12 pt-8 text-center italic">
+    <div className="text-accent-02 mx-auto max-w-2xl space-y-4 px-12 pt-8 text-center italic bg-white rounded-xl shadow-md p-6 dark:bg-gray-800">
       <h2 className="mb-4 text-xl font-semibold">Welcome to Fireproof App Builder</h2>
       <p>Ask me to generate a web application for you</p>
       <p>

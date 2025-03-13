@@ -7,6 +7,7 @@ interface MessageListProps {
   isStreaming: boolean;
   isShrinking?: boolean;
   isExpanding?: boolean;
+  setSelectedResponseId?: (id: string) => void;
 }
 
 function MessageList({
@@ -14,6 +15,7 @@ function MessageList({
   isStreaming,
   isShrinking = false,
   isExpanding = false,
+  setSelectedResponseId,
 }: MessageListProps) {
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -26,10 +28,11 @@ function MessageList({
           isStreaming={isStreaming}
           isShrinking={isShrinking}
           isExpanding={isExpanding}
+          setSelectedResponseId={setSelectedResponseId}
         />
       );
     });
-  }, [messages, isShrinking, isExpanding]);
+  }, [messages, isShrinking, isExpanding, isStreaming, setSelectedResponseId]);
 
   useEffect(() => {
     try {
@@ -43,7 +46,7 @@ function MessageList({
 
   return (
     <div
-      className={`flex-1 overflow-y-auto ${
+      className={`flex-1 overflow-y-auto bg-light-background-01 dark:bg-dark-background-01 ${
         isShrinking ? 'animate-width-shrink' : isExpanding ? 'animate-width-expand' : ''
       }`}
       ref={messagesEndRef}
@@ -68,6 +71,10 @@ export default memo(MessageList, (prevProps, nextProps) => {
     prevProps.isShrinking === nextProps.isShrinking &&
     prevProps.isExpanding === nextProps.isExpanding;
 
+  // Check if setSelectedResponseId changed
+  const setSelectedResponseIdEqual =
+    prevProps.setSelectedResponseId === nextProps.setSelectedResponseId;
+
   // Content equality check for messages - must compare text content
   const messagesEqual =
     prevProps.messages.length === nextProps.messages.length &&
@@ -77,5 +84,5 @@ export default memo(MessageList, (prevProps, nextProps) => {
       return msg._id === nextMsg._id && msg.text === nextMsg.text;
     });
 
-  return animationStateEqual && messagesEqual;
+  return animationStateEqual && messagesEqual && setSelectedResponseIdEqual;
 });

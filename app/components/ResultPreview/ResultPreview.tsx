@@ -28,6 +28,12 @@ function ResultPreview({
   }, [sessionId, isStreaming, code, showWelcome]);
 
   useEffect(() => {
+    if (isStreaming) {
+      setActiveView('code');
+    }
+  }, [isStreaming]); 
+
+  useEffect(() => {
     const handleMessage = ({ data }: MessageEvent) => {
       if (data) {
         if (data.type === 'preview-loaded') {

@@ -21,6 +21,7 @@ function ChatInterface({
   const [isShrinking, setIsShrinking] = useState(false);
   const [isExpanding, setIsExpanding] = useState(false);
   const [isSidebarVisible, setIsSidebarVisible] = useState(false);
+  const [selectedResponseId, setSelectedResponseId] = useState<string | null>(null);
 
   // Convert docs to messages
   // const messages = useMemo(() => convertDocsToMessages(docs), [docs]);
@@ -70,6 +71,11 @@ function ChatInterface({
     [setInput, inputRef]
   );
 
+  // Callback for setting the selected response ID
+  const handleSetSelectedResponseId = useCallback((id: string) => {
+    setSelectedResponseId(id);
+  }, []);
+
   // Memoize the MessageList component to prevent unnecessary re-renders
   const memoizedMessageList = useMemo(() => {
     return (
@@ -78,9 +84,10 @@ function ChatInterface({
         isStreaming={isStreaming}
         isShrinking={isShrinking}
         isExpanding={isExpanding}
+        setSelectedResponseId={handleSetSelectedResponseId}
       />
     );
-  }, [sessionId, messages, isStreaming, isShrinking, isExpanding]);
+  }, [sessionId, messages, isStreaming, isShrinking, isExpanding, handleSetSelectedResponseId]);
 
   return (
     <div className="flex h-screen flex-col">
