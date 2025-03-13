@@ -117,27 +117,28 @@ vi.mock('../app/hooks/useSessionMessages', () => {
         messages: messagesStore[sessionKey],
         isLoading: false,
         addUserMessage: vi.fn().mockImplementation(async (text) => {
-          const timestamp = Date.now();
+          const created_at = Date.now();
           messagesStore[sessionKey].push({
+            _id: `user-${created_at}`,
             type: 'user',
             text,
-            timestamp,
+            session_id: sessionKey,
+            created_at,
           });
-          return timestamp;
+          return created_at;
         }),
         addAiMessage: vi.fn().mockImplementation(async (rawContent, timestamp) => {
-          const now = timestamp || Date.now();
-          const { segments, dependenciesString } = parseContent(rawContent);
+          const created_at = timestamp || Date.now();
+          const { segments } = parseContent(rawContent);
 
           messagesStore[sessionKey].push({
+            _id: `ai-${created_at}`,
             type: 'ai',
             text: rawContent,
-            segments,
-            dependenciesString,
-            isStreaming: false,
-            timestamp: now,
+            session_id: sessionKey,
+            created_at,
           });
-          return now;
+          return created_at;
         }),
         updateAiMessage: vi
           .fn()
@@ -180,7 +181,7 @@ export default HelloWorld;`,
                 dependenciesString: '{"react": "^18.2.0", "react-dom": "^18.2.0"}}',
                 isStreaming,
                 timestamp: now,
-              };
+              } as any;
             }
             // Special case for the dependencies test
             else if (rawContent.includes('function Timer()') && rawContent.includes('useEffect')) {
@@ -456,7 +457,7 @@ describe('useSimpleChat', () => {
 
   it('updates input value', () => {
     const { result } = renderHook(() => useSimpleChat(undefined));
-    
+
     // Verify initial state
     expect(result.current.input).toBe('');
 
@@ -464,10 +465,10 @@ describe('useSimpleChat', () => {
     act(() => {
       result.current.setInput('Hello, AI!');
     });
-    
-    // Force a re-render to get the latest state 
+
+    // Force a re-render to get the latest state
     const { result: refreshedResult } = renderHook(() => useSimpleChat(undefined));
-    
+
     // The userMessage text should now be 'Hello, AI!'
     expect(refreshedResult.current.input).toBe('Hello, AI!');
   });
@@ -626,7 +627,9 @@ You can use this component in your application.`,
 
     // First segment should be markdown intro
     expect(result.current.selectedSegments?.[0].type).toBe('markdown');
-    expect(result.current.selectedSegments?.[0].content).toContain("Here's a simple React component");
+    expect(result.current.selectedSegments?.[0].content).toContain(
+      "Here's a simple React component"
+    );
 
     // Second segment should be code
     expect(result.current.selectedSegments?.[1].type).toBe('code');

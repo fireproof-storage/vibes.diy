@@ -12,12 +12,12 @@ vi.mock('../app/components/Message', () => ({
 describe('MessageList', () => {
   test('renders messages correctly', () => {
     const messages = [
-      { 
-        type: 'user', 
-        text: 'Hello', 
-        _id: 'user-1', 
+      {
+        type: 'user',
+        text: 'Hello',
+        _id: 'user-1',
         session_id: 'test',
-        created_at: Date.now() 
+        created_at: Date.now(),
       } as UserChatMessage,
       {
         type: 'ai',
@@ -25,7 +25,7 @@ describe('MessageList', () => {
         _id: 'ai-1',
         segments: [{ type: 'markdown', content: 'Hi there!' }],
         session_id: 'test',
-        created_at: Date.now()
+        created_at: Date.now(),
       } as AiChatMessage,
     ];
 
@@ -43,12 +43,12 @@ describe('MessageList', () => {
 
   test('renders streaming message correctly', () => {
     const messages = [
-      { 
-        type: 'user', 
-        text: 'Hello', 
-        _id: 'user-1', 
+      {
+        type: 'user',
+        text: 'Hello',
+        _id: 'user-1',
         session_id: 'test',
-        created_at: Date.now() 
+        created_at: Date.now(),
       } as UserChatMessage,
       {
         type: 'ai',
@@ -57,7 +57,7 @@ describe('MessageList', () => {
         segments: [{ type: 'markdown', content: 'Streaming response...' }],
         isStreaming: true,
         session_id: 'test',
-        created_at: Date.now()
+        created_at: Date.now(),
       } as AiChatMessage,
     ];
 
@@ -70,12 +70,12 @@ describe('MessageList', () => {
 
   test('should show content instead of placeholder when streaming message has content', () => {
     const messages = [
-      { 
-        type: 'user', 
-        text: 'Create a React app', 
-        _id: 'user-2', 
+      {
+        type: 'user',
+        text: 'Create a React app',
+        _id: 'user-2',
         session_id: 'test',
-        created_at: Date.now() 
+        created_at: Date.now(),
       } as UserChatMessage,
       {
         type: 'ai',
@@ -84,7 +84,7 @@ describe('MessageList', () => {
         segments: [{ type: 'markdown', content: 'Here is a React app' }],
         isStreaming: true,
         session_id: 'test',
-        created_at: Date.now()
+        created_at: Date.now(),
       } as AiChatMessage,
     ];
 
@@ -95,12 +95,12 @@ describe('MessageList', () => {
 
   test('should show "Processing response..." when streaming message has no content', () => {
     const messages = [
-      { 
-        type: 'user', 
-        text: 'Create a React app', 
-        _id: 'user-3', 
+      {
+        type: 'user',
+        text: 'Create a React app',
+        _id: 'user-3',
         session_id: 'test',
-        created_at: Date.now() 
+        created_at: Date.now(),
       } as UserChatMessage,
       {
         type: 'ai',
@@ -109,7 +109,7 @@ describe('MessageList', () => {
         segments: [],
         isStreaming: true,
         session_id: 'test',
-        created_at: Date.now()
+        created_at: Date.now(),
       } as AiChatMessage,
     ];
 

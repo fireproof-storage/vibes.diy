@@ -42,19 +42,20 @@ interface AppLayoutProps {
 
 // Mock components used in the Session component
 vi.mock('../app/ChatInterface', () => ({
-  default: ({ docs, input, setInput, isStreaming, inputRef, sendMessage, sessionId, title }: ChatInterfaceProps) => (
-    <div data-testid="mock-chat-interface">Chat Interface Component</div>
-  ),
+  default: ({
+    docs,
+    input,
+    setInput,
+    isStreaming,
+    inputRef,
+    sendMessage,
+    sessionId,
+    title,
+  }: ChatInterfaceProps) => <div data-testid="mock-chat-interface">Chat Interface Component</div>,
 }));
 
 vi.mock('../app/components/ResultPreview/ResultPreview', () => ({
-  default: ({
-    code,
-    dependencies,
-    isStreaming,
-    onShare,
-    sessionId,
-  }: ResultPreviewProps) => (
+  default: ({ code, dependencies, isStreaming, onShare, sessionId }: ResultPreviewProps) => (
     <div data-testid="mock-result-preview">
       <div data-testid="code-line-count">{code.split('\n').length} lines of code</div>
       <div data-testid="code-content">{code.substring(0, 50)}...</div>

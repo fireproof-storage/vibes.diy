@@ -45,8 +45,10 @@ export function useSimpleChat(sessionId: string | undefined): ChatState {
   // Process docs into messages for the UI
   const filteredDocs = docs.filter((doc: any) => doc.type === 'ai' || doc.type === 'user');
 
-  const messages = (aiMessage.text.length > 0 ? [aiMessage, ...filteredDocs] : filteredDocs) as unknown as ChatMessageDocument[];
-  
+  const messages = (aiMessage.text.length > 0
+    ? [ ...filteredDocs, aiMessage]
+    : filteredDocs) as unknown as ChatMessageDocument[];
+
   function buildMessageHistory() {
     return messages.map((msg) => ({
       role: msg.type === 'user' ? ('user' as const) : ('assistant' as const),
@@ -103,13 +105,15 @@ export function useSimpleChat(sessionId: string | undefined): ChatState {
       })
       .then((response) => {
         return processStream(response, (content) => {
-          console.log('content', content);
+          console.log('>', content);
           streamBufferRef.current += content;
           mergeAiMessage({ text: streamBufferRef.current });
         });
       })
       .then(() => {
+        console.log('saving final message', streamBufferRef.current);
         mergeAiMessage({ text: streamBufferRef.current });
+        console.log('ai message', aiMessage);
         return submitAiMessage();
       })
       .then(() => {

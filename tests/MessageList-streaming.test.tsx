@@ -12,11 +12,12 @@ beforeEach(() => {
 vi.mock('../app/components/Message', () => ({
   default: ({ message }: any) => (
     <div data-testid="mock-message">
-      {message.segments && message.segments.map((segment: any, i: number) => (
-        <div key={i} data-testid={segment.type}>
-          {segment.content}
-        </div>
-      ))}
+      {message.segments &&
+        message.segments.map((segment: any, i: number) => (
+          <div key={i} data-testid={segment.type}>
+            {segment.content}
+          </div>
+        ))}
       {message.text && !message.segments?.length && <div>{message.text}</div>}
     </div>
   ),

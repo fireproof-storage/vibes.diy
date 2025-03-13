@@ -111,9 +111,9 @@ describe('Component Rendering', () => {
 
     it('applies tooltip classes correctly', () => {
       render(
-        <ChatHeader 
-          onOpenSidebar={() => {}} 
-          onNewChat={() => {}} 
+        <ChatHeader
+          onOpenSidebar={() => {}}
+          onNewChat={() => {}}
           isStreaming={() => false}
           title="Test Chat"
         />
@@ -164,20 +164,18 @@ describe('Component Rendering', () => {
 
   describe('MessageList', () => {
     it('renders empty list', () => {
-      const { container } = render(
-        <MessageList messages={[]} isStreaming={false} />
-      );
+      const { container } = render(<MessageList messages={[]} isStreaming={false} />);
       expect(screen.getByText('Welcome to Fireproof App Builder')).toBeInTheDocument();
     });
 
     it('renders messages correctly', () => {
       const messages = [
-        { 
-          type: 'user' as const, 
-          text: 'Hello', 
-          _id: 'user-1', 
+        {
+          type: 'user' as const,
+          text: 'Hello',
+          _id: 'user-1',
           session_id: 'test-session',
-          created_at: Date.now() 
+          created_at: Date.now(),
         } as UserChatMessage,
         {
           type: 'ai' as const,
@@ -185,8 +183,8 @@ describe('Component Rendering', () => {
           _id: 'ai-1',
           segments: [{ type: 'markdown', content: 'Hi there' }],
           session_id: 'test-session',
-          created_at: Date.now()
-        } as AiChatMessage
+          created_at: Date.now(),
+        } as AiChatMessage,
       ];
 
       render(<MessageList messages={messages} isStreaming={false} />);
@@ -196,12 +194,12 @@ describe('Component Rendering', () => {
 
     it('renders placeholder text when streaming with no content', () => {
       const messages = [
-        { 
-          type: 'user' as const, 
-          text: 'Hello', 
-          _id: 'user-2', 
+        {
+          type: 'user' as const,
+          text: 'Hello',
+          _id: 'user-2',
           session_id: 'test-session',
-          created_at: Date.now() 
+          created_at: Date.now(),
         } as UserChatMessage,
         {
           type: 'ai' as const,
@@ -210,8 +208,8 @@ describe('Component Rendering', () => {
           segments: [],
           isStreaming: true,
           session_id: 'test-session',
-          created_at: Date.now()
-        } as AiChatMessage
+          created_at: Date.now(),
+        } as AiChatMessage,
       ];
 
       render(<MessageList messages={messages} isStreaming={true} />);
@@ -229,8 +227,8 @@ describe('Component Rendering', () => {
           segments: [{ type: 'markdown', content: 'I am thinking...' }],
           isStreaming: true,
           session_id: 'test-session',
-          created_at: Date.now()
-        } as AiChatMessage
+          created_at: Date.now(),
+        } as AiChatMessage,
       ];
 
       render(<MessageList messages={messages} isStreaming={true} />);

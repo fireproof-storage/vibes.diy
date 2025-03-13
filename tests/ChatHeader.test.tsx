@@ -16,7 +16,12 @@ describe('ChatHeader', () => {
 
   it('renders correctly', () => {
     render(
-      <ChatHeader onOpenSidebar={onOpenSidebar} onNewChat={onNewChat} isStreaming={isStreamingFn} />
+      <ChatHeader
+        onOpenSidebar={onOpenSidebar}
+        onNewChat={onNewChat}
+        isStreaming={isStreamingFn}
+        title="Test Chat"
+      />
     );
 
     expect(screen.getByLabelText('Open chat history')).toBeDefined();
@@ -25,7 +30,12 @@ describe('ChatHeader', () => {
 
   it('calls openSidebar when the sidebar button is clicked', () => {
     render(
-      <ChatHeader onOpenSidebar={onOpenSidebar} onNewChat={onNewChat} isStreaming={isStreamingFn} />
+      <ChatHeader
+        onOpenSidebar={onOpenSidebar}
+        onNewChat={onNewChat}
+        isStreaming={isStreamingFn}
+        title="Test Chat"
+      />
     );
 
     const openButton = screen.getByLabelText('Open chat history');
@@ -36,7 +46,12 @@ describe('ChatHeader', () => {
 
   it('calls handleNewChat when the new chat button is clicked', () => {
     render(
-      <ChatHeader onOpenSidebar={onOpenSidebar} onNewChat={onNewChat} isStreaming={isStreamingFn} />
+      <ChatHeader
+        onOpenSidebar={onOpenSidebar}
+        onNewChat={onNewChat}
+        isStreaming={isStreamingFn}
+        title="Test Chat"
+      />
     );
 
     const newChatButton = screen.getByLabelText('New Chat');
@@ -50,7 +65,12 @@ describe('ChatHeader', () => {
     isStreamingFn = () => true;
 
     render(
-      <ChatHeader onOpenSidebar={onOpenSidebar} onNewChat={onNewChat} isStreaming={isStreamingFn} />
+      <ChatHeader
+        onOpenSidebar={onOpenSidebar}
+        onNewChat={onNewChat}
+        isStreaming={isStreamingFn}
+        title="Test Chat"
+      />
     );
 
     const newChatButton = screen.getByLabelText('New Chat');

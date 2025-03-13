@@ -102,13 +102,7 @@ vi.mock('../app/ChatInterface', () => ({
 }));
 
 vi.mock('../app/components/ResultPreview/ResultPreview', () => ({
-  default: ({
-    code,
-    dependencies,
-    isStreaming,
-    onShare,
-    sessionId,
-  }: ResultPreviewProps) => (
+  default: ({ code, dependencies, isStreaming, onShare, sessionId }: ResultPreviewProps) => (
     <div data-testid="mock-result-preview">
       <div data-testid="code-line-count">{code.split('\n').length} lines of code</div>
       <div data-testid="code-content">{code.substring(0, 50)}...</div>
@@ -261,7 +255,7 @@ describe('Home Route in completed state', () => {
     // Now the ChatInterface component doesn't have session creation functionality
     // directly in it, and the session creation flow has changed.
     // The flow is now: no session id → title set → id is set
-    
+
     // Set mock location for this test
     locationMock = {
       search: '',
@@ -283,16 +277,19 @@ describe('Home Route in completed state', () => {
     // Instead of expecting immediate navigation, allow for the possibility
     // that the session creation might happen in steps (title set first, then ID)
     // by using a longer timeout and looser expectations
-    await waitFor(() => {
-      expect(navigateMock).toHaveBeenCalled();
-      // Check that we navigate to a session path
-      const firstCall = navigateMock.mock.calls[0];
-      if (firstCall) {
-        const path = firstCall[0];
-        expect(typeof path).toBe('string');
-        expect(path.includes('/session/')).toBe(true);
-      }
-    }, { timeout: 2000 });
+    await waitFor(
+      () => {
+        expect(navigateMock).toHaveBeenCalled();
+        // Check that we navigate to a session path
+        const firstCall = navigateMock.mock.calls[0];
+        if (firstCall) {
+          const path = firstCall[0];
+          expect(typeof path).toBe('string');
+          expect(path.includes('/session/')).toBe(true);
+        }
+      },
+      { timeout: 2000 }
+    );
   });
 
   it('loads code from URL hash state when present', async () => {

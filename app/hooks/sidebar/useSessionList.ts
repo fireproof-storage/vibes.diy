@@ -11,7 +11,6 @@ type SessionOrScreenshot = {
   type?: 'session' | 'screenshot';
   session_id?: string;
   title?: string;
-  timestamp?: number;
   created_at?: number;
   _files?: Record<string, any>;
 };
@@ -84,10 +83,10 @@ export function useSessionList() {
       }
     });
 
-    // Convert map to array and sort by timestamp (newest first)
+    // Convert map to array and sort by created_at (newest first)
     return Array.from(groups.values()).sort((a, b) => {
-      const timeA = a.session.timestamp || 0;
-      const timeB = b.session.timestamp || 0;
+      const timeA = a.session.created_at || 0;
+      const timeB = b.session.created_at || 0;
       return timeB - timeA;
     });
   }, [sessionAndScreenshots]);

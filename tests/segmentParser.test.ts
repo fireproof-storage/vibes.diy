@@ -112,11 +112,47 @@ function SearchResults({ searches }) {
   it('correctly handles a complex real-world app example', () => {
     // Read the long-message.txt fixture file
     const fixturePath = path.join(__dirname, 'long-message.txt');
-    const longMessageContent = fs.readFileSync(fixturePath, 'utf-8');
+    const messageContent = fs.readFileSync(fixturePath, 'utf-8');
 
     console.log('Testing with long message fixture');
 
-    const result = parseContent(longMessageContent);
+    const result = parseContent(messageContent);
+
+    // More detailed logging to understand segment types and content
+    console.log('SEGMENT DETAILS FOR LONG-MESSAGE.TXT:');
+    result.segments.forEach((segment, i) => {
+      console.log(`\nSegment ${i}:`);
+      console.log(`  Type: ${segment.type}`);
+      console.log(`  Content starts with: ${segment.content.substring(0, 100)}...`);
+      console.log(`  Content ends with: ...${segment.content.substring(segment.content.length - 100)}`);
+      
+      // Check for key indicators to help determine if the segment type is correct
+      const hasCodeIndicators = [
+        'import React',
+        'function App',
+        'useFireproof',
+        'useState',
+        'return (',
+        'className='
+      ].some(indicator => segment.content.includes(indicator));
+      
+      const hasMarkdownIndicators = [
+        'GIF Search App',
+        'This app allows users',
+        'Features:'
+      ].some(indicator => segment.content.includes(indicator));
+      
+      console.log(`  Contains code indicators: ${hasCodeIndicators}`);
+      console.log(`  Contains markdown indicators: ${hasMarkdownIndicators}`);
+      console.log(`  Expected type: ${hasCodeIndicators ? 'code' : hasMarkdownIndicators ? 'markdown' : 'unknown'}`);
+      console.log(`  Actual type: ${segment.type}`);
+      
+      // Log if there's a type mismatch
+      if ((hasCodeIndicators && segment.type !== 'code') || 
+          (hasMarkdownIndicators && !hasCodeIndicators && segment.type !== 'markdown')) {
+        console.log(`  TYPE MISMATCH DETECTED!`);
+      }
+    });
 
     // Log the segments for debugging
     console.log(`Parsed ${result.segments.length} segments from long-message.txt`);
@@ -172,6 +208,43 @@ function SearchResults({ searches }) {
 
     const result = parseContent(messageContent);
 
+    // More detailed logging to understand segment types and content
+    console.log(`Parsed ${result.segments.length} segments from easy-message.txt`);
+    console.log('SEGMENT DETAILS FOR EASY-MESSAGE.TXT:');
+    result.segments.forEach((segment, i) => {
+      console.log(`\nSegment ${i}:`);
+      console.log(`  Type: ${segment.type}`);
+      console.log(`  Content starts with: ${segment.content.substring(0, 100)}...`);
+      console.log(`  Content ends with: ...${segment.content.substring(segment.content.length - 100)}`);
+      
+      // Check for key indicators to help determine if the segment type is correct
+      const hasCodeIndicators = [
+        'import React',
+        'function ExoplanetTracker',
+        'useFireproof',
+        'useState',
+        'return (',
+        'className='
+      ].some(indicator => segment.content.includes(indicator));
+      
+      const hasMarkdownIndicators = [
+        'I\'ll create an "Exoplanet Tracker" app',
+        'This Exoplanet Tracker app allows',
+        'astronomy enthusiasts'
+      ].some(indicator => segment.content.includes(indicator));
+      
+      console.log(`  Contains code indicators: ${hasCodeIndicators}`);
+      console.log(`  Contains markdown indicators: ${hasMarkdownIndicators}`);
+      console.log(`  Expected type: ${hasCodeIndicators ? 'code' : hasMarkdownIndicators ? 'markdown' : 'unknown'}`);
+      console.log(`  Actual type: ${segment.type}`);
+      
+      // Log if there's a type mismatch
+      if ((hasCodeIndicators && segment.type !== 'code') || 
+          (hasMarkdownIndicators && !hasCodeIndicators && segment.type !== 'markdown')) {
+        console.log(`  TYPE MISMATCH DETECTED!`);
+      }
+    });
+
     // Log the segments for debugging
     console.log(`Parsed ${result.segments.length} segments from easy-message.txt`);
     result.segments.forEach((segment, i) => {
@@ -221,6 +294,43 @@ function SearchResults({ searches }) {
     console.log('Testing with easy-message2.txt fixture');
 
     const result = parseContent(messageContent);
+
+    // More detailed logging to understand segment types and content
+    console.log(`Parsed ${result.segments.length} segments from easy-message2.txt`);
+    console.log('SEGMENT DETAILS FOR EASY-MESSAGE2.TXT:');
+    result.segments.forEach((segment, i) => {
+      console.log(`\nSegment ${i}:`);
+      console.log(`  Type: ${segment.type}`);
+      console.log(`  Content starts with: ${segment.content.substring(0, 100)}...`);
+      console.log(`  Content ends with: ...${segment.content.substring(segment.content.length - 100)}`);
+      
+      // Check for key indicators to help determine if the segment type is correct
+      const hasCodeIndicators = [
+        'import React',
+        'function LyricsRaterApp',
+        'useFireproof',
+        'useState',
+        'return (',
+        'className='
+      ].some(indicator => segment.content.includes(indicator));
+      
+      const hasMarkdownIndicators = [
+        'Lyrics Rater App',
+        'This Lyrics Rater app lets you',
+        'avoid copyright issues'
+      ].some(indicator => segment.content.includes(indicator));
+      
+      console.log(`  Contains code indicators: ${hasCodeIndicators}`);
+      console.log(`  Contains markdown indicators: ${hasMarkdownIndicators}`);
+      console.log(`  Expected type: ${hasCodeIndicators ? 'code' : hasMarkdownIndicators ? 'markdown' : 'unknown'}`);
+      console.log(`  Actual type: ${segment.type}`);
+      
+      // Log if there's a type mismatch
+      if ((hasCodeIndicators && segment.type !== 'code') || 
+          (hasMarkdownIndicators && !hasCodeIndicators && segment.type !== 'markdown')) {
+        console.log(`  TYPE MISMATCH DETECTED!`);
+      }
+    });
 
     // Log the segments for debugging
     console.log(`Parsed ${result.segments.length} segments from easy-message2.txt`);
@@ -277,6 +387,42 @@ function SearchResults({ searches }) {
 
     const result = parseContent(messageContent);
 
+    // More detailed logging to understand segment types and content
+    console.log('SEGMENT DETAILS FOR HARD-MESSAGE.TXT:');
+    result.segments.forEach((segment, i) => {
+      console.log(`\nSegment ${i}:`);
+      console.log(`  Type: ${segment.type}`);
+      console.log(`  Content starts with: ${segment.content.substring(0, 100)}...`);
+      console.log(`  Content ends with: ...${segment.content.substring(segment.content.length - 100)}`);
+      
+      // Check for key indicators to help determine if the segment type is correct
+      const hasCodeIndicators = [
+        'import React',
+        'function App',
+        'useFireproof',
+        'useState',
+        'return (',
+        'className='
+      ].some(indicator => segment.content.includes(indicator));
+      
+      const hasMarkdownIndicators = [
+        'photo gallery app',
+        'This photo gallery app',
+        'Features:'
+      ].some(indicator => segment.content.includes(indicator));
+      
+      console.log(`  Contains code indicators: ${hasCodeIndicators}`);
+      console.log(`  Contains markdown indicators: ${hasMarkdownIndicators}`);
+      console.log(`  Expected type: ${hasCodeIndicators ? 'code' : hasMarkdownIndicators ? 'markdown' : 'unknown'}`);
+      console.log(`  Actual type: ${segment.type}`);
+      
+      // Log if there's a type mismatch
+      if ((hasCodeIndicators && segment.type !== 'code') || 
+          (hasMarkdownIndicators && !hasCodeIndicators && segment.type !== 'markdown')) {
+        console.log(`  TYPE MISMATCH DETECTED!`);
+      }
+    });
+
     // Log the segments for debugging
     console.log(`Parsed ${result.segments.length} segments from hard-message.txt`);
     result.segments.forEach((segment, i) => {
@@ -327,5 +473,155 @@ function SearchResults({ searches }) {
         segment.content.includes('Orange synthwave aesthetic')
     );
     expect(hasAppFeatures).toBe(true);
+  });
+
+  it('correctly parses todo app from easy-message3.txt', () => {
+    // Read the easy-message3.txt fixture file
+    const fixturePath = path.join(__dirname, 'easy-message3.txt');
+    const messageContent = fs.readFileSync(fixturePath, 'utf-8');
+
+    console.log('Testing with easy-message3.txt fixture');
+
+    const result = parseContent(messageContent);
+
+    // More detailed logging to understand segment types and content
+    console.log(`Parsed ${result.segments.length} segments from easy-message3.txt`);
+    console.log('SEGMENT DETAILS:');
+    result.segments.forEach((segment, i) => {
+      console.log(`\nSegment ${i}:`);
+      console.log(`  Type: ${segment.type}`);
+      console.log(`  Content starts with: ${segment.content.substring(0, 100)}...`);
+      console.log(`  Content ends with: ...${segment.content.substring(segment.content.length - 100)}`);
+      
+      // Check for key indicators to help determine if the segment type is correct
+      const hasCodeIndicators = [
+        'import React',
+        'function TodoApp',
+        'useFireproof',
+        'useState',
+        'return (',
+        'className='
+      ].some(indicator => segment.content.includes(indicator));
+      
+      const hasMarkdownIndicators = [
+        'This todo app features',
+        'Add todos with titles',
+        'Persistent storage across sessions'
+      ].some(indicator => segment.content.includes(indicator));
+      
+      console.log(`  Contains code indicators: ${hasCodeIndicators}`);
+      console.log(`  Contains markdown indicators: ${hasMarkdownIndicators}`);
+      console.log(`  Expected type: ${hasCodeIndicators ? 'code' : hasMarkdownIndicators ? 'markdown' : 'unknown'}`);
+      console.log(`  Actual type: ${segment.type}`);
+      
+      // Log if there's a type mismatch
+      if ((hasCodeIndicators && segment.type !== 'code') || 
+          (hasMarkdownIndicators && !hasCodeIndicators && segment.type !== 'markdown')) {
+        console.log(`  TYPE MISMATCH DETECTED!`);
+      }
+    });
+
+    // Log dependencies string details
+    console.log('\nDEPENDENCIES STRING:');
+    console.log('Content:', result.dependenciesString);
+    if (result.dependenciesString) {
+      const hasTodoAppIntro = result.dependenciesString.includes("Here's a todo app with due dates");
+      const hasReactImport = result.dependenciesString.includes('import React');
+      const hasFunctionTodoApp = result.dependenciesString.includes('function TodoApp');
+      
+      console.log(`Contains intro: ${hasTodoAppIntro}`);
+      console.log(`Contains React import: ${hasReactImport}`);
+      console.log(`Contains TodoApp function: ${hasFunctionTodoApp}`);
+    }
+
+    // Basic validations
+    expect(result.segments.length).toBeGreaterThan(0);
+
+    // Log the dependencies string for debugging
+    console.log('Dependencies string:', result.dependenciesString);
+
+    // Verify dependencies - the fixture contains {"dependencies": {}}
+    expect(result.dependenciesString).toBeDefined();
+    expect(result.dependenciesString?.includes('{"dependencies": {}}')).toBe(true);
+
+    const dependencies = parseDependencies(result.dependenciesString);
+    expect(dependencies).toEqual({});
+
+    // Verify the todo app intro text is in the dependencies string or in any segment
+    const hasTodoAppIntro =
+      result.dependenciesString?.includes("todo app with due dates") ||
+      result.segments.some((segment) => segment.content.includes("todo app with due dates"));
+    expect(hasTodoAppIntro).toBe(true);
+
+    // Verify React import is in the dependenciesString or any segment
+    const hasReactImport =
+      result.dependenciesString?.includes('import React') ||
+      result.segments.some((segment) => segment.content.includes('import React'));
+    expect(hasReactImport).toBe(true);
+    
+    // Verify useFireproof is present in the dependenciesString or any segment
+    const hasFireproofImport =
+      result.dependenciesString?.includes('useFireproof') ||
+      result.segments.some((segment) => segment.content.includes('useFireproof'));
+    expect(hasFireproofImport).toBe(true);
+
+    // Check for function TodoApp in the dependenciesString or any segment
+    const hasTodoApp =
+      result.dependenciesString?.includes('function TodoApp') ||
+      result.segments.some((segment) => segment.content.includes('function TodoApp'));
+    expect(hasTodoApp).toBe(true);
+
+    // Check for features list in any segment
+    const hasFeaturesList = result.segments.some((segment) =>
+      segment.content.includes('This todo app features')
+    );
+    expect(hasFeaturesList).toBe(true);
+
+    // Verify specific app features are mentioned in any segment
+    const hasAppFeatures = result.segments.some(
+      (segment) =>
+        segment.content.includes('Add todos with titles') &&
+        segment.content.includes('Persistent storage across sessions')
+    );
+    expect(hasAppFeatures).toBe(true);
+    
+    // ENFORCE CORRECT SEGMENT TYPE VALIDATION
+    console.log("\nSEGMENT TYPE VALIDATION:");
+    result.segments.forEach((segment, i) => {
+      // Define code indicators - these strongly suggest the segment should be typed as code
+      const hasCodeIndicators = [
+        'import React',
+        'function TodoApp',
+        'useFireproof',
+        'useState',
+        'return (',
+        'className=',
+        'const {'
+      ].some(indicator => segment.content.includes(indicator));
+      
+      // Define markdown indicators - these strongly suggest the segment should be typed as markdown
+      const hasMarkdownIndicators = [
+        'This todo app features:',
+        'Add todos with titles',
+        'Persistent storage across sessions'
+      ].some(indicator => segment.content.includes(indicator));
+      
+      // Determine expected type
+      let expectedType = 'unknown';
+      if (hasCodeIndicators) {
+        expectedType = 'code';
+      } else if (hasMarkdownIndicators) {
+        expectedType = 'markdown';
+      }
+      
+      console.log(`Segment ${i}: Expected type: ${expectedType}, Actual type: ${segment.type}`);
+      
+      // Explicitly check correct segment type classification
+      if (hasCodeIndicators) {
+        expect(segment.type).toBe('code');
+      } else if (hasMarkdownIndicators && !hasCodeIndicators) {
+        expect(segment.type).toBe('markdown');
+      }
+    });
   });
 });

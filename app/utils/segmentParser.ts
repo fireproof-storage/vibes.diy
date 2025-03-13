@@ -19,60 +19,52 @@ export function parseContent(text: string): {
     text = text.slice(depsMatch[1].length);
   }
 
-  // More robust code block detection - matching standard markdown code fence pattern
-  // This will match ```language\n and ``` patterns
-  const codeBlockRegex = /```(?:([a-zA-Z0-9]+)?\n)?/g;
-
-  let match;
+  // Find all code blocks using a regular expression
+  // This regex matches code blocks with an optional language specifier
+  const codeBlockPattern = /```(?:[a-zA-Z0-9]+)?([\s\S]*?)```/g;
+  
   let lastIndex = 0;
-  let inCodeBlock = false;
+  let match;
 
-  // Loop through all code block markers
-  while ((match = codeBlockRegex.exec(text)) !== null) {
-    const matchIndex = match.index;
-    const matchLength = match[0].length;
-
-    if (!inCodeBlock) {
-      // This is the start of a code block
-      // Add the text before this code block as markdown
-      const markdownContent = text.substring(lastIndex, matchIndex);
+  while ((match = codeBlockPattern.exec(text)) !== null) {
+    const codeBlockStart = match.index;
+    const codeBlockEnd = match.index + match[0].length;
+    const codeContent = match[1].trim(); // This is the content between the backticks
+    
+    // Add markdown segment before the code block if there is any
+    if (codeBlockStart > lastIndex) {
+      const markdownContent = text.substring(lastIndex, codeBlockStart);
       if (markdownContent.trim()) {
         segments.push({
           type: 'markdown',
           content: markdownContent,
         });
       }
-
-      // Mark the position after this code block marker
-      lastIndex = matchIndex + matchLength;
-      inCodeBlock = true;
-    } else {
-      // This is the end of a code block
-      // Add the code block content
-      const codeContent = text.substring(lastIndex, matchIndex);
-      if (codeContent) {
-        segments.push({
-          type: 'code',
-          content: codeContent,
-        });
-      }
-
-      // Mark the position after this code block marker
-      lastIndex = matchIndex + matchLength;
-      inCodeBlock = false;
+    }
+    
+    // Add the code segment
+    if (codeContent) {
+      segments.push({
+        type: 'code',
+        content: codeContent,
+      });
+    }
+    
+    lastIndex = codeBlockEnd;
+  }
+  
+  // Add any remaining text as markdown
+  if (lastIndex < text.length) {
+    const markdownContent = text.substring(lastIndex);
+    if (markdownContent.trim()) {
+      segments.push({
+        type: 'markdown',
+        content: markdownContent,
+      });
     }
   }
 
-  // Add any remaining content
-  if (lastIndex < text.length) {
-    segments.push({
-      type: inCodeBlock ? 'code' : 'markdown',
-      content: text.substring(lastIndex),
-    });
-  }
-
-  // If no segments were created (which shouldn't happen but just in case)
-  // treat the entire content as markdown
+  // If no segments were created, treat the entire content as markdown
   if (segments.length === 0) {
     segments.push({
       type: 'markdown',

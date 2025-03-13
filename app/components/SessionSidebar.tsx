@@ -43,7 +43,7 @@ interface ScreenshotDocument extends DocBase {
 interface SessionDocument extends DocBase {
   type?: 'session'; // Make it optional since existing docs might not have it
   title?: string;
-  timestamp: number;
+  created_at: number;
   messages?: Array<{
     text: string;
     type: 'user' | 'ai';
@@ -130,7 +130,7 @@ function SessionSidebar({ isVisible, onClose }: SessionSidebarProps) {
           >
             <div className="text-sm font-semibold text-gray-900 dark:text-white">{title}</div>
             <div className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-              {new Date(session.timestamp).toLocaleString()}
+              {new Date(session.created_at).toLocaleString()}
             </div>
             {screenshots.map(
               (screenshot) =>

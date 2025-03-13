@@ -26,7 +26,7 @@ vi.mock('use-fireproof', () => ({
 import ChatHeader from '../app/components/ChatHeader';
 import SessionSidebar from '../app/components/SessionSidebar';
 import MessageList from '../app/components/MessageList';
-import type { ChatMessage } from '../app/types/chat';
+import type { ChatMessageDocument } from '../app/types/chat';
 
 // Mock component that tracks renders
 function createRenderTracker(Component: React.ComponentType<any>) {
@@ -168,7 +168,15 @@ describe('Component Memoization', () => {
   describe('MessageList Memoization', () => {
     it('does not re-render when props are unchanged', async () => {
       const { Component: TrackedMessageList, getRenderCount } = createRenderTracker(MessageList);
-      const initialMessages: ChatMessage[] = [{ text: 'Hello', type: 'user' }];
+      const initialMessages: ChatMessageDocument[] = [
+        {
+          _id: 'user-1',
+          text: 'Hello',
+          type: 'user',
+          session_id: 'test-session',
+          created_at: Date.now(),
+        },
+      ];
 
       function TestWrapper() {
         const [, forceUpdate] = React.useState({});
@@ -208,7 +216,15 @@ describe('Component Memoization', () => {
 
     it('does re-render when messages array changes', async () => {
       const { Component: TrackedMessageList, getRenderCount } = createRenderTracker(MessageList);
-      const initialMessages: ChatMessage[] = [{ text: 'Hello', type: 'user' }];
+      const initialMessages: ChatMessageDocument[] = [
+        {
+          _id: 'user-1',
+          text: 'Hello',
+          type: 'user',
+          session_id: 'test-session',
+          created_at: Date.now(),
+        },
+      ];
 
       function TestWrapper() {
         const [messages, setMessages] = React.useState(initialMessages);
@@ -217,9 +233,11 @@ describe('Component Memoization', () => {
           setMessages([
             ...messages,
             {
+              _id: 'ai-1',
               text: 'New message',
               type: 'ai',
-              segments: [{ type: 'markdown', content: 'New message' }],
+              session_id: 'test-session',
+              created_at: Date.now(),
             },
           ]);
         };

@@ -28,11 +28,12 @@ beforeEach(() => {
 vi.mock('../app/components/Message', () => ({
   default: ({ message }: any) => (
     <div data-testid={`message-${message._id}`}>
-      {message.segments && message.segments.map((segment: any, i: number) => (
-        <div key={i} data-testid={segment.type}>
-          {segment.content}
-        </div>
-      ))}
+      {message.segments &&
+        message.segments.map((segment: any, i: number) => (
+          <div key={i} data-testid={segment.type}>
+            {segment.content}
+          </div>
+        ))}
       {message.text && !message.segments?.length && <div>{message.text}</div>}
     </div>
   ),
@@ -42,7 +43,7 @@ vi.mock('../app/components/Message', () => ({
 describe('MessageList Real-World Streaming Tests', () => {
   test('should display minimal content at stream start', () => {
     writeToStdout('🔍 TEST: should display minimal content at stream start');
-    
+
     const messages = [
       {
         type: 'user',
@@ -61,7 +62,7 @@ describe('MessageList Real-World Streaming Tests', () => {
         created_at: Date.now(),
       } as AiChatMessage,
     ];
-    
+
     render(<MessageList messages={messages} isStreaming={true} />);
 
     // Check if we see the minimal content in the DOM
@@ -84,12 +85,12 @@ describe('MessageList Real-World Streaming Tests', () => {
 
   test('should update UI as more content streams in', () => {
     writeToStdout('🔍 TEST: should update UI as more content streams in');
-    
+
     const content = '{"dependencies": {}}\n\nThis quiz app allows users to create';
     writeToStdout(
       `🔍 STREAM UPDATE: length=${content.length} - content="${content.substring(0, 30)}..."`
     );
-    
+
     const messages = [
       {
         type: 'user',
@@ -108,7 +109,7 @@ describe('MessageList Real-World Streaming Tests', () => {
         created_at: Date.now(),
       } as AiChatMessage,
     ];
-    
+
     render(<MessageList messages={messages} isStreaming={true} />);
 
     // Check if we see the content
@@ -125,7 +126,7 @@ describe('MessageList Real-World Streaming Tests', () => {
 
   test('should display both markdown and code when segments are present', () => {
     writeToStdout('🔍 TEST: should display both markdown and code when segments are present');
-    
+
     const markdownContent =
       '{"dependencies": {}}\n\nThis quiz app allows users to create quizzes with timed questions and track scores. Users can create new quizzes, add questions with multiple choice options, and then take quizzes to track their scores.';
     const codeContent = 'import React, { useState, use';
@@ -133,11 +134,9 @@ describe('MessageList Real-World Streaming Tests', () => {
     writeToStdout(
       `🔍 STREAM UPDATE: length=${markdownContent.length + codeContent.length + 8} with code segment - markdown=${markdownContent.length} bytes, code=${codeContent.length} bytes`
     );
-    writeToStdout(
-      `🔍 SEGMENT 0: type=markdown, content="${markdownContent.substring(0, 30)}..."`
-    );
+    writeToStdout(`🔍 SEGMENT 0: type=markdown, content="${markdownContent.substring(0, 30)}..."`);
     writeToStdout(`🔍 SEGMENT 1: type=code, content="${codeContent}"`);
-    
+
     const messages = [
       {
         type: 'user',
@@ -159,7 +158,7 @@ describe('MessageList Real-World Streaming Tests', () => {
         created_at: Date.now(),
       } as AiChatMessage,
     ];
-    
+
     render(<MessageList messages={messages} isStreaming={true} />);
 
     // Check if we see both types of content
