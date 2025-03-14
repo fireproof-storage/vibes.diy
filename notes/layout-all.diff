@@ -6,11 +6,10 @@
  .../ResultPreview/ResultPreviewHeaderContent.tsx   | 155 +++++++++++++++++++++
  .../ResultPreview/ResultPreviewToolbar.tsx         |   2 +-
  app/components/ResultPreview/ResultPreviewTypes.ts |   4 +-
- app/components/ResultPreview/SandpackContent.tsx   |  11 ++
  .../ResultPreview/SandpackScrollController.tsx     | 126 +++++++++++------
  app/routes/home.tsx                                |  48 ++++++-
  app/types/chat.ts                                  |   1 +
- 12 files changed, 447 insertions(+), 101 deletions(-)
+ 11 files changed, 436 insertions(+), 101 deletions(-)
 diff --git a/app/components/AppLayout.tsx b/app/components/AppLayout.tsx
 index 7bb7d61..3f7dbb8 100644
 --- a/app/components/AppLayout.tsx
@@ -543,28 +542,6 @@ index 934441f..d436bcd 100644
  }
  
  export type SandpackFiles = {
-diff --git a/app/components/ResultPreview/SandpackContent.tsx b/app/components/ResultPreview/SandpackContent.tsx
-index 4831fb3..f5ebda0 100644
---- a/app/components/ResultPreview/SandpackContent.tsx
-+++ b/app/components/ResultPreview/SandpackContent.tsx
-@@ -45,6 +45,17 @@ const SandpackContent: React.FC<SandpackContentProps> = ({
-     return () => mediaQuery.removeEventListener('change', handleChange);
-   }, []);
- 
-+  // Log the sandpack configuration for debugging
-+  useEffect(() => {
-+    console.log('Sandpack config:', {
-+      key: sandpackKey,
-+      dependencies: dependencies,
-+      isDarkMode: isDarkMode,
-+      filesCount: Object.keys(filesContent).length,
-+      firstFile: Object.keys(filesContent)[0]
-+    });
-+  }, [sandpackKey, dependencies, isDarkMode, filesContent]);
-+
-   return (
-     <div data-testid="sandpack-provider">
-       <SandpackProvider
 diff --git a/app/components/ResultPreview/SandpackScrollController.tsx b/app/components/ResultPreview/SandpackScrollController.tsx
 index 7140286..10bb1a8 100644
 --- a/app/components/ResultPreview/SandpackScrollController.tsx

@@ -39,7 +39,7 @@ function QuickSuggestions({ onSelectSuggestion }: QuickSuggestionsProps) {
   ];
 
   return (
-    <div className="bg-light-background-01 dark:bg-dark-background-01 px-4 py-3">
+    <div className="px-4 py-3">
       <div className="flex flex-wrap gap-2">
         {suggestions.map((suggestion, index) => (
           <button

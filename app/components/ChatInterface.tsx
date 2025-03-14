@@ -90,13 +90,17 @@ function ChatInterface({
   }, [messages, isStreaming, isShrinking, isExpanding, handleSetSelectedResponseId]);
 
   return (
-    <div className="flex h-full flex-col overflow-hidden">
-      <div className="flex-grow overflow-y-auto">
-        {memoizedMessageList}
-        {messages.length === 0 && (
+    <div className="flex h-full flex-col overflow-hidden bg-light-background-01 dark:bg-dark-background-01">
+      {messages.length > 0 ? (
+        <div className="flex-grow overflow-y-auto flex flex-col-reverse">
+          {memoizedMessageList}
+        </div>
+      ) : (
+        <div className="flex flex-col justify-between flex-grow">
+          <div className="flex-grow"></div>
           <QuickSuggestions onSelectSuggestion={handleSelectSuggestion} />
-        )}
-      </div>
+        </div>
+      )}
       <ChatInput
         value={input}
         onChange={handleInputChange}
