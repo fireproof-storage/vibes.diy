@@ -22,6 +22,9 @@ const staticRefs = {
   currentHighlightedLine: null as HTMLElement | null,
   lastLineIndex: -1, // Track the last line index to avoid unnecessary DOM operations
   documentLineCount: 0, // Track the total number of lines for adaptive timing
+  rafID: null as number | null, // Store animation frame ID for synchronized animations
+  pendingHighlight: false, // Flag to indicate pending highlight operation
+  pendingScroll: false, // Flag to indicate pending scroll operation
 };
 
 interface SandpackScrollControllerProps {
@@ -124,21 +127,16 @@ const SandpackScrollController: React.FC<SandpackScrollControllerProps> = ({
         const oldHeight = staticRefs.lastScrollHeight;
         const newHeight = staticRefs.scroller.scrollHeight;
         
-        // Check if conditions still valid
+        // Instead of calling functions directly, schedule them for next animation frame
         if (shouldScroll()) {
-          highlightLastLine();
+          staticRefs.pendingHighlight = true;
+          staticRefs.pendingScroll = newHeight !== oldHeight;
+          scheduleAnimationFrame();
         } else if (staticRefs.currentHighlightedLine) {
           // Only clear highlight if we're not in scroll mode anymore
           staticRefs.currentHighlightedLine.classList.remove('cm-line-highlighted');
           staticRefs.currentHighlightedLine = null;
           staticRefs.lastLineIndex = -1;
-        }
-
-        // Always try to scroll when height changes during streaming
-        if (newHeight !== oldHeight && shouldScroll()) {
-          scrollToBottom();
-          staticRefs.lastScrollHeight = newHeight;
-          return;
         }
 
         // Only check isNearBottom if height has changed
@@ -150,7 +148,8 @@ const SandpackScrollController: React.FC<SandpackScrollControllerProps> = ({
           staticRefs.scroller.scrollTop + staticRefs.scroller.clientHeight > oldHeight - 100;
 
         if (!staticRefs.hasUserScrolled || isNearBottom) {
-          scrollToBottom();
+          staticRefs.pendingScroll = true;
+          scheduleAnimationFrame();
         }
 
         staticRefs.lastScrollHeight = newHeight;
@@ -176,62 +175,81 @@ const SandpackScrollController: React.FC<SandpackScrollControllerProps> = ({
     }
   };
 
-  // Scroll to bottom function - simplified and more robust with debounce
-  const scrollToBottom = () => {
+  // Schedule a single animation frame for both scroll and highlight operations
+  const scheduleAnimationFrame = () => {
+    if (staticRefs.rafID !== null) return; // Already scheduled
+    
+    staticRefs.rafID = requestAnimationFrame(() => {
+      staticRefs.rafID = null;
+      
+      if (!componentMounted.current || !staticRefs.scroller) return;
+      
+      // Execute both operations in the same frame if needed
+      if (staticRefs.pendingHighlight) {
+        staticRefs.pendingHighlight = false;
+        highlightLastLine(true); // Pass true to indicate we're in a coordinated frame
+      }
+      
+      if (staticRefs.pendingScroll) {
+        staticRefs.pendingScroll = false;
+        scrollToBottom(true); // Pass true to indicate we're in a coordinated frame
+      }
+    });
+  };
+
+  // Scroll to bottom function - modified to work with coordinated frames
+  const scrollToBottom = (inCoordinatedFrame = false) => {
     if (!staticRefs.scroller) return;
     
-    if (staticRefs.scrollInProgress) {
+    if (staticRefs.scrollInProgress && !inCoordinatedFrame) {
+      staticRefs.pendingScroll = true;
+      scheduleAnimationFrame();
       return;
     }
     
-    const now = Date.now();
-    if (now - staticRefs.lastScrollTime < 50) return; // Don't scroll too frequently
-    staticRefs.lastScrollTime = now;
+    // If not in a coordinated frame, check throttling
+    if (!inCoordinatedFrame) {
+      const now = Date.now();
+      if (now - staticRefs.lastScrollTime < 50) {
+        staticRefs.pendingScroll = true;
+        scheduleAnimationFrame();
+        return;
+      }
+      staticRefs.lastScrollTime = now;
+    }
     
     staticRefs.isScrolling = true;
     staticRefs.scrollInProgress = true;
 
-    // Ensure scrolling happens reliably with multiple animation frames
-    let scrollAttempts = 0;
-    const ensureScrolled = () => {
-      if (!staticRefs.scroller || scrollAttempts >= 3) {
-        staticRefs.isScrolling = false;
-        staticRefs.scrollInProgress = false;
-        return;
-      }
-      
-      scrollAttempts++;
-      staticRefs.scroller.scrollTop = staticRefs.scroller.scrollHeight;
-      
-      // Check if we need another attempt
-      if (staticRefs.scroller.scrollTop < staticRefs.scroller.scrollHeight - 10) {
-        requestAnimationFrame(ensureScrolled);
-      } else {
-        staticRefs.lastScrollHeight = staticRefs.scroller.scrollHeight;
-        staticRefs.lastScrollPosition = staticRefs.scroller.scrollTop;
-        staticRefs.isScrolling = false;
-        staticRefs.scrollInProgress = false;
-      }
-    };
+    // Ensure scrolling happens reliably
+    staticRefs.scroller.scrollTop = staticRefs.scroller.scrollHeight;
     
-    requestAnimationFrame(ensureScrolled);
+    // Update state after scrolling
+    staticRefs.lastScrollHeight = staticRefs.scroller.scrollHeight;
+    staticRefs.lastScrollPosition = staticRefs.scroller.scrollTop;
+    staticRefs.isScrolling = false;
+    staticRefs.scrollInProgress = false;
   };
 
-  // Optimized highlight last line function - more efficient with large documents
-  const highlightLastLine = () => {
+  // Optimized highlight last line function - modified to work with coordinated frames
+  const highlightLastLine = (inCoordinatedFrame = false) => {
     if (!staticRefs.scroller || !shouldScroll()) return;
     
-    // Throttle updates for performance
-    const now = Date.now();
-    
-    // Calculate adaptive throttle interval based on document size
-    // For small documents, update frequently (100ms)
-    // For larger documents, gradually increase the interval up to 350ms
-    const lineCount = staticRefs.documentLineCount || 0;
-    const adaptiveInterval = Math.min(100 + Math.floor(lineCount / 4), 350);
-    
-    if (now - staticRefs.lastHighlightTime < adaptiveInterval) return;
-    staticRefs.lastHighlightTime = now;
+    // If not in a coordinated frame, check throttling
+    if (!inCoordinatedFrame) {
+      const now = Date.now();
+      
+      // Calculate adaptive throttle interval based on document size
+      const lineCount = staticRefs.documentLineCount || 0;
+      const adaptiveInterval = Math.min(100 + Math.floor(lineCount / 4), 350);
+      
+      if (now - staticRefs.lastHighlightTime < adaptiveInterval) {
+        staticRefs.pendingHighlight = true;
+        scheduleAnimationFrame();
+        return;
+      }
+      staticRefs.lastHighlightTime = now;
+    }
 
     // Get all lines in the document
     const lines = document.querySelectorAll('.cm-line');
@@ -242,8 +260,6 @@ const SandpackScrollController: React.FC<SandpackScrollControllerProps> = ({
     let lastLineIdx = -1;
     
     // ALWAYS start searching from the end of the document to avoid jumping up
-    // Previous implementation started from the last known line which could cause highlighting
-    // to jump up if multiple lines were added at once
     for (let i = lines.length - 1; i >= 0; i--) {
       const line = lines[i] as HTMLElement;
       const content = line.textContent || '';
@@ -270,14 +286,14 @@ const SandpackScrollController: React.FC<SandpackScrollControllerProps> = ({
       staticRefs.currentHighlightedLine = lastLine;
       staticRefs.lastLineIndex = lastLineIdx;
       
-      // Only scroll into view if we're in streaming mode
-      if (shouldScroll()) {
-        // Use a more efficient way to scroll the element into view
+      // Only check if we need to scroll if not already in a coordinated operation
+      if (!inCoordinatedFrame && shouldScroll()) {
         const rect = lastLine.getBoundingClientRect();
         if (rect && staticRefs.scroller) {
           const scrollerRect = staticRefs.scroller.getBoundingClientRect();
           if (rect.bottom > scrollerRect.bottom) {
-            staticRefs.scroller.scrollTop = staticRefs.scroller.scrollHeight;
+            staticRefs.pendingScroll = true;
+            scheduleAnimationFrame();
           }
         }
       }
@@ -368,6 +384,12 @@ const SandpackScrollController: React.FC<SandpackScrollControllerProps> = ({
     return () => {
       debugLog(`Component cleanup triggered, render count: ${staticRefs.renderCount}`);
       
+      // Cancel any pending animation frame
+      if (staticRefs.rafID !== null) {
+        cancelAnimationFrame(staticRefs.rafID);
+        staticRefs.rafID = null;
+      }
+      
       // Mark component as unmounted
       cleanupCalled.current = true;
       componentMounted.current = false;
@@ -380,13 +402,15 @@ const SandpackScrollController: React.FC<SandpackScrollControllerProps> = ({
     
     if (shouldBeScrolling) {
       if (!staticRefs.highlightInterval) {
-        // Use requestAnimationFrame for smoother performance rather than setInterval
-        let animationFrameId: number | null = null;
+        // Use a coordinated update approach for both highlighting and scrolling
         let lastFrameTime = 0;
         
-        const updateHighlight = (timestamp: number) => {
+        const updateAnimations = (timestamp: number) => {
           if (!shouldScroll() || !componentMounted.current) {
-            animationFrameId = null;
+            if (staticRefs.rafID !== null) {
+              cancelAnimationFrame(staticRefs.rafID);
+              staticRefs.rafID = null;
+            }
             return;
           }
           
@@ -398,25 +422,29 @@ const SandpackScrollController: React.FC<SandpackScrollControllerProps> = ({
             lastFrameTime = timestamp;
             
             if (staticRefs.scroller) {
-              highlightLastLine();
+              // Set pending flags for both operations
+              staticRefs.pendingHighlight = true;
               if (!staticRefs.hasUserScrolled) {
-                scrollToBottom();
+                staticRefs.pendingScroll = true;
               }
+              // And then schedule them in a synchronized frame
+              scheduleAnimationFrame();
             }
           }
           
-          animationFrameId = requestAnimationFrame(updateHighlight);
+          // Schedule next animation check
+          staticRefs.rafID = requestAnimationFrame(updateAnimations);
         };
         
         // Start the animation frame loop
-        animationFrameId = requestAnimationFrame(updateHighlight);
+        staticRefs.rafID = requestAnimationFrame(updateAnimations);
         
-        // Store the ID and cleanup function
+        // Store the cleanup function in the highlight interval
         staticRefs.highlightInterval = {
           clear: () => {
-            if (animationFrameId !== null) {
-              cancelAnimationFrame(animationFrameId);
-              animationFrameId = null;
+            if (staticRefs.rafID !== null) {
+              cancelAnimationFrame(staticRefs.rafID);
+              staticRefs.rafID = null;
             }
           }
         } as unknown as NodeJS.Timeout;
@@ -430,6 +458,12 @@ const SandpackScrollController: React.FC<SandpackScrollControllerProps> = ({
       }
       
       staticRefs.highlightInterval = null;
+      
+      // Cancel any pending animation frame
+      if (staticRefs.rafID !== null) {
+        cancelAnimationFrame(staticRefs.rafID);
+        staticRefs.rafID = null;
+      }
       
       // Clear highlights when not in streaming mode
       if (staticRefs.currentHighlightedLine) {
