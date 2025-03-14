@@ -6,6 +6,7 @@ const staticRefs = {
   scroller: null as HTMLElement | null,
   contentObserver: null as MutationObserver | null,
   checkForScrollerInterval: null as NodeJS.Timeout | null,
+  scrollIntervalRef: null as NodeJS.Timeout | null,
   hasUserScrolled: false,
   isScrolling: false,
   lastScrollHeight: 0,
@@ -41,16 +42,17 @@ const SandpackScrollController: React.FC<SandpackScrollControllerProps> = ({
     const { isStreaming, codeReady, activeView } = propsRef.current;
     return isStreaming && !codeReady && activeView === 'code';
   };
+  
+  // Check if we should lock scrolling
+  const shouldLockScroll = () => {
+    return shouldAutoScroll();
+  };
 
   // Safely scroll to bottom with minimal side effects
-  const scrollToBottom = () => {
-    if (!staticRefs.scroller || staticRefs.isScrolling) return;
+  const scrollToBottom = (force = false) => {
+    if (!staticRefs.scroller) return;
     
-    // Don't scroll if the user has recently interacted, unless we should force it
-    const now = Date.now();
-    if (staticRefs.hasUserScrolled && (now - staticRefs.lastUserInteraction < 1000)) {
-      return;
-    }
+    if (staticRefs.isScrolling && !force) return;
     
     staticRefs.isScrolling = true;
     
@@ -61,6 +63,8 @@ const SandpackScrollController: React.FC<SandpackScrollControllerProps> = ({
     // Use requestAnimationFrame to ensure smooth scrolling
     requestAnimationFrame(() => {
       if (staticRefs.scroller && componentMounted.current) {
+        // Use smooth scrolling behavior
+        staticRefs.scroller.style.scrollBehavior = 'smooth';
         staticRefs.scroller.scrollTop = staticRefs.scroller.scrollHeight;
         staticRefs.lastScrollHeight = staticRefs.scroller.scrollHeight;
         staticRefs.lastScrollTop = staticRefs.scroller.scrollTop;
@@ -70,8 +74,25 @@ const SandpackScrollController: React.FC<SandpackScrollControllerProps> = ({
       setTimeout(() => {
         staticRefs.isScrolling = false;
         staticRefs.scrollLock = false;
+        // Reset scroll behavior to auto after scrolling is done
+        if (staticRefs.scroller) {
+          staticRefs.scroller.style.scrollBehavior = 'auto';
+        }
       }, 50);
     });
+  };
+
+  // Setup scroll interrupt handler (prevent user scrolling)
+  const handleScrollInterrupt = (e: Event) => {
+    if (shouldLockScroll()) {
+      // If we should be auto-scrolling, prevent user scroll
+      e.preventDefault();
+      e.stopPropagation();
+      // Force scroll to bottom immediately to give feedback
+      scrollToBottom(true);
+      return false;
+    }
+    return true;
   };
 
   // Setup the scroller observer
@@ -85,25 +106,19 @@ const SandpackScrollController: React.FC<SandpackScrollControllerProps> = ({
       staticRefs.contentObserver.disconnect();
     }
     
-    // Setup scroll listener to detect user scrolling
-    const handleScroll = () => {
-      if (staticRefs.isScrolling || !staticRefs.scroller || staticRefs.scrollLock) return;
-      
-      const currentScrollTop = staticRefs.scroller.scrollTop;
-      const scrollDelta = Math.abs(currentScrollTop - staticRefs.lastScrollTop);
-      
-      // Only consider significant scroll changes as user interaction
-      if (scrollDelta > 5) {
-        staticRefs.lastUserInteraction = Date.now();
-        
-        // Detect if user has scrolled away from bottom
-        const bottomPosition = staticRefs.scroller.scrollHeight - staticRefs.scroller.clientHeight;
-        const isNearBottom = Math.abs(currentScrollTop - bottomPosition) < 50;
-        
-        staticRefs.hasUserScrolled = !isNearBottom;
-        staticRefs.lastScrollTop = currentScrollTop;
+    // Setup custom scroll prevention
+    const preventScroll = (e: WheelEvent) => {
+      if (shouldLockScroll()) {
+        e.preventDefault();
+        e.stopPropagation();
+        return false;
       }
+      return true;
     };
+    
+    // Add event listeners for scroll prevention - use proper TypeScript casting
+    scroller.addEventListener('wheel', preventScroll, { capture: true, passive: false } as AddEventListenerOptions);
+    scroller.addEventListener('touchmove', handleScrollInterrupt, { capture: true, passive: false } as AddEventListenerOptions);
     
     // Setup content observer with simplified mutation handling
     const contentObserver = new MutationObserver((mutations) => {
@@ -117,18 +132,9 @@ const SandpackScrollController: React.FC<SandpackScrollControllerProps> = ({
       const newHeight = staticRefs.scroller.scrollHeight;
       const heightChanged = newHeight !== staticRefs.lastScrollHeight;
       
-      // Auto-scroll conditions:
-      // 1. If we should auto-scroll based on props
-      // 2. If not user scrolled OR if the user is near bottom
+      // Auto-scroll immediately on content change if we should auto-scroll
       if (shouldAutoScroll()) {
-        // Determine if we're at the bottom already
-        const bottomPosition = staticRefs.scroller.scrollHeight - staticRefs.scroller.clientHeight;
-        const isNearBottom = Math.abs(staticRefs.scroller.scrollTop - bottomPosition) < 50;
-        
-        if (!staticRefs.hasUserScrolled || isNearBottom) {
-          // Small delay to ensure DOM has settled after mutations
-          setTimeout(scrollToBottom, 10);
-        }
+        scrollToBottom();
       }
       
       staticRefs.lastScrollHeight = newHeight;
@@ -141,13 +147,30 @@ const SandpackScrollController: React.FC<SandpackScrollControllerProps> = ({
       characterData: true,
     });
     
-    scroller.addEventListener('scroll', handleScroll);
     staticRefs.contentObserver = contentObserver;
     
     // Do initial scroll if needed
     if (shouldAutoScroll()) {
-      // Slight delay to ensure content is loaded
-      setTimeout(scrollToBottom, 100);
+      scrollToBottom();
+    }
+  };
+  
+  // Setup or tear down the periodic scrolling
+  const setupScrollInterval = () => {
+    // Clear any existing interval
+    if (staticRefs.scrollIntervalRef) {
+      clearInterval(staticRefs.scrollIntervalRef);
+      staticRefs.scrollIntervalRef = null;
+    }
+    
+    // If we should auto-scroll, set up the interval
+    if (shouldAutoScroll() && staticRefs.scroller) {
+      // Scroll 4 times per second (every 250ms)
+      staticRefs.scrollIntervalRef = setInterval(() => {
+        if (componentMounted.current && shouldAutoScroll()) {
+          scrollToBottom();
+        }
+      }, 250);
     }
   };
 
@@ -238,6 +261,9 @@ const SandpackScrollController: React.FC<SandpackScrollControllerProps> = ({
       }, 100);
     }
     
+    // Set up the scroll interval
+    setupScrollInterval();
+    
     // Cleanup function
     return () => {
       componentMounted.current = false;
@@ -248,17 +274,32 @@ const SandpackScrollController: React.FC<SandpackScrollControllerProps> = ({
         staticRefs.checkForScrollerInterval = null;
       }
       
+      if (staticRefs.scrollIntervalRef) {
+        clearInterval(staticRefs.scrollIntervalRef);
+        staticRefs.scrollIntervalRef = null;
+      }
+      
       // Disconnect observer
       if (staticRefs.contentObserver) {
         staticRefs.contentObserver.disconnect();
+      }
+      
+      // Remove event listeners if scroller exists
+      if (staticRefs.scroller) {
+        // Need to provide the same functions to removeEventListener
+        staticRefs.scroller.removeEventListener('wheel', () => {}, { capture: true } as EventListenerOptions);
+        staticRefs.scroller.removeEventListener('touchmove', handleScrollInterrupt, { capture: true } as EventListenerOptions);
       }
     };
   }, []);
 
   // Effect for responding to prop changes
   useEffect(() => {
+    // Reset the scroll interval when props change
+    setupScrollInterval();
+    
     // If conditions change and we should auto-scroll now, do it
-    if (shouldAutoScroll() && staticRefs.scroller && !staticRefs.hasUserScrolled) {
+    if (shouldAutoScroll() && staticRefs.scroller) {
       scrollToBottom();
     }
   }, [isStreaming, codeReady, activeView]);

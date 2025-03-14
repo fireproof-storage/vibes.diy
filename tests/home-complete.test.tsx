@@ -318,22 +318,66 @@ describe('Home Route in completed state', () => {
     ];
 
     const mockChatState = {
+      ...mockChatStateProps,
       docs: [],
-      input: 'test input',
+      input: '',
       setInput: vi.fn(),
+      isStreaming: false,
       inputRef: { current: null },
       sendMessage: vi.fn(),
-      isStreaming: false,
-      title: 'Test Title',
-      sessionId: 'test-session-id',
-      selectedResponseDoc: undefined,
+      title: 'test',
+      sessionId: null,
       selectedSegments: [],
       selectedCode: { type: 'code' as const, content: '' },
       selectedDependencies: {},
-      ...mockChatStateProps,
     };
 
-    vi.spyOn(useSimpleChatModule, 'useSimpleChat').mockReturnValue(mockChatState);
+    vi.spyOn(useSimpleChatModule, 'useSimpleChat').mockReturnValue({
+      ...mockChatStateProps,
+      docs: [
+        {
+          _id: 'msg1',
+          session_id: 'session123',
+          type: 'user',
+          text: 'Hello AI',
+          created_at: Date.now() - 10000,
+        },
+        {
+          _id: 'msg2',
+          session_id: 'session123',
+          type: 'ai',
+          text: '{"dependencies": {}}\n\nHello human! How can I help you today?',
+          created_at: Date.now() - 5000,
+        },
+      ],
+      input: 'test input',
+      setInput: vi.fn(),
+      isStreaming: false,
+      inputRef: { current: null },
+      sendMessage: vi.fn(),
+      title: 'Shared Code Example',
+      sessionId: 'session123',
+      selectedResponseDoc: {
+        _id: 'msg2',
+        session_id: 'session123',
+        type: 'ai',
+        text: '{"dependencies": {}}\n\nHello human! How can I help you today?',
+        created_at: Date.now() - 5000,
+        timestamp: Date.now() - 5000,
+        segments: [
+          { type: 'markdown', content: 'Hello human! How can I help you today?' },
+        ],
+        dependenciesString: '{"dependencies": {}}',
+      } as AiChatMessage,
+      selectedSegments: [
+        { type: 'markdown', content: 'Hello human! How can I help you today?' },
+      ],
+      selectedCode: {
+        type: 'code',
+        content: 'console.log("from hash")',
+      },
+      selectedDependencies: {},
+    });
 
     render(<UnifiedSession />);
 

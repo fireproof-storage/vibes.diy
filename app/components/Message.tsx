@@ -19,7 +19,11 @@ const getAnimationClasses = (isShrinking: boolean, isExpanding: boolean): string
 
 // AI Message component (simplified without animation handling)
 const AIMessage = memo(
-  ({ message, isStreaming }: { message: AiChatMessageDocument; isStreaming: boolean }) => {
+  ({ message, isStreaming, setSelectedResponseId }: { 
+    message: AiChatMessageDocument; 
+    isStreaming: boolean;
+    setSelectedResponseId?: (id: string) => void;
+  }) => {
     const { segments } = parseContent(message.text);
     return (
       <div className="mb-4 flex flex-row justify-start px-4">
@@ -32,7 +36,12 @@ const AIMessage = memo(
           </div>
         </div>
         <div className="max-w-[85%] rounded-2xl bg-white px-5 py-3 text-gray-900 shadow-md dark:bg-gray-800 dark:text-gray-100">
-          <StructuredMessage segments={segments || []} isStreaming={isStreaming} />
+          <StructuredMessage 
+            segments={segments || []} 
+            isStreaming={isStreaming} 
+            messageId={message._id}
+            setSelectedResponseId={setSelectedResponseId}
+          />
         </div>
       </div>
     );
@@ -42,7 +51,8 @@ const AIMessage = memo(
     // Return false to signal React to re-render the component
     if (
       prevProps.message.text !== nextProps.message.text ||
-      prevProps.isStreaming !== nextProps.isStreaming
+      prevProps.isStreaming !== nextProps.isStreaming ||
+      prevProps.setSelectedResponseId !== nextProps.setSelectedResponseId
     ) {
       return false;
     }
@@ -67,20 +77,16 @@ const UserMessage = memo(({ message }: { message: ChatMessageDocument }) => {
 // Main Message component that handles animation and decides which subcomponent to render
 const Message = memo(
   ({ message, isShrinking, isExpanding, isStreaming, setSelectedResponseId }: MessageProps) => {
-    const handleClick = () => {
-      console.log('handleClick', message._id);
-      if (setSelectedResponseId && message._id) {
-        setSelectedResponseId(message._id);
-      }
-    };
-
     return (
       <div 
         className={`transition-all duration-150 ease-in hover:opacity-95 ${getAnimationClasses(isShrinking, isExpanding)}`}
-        onClick={handleClick}
       >
         {message.type === 'ai' ? (
-          <AIMessage message={message as AiChatMessageDocument} isStreaming={isStreaming} />
+          <AIMessage 
+            message={message as AiChatMessageDocument} 
+            isStreaming={isStreaming} 
+            setSelectedResponseId={setSelectedResponseId}
+          />
         ) : (
           <UserMessage message={message} />
         )}

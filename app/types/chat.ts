@@ -95,6 +95,7 @@ export interface ChatState {
   title: string;
   addScreenshot: (screenshot: string) => Promise<void>;
   sessionId?: string | null;
+  setSelectedResponseId: (id: string) => void;
   selectedResponseDoc?: ChatMessageDocument;
   selectedSegments?: Segment[];
   selectedCode?: Segment;

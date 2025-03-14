@@ -218,6 +218,7 @@ export function useSimpleChat(sessionId: string | undefined): ChatState {
     sessionId: session._id,
     addScreenshot,
     docs: messages,
+    setSelectedResponseId,
     selectedResponseDoc,
     selectedSegments,
     selectedCode,

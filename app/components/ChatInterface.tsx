@@ -24,11 +24,11 @@ function ChatInterface({
   addScreenshot,
   isSidebarVisible,
   setIsSidebarVisible,
+  setSelectedResponseId
 }: ChatInterfaceProps) {
   // State for UI transitions and sharing
   const [isShrinking, setIsShrinking] = useState(false);
   const [isExpanding, setIsExpanding] = useState(false);
-  const [selectedResponseId, setSelectedResponseId] = useState<string | null>(null);
 
   // Sidebar visibility function
   const closeSidebar = useCallback(() => {
@@ -73,6 +73,7 @@ function ChatInterface({
 
   // Callback for setting the selected response ID
   const handleSetSelectedResponseId = useCallback((id: string) => {
+    console.log('handleSetSelectedResponseId', id);
     setSelectedResponseId(id);
   }, []);
 

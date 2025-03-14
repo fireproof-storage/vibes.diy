@@ -144,71 +144,50 @@ describe('Session Route Integration', () => {
 
     // Mock useSimpleChat to return chat state with an AI message
     vi.spyOn(useSimpleChatModule, 'useSimpleChat').mockReturnValue({
+      ...mockChatStateProps,
       docs: [
         {
+          _id: 'msg1',
+          session_id: 'session123',
           type: 'user',
-          text: 'Create a photo gallery app',
-          session_id: 'test-session-id',
-          created_at: Date.now(),
-        } as UserChatMessage,
+          text: 'Hello AI',
+          created_at: Date.now() - 10000,
+        },
         {
+          _id: 'msg2',
+          session_id: 'session123',
           type: 'ai',
-          text: `Here's a photo gallery app with a grid layout and modal view.\n\n\`\`\`\n${mockCode}\n\`\`\``,
-          segments: [
-            {
-              type: 'markdown',
-              content: "Here's a photo gallery app with a grid layout and modal view.",
-            },
-            {
-              type: 'code',
-              content: mockCode,
-            },
-          ],
-          isStreaming: false,
-          session_id: 'test-session-id',
-          created_at: Date.now(),
-        } as AiChatMessage,
+          text: '{"dependencies": {}}\n\nHello human! How can I help you today?',
+          created_at: Date.now() - 5000,
+        },
       ],
-      input: '',
+      input: 'test input',
       setInput: vi.fn(),
       isStreaming: false,
+      inputRef: { current: null },
       sendMessage: vi.fn(),
+      title: 'Test Chat Session',
+      sessionId: 'session123',
+      selectedResponseDoc: {
+        _id: 'msg2',
+        session_id: 'session123',
+        type: 'ai',
+        text: '{"dependencies": {}}\n\nHello human! How can I help you today?',
+        created_at: Date.now() - 5000,
+        timestamp: Date.now() - 5000,
+        segments: [
+          { type: 'markdown', content: 'Hello human! How can I help you today?' },
+        ],
+        dependenciesString: '{"dependencies": {}}',
+      } as AiChatMessage,
       selectedSegments: [
-        {
-          type: 'markdown',
-          content: "Here's a photo gallery app with a grid layout and modal view.",
-        },
-        {
-          type: 'code',
-          content: mockCode,
-        },
+        { type: 'markdown', content: 'Hello human! How can I help you today?' },
       ],
       selectedCode: {
         type: 'code',
-        content: mockCode,
+        content: Array(210).fill('console.log("test");').join('\n'),
       },
       selectedDependencies: {},
-      inputRef: { current: null },
-      title: 'Photo Gallery App',
-      sessionId: 'test-session-id',
-      selectedResponseDoc: {
-        type: 'ai',
-        text: `Here's a photo gallery app with a grid layout and modal view.\n\n\`\`\`\n${mockCode}\n\`\`\``,
-        segments: [
-          {
-            type: 'markdown',
-            content: "Here's a photo gallery app with a grid layout and modal view.",
-          },
-          {
-            type: 'code',
-            content: mockCode,
-          },
-        ],
-        isStreaming: false,
-        session_id: 'test-session-id',
-        created_at: Date.now(),
-      } as AiChatMessage,
-      ...mockChatStateProps,
     });
   });
 

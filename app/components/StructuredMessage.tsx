@@ -5,12 +5,14 @@ import type { Segment } from '../types/chat';
 interface StructuredMessageProps {
   segments: Segment[];
   isStreaming?: boolean;
+  messageId?: string;
+  setSelectedResponseId?: (id: string) => void;
 }
 
 /**
  * Component for displaying structured messages with markdown and code segments
  */
-const StructuredMessage = memo(({ segments, isStreaming }: StructuredMessageProps) => {
+const StructuredMessage = memo(({ segments, isStreaming, messageId, setSelectedResponseId }: StructuredMessageProps) => {
   // Ensure segments is an array (defensive)
   const validSegments = Array.isArray(segments) ? segments : [];
 
@@ -24,6 +26,14 @@ const StructuredMessage = memo(({ segments, isStreaming }: StructuredMessageProp
     validSegments.length > 0 &&
     validSegments.some((segment) => segment?.content && segment.content.trim().length > 0);
 
+  // Handle click on code segments to select the response
+  const handleCodeClick = () => {
+    if (setSelectedResponseId && messageId) {
+      console.log('handleCodeClick', messageId);
+      setSelectedResponseId(messageId);
+    }
+  };
+
   return (
     <div className="structured-message">
       {!hasContent ? (
@@ -34,7 +44,7 @@ const StructuredMessage = memo(({ segments, isStreaming }: StructuredMessageProp
       ) : (
         // Map and render each segment that has content
         validSegments
-          .filter((segment) => segment?.content && segment.content.trim().length > 0)
+          .filter((segment): segment is Segment => Boolean(segment?.content && segment.content.trim().length > 0))
           .map((segment, index) => {
             if (segment.type === 'markdown') {
               return (
@@ -51,7 +61,8 @@ const StructuredMessage = memo(({ segments, isStreaming }: StructuredMessageProp
               return (
                 <div
                   key={`code-${index}`}
-                  className="my-4 rounded-lg border border-gray-200 bg-gray-50 p-4 shadow-sm dark:border-gray-700 dark:bg-gray-800"
+                  className="my-4 rounded-lg border border-gray-200 bg-gray-50 p-4 shadow-sm dark:border-gray-700 dark:bg-gray-800 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700"
+                  onClick={handleCodeClick}
                 >
                   <div className="mb-2 flex items-center justify-between">
                     <span className="font-mono text-sm text-gray-500 dark:text-gray-400">
@@ -59,7 +70,8 @@ const StructuredMessage = memo(({ segments, isStreaming }: StructuredMessageProp
                     </span>
 
                     <button
-                      onClick={() => {
+                      onClick={(e: React.MouseEvent) => {
+                        e.stopPropagation(); // Prevent triggering the parent's onClick
                         navigator.clipboard.writeText(content);
                       }}
                       className="rounded bg-gray-200 px-2 py-1 text-xs transition-colors hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600"

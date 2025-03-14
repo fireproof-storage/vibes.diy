@@ -20,6 +20,7 @@ vi.mock('use-fireproof', () => ({
 
 // Prepare mock data
 const mockChatState: ChatState = {
+  ...mockChatStateProps,
   docs: [],
   input: '',
   setInput: vi.fn(),
@@ -35,7 +36,9 @@ const mockChatState: ChatState = {
     content: 'console.log("test")',
   },
   selectedDependencies: {},
-  ...mockChatStateProps,
+  codeReady: false,
+  addScreenshot: () => Promise.resolve(),
+  setSelectedResponseId: vi.fn(),
 };
 
 describe('ChatInterface', () => {

@@ -7,6 +7,7 @@ export const mockResultPreviewProps = {
 export const mockChatStateProps = {
   codeReady: false,
   addScreenshot: () => Promise.resolve(),
+  setSelectedResponseId: () => {},
 };
 
 export const mockSessionSidebarProps = {
@@ -31,5 +32,6 @@ export const createMockChatState = (overrides = {}) => ({
   selectedResponseDoc: undefined,
   codeReady: false,
   addScreenshot: () => Promise.resolve(),
+  setSelectedResponseId: () => {},
   ...overrides,
 }); 
