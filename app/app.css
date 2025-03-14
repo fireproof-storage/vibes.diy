@@ -263,7 +263,7 @@ a,
 .pulsing {
   width: 100%;
   height: auto;
-  transform: rotate(-5deg) scale(4);
+  transform: rotate(-5deg) scale(6);
   animation: pulse 8s infinite;
 }
 
@@ -280,7 +280,7 @@ a,
 }
 .logo-pulse {
   transform: rotate(-5deg) scale(4);
-  animation: logo-rotate 30s ease-in-out infinite;
+  animation: logo-rotate 33s ease-in-out infinite, logo-pulse-height 21s ease-in-out infinite;
 }
 
 @keyframes logo-rotate {
@@ -292,6 +292,18 @@ a,
   }
   100% {
     transform: rotate(0deg) scale(1);
+  }
+}
+
+@keyframes logo-pulse-height {
+  0% {
+    width: 80%;
+  }
+  50% {
+    width: 120%;
+  }
+  100% {
+    width: 80%;
   }
 }
 
