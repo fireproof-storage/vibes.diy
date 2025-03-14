@@ -175,14 +175,10 @@ describe('Session Route Integration', () => {
         text: '{"dependencies": {}}\n\nHello human! How can I help you today?',
         created_at: Date.now() - 5000,
         timestamp: Date.now() - 5000,
-        segments: [
-          { type: 'markdown', content: 'Hello human! How can I help you today?' },
-        ],
+        segments: [{ type: 'markdown', content: 'Hello human! How can I help you today?' }],
         dependenciesString: '{"dependencies": {}}',
       } as AiChatMessage,
-      selectedSegments: [
-        { type: 'markdown', content: 'Hello human! How can I help you today?' },
-      ],
+      selectedSegments: [{ type: 'markdown', content: 'Hello human! How can I help you today?' }],
       selectedCode: {
         type: 'code',
         content: Array(210).fill('console.log("test");').join('\n'),

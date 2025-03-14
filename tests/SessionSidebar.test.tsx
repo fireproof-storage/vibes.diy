@@ -172,7 +172,9 @@ describe('SessionSidebar', () => {
     const onClose = vi.fn();
 
     // Render with isVisible=false
-    const { container } = render(<SessionSidebar isVisible={false} onClose={onClose} {...mockSessionSidebarProps} />);
+    const { container } = render(
+      <SessionSidebar isVisible={false} onClose={onClose} {...mockSessionSidebarProps} />
+    );
 
     // Check that the sidebar has classes indicating it's not visible
     const invisibleSidebar = container.querySelector('.pointer-events-none');

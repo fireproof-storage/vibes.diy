@@ -124,13 +124,17 @@ describe('Component Rendering', () => {
 
   describe('SessionSidebar', () => {
     it('renders in hidden state', () => {
-      const { container } = render(<SessionSidebar isVisible={false} onClose={onClose} {...mockSessionSidebarProps} />);
+      const { container } = render(
+        <SessionSidebar isVisible={false} onClose={onClose} {...mockSessionSidebarProps} />
+      );
       // Check that it has the hidden class
       expect(container.firstChild).toHaveClass('-translate-x-full');
     });
 
     it('renders in visible state', () => {
-      const { container } = render(<SessionSidebar isVisible={true} onClose={onClose} {...mockSessionSidebarProps} />);
+      const { container } = render(
+        <SessionSidebar isVisible={true} onClose={onClose} {...mockSessionSidebarProps} />
+      );
       // Check that it doesn't have the hidden class
       expect(container.firstChild).not.toHaveClass('-translate-x-full');
     });
@@ -148,11 +152,11 @@ describe('Component Rendering', () => {
 
     it('has a close button that works', () => {
       render(<SessionSidebar isVisible={true} onClose={onClose} {...mockSessionSidebarProps} />);
-      
+
       // Find and click the close button
       const closeButton = screen.getByLabelText('Close sidebar');
       fireEvent.click(closeButton);
-      
+
       // Verify that onClose was called
       expect(onClose).toHaveBeenCalled();
     });
@@ -161,7 +165,7 @@ describe('Component Rendering', () => {
   describe('MessageList', () => {
     it('renders empty list', () => {
       const { container } = render(<MessageList messages={[]} isStreaming={false} />);
-      
+
       // Update to check for text that actually exists in the WelcomeScreen component
       expect(screen.getByText(/Quickly create React apps in your browser/i)).toBeInTheDocument();
     });

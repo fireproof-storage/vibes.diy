@@ -28,14 +28,14 @@ export function useSimpleChat(sessionId: string | undefined): ChatState {
     database,
     aiMessage,
   } = useSession(sessionId);
-  
+
   // First declare ALL ref hooks to maintain hook order consistency
   const streamBufferRef = useRef<string>('');
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const isProcessingRef = useRef<boolean>(false);
   const lastUpdateTimeRef = useRef<number>(0);
   const updateTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  
+
   // Then declare state hooks
   const [systemPrompt, setSystemPrompt] = useState('');
   const [isStreaming, setIsStreaming] = useState<boolean>(false);
@@ -46,9 +46,12 @@ export function useSimpleChat(sessionId: string | undefined): ChatState {
     : docs.find((doc: any) => doc.type === 'ai' && doc._id === selectedResponseId) ||
       docs.filter((doc: any) => doc.type === 'ai').reverse()[0]) as unknown as ChatMessageDocument;
 
-  const setInput = useCallback((input: string) => {
-    mergeUserMessage({ text: input });
-  }, [mergeUserMessage]);
+  const setInput = useCallback(
+    (input: string) => {
+      mergeUserMessage({ text: input });
+    },
+    [mergeUserMessage]
+  );
 
   // Process docs into messages for the UI
   const filteredDocs = docs.filter((doc: any) => doc.type === 'ai' || doc.type === 'user');
@@ -77,30 +80,33 @@ export function useSimpleChat(sessionId: string | undefined): ChatState {
     : {};
 
   // Throttled update function with fixed 10ms delay
-  const throttledMergeAiMessage = useCallback((content: string) => {
-    // Store content in ref
-    streamBufferRef.current = content;
-    
-    // If we're already processing a database operation, don't trigger more updates
-    if (isProcessingRef.current) {
-      return;
-    }
-    
-    // Clear any pending timeout
-    if (updateTimeoutRef.current) {
-      clearTimeout(updateTimeoutRef.current);
-      updateTimeoutRef.current = null;
-    }
-    
-    // Use a fixed 10ms throttle delay
-    const THROTTLE_DELAY = 10;
-    
-    // Schedule update with fixed delay
-    updateTimeoutRef.current = setTimeout(() => {
-      lastUpdateTimeRef.current = Date.now();
-      mergeAiMessage({ text: streamBufferRef.current });
-    }, THROTTLE_DELAY);
-  }, [mergeAiMessage]);
+  const throttledMergeAiMessage = useCallback(
+    (content: string) => {
+      // Store content in ref
+      streamBufferRef.current = content;
+
+      // If we're already processing a database operation, don't trigger more updates
+      if (isProcessingRef.current) {
+        return;
+      }
+
+      // Clear any pending timeout
+      if (updateTimeoutRef.current) {
+        clearTimeout(updateTimeoutRef.current);
+        updateTimeoutRef.current = null;
+      }
+
+      // Use a fixed 10ms throttle delay
+      const THROTTLE_DELAY = 10;
+
+      // Schedule update with fixed delay
+      updateTimeoutRef.current = setTimeout(() => {
+        lastUpdateTimeRef.current = Date.now();
+        mergeAiMessage({ text: streamBufferRef.current });
+      }, THROTTLE_DELAY);
+    },
+    [mergeAiMessage]
+  );
 
   /**
    * Send a message and process the AI response
@@ -148,17 +154,17 @@ export function useSimpleChat(sessionId: string | undefined): ChatState {
       .then(async () => {
         // Set processing flag to prevent infinite updates
         isProcessingRef.current = true;
-        
+
         try {
           // Only do a final update if the current state doesn't match our buffer
           if (aiMessage.text !== streamBufferRef.current) {
             // First update the aiMessage object (no state update)
             aiMessage.text = streamBufferRef.current;
           }
-          
+
           // Then persist to database
           const ok = await database.put(aiMessage);
-          
+
           // Finally, generate title if needed
           const { segments } = parseContent(aiMessage.text);
           if (!session?.title) {
@@ -188,17 +194,20 @@ export function useSimpleChat(sessionId: string | undefined): ChatState {
     aiMessage,
     database,
     session?.title,
-    updateTitle
+    updateTitle,
   ]);
 
-  const addFirstScreenshot = useCallback(async (screenshotData: string) => {
-    const { rows: screenshots } = await database.query((doc: any) => [doc.session_id, doc.type], {
-      key: [session._id, 'screenshot'],
-    });
-    if (screenshots.length === 0) {
-      addScreenshot(screenshotData);
-    }
-  }, [session._id, database, addScreenshot]);
+  const addFirstScreenshot = useCallback(
+    async (screenshotData: string) => {
+      const { rows: screenshots } = await database.query((doc: any) => [doc.session_id, doc.type], {
+        key: [session._id, 'screenshot'],
+      });
+      if (screenshots.length === 0) {
+        addScreenshot(screenshotData);
+      }
+    },
+    [session._id, database, addScreenshot]
+  );
 
   const codeReady = useMemo(() => {
     return !isStreaming || selectedSegments.length > 2;

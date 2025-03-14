@@ -21,7 +21,7 @@ export default function UnifiedSession() {
   const navigate = useNavigate();
   const location = useLocation();
   const chatState = useSimpleChat(urlSessionId);
-  
+
   // State for view management
   const [activeView, setActiveView] = useState<'code' | 'preview'>('code');
   const [previewReady, setPreviewReady] = useState(false);
@@ -62,10 +62,7 @@ export default function UnifiedSession() {
   return (
     <AppLayout
       headerLeft={
-        <ChatHeaderContent 
-          onOpenSidebar={openSidebar} 
-          title={chatState.title || 'New Chat'} 
-        />
+        <ChatHeaderContent onOpenSidebar={openSidebar} title={chatState.title || 'New Chat'} />
       }
       headerRight={
         <ResultPreviewHeaderContent
@@ -79,7 +76,7 @@ export default function UnifiedSession() {
         />
       }
       chatPanel={
-        <ChatInterface 
+        <ChatInterface
           {...chatState}
           isSidebarVisible={isSidebarVisible}
           setIsSidebarVisible={setIsSidebarVisible}

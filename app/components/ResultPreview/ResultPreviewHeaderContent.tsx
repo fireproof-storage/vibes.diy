@@ -152,4 +152,4 @@ const ResultPreviewHeaderContent: React.FC<ResultPreviewHeaderContentProps> = ({
   );
 };
 
-export default ResultPreviewHeaderContent; 
+export default ResultPreviewHeaderContent;

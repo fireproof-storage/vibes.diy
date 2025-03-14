@@ -34,4 +34,4 @@ export const createMockChatState = (overrides = {}) => ({
   addScreenshot: () => Promise.resolve(),
   setSelectedResponseId: () => {},
   ...overrides,
-}); 
+});

@@ -59,7 +59,9 @@ afterAll(() => {
 describe('ResultPreview', () => {
   it('renders without crashing', () => {
     // Use non-empty code to ensure the editor is shown
-    const { container } = render(<ResultPreview code="const test = 'Hello';" {...mockResultPreviewProps} />);
+    const { container } = render(
+      <ResultPreview code="const test = 'Hello';" {...mockResultPreviewProps} />
+    );
 
     // Now the sandpack editor should be visible
     expect(screen.getByTestId('sandpack-editor')).toBeDefined();
@@ -171,11 +173,11 @@ describe('ResultPreview', () => {
   it('handles dependencies correctly', () => {
     const code = `function App() { return <div>Hello World</div>; }`;
     const dependencies = {
-      'react': '17.0.2',
+      react: '17.0.2',
       'react-dom': '17.0.2',
     };
     render(<ResultPreview code={code} dependencies={dependencies} {...mockResultPreviewProps} />);
-    
+
     // Dependencies should be passed to the Sandpack component
     expect(screen.queryByText(/Welcome to the preview/i)).not.toBeInTheDocument();
   });
@@ -183,7 +185,7 @@ describe('ResultPreview', () => {
   it('displays code correctly', () => {
     const code = `function App() { return <div>Hello World</div>; }`;
     render(<ResultPreview code={code} {...mockResultPreviewProps} />);
-    
+
     // Code should be processed and displayed in the editor
     expect(screen.queryByText(/Welcome to the preview/i)).not.toBeInTheDocument();
   });
@@ -201,7 +203,7 @@ describe('ResultPreview', () => {
   it('handles code updates correctly', () => {
     const { rerender } = render(<ResultPreview code="" {...mockResultPreviewProps} />);
     rerender(<ResultPreview code="const test = 'Hello';" {...mockResultPreviewProps} />);
-    
+
     // Should change from welcome screen to code display
     expect(screen.queryByText(/Welcome to the preview/i)).not.toBeInTheDocument();
   });
@@ -209,34 +211,42 @@ describe('ResultPreview', () => {
   it('handles screenshot capture requests', () => {
     const onScreenshotCaptured = vi.fn();
     const code = `function App() { return <div>Hello World</div>; }`;
-    render(<ResultPreview code={code} onScreenshotCaptured={onScreenshotCaptured} {...mockResultPreviewProps} />);
-    
+    render(
+      <ResultPreview
+        code={code}
+        onScreenshotCaptured={onScreenshotCaptured}
+        {...mockResultPreviewProps}
+      />
+    );
+
     // Simulate screenshot message
     act(() => {
-      window.dispatchEvent(new MessageEvent('message', { 
-        data: { type: 'screenshot', data: 'base64-data' }
-      }));
+      window.dispatchEvent(
+        new MessageEvent('message', {
+          data: { type: 'screenshot', data: 'base64-data' },
+        })
+      );
     });
-    
+
     expect(onScreenshotCaptured).toHaveBeenCalledWith('base64-data');
   });
 
   it('handles preview loaded event', async () => {
     const onPreviewLoaded = vi.fn();
     const code = `function App() { return <div>Hello World</div>; }`;
-    render(<ResultPreview 
-      code={code} 
-      {...mockResultPreviewProps}
-      onPreviewLoaded={onPreviewLoaded} 
-    />);
-    
+    render(
+      <ResultPreview code={code} {...mockResultPreviewProps} onPreviewLoaded={onPreviewLoaded} />
+    );
+
     // Simulate preview loaded message
     act(() => {
-      window.dispatchEvent(new MessageEvent('message', { 
-        data: { type: 'preview-loaded' }
-      }));
+      window.dispatchEvent(
+        new MessageEvent('message', {
+          data: { type: 'preview-loaded' },
+        })
+      );
     });
-    
+
     await waitFor(() => {
       expect(onPreviewLoaded).toHaveBeenCalled();
     });
@@ -245,11 +255,11 @@ describe('ResultPreview', () => {
   it('passes dependencies to Sandpack', () => {
     const code = `function App() { return <div>Hello World</div>; }`;
     const dependencies = {
-      'react': '17.0.2',
+      react: '17.0.2',
       'react-dom': '17.0.2',
     };
     render(<ResultPreview code={code} dependencies={dependencies} {...mockResultPreviewProps} />);
-    
+
     // Dependencies should be configured in Sandpack
     expect(screen.queryByText(/Welcome to the preview/i)).not.toBeInTheDocument();
   });
@@ -257,7 +267,7 @@ describe('ResultPreview', () => {
   it('displays the code editor initially', () => {
     const code = `function App() { return <div>Hello World</div>; }`;
     render(<ResultPreview code={code} {...mockResultPreviewProps} />);
-    
+
     // Should default to code view
     expect(screen.queryByText(/Welcome to the preview/i)).not.toBeInTheDocument();
   });

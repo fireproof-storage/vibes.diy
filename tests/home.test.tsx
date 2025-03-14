@@ -74,7 +74,7 @@ vi.mock('../app/components/SessionSidebar/utils', () => ({
 vi.mock('../app/components/AppLayout', () => {
   return {
     __esModule: true,
-    default: ({ chatPanel, previewPanel }: { chatPanel: any, previewPanel: any }) => {
+    default: ({ chatPanel, previewPanel }: { chatPanel: any; previewPanel: any }) => {
       return (
         <div data-testid="app-layout">
           <div data-testid="chat-panel">{chatPanel}</div>
@@ -114,7 +114,7 @@ describe('Home Route', () => {
     expect(screen.getByTestId('app-layout')).toBeInTheDocument();
     expect(screen.getByTestId('chat-panel')).toBeInTheDocument();
     expect(screen.getByTestId('preview-panel')).toBeInTheDocument();
-    
+
     // Check for the content inside the panels
     expect(screen.getByTestId('chat-interface')).toBeInTheDocument();
     expect(screen.getByTestId('result-preview')).toBeInTheDocument();

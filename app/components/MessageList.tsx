@@ -42,9 +42,7 @@ function MessageList({
         {messages.length === 0 && !isStreaming ? (
           <WelcomeScreen />
         ) : (
-          <div className="flex flex-col space-y-4">
-            {messageElements}
-          </div>
+          <div className="flex flex-col space-y-4">{messageElements}</div>
         )}
       </div>
     </div>

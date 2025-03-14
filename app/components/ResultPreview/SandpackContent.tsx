@@ -57,9 +57,9 @@ const SandpackContent: React.FC<SandpackContentProps> = ({
           scrollPositionRef.current = scroller.scrollTop;
         }
       }
-      
+
       previousViewRef.current = activeView;
-      
+
       if (activeView === 'code') {
         // Restore scroll position when returning to code view
         // Use requestAnimationFrame to ensure DOM is ready
@@ -93,8 +93,8 @@ const SandpackContent: React.FC<SandpackContentProps> = ({
         files={filesContent}
         theme={isDarkMode ? 'dark' : 'light'}
       >
-        <SandpackScrollController 
-          isStreaming={isStreaming} 
+        <SandpackScrollController
+          isStreaming={isStreaming}
           shouldEnableScrolling={isStreaming || !codeReady}
           codeReady={codeReady}
           activeView={activeView}

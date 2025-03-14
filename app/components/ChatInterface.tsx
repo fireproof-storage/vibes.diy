@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback, useRef } from 'react';
+import { useState, useMemo, useCallback, useRef, useEffect } from 'react';
 import type { ChangeEvent } from 'react';
 import type { ChatState } from '../types/chat';
 import SessionSidebar from './SessionSidebar';
@@ -24,11 +24,12 @@ function ChatInterface({
   addScreenshot,
   isSidebarVisible,
   setIsSidebarVisible,
-  setSelectedResponseId
+  setSelectedResponseId,
 }: ChatInterfaceProps) {
   // State for UI transitions and sharing
   const [isShrinking, setIsShrinking] = useState(false);
   const [isExpanding, setIsExpanding] = useState(false);
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
 
   // Sidebar visibility function
   const closeSidebar = useCallback(() => {
@@ -77,6 +78,18 @@ function ChatInterface({
     setSelectedResponseId(id);
   }, []);
 
+  // Scroll to bottom when message count changes or when streaming starts/stops
+  useEffect(() => {
+    if (messagesContainerRef.current && messages.length > 0) {
+      try {
+        // Since we're using flex-col-reverse, we need to scroll to the top to see the latest messages
+        messagesContainerRef.current.scrollTop = 0;
+      } catch (error) {
+        console.error('Error scrolling to bottom:', error);
+      }
+    }
+  }, [messages.length, isStreaming]);
+
   // Memoize the MessageList component to prevent unnecessary re-renders
   const memoizedMessageList = useMemo(() => {
     return (
@@ -91,13 +104,13 @@ function ChatInterface({
   }, [messages, isStreaming, isShrinking, isExpanding, handleSetSelectedResponseId]);
 
   return (
-    <div className="flex h-full flex-col overflow-hidden bg-light-background-01 dark:bg-dark-background-01">
+    <div className="bg-light-background-01 dark:bg-dark-background-01 flex h-full flex-col overflow-hidden">
       {messages.length > 0 ? (
-        <div className="flex-grow overflow-y-auto flex flex-col-reverse">
+        <div ref={messagesContainerRef} className="flex flex-grow flex-col-reverse overflow-y-auto">
           {memoizedMessageList}
         </div>
       ) : (
-        <div className="flex flex-col justify-between flex-grow">
+        <div className="flex flex-grow flex-col justify-between">
           <div className="flex-grow"></div>
           <QuickSuggestions onSelectSuggestion={handleSelectSuggestion} />
         </div>
@@ -110,10 +123,10 @@ function ChatInterface({
         disabled={isStreaming}
         inputRef={inputRef}
       />
-      <SessionSidebar 
-        isVisible={isSidebarVisible} 
-        onClose={closeSidebar} 
-        sessionId={sessionId || ''} 
+      <SessionSidebar
+        isVisible={isSidebarVisible}
+        onClose={closeSidebar}
+        sessionId={sessionId || ''}
       />
     </div>
   );

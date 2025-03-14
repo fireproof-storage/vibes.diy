@@ -88,6 +88,10 @@ function ResultPreview({
     };
   }, [onScreenshotCaptured, setActiveView, onPreviewLoaded]);
 
+  // Create refs outside useEffect to track timeout state
+  const timeoutIdRef = useRef<NodeJS.Timeout | null>(null);
+  const needsReloadRef = useRef(false);
+
   useEffect(() => {
     if (!showWelcome) {
       const processedCode = processCodeForDisplay(code);
@@ -98,17 +102,39 @@ function ResultPreview({
           active: true,
         },
       };
-      if (codeReady) {
-        setTimeout(() => {
-          const iframe = document.querySelector('.sp-preview-iframe') as HTMLIFrameElement;
-          iframe?.contentWindow?.postMessage({
-            type: 'command',
-            command: 'reload-preview'
-          }, '*');
-        }, 200);
 
+      if (codeReady) {
+        // Set the flag that we need to reload
+        needsReloadRef.current = true;
+
+        // Clear any existing timeout to avoid stacking
+        if (timeoutIdRef.current) {
+          clearTimeout(timeoutIdRef.current);
+        }
+
+        timeoutIdRef.current = setTimeout(() => {
+          if (needsReloadRef.current) {
+            const iframe = document.querySelector('.sp-preview-iframe') as HTMLIFrameElement;
+            iframe?.contentWindow?.postMessage(
+              {
+                type: 'command',
+                command: 'reload-preview',
+              },
+              '*'
+            );
+            needsReloadRef.current = false;
+            timeoutIdRef.current = null;
+          }
+        }, 200);
       }
     }
+
+    // Clean up timeout on unmount
+    return () => {
+      if (timeoutIdRef.current) {
+        clearTimeout(timeoutIdRef.current);
+      }
+    };
   }, [code, showWelcome, codeReady]);
 
   const previewArea = showWelcome ? (

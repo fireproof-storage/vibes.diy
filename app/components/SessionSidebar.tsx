@@ -53,7 +53,9 @@ function SessionSidebar({ isVisible, onClose }: SessionSidebarProps) {
       // first and last screenshots, if they exist, and unique
       const shownScreenshots = [screenshots[0], screenshots[screenshots.length - 1]]
         .filter((screenshot) => screenshot !== undefined)
-        .filter((screenshot, index, self) => self.findIndex((t) => t._id === screenshot._id) === index);
+        .filter(
+          (screenshot, index, self) => self.findIndex((t) => t._id === screenshot._id) === index
+        );
 
       return (
         <li
