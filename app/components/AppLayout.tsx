@@ -27,7 +27,7 @@ export default function AppLayout({
   return (
     <div className="flex h-dvh flex-col relative">
       {/* Header - stacked on mobile, side-by-side on desktop */}
-      <div className="border-light-decorative-00 dark:border-dark-decorative-00 flex w-full border-b flex-col md:flex-row z-10 h-[2.5rem] md:h-[3rem]">
+      <div className="border-light-decorative-00 dark:border-dark-decorative-00 flex w-full border-b flex-col md:flex-row z-10 h-[5rem] md:h-[3rem]">
         {/* HeaderLeft is always in the header */}
         <div className="border-light-decorative-00 dark:border-dark-decorative-00 flex items-center w-full md:w-1/3 p-2">
           {headerLeft}
@@ -57,7 +57,7 @@ export default function AppLayout({
         </div>
         
         {/* Preview panel - rendered once, different layouts for mobile/desktop */}
-        <div className="w-full h-[60vh] md:h-full md:w-2/3">
+        <div className="w-full md:h-full md:w-2/3">
           {previewPanel}
         </div>
         
