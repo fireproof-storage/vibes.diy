@@ -1,5 +1,26 @@
 import { useEffect, useRef } from 'react';
 
+// Create static refs that persist across component remounts
+// These will maintain state even when the component is unmounted and remounted
+const staticRefs = {
+  lastScrollHeight: 0,
+  lastScrollPosition: 0,
+  isScrolling: false,
+  hasUserScrolled: false,
+  highlightInterval: null as NodeJS.Timeout | null,
+  contentObserver: null as MutationObserver | null,
+  checkForScrollerInterval: null as NodeJS.Timeout | null,
+  scroller: null as HTMLElement | null,
+  scrollInProgress: false,
+  renderCount: 0,
+  scrollerSetupComplete: false,
+  lastScrollTime: 0,
+  mountTimestamp: 0,
+  mountDebounceTimeout: null as NodeJS.Timeout | null,
+  isScrollingScheduled: false,
+  lastHighlightTime: 0,
+};
+
 interface SandpackScrollControllerProps {
   isStreaming: boolean;
   shouldEnableScrolling?: boolean;
@@ -7,300 +28,373 @@ interface SandpackScrollControllerProps {
   activeView?: 'preview' | 'code';
 }
 
+// Debug logging function to track scroll issues
+const debugLog = (message: string, data?: any) => {
+  console.log(`[ScrollDebug] ${message}`, data || '');
+};
+
 const SandpackScrollController: React.FC<SandpackScrollControllerProps> = ({ 
   isStreaming,
   shouldEnableScrolling = isStreaming, // Default to isStreaming if not provided
   codeReady = false,
   activeView = 'preview' // Default to preview view
 }) => {
-  // Tracking refs from main branch
-  const lastScrollHeight = useRef(0);
-  const lastScrollPosition = useRef(0);
-  const isScrolling = useRef(false);
-  const hasUserScrolled = useRef(false);
-  
-  // Our additional tracking refs
-  const animationFrameRef = useRef<number | null>(null);
-  const lastLineRef = useRef<HTMLElement | null>(null);
-  const scrollerRef = useRef<HTMLElement | null>(null);
-  const observerRef = useRef<MutationObserver | null>(null);
-  const checkForScrollerIntervalRef = useRef<number | null>(null);
-  
-  // Add the highlight styles regardless of streaming state
+  // We still keep component-level refs for React's hook rules,
+  // but they're just pointers to our static refs
+  const componentMounted = useRef(false);
+  const cleanupCalled = useRef(false);
+  // Local refs to hold the props
+  const propsRef = useRef({ isStreaming, codeReady, activeView });
+
+  // Update props ref when they change
   useEffect(() => {
-    // Create highlighting styles if needed
-    if (!document.getElementById('highlight-style')) {
-      const style = document.createElement('style');
-      style.id = 'highlight-style';
-      style.textContent = `
-        .cm-line-highlighted {
-          position: relative !important;
-          border-left: 3px solid rgba(0, 137, 249, 0.6) !important;
-          color: inherit !important;
-        }
-        
-        .cm-line-highlighted::before {
-          content: "" !important;
-          position: absolute !important;
-          top: 0 !important;
-          left: 0 !important;
-          right: 0 !important;
-          bottom: 0 !important;
-          background: linear-gradient(
-            90deg, 
-            rgba(0, 128, 255, 0.12) 0%, 
-            rgba(224, 255, 255, 0.2) 50%, 
-            rgba(0, 183, 255, 0.12) 100%
-          ) !important;
-          background-size: 200% 100% !important;
-          animation: sparkleFlow 1.8s ease-in-out infinite !important;
-          pointer-events: none !important;
-          z-index: -1 !important;
-        }
-        
-        @keyframes sparkleFlow {
-          0% { background-position: 0% 50%; opacity: 0.7; }
-          50% { background-position: 100% 50%; opacity: 0.85; }
-          100% { background-position: 0% 50%; opacity: 0.7; }
-        }
-      `;
-      document.head.appendChild(style);
-    }
-    
-    return () => {
-      // We're not removing the style on unmount as other instances may need it
-    };
-  }, []);
-  
-  // Simple check if we should be scrolling (combines our condition with main branch logic)
+    propsRef.current = { isStreaming, codeReady, activeView };
+  }, [isStreaming, codeReady, activeView]);
+
+  // Simple check if we should be scrolling
   const shouldScroll = () => {
+    // Use the values from propsRef to ensure we're using the latest props
+    const { isStreaming, codeReady, activeView } = propsRef.current;
     return isStreaming && !codeReady && activeView === 'code';
   };
-  
-  // Main scrolling and highlighting effect from main branch
-  useEffect(() => {
-    // Clean up function - defined at the top to avoid reference errors
-    const cleanup = () => {
-      // Clear all timers
-      if (checkForScrollerIntervalRef.current) {
-        window.clearInterval(checkForScrollerIntervalRef.current);
-        checkForScrollerIntervalRef.current = null;
-      }
-      
-      if (animationFrameRef.current) {
-        window.cancelAnimationFrame(animationFrameRef.current);
-        animationFrameRef.current = null;
-      }
-      
-      // Disconnect observer
-      if (observerRef.current) {
-        observerRef.current.disconnect();
-        observerRef.current = null;
-      }
-      
-      // Remove event listeners
-      if (scrollerRef.current) {
-        scrollerRef.current.removeEventListener('scroll', () => {});
-      }
-      
-      // Clear highlights
-      if (lastLineRef.current) {
-        lastLineRef.current.classList.remove('cm-line-highlighted');
-        lastLineRef.current = null;
-      }
-      
-      // Reset state
-      hasUserScrolled.current = false;
-    };
+
+  // Setup the scroller observer only once it's found - with debounce
+  const setupScrollerOnce = () => {
+    if (staticRefs.scrollerSetupComplete || !staticRefs.scroller) return;
     
-    // Don't do anything if we're not supposed to be scrolling
-    if (!shouldScroll()) {
-      cleanup();
+    debugLog(`Setting up scroller for the first time`, { height: staticRefs.scroller.scrollHeight });
+    
+    // Setup scroll listener with throttling
+    const handleScroll = () => {
+      if (staticRefs.isScrolling || !staticRefs.scroller) return;
+
+      const now = Date.now();
+      if (now - staticRefs.lastScrollTime < 50) return; // Throttle to max 20 events per second
+      staticRefs.lastScrollTime = now;
+
+      const currentPosition = staticRefs.scroller.scrollTop;
+      const delta = Math.abs(currentPosition - staticRefs.lastScrollPosition);
+      
+      if (delta > 10) {
+        const wasUserScrolled = staticRefs.hasUserScrolled;
+        staticRefs.hasUserScrolled = true;
+        staticRefs.lastScrollPosition = currentPosition;
+        
+        if (wasUserScrolled !== true) {
+          debugLog(`User scroll state changed to true`);
+        }
+
+        // Check if scrolled to bottom
+        const atBottom = 
+          staticRefs.scroller.scrollTop + staticRefs.scroller.clientHeight >=
+          staticRefs.scroller.scrollHeight - 50;
+        
+        if (atBottom) {
+          staticRefs.hasUserScrolled = false;
+          debugLog(`User scrolled to bottom, resetting hasUserScrolled`);
+        }
+      }
+    };
+
+    // Setup content observer with more efficient mutation handling
+    if (staticRefs.contentObserver) {
+      staticRefs.contentObserver.disconnect();
+    }
+
+    const contentObserver = new MutationObserver((mutations) => {
+      if (!staticRefs.scroller) return;
+      
+      // Coalesce multiple mutations that happen close together
+      if (staticRefs.isScrollingScheduled) return;
+      staticRefs.isScrollingScheduled = true;
+      
+      // Debounce the scroll operation to handle rapid mutations
+      setTimeout(() => {
+        staticRefs.isScrollingScheduled = false;
+        
+        if (!staticRefs.scroller) return;
+        
+        const oldHeight = staticRefs.lastScrollHeight;
+        const newHeight = staticRefs.scroller.scrollHeight;
+        
+        // Check if conditions still valid
+        if (shouldScroll()) {
+          highlightLastLine();
+        } else {
+          document.querySelectorAll('.cm-line-highlighted').forEach((el) => {
+            el.classList.remove('cm-line-highlighted');
+          });
+        }
+
+        // Always try to scroll when height changes during streaming
+        if (newHeight !== oldHeight && shouldScroll()) {
+          scrollToBottom();
+          staticRefs.lastScrollHeight = newHeight;
+          return;
+        }
+
+        // Only check isNearBottom if height has changed
+        if (newHeight === oldHeight) {
+          return;
+        }
+
+        const isNearBottom =
+          staticRefs.scroller.scrollTop + staticRefs.scroller.clientHeight > oldHeight - 100;
+
+        if (!staticRefs.hasUserScrolled || isNearBottom) {
+          scrollToBottom();
+        }
+
+        staticRefs.lastScrollHeight = newHeight;
+      }, 10); // Small delay to coalesce rapid mutations
+    });
+
+    contentObserver.observe(staticRefs.scroller, {
+      childList: true,
+      subtree: true,
+      characterData: true,
+    });
+    
+    staticRefs.scroller.addEventListener('scroll', handleScroll);
+    staticRefs.contentObserver = contentObserver;
+    staticRefs.scrollerSetupComplete = true;
+    
+    debugLog(`Scroller setup complete`, { height: staticRefs.scroller.scrollHeight });
+    
+    // Do initial scroll and highlight
+    if (shouldScroll()) {
+      highlightLastLine();
+      scrollToBottom();
+    }
+  };
+
+  // Scroll to bottom function - simplified and more robust with debounce
+  const scrollToBottom = () => {
+    if (!staticRefs.scroller) return;
+    
+    if (staticRefs.scrollInProgress) {
       return;
     }
     
-    // Main branch's scrollToBottom function
-    const scrollToBottom = () => {
-      if (!scrollerRef.current) return;
-      
-      isScrolling.current = true;
-      requestAnimationFrame(() => {
-        if (scrollerRef.current) {
-          scrollerRef.current.scrollTop = scrollerRef.current.scrollHeight;
-          lastScrollHeight.current = scrollerRef.current.scrollHeight;
-          lastScrollPosition.current = scrollerRef.current.scrollTop;
-        }
-        isScrolling.current = false;
-      });
-    };
+    const now = Date.now();
+    if (now - staticRefs.lastScrollTime < 50) return; // Don't scroll too frequently
+    staticRefs.lastScrollTime = now;
     
-    // Main branch's highlight function with our improvements
-    const highlightLastLine = () => {
-      if (!scrollerRef.current || !shouldScroll()) return;
-      
-      // Clear previous highlights
-      if (lastLineRef.current) {
-        lastLineRef.current.classList.remove('cm-line-highlighted');
-        lastLineRef.current = null;
-      }
-      
-      // Find the last meaningful line (directly from main branch)
-      const lines = Array.from(document.querySelectorAll('.cm-line'));
-      let lastLine = null;
-      
-      for (let i = lines.length - 1; i >= 0; i--) {
-        const line = lines[i];
-        const content = line.textContent || '';
-        if (content.trim() && !content.includes('END OF CODE')) {
-          lastLine = line as HTMLElement;
-          break;
-        }
-      }
-      
-      // Apply highlighting to last line
-      if (lastLine) {
-        lastLine.classList.add('cm-line-highlighted');
-        lastLineRef.current = lastLine;
-      }
-    };
-    
-    // Set up MutationObserver for content changes (main branch approach)
-    const setupContentObserver = () => {
-      if (!scrollerRef.current) return;
-      
-      // Don't create multiple observers
-      if (observerRef.current) {
-        observerRef.current.disconnect();
-      }
-      
-      // Create the observer (from main branch)
-      const contentObserver = new MutationObserver(() => {
-        if (!scrollerRef.current || !shouldScroll()) return;
-        
-        const newHeight = scrollerRef.current.scrollHeight;
-        
-        // Always highlight the last line when streaming
-        if (shouldScroll()) {
-          highlightLastLine();
-        }
-        
-        // Skip if height hasn't changed
-        if (newHeight === lastScrollHeight.current) return;
-        
-        // Calculate if we're near the bottom (from main branch)
-        const isNearBottom = 
-          scrollerRef.current.scrollTop + scrollerRef.current.clientHeight > 
-          lastScrollHeight.current - 100;
-        
-        // Only scroll if user hasn't scrolled or is already near bottom
-        if (!hasUserScrolled.current || isNearBottom) {
-          scrollToBottom();
-        }
-        
-        lastScrollHeight.current = newHeight;
-      });
-      
-      // Handle manual scrolling (from main branch)
-      const handleScroll = () => {
-        if (isScrolling.current || !scrollerRef.current) return;
-        
-        const currentPosition = scrollerRef.current.scrollTop;
-        if (Math.abs(currentPosition - lastScrollPosition.current) > 10) {
-          hasUserScrolled.current = true;
-          lastScrollPosition.current = currentPosition;
-          
-          // Reset when scrolled to bottom (allows auto-scrolling to resume)
-          if (
-            scrollerRef.current.scrollTop + scrollerRef.current.clientHeight >=
-            scrollerRef.current.scrollHeight - 50
-          ) {
-            hasUserScrolled.current = false;
-          }
-        }
-      };
-      
-      // Set up the observer and scroll handler
-      if (scrollerRef.current) {
-        contentObserver.observe(scrollerRef.current, {
-          childList: true,
-          subtree: true,
-          characterData: true,
-        });
-        
-        scrollerRef.current.addEventListener('scroll', handleScroll);
-        
-        // Initial highlight
-        if (shouldScroll()) {
-          highlightLastLine();
-        }
-      }
-      
-      // Store the observer for cleanup
-      observerRef.current = contentObserver;
-    };
-    
-    // Main branch's approach to finding the scroller with a fallback
-    const findAndSetupScroller = () => {
-      // Try various selectors to find the editor scroller
-      const selectors = [
-        '.cm-scroller', 
-        '.sp-editor-container .cm-scroller',
-        '.sp-layout .sp-editor .cm-scroller',
-        '[data-testid="code-editor"] .cm-scroller'
-      ];
-      
-      for (const selector of selectors) {
-        const scroller = document.querySelector(selector);
-        if (scroller instanceof HTMLElement) {
-          scrollerRef.current = scroller;
-          break;
-        }
-      }
-      
-      if (scrollerRef.current) {
-        // We found the scroller, set up observers
-        setupContentObserver();
-        
-        // Do an initial scroll to bottom
-        scrollToBottom();
-        
-        // Clear the interval since we found the scroller
-        if (checkForScrollerIntervalRef.current) {
-          window.clearInterval(checkForScrollerIntervalRef.current);
-          checkForScrollerIntervalRef.current = null;
-        }
-      }
-    };
-    
-    // Actively check for scroller (main branch approach)
-    checkForScrollerIntervalRef.current = window.setInterval(() => {
-      if (scrollerRef.current) {
-        window.clearInterval(checkForScrollerIntervalRef.current!);
-        checkForScrollerIntervalRef.current = null;
+    staticRefs.isScrolling = true;
+    staticRefs.scrollInProgress = true;
+
+    // Ensure scrolling happens reliably with multiple animation frames
+    let scrollAttempts = 0;
+    const ensureScrolled = () => {
+      if (!staticRefs.scroller || scrollAttempts >= 3) {
+        staticRefs.isScrolling = false;
+        staticRefs.scrollInProgress = false;
         return;
       }
       
-      findAndSetupScroller();
-    }, 100);
-    
-    // Initial attempt to find and setup
-    findAndSetupScroller();
-    
-    // Do a delayed scroll to ensure we catch late-mounting editors
-    const initialScrollTimeoutId = window.setTimeout(() => {
-      if (scrollerRef.current) {
-        scrollToBottom();
-        highlightLastLine();
+      scrollAttempts++;
+      staticRefs.scroller.scrollTop = staticRefs.scroller.scrollHeight;
+      
+      // Check if we need another attempt
+      if (staticRefs.scroller.scrollTop < staticRefs.scroller.scrollHeight - 10) {
+        requestAnimationFrame(ensureScrolled);
+      } else {
+        staticRefs.lastScrollHeight = staticRefs.scroller.scrollHeight;
+        staticRefs.lastScrollPosition = staticRefs.scroller.scrollTop;
+        staticRefs.isScrolling = false;
+        staticRefs.scrollInProgress = false;
       }
-    }, 300);
-    
-    // Return cleanup function
-    return () => {
-      cleanup();
-      window.clearTimeout(initialScrollTimeoutId);
     };
+    
+    requestAnimationFrame(ensureScrolled);
+  };
+
+  // Highlight last line function with debounce
+  const highlightLastLine = () => {
+    if (!staticRefs.scroller || !shouldScroll()) return;
+    
+    const now = Date.now();
+    if (now - staticRefs.lastHighlightTime < 100) return; // Limit highlighting frequency
+    staticRefs.lastHighlightTime = now;
+
+    document.querySelectorAll('.cm-line-highlighted').forEach((el) => {
+      el.classList.remove('cm-line-highlighted');
+    });
+
+    const lines = Array.from(document.querySelectorAll('.cm-line'));
+    let lastLine = null;
+
+    for (let i = lines.length - 1; i >= 0; i--) {
+      const line = lines[i];
+      const content = line.textContent || '';
+      if (content.trim() && !content.includes('END OF CODE')) {
+        lastLine = line;
+        break;
+      }
+    }
+
+    if (lastLine) {
+      lastLine.classList.add('cm-line-highlighted');
+      
+      // Only scroll into view if we're in streaming mode
+      if (shouldScroll()) {
+        // Use a more reliable way to scroll to the element
+        const rect = lastLine.getBoundingClientRect();
+        if (rect && staticRefs.scroller) {
+          const scrollerRect = staticRefs.scroller.getBoundingClientRect();
+          if (rect.bottom > scrollerRect.bottom) {
+            staticRefs.scroller.scrollTop = staticRefs.scroller.scrollHeight;
+          }
+        }
+      }
+    }
+  };
+
+  // Main effect to handle mounting and cleanup - debounced to prevent rapid remounting issues
+  useEffect(() => {
+    // Record mount timestamp
+    const thisRenderTime = Date.now();
+    
+    // Clear any existing debounce timeout
+    if (staticRefs.mountDebounceTimeout) {
+      clearTimeout(staticRefs.mountDebounceTimeout);
+    }
+    
+    // Debounce the mount setup to prevent thrashing on frequent remounts
+    staticRefs.mountDebounceTimeout = setTimeout(() => {
+      // Only proceed if this is still the latest mount
+      if (thisRenderTime !== staticRefs.mountTimestamp) return;
+      
+      staticRefs.renderCount++;
+      cleanupCalled.current = false;
+      componentMounted.current = true;
+      
+      debugLog(`Component mounted, render count: ${staticRefs.renderCount}`);
+      
+      // Add the highlight styles if they don't exist
+      if (!document.getElementById('highlight-style')) {
+        const style = document.createElement('style');
+        style.id = 'highlight-style';
+        style.textContent = `
+          .cm-line-highlighted {
+            position: relative !important;
+            border-left: 3px solid rgba(0, 137, 249, 0.6) !important;
+            color: inherit !important;
+          }
+          
+          .cm-line-highlighted::before {
+            content: "" !important;
+            position: absolute !important;
+            top: 0 !important;
+            left: 0 !important;
+            right: 0 !important;
+            bottom: 0 !important;
+            background: linear-gradient(
+              90deg, 
+              rgba(0, 128, 255, 0.12) 0%, 
+              rgba(224, 255, 255, 0.2) 50%, 
+              rgba(0, 183, 255, 0.12) 100%
+            ) !important;
+            background-size: 200% 100% !important;
+            animation: sparkleFlow 1.8s ease-in-out infinite !important;
+            pointer-events: none !important;
+            z-index: -1 !important;
+          }
+          
+          @keyframes sparkleFlow {
+            0% { background-position: 0% 50%; opacity: 0.7; }
+            50% { background-position: 100% 50%; opacity: 0.85; }
+            100% { background-position: 0% 50%; opacity: 0.7; }
+          }
+        `;
+        document.head.appendChild(style);
+      }
+
+      // If we already have a scroller, use it
+      if (staticRefs.scroller) {
+        setupScrollerOnce();
+      }
+      
+      // Otherwise, check for it periodically
+      if (!staticRefs.checkForScrollerInterval) {
+        staticRefs.checkForScrollerInterval = setInterval(() => {
+          if (staticRefs.scroller) return;
+          
+          const newScroller = document.querySelector('.cm-scroller');
+          if (newScroller && newScroller instanceof HTMLElement) {
+            staticRefs.scroller = newScroller;
+            setupScrollerOnce();
+          }
+        }, 100);
+      }
+
+      // Update highlight interval based on current conditions
+      updateHighlightInterval();
+    }, 150); // Debounce period - only set up if component stays mounted for 150ms
+    
+    // Record this mount as the latest
+    staticRefs.mountTimestamp = thisRenderTime;
+
+    // Cleanup function
+    return () => {
+      debugLog(`Component cleanup triggered, render count: ${staticRefs.renderCount}`);
+      
+      // Don't do expensive cleanup on rapid remounts
+      if (Date.now() - thisRenderTime < 100) {
+        debugLog(`Skipping cleanup due to short mount duration`);
+        return;
+      }
+      
+      // Mark component as unmounted
+      cleanupCalled.current = true;
+      componentMounted.current = false;
+    };
+  }, []); // Empty dependency array - we manage state independently
+
+  // Function to update the highlight interval
+  const updateHighlightInterval = () => {
+    const shouldBeScrolling = shouldScroll();
+    
+    if (shouldBeScrolling) {
+      if (!staticRefs.highlightInterval) {
+        staticRefs.highlightInterval = setInterval(() => {
+          // Check again inside interval in case conditions changed
+          if (shouldScroll() && staticRefs.scroller) {
+            highlightLastLine();
+            scrollToBottom();
+          }
+        }, 200); // Less frequent interval to reduce CPU usage
+      }
+    } else if (staticRefs.highlightInterval) {
+      clearInterval(staticRefs.highlightInterval);
+      staticRefs.highlightInterval = null;
+      
+      // Clear highlights when not in streaming mode
+      document.querySelectorAll('.cm-line-highlighted').forEach((el) => {
+        el.classList.remove('cm-line-highlighted');
+      });
+    }
+  };
+
+  // Effect for responding to condition changes - with debounce
+  useEffect(() => {
+    debugLog(`Conditions updated: isStreaming=${isStreaming}, codeReady=${codeReady}, activeView=${activeView}, shouldScroll=${shouldScroll()}`);
+    
+    // Don't immediately react to prop changes - debounce them
+    const timeoutId = setTimeout(() => {
+      // Update interval based on conditions
+      updateHighlightInterval();
+      
+      // Perform immediate scroll and highlight if needed
+      if (shouldScroll() && staticRefs.scroller) {
+        highlightLastLine();
+        scrollToBottom();
+      }
+    }, 100); // Small debounce to prevent rapid changes from causing issues
+    
+    return () => clearTimeout(timeoutId);
   }, [isStreaming, codeReady, activeView]);
-  
+
   return null;
 };
 

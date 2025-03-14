@@ -19,14 +19,43 @@ function ResultPreview({
 }: ResultPreviewProps) {
   const [bundlingComplete, setBundlingComplete] = useState(true);
   const [previewReady, setPreviewReady] = useState(false);
+  const isStreamingRef = useRef(isStreaming);
+  const hasGeneratedStreamingKeyRef = useRef(false);
+  const streamingKeyRef = useRef<string>('');
 
   const filesRef = useRef<SandpackFiles>({});
   const showWelcome = !isStreaming && (!code || code.length === 0);
 
+  // Track streaming state changes to reset key generation only when streaming starts/stops
+  useEffect(() => {
+    if (isStreaming !== isStreamingRef.current) {
+      isStreamingRef.current = isStreaming;
+      
+      // Reset streaming key when streaming stops
+      if (!isStreaming) {
+        hasGeneratedStreamingKeyRef.current = false;
+      }
+    }
+  }, [isStreaming]);
+
   const sandpackKey = useMemo(() => {
     if (showWelcome) return `${sessionId || 'default'}-welcome`;
-    return `${sessionId || 'default'}-${isStreaming ? 'streaming' : 'static'}-${code}`;
-  }, [sessionId, codeReady, code, showWelcome]);
+    
+    // During streaming, use a stable key that doesn't include the changing code
+    if (isStreaming) {
+      // Only generate a new streaming key once per streaming session
+      if (!hasGeneratedStreamingKeyRef.current) {
+        // Use timestamp to ensure unique key between different streaming sessions
+        streamingKeyRef.current = `${sessionId || 'default'}-streaming-${Date.now()}`;
+        hasGeneratedStreamingKeyRef.current = true;
+      }
+      return streamingKeyRef.current;
+    }
+    
+    // For non-streaming mode, we can include the code in the key (content is stable)
+    // But to prevent the key from being too long, just use a hash of the code
+    return `${sessionId || 'default'}-static-${codeReady}-${code.length}-${Date.now()}`;
+  }, [sessionId, isStreaming, codeReady, showWelcome, code.length]);
 
   useEffect(() => {
     if (isStreaming) {

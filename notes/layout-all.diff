@@ -1,37 +1,37 @@
- app/ChatInterface.tsx                              | 406 -----------------
- app/app.css                                        |  53 ++-
+ app/ChatInterface.tsx                              | 406 ----------------
+ app/app.css                                        |  53 +-
  app/components/AppLayout.tsx                       |  37 ++
  app/components/ChatHeader.tsx                      |  29 +-
- app/components/ChatHeaderContent.tsx               |  76 ++++
+ app/components/ChatHeaderContent.tsx               |  76 +++
  app/components/ChatInput.tsx                       |  14 +-
  app/components/ChatInterface.tsx                   | 121 +++++
- app/components/Message.tsx                         | 153 +++++++
+ app/components/Message.tsx                         | 153 ++++++
  app/components/MessageList.tsx                     | 219 ++-------
  app/components/QuickSuggestions.tsx                |   2 +-
- app/components/ResultPreview/ResultPreview.tsx     | 505 ++++-----------------
- .../ResultPreview/ResultPreviewHeaderContent.tsx   | 155 +++++++
+ app/components/ResultPreview/ResultPreview.tsx     | 532 ++++-----------------
+ .../ResultPreview/ResultPreviewHeaderContent.tsx   | 155 ++++++
  .../ResultPreview/ResultPreviewTemplates.ts        |  89 ++++
- .../ResultPreview/ResultPreviewToolbar.tsx         | 155 +++++++
+ .../ResultPreview/ResultPreviewToolbar.tsx         | 155 ++++++
  app/components/ResultPreview/ResultPreviewTypes.ts |  19 +
  app/components/ResultPreview/ResultPreviewUtils.ts |  14 +
  app/components/ResultPreview/SandpackContent.tsx   | 143 ++++++
  .../ResultPreview/SandpackEventListener.tsx        |  40 --
- .../ResultPreview/SandpackScrollController.tsx     | 374 ++++++++-------
+ .../ResultPreview/SandpackScrollController.tsx     | 510 ++++++++++++++------
  app/components/ResultPreview/WelcomeScreen.tsx     |   2 +-
- app/components/SessionSidebar.tsx                  | 230 ++--------
+ app/components/SessionSidebar.tsx                  | 230 ++-------
  app/components/SessionSidebar/ImgFile.tsx          |  29 ++
  app/components/SessionSidebar/utils.ts             |  12 +
- app/components/StructuredMessage.tsx               | 103 +++++
+ app/components/StructuredMessage.tsx               | 103 ++++
  app/config/env.ts                                  |  11 +
  app/context/ChatContext.tsx                        | 134 ------
  app/hooks/sidebar/useSessionList.ts                |  98 ++++
- app/hooks/useChat.ts                               | 390 ----------------
+ app/hooks/useChat.ts                               | 390 ---------------
  app/hooks/useChatSessions.ts                       |  85 ----
  app/hooks/useSession.ts                            | 108 +++++
  app/hooks/useSimpleChat.ts                         | 173 +++++++
  app/prompts.ts                                     |   2 +-
  app/routes.ts                                      |   2 +-
- app/routes/home.tsx                                | 442 ++++--------------
+ app/routes/home.tsx                                | 442 +++--------------
  app/routes/session.tsx                             | 137 ------
  app/tests/ChatInterface.test.tsx                   |  63 ---
  app/types/chat.ts                                  | 149 ++++--
@@ -41,7 +41,7 @@
  app/utils/sharing.ts                               |  68 +++
  app/utils/streamHandler.ts                         | 111 +++++
  app/utils/titleGenerator.ts                        |  59 +++
- 43 files changed, 2645 insertions(+), 2633 deletions(-)
+ 43 files changed, 2814 insertions(+), 2627 deletions(-)
 diff --git a/app/ChatInterface.tsx b/app/ChatInterface.tsx
 deleted file mode 100644
 index 1be05f1..0000000
@@ -1302,10 +1302,10 @@ index 3b85d25..80cbabe 100644
          {suggestions.map((suggestion, index) => (
            <button
 diff --git a/app/components/ResultPreview/ResultPreview.tsx b/app/components/ResultPreview/ResultPreview.tsx
-index eeba940..04bb7f9 100644
+index eeba940..37d13c5 100644
 --- a/app/components/ResultPreview/ResultPreview.tsx
 +++ b/app/components/ResultPreview/ResultPreview.tsx
-@@ -1,469 +1,116 @@
+@@ -1,469 +1,145 @@
 -import {
 -  SandpackCodeEditor,
 -  SandpackLayout,
@@ -1442,26 +1442,54 @@ index eeba940..04bb7f9 100644
 -      active: true,
 -    },
 -  });
--
++  const [previewReady, setPreviewReady] = useState(false);
++  const isStreamingRef = useRef(isStreaming);
++  const hasGeneratedStreamingKeyRef = useRef(false);
++  const streamingKeyRef = useRef<string>('');
+ 
 -  useEffect(() => {
 -    const prefersDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches;
 -    setIsDarkMode(prefersDarkMode);
-+  const [previewReady, setPreviewReady] = useState(false);
++  const filesRef = useRef<SandpackFiles>({});
++  const showWelcome = !isStreaming && (!code || code.length === 0);
  
 -    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
 -    const handleChange = (e: MediaQueryListEvent) => {
 -      setIsDarkMode(e.matches);
 -    };
-+  const filesRef = useRef<SandpackFiles>({});
-+  const showWelcome = !isStreaming && (!code || code.length === 0);
++  // Track streaming state changes to reset key generation only when streaming starts/stops
++  useEffect(() => {
++    if (isStreaming !== isStreamingRef.current) {
++      isStreamingRef.current = isStreaming;
++      
++      // Reset streaming key when streaming stops
++      if (!isStreaming) {
++        hasGeneratedStreamingKeyRef.current = false;
++      }
++    }
++  }, [isStreaming]);
  
 -    mediaQuery.addEventListener('change', handleChange);
 -    return () => mediaQuery.removeEventListener('change', handleChange);
 -  }, []);
 +  const sandpackKey = useMemo(() => {
 +    if (showWelcome) return `${sessionId || 'default'}-welcome`;
-+    return `${sessionId || 'default'}-${isStreaming ? 'streaming' : 'static'}-${code}`;
-+  }, [sessionId, codeReady, code, showWelcome]);
++    
++    // During streaming, use a stable key that doesn't include the changing code
++    if (isStreaming) {
++      // Only generate a new streaming key once per streaming session
++      if (!hasGeneratedStreamingKeyRef.current) {
++        // Use timestamp to ensure unique key between different streaming sessions
++        streamingKeyRef.current = `${sessionId || 'default'}-streaming-${Date.now()}`;
++        hasGeneratedStreamingKeyRef.current = true;
++      }
++      return streamingKeyRef.current;
++    }
++    
++    // For non-streaming mode, we can include the code in the key (content is stable)
++    // But to prevent the key from being too long, just use a hash of the code
++    return `${sessionId || 'default'}-static-${codeReady}-${code.length}-${Date.now()}`;
++  }, [sessionId, isStreaming, codeReady, showWelcome, code.length]);
  
    useEffect(() => {
 -    const handleMessage = (event: MessageEvent) => {
@@ -2510,11 +2538,33 @@ index a5446ac..0000000
 -
 -export default SandpackEventListener;
 diff --git a/app/components/ResultPreview/SandpackScrollController.tsx b/app/components/ResultPreview/SandpackScrollController.tsx
-index 01581fd..407440d 100644
+index 01581fd..9bf8975 100644
 --- a/app/components/ResultPreview/SandpackScrollController.tsx
 +++ b/app/components/ResultPreview/SandpackScrollController.tsx
-@@ -2,25 +2,37 @@ import { useEffect, useRef } from 'react';
+@@ -1,121 +1,124 @@
+ import { useEffect, useRef } from 'react';
  
++// Create static refs that persist across component remounts
++// These will maintain state even when the component is unmounted and remounted
++const staticRefs = {
++  lastScrollHeight: 0,
++  lastScrollPosition: 0,
++  isScrolling: false,
++  hasUserScrolled: false,
++  highlightInterval: null as NodeJS.Timeout | null,
++  contentObserver: null as MutationObserver | null,
++  checkForScrollerInterval: null as NodeJS.Timeout | null,
++  scroller: null as HTMLElement | null,
++  scrollInProgress: false,
++  renderCount: 0,
++  scrollerSetupComplete: false,
++  lastScrollTime: 0,
++  mountTimestamp: 0,
++  mountDebounceTimeout: null as NodeJS.Timeout | null,
++  isScrollingScheduled: false,
++  lastHighlightTime: 0,
++};
++
  interface SandpackScrollControllerProps {
    isStreaming: boolean;
 +  shouldEnableScrolling?: boolean;
@@ -2528,76 +2578,97 @@ index 01581fd..407440d 100644
 -  const isScrolling = useRef(false);
 -  const hasUserScrolled = useRef(false);
 -  const highlightIntervalRef = useRef<NodeJS.Timeout | null>(null);
--
++// Debug logging function to track scroll issues
++const debugLog = (message: string, data?: any) => {
++  console.log(`[ScrollDebug] ${message}`, data || '');
++};
+ 
 +const SandpackScrollController: React.FC<SandpackScrollControllerProps> = ({ 
 +  isStreaming,
 +  shouldEnableScrolling = isStreaming, // Default to isStreaming if not provided
 +  codeReady = false,
 +  activeView = 'preview' // Default to preview view
 +}) => {
-+  // Simple refs for tracking state
-+  const animationFrameRef = useRef<number | null>(null);
-+  const isHighlighting = useRef(false);
-+  const lastLineRef = useRef<HTMLElement | null>(null);
-+  const hasStartedScrolling = useRef(false);
-+  const retryCount = useRef(0);
-+  const maxRetries = 20; // Maximum number of retries to find the scroller
-+  const initTimeoutRef = useRef<number | null>(null);
-+  const scrollTimeoutRef = useRef<number | null>(null);
-+  
-+  // Add the highlight styles regardless of streaming state
++  // We still keep component-level refs for React's hook rules,
++  // but they're just pointers to our static refs
++  const componentMounted = useRef(false);
++  const cleanupCalled = useRef(false);
++  // Local refs to hold the props
++  const propsRef = useRef({ isStreaming, codeReady, activeView });
++
++  // Update props ref when they change
    useEffect(() => {
 -    let primaryScroller: HTMLElement | null = null;
 -
-+    // Create highlighting styles if needed
-     if (!document.getElementById('highlight-style')) {
-       const style = document.createElement('style');
-       style.id = 'highlight-style';
-       style.textContent = `
-         .cm-line-highlighted {
-           position: relative !important;
+-    if (!document.getElementById('highlight-style')) {
+-      const style = document.createElement('style');
+-      style.id = 'highlight-style';
+-      style.textContent = `
+-        .cm-line-highlighted {
+-          position: relative !important;
 -          border-left: 3px solid rgba(0, 137, 249, 0.27) !important;
-+          border-left: 3px solid rgba(0, 137, 249, 0.6) !important;
-           color: inherit !important;
-         }
-         
-@@ -31,178 +43,212 @@ const SandpackScrollController: React.FC<SandpackScrollControllerProps> = ({ isS
-           left: 0 !important;
-           right: 0 !important;
-           bottom: 0 !important;
+-          color: inherit !important;
+-        }
+-        
+-        .cm-line-highlighted::before {
+-          content: "" !important;
+-          position: absolute !important;
+-          top: 0 !important;
+-          left: 0 !important;
+-          right: 0 !important;
+-          bottom: 0 !important;
 -          background: linear-gradient(60deg, rgba(0, 128, 255, 0.15), rgba(224, 255, 255, 0.25), rgba(0, 183, 255, 0.15)) !important;
 -          background-size: 200% 200% !important;
 -          animation: sparkleAppear 2s ease-out !important;
-+          background: linear-gradient(
-+            90deg, 
-+            rgba(0, 128, 255, 0.12) 0%, 
-+            rgba(224, 255, 255, 0.2) 50%, 
-+            rgba(0, 183, 255, 0.12) 100%
-+          ) !important;
-+          background-size: 200% 100% !important;
-+          animation: sparkleFlow 1.8s ease-in-out infinite !important;
-           pointer-events: none !important;
-           z-index: -1 !important;
-         }
-         
+-          pointer-events: none !important;
+-          z-index: -1 !important;
+-        }
+-        
 -        @keyframes sparkleGradient {
 -          0% { background-position: 0% 50% }
 -          50% { background-position: 100% 50% }
 -          100% { background-position: 0% 50% }
 -        }
--        
++    propsRef.current = { isStreaming, codeReady, activeView };
++  }, [isStreaming, codeReady, activeView]);
++
++  // Simple check if we should be scrolling
++  const shouldScroll = () => {
++    // Use the values from propsRef to ensure we're using the latest props
++    const { isStreaming, codeReady, activeView } = propsRef.current;
++    return isStreaming && !codeReady && activeView === 'code';
++  };
++
++  // Setup the scroller observer only once it's found - with debounce
++  const setupScrollerOnce = () => {
++    if (staticRefs.scrollerSetupComplete || !staticRefs.scroller) return;
++    
++    debugLog(`Setting up scroller for the first time`, { height: staticRefs.scroller.scrollHeight });
++    
++    // Setup scroll listener with throttling
++    const handleScroll = () => {
++      if (staticRefs.isScrolling || !staticRefs.scroller) return;
++
++      const now = Date.now();
++      if (now - staticRefs.lastScrollTime < 50) return; // Throttle to max 20 events per second
++      staticRefs.lastScrollTime = now;
++
++      const currentPosition = staticRefs.scroller.scrollTop;
++      const delta = Math.abs(currentPosition - staticRefs.lastScrollPosition);
++      
++      if (delta > 10) {
++        const wasUserScrolled = staticRefs.hasUserScrolled;
++        staticRefs.hasUserScrolled = true;
++        staticRefs.lastScrollPosition = currentPosition;
+         
 -        @keyframes sparkleAppear {
 -          0% { opacity: 0.8; }
 -          50% { opacity: 0.8; }
 -          100% { opacity: 0.1; }
-+        @keyframes sparkleFlow {
-+          0% { background-position: 0% 50%; opacity: 0.7; }
-+          50% { background-position: 100% 50%; opacity: 0.85; }
-+          100% { background-position: 0% 50%; opacity: 0.7; }
-         }
-       `;
-       document.head.appendChild(style);
-     }
+-        }
+-      `;
+-      document.head.appendChild(style);
+-    }
 -
 -    const scrollToBottom = () => {
 -      if (!primaryScroller) return;
@@ -2608,14 +2679,12 @@ index 01581fd..407440d 100644
 -          primaryScroller.scrollTop = primaryScroller.scrollHeight;
 -          lastScrollHeight.current = primaryScroller.scrollHeight;
 -          lastScrollPosition.current = primaryScroller.scrollTop;
--        }
++        if (wasUserScrolled !== true) {
++          debugLog(`User scroll state changed to true`);
+         }
 -        isScrolling.current = false;
 -      });
-+    
-+    return () => {
-+      // We're not removing the style on unmount as other instances may need it
-+      // The test will handle cleanup if needed
-     };
+-    };
 -
 -    const highlightLastLine = () => {
 -      if (!primaryScroller || !isStreaming) return;
@@ -2626,83 +2695,34 @@ index 01581fd..407440d 100644
 -
 -      const lines = Array.from(document.querySelectorAll('.cm-line'));
 -      let lastLine = null;
--
+ 
 -      for (let i = lines.length - 1; i >= 0; i--) {
 -        const line = lines[i];
 -        const content = line.textContent || '';
 -        if (content.trim() && !content.includes('END OF CODE')) {
 -          lastLine = line;
 -          break;
--        }
--      }
++        // Check if scrolled to bottom
++        const atBottom = 
++          staticRefs.scroller.scrollTop + staticRefs.scroller.clientHeight >=
++          staticRefs.scroller.scrollHeight - 50;
++        
++        if (atBottom) {
++          staticRefs.hasUserScrolled = false;
++          debugLog(`User scrolled to bottom, resetting hasUserScrolled`);
+         }
+       }
 -
 -      if (lastLine) {
 -        lastLine.classList.add('cm-line-highlighted');
-+  }, []);
-+  
-+  // Simple check if we should be scrolling
-+  const shouldScroll = () => {
-+    return isStreaming && !codeReady && activeView === 'code';
-+  };
-+  
-+  // Function to find the editor scroller, trying multiple possible selectors
-+  const findEditorScroller = (): HTMLElement | null => {
-+    // Try various selectors for better resilience
-+    const selectors = [
-+      '.cm-scroller', 
-+      '.sp-editor-container .cm-scroller',
-+      '.sp-layout .sp-editor .cm-scroller',
-+      '[data-testid="code-editor"] .cm-scroller'
-+    ];
-+    
-+    let foundScroller: HTMLElement | null = null;
-+    
-+    for (const selector of selectors) {
-+      const scroller = document.querySelector(selector);
-+      if (scroller instanceof HTMLElement) {
-+        retryCount.current = 0; // Reset retry count when found
-+        foundScroller = scroller;
-+        break;
-       }
--    };
--
+-      }
+     };
+ 
 -    const checkForScroller = setInterval(() => {
 -      if (primaryScroller) {
 -        clearInterval(checkForScroller);
 -        return;
-+    }
-+    
-+    // If we get here and didn't find any matching elements
-+    if (!foundScroller) {
-+      retryCount.current += 1;
-+    }
-+    
-+    return foundScroller;
-+  };
-+  
-+  // Function to find and get the last line
-+  const findLastLine = (): HTMLElement | null => {
-+    const lines = document.querySelectorAll('.cm-line');
-+    if (lines.length > 0) {
-+      return lines[lines.length - 1] as HTMLElement;
-+    }
-+    return null;
-+  };
-+  
-+  // More conservative scrolling approach that won't cause rapid state updates
-+  const scrollToBottom = (editorScroller: HTMLElement, lastLine: HTMLElement | null) => {
-+    // Avoid using scrollIntoView which can trigger intersection observers
-+    if (editorScroller) {
-+      // Only set scrollTop which is less likely to trigger observers
-+      editorScroller.scrollTop = editorScroller.scrollHeight;
-+    }
-+    
-+    // Apply highlighting to the last line if we have one
-+    if (lastLine && lastLine !== lastLineRef.current) {
-+      // Remove previous highlight
-+      if (lastLineRef.current) {
-+        lastLineRef.current.classList.remove('cm-line-highlighted');
-       }
+-      }
 -
 -      const newScroller = document.querySelector('.cm-scroller');
 -      if (newScroller && newScroller instanceof HTMLElement) {
@@ -2711,30 +2731,7 @@ index 01581fd..407440d 100644
 -        scrollToBottom();
 -
 -        setupContentObserver();
-+      
-+      // Add highlight to new line
-+      lastLine.classList.add('cm-line-highlighted');
-+      lastLineRef.current = lastLine;
-+    }
-+  };
-+  
-+  // Main function to scroll to bottom and highlight the last line
-+  const scrollAndHighlight = () => {
-+    // Only proceed if we should be scrolling
-+    if (!shouldScroll()) {
-+      cleanupScrolling();
-+      return;
-+    }
-+    
-+    // Try to find the editor scroller
-+    const editorScroller = findEditorScroller();
-+    const lastLine = findLastLine();
-+    
-+    if (editorScroller) {
-+      // Use a less aggressive approach with timeout instead of animation frame
-+      if (scrollTimeoutRef.current) {
-+        clearTimeout(scrollTimeoutRef.current);
-       }
+-      }
 -    }, 100);
 -
 -    const setupContentObserver = () => {
@@ -2744,42 +2741,76 @@ index 01581fd..407440d 100644
 -        if (!primaryScroller) return;
 -
 -        const newHeight = primaryScroller.scrollHeight;
--
++    // Setup content observer with more efficient mutation handling
++    if (staticRefs.contentObserver) {
++      staticRefs.contentObserver.disconnect();
++    }
+ 
 -        if (isStreaming) {
--          highlightLastLine();
--        } else {
--          document.querySelectorAll('.cm-line-highlighted').forEach((el) => {
--            el.classList.remove('cm-line-highlighted');
--          });
--        }
--
++    const contentObserver = new MutationObserver((mutations) => {
++      if (!staticRefs.scroller) return;
++      
++      // Coalesce multiple mutations that happen close together
++      if (staticRefs.isScrollingScheduled) return;
++      staticRefs.isScrollingScheduled = true;
++      
++      // Debounce the scroll operation to handle rapid mutations
++      setTimeout(() => {
++        staticRefs.isScrollingScheduled = false;
++        
++        if (!staticRefs.scroller) return;
++        
++        const oldHeight = staticRefs.lastScrollHeight;
++        const newHeight = staticRefs.scroller.scrollHeight;
++        
++        // Check if conditions still valid
++        if (shouldScroll()) {
+           highlightLastLine();
+         } else {
+           document.querySelectorAll('.cm-line-highlighted').forEach((el) => {
+@@ -123,85 +126,274 @@ const SandpackScrollController: React.FC<SandpackScrollControllerProps> = ({ isS
+           });
+         }
+ 
 -        if (newHeight === lastScrollHeight.current) return;
 -
 -        const isNearBottom =
 -          primaryScroller.scrollTop + primaryScroller.clientHeight > lastScrollHeight.current - 100;
 -
 -        if (!hasUserScrolled.current || isNearBottom) {
--          scrollToBottom();
--        }
--
++        // Always try to scroll when height changes during streaming
++        if (newHeight !== oldHeight && shouldScroll()) {
+           scrollToBottom();
++          staticRefs.lastScrollHeight = newHeight;
++          return;
+         }
+ 
 -        lastScrollHeight.current = newHeight;
 -      });
 -
 -      const handleScroll = () => {
 -        if (isScrolling.current || !primaryScroller) return;
--
++        // Only check isNearBottom if height has changed
++        if (newHeight === oldHeight) {
++          return;
++        }
+ 
 -        const currentPosition = primaryScroller.scrollTop;
 -        if (Math.abs(currentPosition - lastScrollPosition.current) > 10) {
 -          hasUserScrolled.current = true;
 -          lastScrollPosition.current = currentPosition;
--
++        const isNearBottom =
++          staticRefs.scroller.scrollTop + staticRefs.scroller.clientHeight > oldHeight - 100;
+ 
 -          if (
 -            primaryScroller.scrollTop + primaryScroller.clientHeight >=
 -            primaryScroller.scrollHeight - 50
 -          ) {
 -            hasUserScrolled.current = false;
 -          }
--        }
++        if (!staticRefs.hasUserScrolled || isNearBottom) {
++          scrollToBottom();
+         }
 -      };
 -
 -      if (primaryScroller) {
@@ -2788,146 +2819,287 @@ index 01581fd..407440d 100644
 -          subtree: true,
 -          characterData: true,
 -        });
--
+ 
 -        primaryScroller.addEventListener('scroll', handleScroll);
--
++        staticRefs.lastScrollHeight = newHeight;
++      }, 10); // Small delay to coalesce rapid mutations
++    });
++
++    contentObserver.observe(staticRefs.scroller, {
++      childList: true,
++      subtree: true,
++      characterData: true,
++    });
++    
++    staticRefs.scroller.addEventListener('scroll', handleScroll);
++    staticRefs.contentObserver = contentObserver;
++    staticRefs.scrollerSetupComplete = true;
++    
++    debugLog(`Scroller setup complete`, { height: staticRefs.scroller.scrollHeight });
++    
++    // Do initial scroll and highlight
++    if (shouldScroll()) {
++      highlightLastLine();
++      scrollToBottom();
++    }
++  };
++
++  // Scroll to bottom function - simplified and more robust with debounce
++  const scrollToBottom = () => {
++    if (!staticRefs.scroller) return;
++    
++    if (staticRefs.scrollInProgress) {
++      return;
++    }
++    
++    const now = Date.now();
++    if (now - staticRefs.lastScrollTime < 50) return; // Don't scroll too frequently
++    staticRefs.lastScrollTime = now;
++    
++    staticRefs.isScrolling = true;
++    staticRefs.scrollInProgress = true;
++
++    // Ensure scrolling happens reliably with multiple animation frames
++    let scrollAttempts = 0;
++    const ensureScrolled = () => {
++      if (!staticRefs.scroller || scrollAttempts >= 3) {
++        staticRefs.isScrolling = false;
++        staticRefs.scrollInProgress = false;
++        return;
++      }
++      
++      scrollAttempts++;
++      staticRefs.scroller.scrollTop = staticRefs.scroller.scrollHeight;
++      
++      // Check if we need another attempt
++      if (staticRefs.scroller.scrollTop < staticRefs.scroller.scrollHeight - 10) {
++        requestAnimationFrame(ensureScrolled);
++      } else {
++        staticRefs.lastScrollHeight = staticRefs.scroller.scrollHeight;
++        staticRefs.lastScrollPosition = staticRefs.scroller.scrollTop;
++        staticRefs.isScrolling = false;
++        staticRefs.scrollInProgress = false;
++      }
++    };
++    
++    requestAnimationFrame(ensureScrolled);
++  };
++
++  // Highlight last line function with debounce
++  const highlightLastLine = () => {
++    if (!staticRefs.scroller || !shouldScroll()) return;
++    
++    const now = Date.now();
++    if (now - staticRefs.lastHighlightTime < 100) return; // Limit highlighting frequency
++    staticRefs.lastHighlightTime = now;
++
++    document.querySelectorAll('.cm-line-highlighted').forEach((el) => {
++      el.classList.remove('cm-line-highlighted');
++    });
++
++    const lines = Array.from(document.querySelectorAll('.cm-line'));
++    let lastLine = null;
++
++    for (let i = lines.length - 1; i >= 0; i--) {
++      const line = lines[i];
++      const content = line.textContent || '';
++      if (content.trim() && !content.includes('END OF CODE')) {
++        lastLine = line;
++        break;
++      }
++    }
+ 
 -        if (isStreaming) {
 -          highlightLastLine();
++    if (lastLine) {
++      lastLine.classList.add('cm-line-highlighted');
 +      
-+      // Scroll at a reasonable interval that won't overwhelm React
-+      scrollTimeoutRef.current = window.setTimeout(() => {
-+        scrollToBottom(editorScroller, lastLine);
-+        
-+        // Schedule next update if we should still be scrolling
-+        if (shouldScroll()) {
-+          scrollTimeoutRef.current = window.setTimeout(() => {
-+            scrollAndHighlight();
-+          }, 100); // Scroll every 100ms instead of every frame
++      // Only scroll into view if we're in streaming mode
++      if (shouldScroll()) {
++        // Use a more reliable way to scroll to the element
++        const rect = lastLine.getBoundingClientRect();
++        if (rect && staticRefs.scroller) {
++          const scrollerRect = staticRefs.scroller.getBoundingClientRect();
++          if (rect.bottom > scrollerRect.bottom) {
++            staticRefs.scroller.scrollTop = staticRefs.scroller.scrollHeight;
++          }
          }
-+      }, 0);
-+    } else if (retryCount.current > maxRetries) {
-+      // If we've exceeded max retries, pause and try again after a delay
-+      console.warn('Could not find editor scroller after multiple attempts, will retry in 500ms');
-+      retryCount.current = 0; // Reset for next run
-+      
-+      // Retry with a delay to allow for components to fully mount
-+      if (scrollTimeoutRef.current) {
-+        clearTimeout(scrollTimeoutRef.current);
        }
--
++    }
++  };
+ 
 -      if (isStreaming) {
 -        highlightIntervalRef.current = setInterval(highlightLastLine, 10);
--      }
--
++  // Main effect to handle mounting and cleanup - debounced to prevent rapid remounting issues
++  useEffect(() => {
++    // Record mount timestamp
++    const thisRenderTime = Date.now();
++    
++    // Clear any existing debounce timeout
++    if (staticRefs.mountDebounceTimeout) {
++      clearTimeout(staticRefs.mountDebounceTimeout);
++    }
++    
++    // Debounce the mount setup to prevent thrashing on frequent remounts
++    staticRefs.mountDebounceTimeout = setTimeout(() => {
++      // Only proceed if this is still the latest mount
++      if (thisRenderTime !== staticRefs.mountTimestamp) return;
++      
++      staticRefs.renderCount++;
++      cleanupCalled.current = false;
++      componentMounted.current = true;
++      
++      debugLog(`Component mounted, render count: ${staticRefs.renderCount}`);
++      
++      // Add the highlight styles if they don't exist
++      if (!document.getElementById('highlight-style')) {
++        const style = document.createElement('style');
++        style.id = 'highlight-style';
++        style.textContent = `
++          .cm-line-highlighted {
++            position: relative !important;
++            border-left: 3px solid rgba(0, 137, 249, 0.6) !important;
++            color: inherit !important;
++          }
++          
++          .cm-line-highlighted::before {
++            content: "" !important;
++            position: absolute !important;
++            top: 0 !important;
++            left: 0 !important;
++            right: 0 !important;
++            bottom: 0 !important;
++            background: linear-gradient(
++              90deg, 
++              rgba(0, 128, 255, 0.12) 0%, 
++              rgba(224, 255, 255, 0.2) 50%, 
++              rgba(0, 183, 255, 0.12) 100%
++            ) !important;
++            background-size: 200% 100% !important;
++            animation: sparkleFlow 1.8s ease-in-out infinite !important;
++            pointer-events: none !important;
++            z-index: -1 !important;
++          }
++          
++          @keyframes sparkleFlow {
++            0% { background-position: 0% 50%; opacity: 0.7; }
++            50% { background-position: 100% 50%; opacity: 0.85; }
++            100% { background-position: 0% 50%; opacity: 0.7; }
++          }
++        `;
++        document.head.appendChild(style);
+       }
+ 
 -      return () => {
 -        clearInterval(checkForScroller);
 -        if (highlightIntervalRef.current) {
 -          clearInterval(highlightIntervalRef.current);
 -          highlightIntervalRef.current = null;
-+      
-+      scrollTimeoutRef.current = window.setTimeout(() => {
-+        if (shouldScroll()) {
-+          scrollAndHighlight();
-         }
+-        }
 -        contentObserver.disconnect();
 -        primaryScroller?.removeEventListener('scroll', handleScroll);
 -      };
 -    };
--
++      // If we already have a scroller, use it
++      if (staticRefs.scroller) {
++        setupScrollerOnce();
++      }
++      
++      // Otherwise, check for it periodically
++      if (!staticRefs.checkForScrollerInterval) {
++        staticRefs.checkForScrollerInterval = setInterval(() => {
++          if (staticRefs.scroller) return;
++          
++          const newScroller = document.querySelector('.cm-scroller');
++          if (newScroller && newScroller instanceof HTMLElement) {
++            staticRefs.scroller = newScroller;
++            setupScrollerOnce();
++          }
++        }, 100);
++      }
+ 
 -    setTimeout(scrollToBottom, 100);
--
--    return () => {
++      // Update highlight interval based on current conditions
++      updateHighlightInterval();
++    }, 150); // Debounce period - only set up if component stays mounted for 150ms
++    
++    // Record this mount as the latest
++    staticRefs.mountTimestamp = thisRenderTime;
+ 
++    // Cleanup function
+     return () => {
 -      clearInterval(checkForScroller);
 -      if (highlightIntervalRef.current) {
 -        clearInterval(highlightIntervalRef.current);
 -        highlightIntervalRef.current = null;
-+      }, 500);
-+    } else {
-+      // Try again soon if we didn't find it but haven't exceeded retries
-+      if (scrollTimeoutRef.current) {
-+        clearTimeout(scrollTimeoutRef.current);
++      debugLog(`Component cleanup triggered, render count: ${staticRefs.renderCount}`);
++      
++      // Don't do expensive cleanup on rapid remounts
++      if (Date.now() - thisRenderTime < 100) {
++        debugLog(`Skipping cleanup due to short mount duration`);
++        return;
        }
--    };
++      
++      // Mark component as unmounted
++      cleanupCalled.current = true;
++      componentMounted.current = false;
+     };
 -  }, [isStreaming]);
 -
-+      
-+      scrollTimeoutRef.current = window.setTimeout(() => {
-+        if (shouldScroll()) {
-+          scrollAndHighlight();
-+        }
-+      }, 100);
-+    }
-+  };
-+  
-+  // Clean up all timers and state
-+  const cleanupScrolling = () => {
-+    // Cancel animation frame if running
-+    if (animationFrameRef.current) {
-+      cancelAnimationFrame(animationFrameRef.current);
-+      animationFrameRef.current = null;
-+    }
-+    
-+    // Clear any timeouts
-+    if (scrollTimeoutRef.current) {
-+      clearTimeout(scrollTimeoutRef.current);
-+      scrollTimeoutRef.current = null;
-+    }
-+    
-+    // Clear any highlighting
-+    if (lastLineRef.current) {
-+      lastLineRef.current.classList.remove('cm-line-highlighted');
-+      lastLineRef.current = null;
-+    }
-+    
-+    isHighlighting.current = false;
-+    hasStartedScrolling.current = false;
-+    retryCount.current = 0;
-+  };
-+  
-+  // Main useEffect for scrolling and highlighting in CODE view
-   useEffect(() => {
+-  useEffect(() => {
 -    if (!isStreaming && highlightIntervalRef.current) {
 -      clearInterval(highlightIntervalRef.current);
 -      highlightIntervalRef.current = null;
 -
--      document.querySelectorAll('.cm-line-highlighted').forEach((el) => {
--        el.classList.remove('cm-line-highlighted');
--      });
-+    // Clean up any existing timers
-+    cleanupScrolling();
++  }, []); // Empty dependency array - we manage state independently
++
++  // Function to update the highlight interval
++  const updateHighlightInterval = () => {
++    const shouldBeScrolling = shouldScroll();
 +    
-+    if (initTimeoutRef.current) {
-+      window.clearTimeout(initTimeoutRef.current);
-+      initTimeoutRef.current = null;
++    if (shouldBeScrolling) {
++      if (!staticRefs.highlightInterval) {
++        staticRefs.highlightInterval = setInterval(() => {
++          // Check again inside interval in case conditions changed
++          if (shouldScroll() && staticRefs.scroller) {
++            highlightLastLine();
++            scrollToBottom();
++          }
++        }, 200); // Less frequent interval to reduce CPU usage
++      }
++    } else if (staticRefs.highlightInterval) {
++      clearInterval(staticRefs.highlightInterval);
++      staticRefs.highlightInterval = null;
++      
++      // Clear highlights when not in streaming mode
+       document.querySelectorAll('.cm-line-highlighted').forEach((el) => {
+         el.classList.remove('cm-line-highlighted');
+       });
      }
 -  }, [isStreaming]);
--
++  };
++
++  // Effect for responding to condition changes - with debounce
++  useEffect(() => {
++    debugLog(`Conditions updated: isStreaming=${isStreaming}, codeReady=${codeReady}, activeView=${activeView}, shouldScroll=${shouldScroll()}`);
 +    
-+    // We start or stop scrolling based on condition changes
-+    if (shouldScroll()) {
-+      // Only start if we haven't already
-+      if (!hasStartedScrolling.current) {
-+        hasStartedScrolling.current = true;
-+        retryCount.current = 0;
-+        
-+        // Start with a small delay to allow CodeMirror to initialize
-+        initTimeoutRef.current = window.setTimeout(() => {
-+          scrollAndHighlight();
-+          initTimeoutRef.current = null;
-+        }, 300); // Longer delay to avoid interference with initialization
++    // Don't immediately react to prop changes - debounce them
++    const timeoutId = setTimeout(() => {
++      // Update interval based on conditions
++      updateHighlightInterval();
++      
++      // Perform immediate scroll and highlight if needed
++      if (shouldScroll() && staticRefs.scroller) {
++        highlightLastLine();
++        scrollToBottom();
 +      }
-+    } else {
-+      // Make sure we clean up
-+      cleanupScrolling();
-+    }
++    }, 100); // Small debounce to prevent rapid changes from causing issues
 +    
-+    // Cleanup on unmount or when conditions change
-+    return cleanupScrolling;
++    return () => clearTimeout(timeoutId);
 +  }, [isStreaming, codeReady, activeView]);
-+  
+ 
    return null;
  };
- 
 diff --git a/app/components/ResultPreview/WelcomeScreen.tsx b/app/components/ResultPreview/WelcomeScreen.tsx
 index e63f911..7498c2c 100644
 --- a/app/components/ResultPreview/WelcomeScreen.tsx
