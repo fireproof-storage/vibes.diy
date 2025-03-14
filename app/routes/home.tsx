@@ -26,11 +26,11 @@ export default function UnifiedSession() {
   const [activeView, setActiveView] = useState<'code' | 'preview'>('code');
   const [previewReady, setPreviewReady] = useState(false);
   const [bundlingComplete, setBundlingComplete] = useState(true);
-  const [sidebarOpener, setSidebarOpener] = useState<(() => void) | null>(null);
+  const [isSidebarVisible, setIsSidebarVisible] = useState(false);
 
-  // Register sidebar opener function
-  const registerSidebarOpener = useCallback((opener: () => void) => {
-    setSidebarOpener(() => opener);
+  // Directly create an openSidebar function
+  const openSidebar = useCallback(() => {
+    setIsSidebarVisible(true);
   }, []);
 
   // Handle preview loaded event
@@ -63,9 +63,8 @@ export default function UnifiedSession() {
     <AppLayout
       headerLeft={
         <ChatHeaderContent 
-          onOpenSidebar={sidebarOpener || (() => {})} 
+          onOpenSidebar={openSidebar} 
           title={chatState.title || 'New Chat'} 
-          registerSidebarOpener={registerSidebarOpener}
         />
       }
       headerRight={
@@ -81,8 +80,9 @@ export default function UnifiedSession() {
       }
       chatPanel={
         <ChatInterface 
-          {...chatState} 
-          registerSidebarOpener={registerSidebarOpener}
+          {...chatState}
+          isSidebarVisible={isSidebarVisible}
+          setIsSidebarVisible={setIsSidebarVisible}
         />
       }
       previewPanel={

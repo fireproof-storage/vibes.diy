@@ -5,6 +5,7 @@ import UnifiedSession from '../app/routes/home';
 import * as segmentParser from '../app/utils/segmentParser';
 import * as useSimpleChatModule from '../app/hooks/useSimpleChat';
 import type { ChatMessage, Segment, UserChatMessage, AiChatMessage } from '../app/types/chat';
+import { mockChatStateProps } from './mockData';
 
 // Mock useParams hook from react-router
 vi.mock('react-router', () => ({
@@ -207,6 +208,7 @@ describe('Session Route Integration', () => {
         session_id: 'test-session-id',
         created_at: Date.now(),
       } as AiChatMessage,
+      ...mockChatStateProps,
     });
   });
 

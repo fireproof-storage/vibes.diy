@@ -99,7 +99,6 @@ export interface ChatState {
   selectedSegments?: Segment[];
   selectedCode?: Segment;
   selectedDependencies?: Record<string, string>;
-  registerSidebarOpener?: (opener: () => void) => void;
 }
 
 export interface ChatInterfaceProps {

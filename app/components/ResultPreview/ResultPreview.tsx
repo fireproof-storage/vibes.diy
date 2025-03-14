@@ -4,7 +4,6 @@ import type { SandpackFiles } from './ResultPreviewTypes';
 import { indexHtml, animationStyles } from './ResultPreviewTemplates';
 import { processCodeForDisplay } from './ResultPreviewUtils';
 import WelcomeScreen from './WelcomeScreen';
-import ResultPreviewToolbar from './ResultPreviewToolbar';
 import SandpackContent from './SandpackContent';
 
 function ResultPreview({
@@ -14,7 +13,7 @@ function ResultPreview({
   sessionId,
   isStreaming = false,
   codeReady = false,
-  activeView = 'code',
+  activeView,
   setActiveView,
   onPreviewLoaded,
 }: ResultPreviewProps) {
@@ -32,9 +31,7 @@ function ResultPreview({
   useEffect(() => {
     if (isStreaming) {
       // Reset to code view when streaming starts
-      if (setActiveView) {
-        setActiveView('code');
-      }
+      setActiveView('code');
     }
   }, [isStreaming, setActiveView]);
 
@@ -44,13 +41,9 @@ function ResultPreview({
         if (data.type === 'preview-loaded') {
           setPreviewReady(true);
           // Automatically switch to preview view when it's ready
-          if (setActiveView) {
-            setActiveView('preview');
-          }
+          setActiveView('preview');
           // Notify parent component that preview is loaded
-          if (onPreviewLoaded) {
-            onPreviewLoaded();
-          }
+          onPreviewLoaded();
         } else if (data.type === 'screenshot' && data.data) {
           console.log('ResultPreview: Received screenshot');
           if (onScreenshotCaptured) {
@@ -79,15 +72,8 @@ function ResultPreview({
     }
   }, [code, showWelcome]);
 
-  // Support running in test environment without visible header
-  // This allows tests to keep working without changes
-  const showToolbarInTest = process.env.NODE_ENV === 'test' && !setActiveView;
-  
-  // Safely handle the setActiveView prop - if not provided use a noop function
-  const handleViewChange = setActiveView || (() => {});
-
   const previewArea = showWelcome ? (
-    <div className="h-full" style={{ height: 'calc(100vh - 49px)' }}>
+    <div className="h-full">
       <WelcomeScreen />
     </div>
   ) : (
@@ -111,7 +97,7 @@ function ResultPreview({
           isStreaming={!codeReady}
           codeReady={codeReady}
           sandpackKey={sandpackKey}
-          setActiveView={handleViewChange}
+          setActiveView={setActiveView}
           setBundlingComplete={setBundlingComplete}
           dependencies={dependencies}
         />
@@ -122,19 +108,6 @@ function ResultPreview({
   return (
     <div className="h-full" style={{ overflow: 'hidden' }}>
       <style>{animationStyles}</style>
-
-      {showToolbarInTest && (
-        <ResultPreviewToolbar
-          previewReady={previewReady}
-          activeView={activeView}
-          setActiveView={handleViewChange}
-          bundlingComplete={bundlingComplete}
-          isStreaming={isStreaming}
-          code={code}
-          dependencies={dependencies}
-        />
-      )}
-
       {previewArea}
     </div>
   );

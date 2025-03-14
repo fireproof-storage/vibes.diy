@@ -2,10 +2,14 @@ import { useState, useMemo, useCallback, useRef } from 'react';
 import type { ChangeEvent } from 'react';
 import type { ChatState } from '../types/chat';
 import SessionSidebar from './SessionSidebar';
-import ChatHeaderContent from './ChatHeaderContent';
 import MessageList from './MessageList';
 import ChatInput from './ChatInput';
 import QuickSuggestions from './QuickSuggestions';
+
+interface ChatInterfaceProps extends ChatState {
+  isSidebarVisible: boolean;
+  setIsSidebarVisible: (isVisible: boolean) => void;
+}
 
 function ChatInterface({
   docs: messages,
@@ -16,27 +20,20 @@ function ChatInterface({
   sendMessage,
   sessionId,
   title,
-  registerSidebarOpener,
-}: ChatState) {
+  codeReady,
+  addScreenshot,
+  isSidebarVisible,
+  setIsSidebarVisible,
+}: ChatInterfaceProps) {
   // State for UI transitions and sharing
   const [isShrinking, setIsShrinking] = useState(false);
   const [isExpanding, setIsExpanding] = useState(false);
-  const [isSidebarVisible, setIsSidebarVisible] = useState(false);
   const [selectedResponseId, setSelectedResponseId] = useState<string | null>(null);
 
-  // Sidebar visibility functions
-  const openSidebar = useCallback(() => {
-    setIsSidebarVisible(true);
-  }, []);
-
+  // Sidebar visibility function
   const closeSidebar = useCallback(() => {
     setIsSidebarVisible(false);
-  }, []);
-
-  // Register the sidebar opener if function is provided
-  if (registerSidebarOpener) {
-    registerSidebarOpener(openSidebar);
-  }
+  }, [setIsSidebarVisible]);
 
   // Function to handle input changes
   const handleInputChange = useCallback(
@@ -92,42 +89,27 @@ function ChatInterface({
     );
   }, [messages, isStreaming, isShrinking, isExpanding, handleSetSelectedResponseId]);
 
-  // Support running in test environment
-  const showHeaderInTest = process.env.NODE_ENV === 'test';
-
   return (
-    <div className="flex h-full w-full flex-col overflow-hidden">
-      {showHeaderInTest && (
-        <div className="border-light-decorative-00 dark:border-dark-decorative-00 bg-light-background-00 dark:bg-dark-background-00 flex h-[4rem] items-center justify-between border-b px-6 py-4">
-          <ChatHeaderContent onOpenSidebar={openSidebar} title={title || 'New Chat'} />
-        </div>
-      )}
-
-      <div 
-        className={`flex h-full flex-grow flex-col overflow-hidden transition-all duration-300 ${
-          isShrinking ? 'w-0' : 'w-full'
-        } ${isExpanding ? 'w-full' : ''}`}
-      >
-        <div className="flex w-full flex-1 flex-col">
-          {memoizedMessageList}
-          {messages.length === 0 && (
-            <QuickSuggestions onSelectSuggestion={handleSelectSuggestion} />
-          )}
-          <ChatInput
-            value={input}
-            onChange={handleInputChange}
-            onKeyDown={handleKeyDown}
-            onSend={sendMessage}
-            disabled={isStreaming}
-            inputRef={inputRef}
-          />
-        </div>
-        <SessionSidebar
-          isVisible={isSidebarVisible}
-          onClose={closeSidebar}
-          sessionId={sessionId || ''}
-        />
+    <div className="flex h-full flex-col overflow-hidden">
+      <div className="flex-grow overflow-y-auto">
+        {memoizedMessageList}
+        {messages.length === 0 && (
+          <QuickSuggestions onSelectSuggestion={handleSelectSuggestion} />
+        )}
       </div>
+      <ChatInput
+        value={input}
+        onChange={handleInputChange}
+        onKeyDown={handleKeyDown}
+        onSend={sendMessage}
+        disabled={isStreaming}
+        inputRef={inputRef}
+      />
+      <SessionSidebar 
+        isVisible={isSidebarVisible} 
+        onClose={closeSidebar} 
+        sessionId={sessionId || ''} 
+      />
     </div>
   );
 }

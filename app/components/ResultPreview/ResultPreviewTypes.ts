@@ -5,9 +5,9 @@ export interface ResultPreviewProps {
   sessionId?: string;
   isStreaming?: boolean;
   codeReady?: boolean;
-  activeView?: 'code' | 'preview';
-  setActiveView?: (view: 'code' | 'preview') => void;
-  onPreviewLoaded?: () => void;
+  activeView: 'code' | 'preview';
+  setActiveView: (view: 'code' | 'preview') => void;
+  onPreviewLoaded: () => void;
 }
 
 export type SandpackFiles = {

@@ -3,15 +3,9 @@ import { memo } from 'react';
 interface ChatHeaderContentProps {
   onOpenSidebar: () => void;
   title: string;
-  registerSidebarOpener?: (opener: () => void) => void;
 }
 
-function ChatHeaderContent({ onOpenSidebar, title, registerSidebarOpener }: ChatHeaderContentProps) {
-  // Register the sidebar opener if provided
-  if (registerSidebarOpener) {
-    registerSidebarOpener(onOpenSidebar);
-  }
-
+function ChatHeaderContent({ onOpenSidebar, title }: ChatHeaderContentProps) {
   return (
     <div className="flex h-full w-full items-center justify-between px-6 py-4">
       <div className="flex items-center">

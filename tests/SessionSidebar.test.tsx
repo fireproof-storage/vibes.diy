@@ -1,6 +1,7 @@
 import { vi, describe, it, expect, beforeEach } from 'vitest';
 import { render, screen, fireEvent, within, act } from '@testing-library/react';
 import SessionSidebar from '../app/components/SessionSidebar';
+import { mockSessionSidebarProps } from './mockData';
 
 // Mock session data
 const mockSessions = [
@@ -105,7 +106,7 @@ describe('SessionSidebar', () => {
   it('renders sidebar correctly when visible', async () => {
     const onClose = vi.fn();
 
-    render(<SessionSidebar isVisible={true} onClose={onClose} />);
+    render(<SessionSidebar isVisible={true} onClose={onClose} {...mockSessionSidebarProps} />);
 
     // Check that the sidebar title is rendered
     expect(screen.getByText('App History')).toBeDefined();
@@ -118,7 +119,7 @@ describe('SessionSidebar', () => {
   it('handles close button click', () => {
     const onClose = vi.fn();
 
-    render(<SessionSidebar isVisible={true} onClose={onClose} />);
+    render(<SessionSidebar isVisible={true} onClose={onClose} {...mockSessionSidebarProps} />);
 
     const closeButton = screen.getByLabelText('Close sidebar');
     fireEvent.click(closeButton);
@@ -129,7 +130,7 @@ describe('SessionSidebar', () => {
   it('creates correct links to sessions', async () => {
     const onClose = vi.fn();
 
-    render(<SessionSidebar isVisible={true} onClose={onClose} />);
+    render(<SessionSidebar isVisible={true} onClose={onClose} {...mockSessionSidebarProps} />);
 
     // Find the elements containing the session titles
     const session1Element = screen.getByText('Test Session 1').closest('a');
@@ -150,7 +151,7 @@ describe('SessionSidebar', () => {
       value: 500, // Mobile width
     });
 
-    render(<SessionSidebar isVisible={true} onClose={onClose} />);
+    render(<SessionSidebar isVisible={true} onClose={onClose} {...mockSessionSidebarProps} />);
 
     // Find and click on a session
     const sessionItem = screen.getByText('Test Session 1').closest('a');
@@ -171,7 +172,7 @@ describe('SessionSidebar', () => {
     const onClose = vi.fn();
 
     // Render with isVisible=false
-    const { container } = render(<SessionSidebar isVisible={false} onClose={onClose} />);
+    const { container } = render(<SessionSidebar isVisible={false} onClose={onClose} {...mockSessionSidebarProps} />);
 
     // Check that the sidebar has classes indicating it's not visible
     const invisibleSidebar = container.querySelector('.pointer-events-none');
@@ -186,7 +187,7 @@ describe('SessionSidebar', () => {
 
     // We need to wrap this in act because it causes state updates when file.file() is called
     act(() => {
-      render(<SessionSidebar isVisible={true} onClose={onClose} />);
+      render(<SessionSidebar isVisible={true} onClose={onClose} {...mockSessionSidebarProps} />);
     });
 
     // The URL.createObjectURL won't be called immediately in our test environment

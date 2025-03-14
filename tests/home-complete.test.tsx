@@ -6,6 +6,7 @@ import * as segmentParser from '../app/utils/segmentParser';
 import * as useSimpleChatModule from '../app/hooks/useSimpleChat';
 import type { ChatMessage, UserChatMessage, AiChatMessage, Segment } from '../app/types/chat';
 import { useLocation } from 'react-router';
+import { mockChatStateProps } from './mockData';
 
 // We need to define the mock before importing any modules that might use it
 const navigateMock = vi.fn();
@@ -211,6 +212,7 @@ describe('Home Route in completed state', () => {
         ],
         isStreaming: false,
       } as AiChatMessage,
+      ...mockChatStateProps,
     });
   });
 
@@ -317,17 +319,18 @@ describe('Home Route in completed state', () => {
 
     const mockChatState = {
       docs: [],
-      input: '',
+      input: 'test input',
       setInput: vi.fn(),
       inputRef: { current: null },
       sendMessage: vi.fn(),
       isStreaming: false,
-      title: 'New Chat',
-      sessionId: null,
-      selectedSegments: mockSegments,
-      selectedCode: { type: 'code', content: hashCode } as Segment,
-      selectedDependencies: {},
+      title: 'Test Title',
+      sessionId: 'test-session-id',
       selectedResponseDoc: undefined,
+      selectedSegments: [],
+      selectedCode: { type: 'code' as const, content: '' },
+      selectedDependencies: {},
+      ...mockChatStateProps,
     };
 
     vi.spyOn(useSimpleChatModule, 'useSimpleChat').mockReturnValue(mockChatState);

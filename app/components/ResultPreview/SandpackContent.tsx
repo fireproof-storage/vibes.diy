@@ -7,8 +7,6 @@ import {
 } from '@codesandbox/sandpack-react';
 import SandpackScrollController from './SandpackScrollController';
 import type { SandpackFiles } from './ResultPreviewTypes';
-import { processCodeForDisplay } from './ResultPreviewUtils';
-import { indexHtml, animationStyles } from './ResultPreviewTemplates';
 
 interface SandpackContentProps {
   activeView: 'preview' | 'code';
@@ -47,18 +45,25 @@ const SandpackContent: React.FC<SandpackContentProps> = ({
     return () => mediaQuery.removeEventListener('change', handleChange);
   }, []);
 
+  // Log the sandpack configuration for debugging
+  useEffect(() => {
+    console.log('Sandpack config:', {
+      key: sandpackKey,
+      dependencies: dependencies,
+      isDarkMode: isDarkMode,
+      filesCount: Object.keys(filesContent).length,
+      firstFile: Object.keys(filesContent)[0]
+    });
+  }, [sandpackKey, dependencies, isDarkMode, filesContent]);
+
   return (
     <div data-testid="sandpack-provider">
-      <style>{animationStyles}</style>
       <SandpackProvider
         key={sandpackKey}
         template="vite-react"
         options={{
           externalResources: ['https://cdn.tailwindcss.com'],
           classes: { 'sp-wrapper': 'h-full' },
-          bundlerURL: 'https://1.codesandbox.io/sandpack-bundler-e8d2',
-          bundlerTimeOut: 20000,
-          initMode: 'immediate',
         }}
         customSetup={{
           dependencies: {

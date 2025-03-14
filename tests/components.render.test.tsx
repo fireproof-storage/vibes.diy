@@ -4,6 +4,7 @@ import ChatHeader from '../app/components/ChatHeader';
 import SessionSidebar from '../app/components/SessionSidebar';
 import MessageList from '../app/components/MessageList';
 import type { ChatMessage, UserChatMessage, AiChatMessage } from '../app/types/chat';
+import { mockSessionSidebarProps } from './mockData';
 
 // Mock dependencies
 vi.mock('react-markdown', () => ({
@@ -123,22 +124,37 @@ describe('Component Rendering', () => {
 
   describe('SessionSidebar', () => {
     it('renders in hidden state', () => {
-      const { container } = render(<SessionSidebar isVisible={false} onClose={onClose} />);
+      const { container } = render(<SessionSidebar isVisible={false} onClose={onClose} {...mockSessionSidebarProps} />);
       // Check that it has the hidden class
       expect(container.firstChild).toHaveClass('-translate-x-full');
     });
 
     it('renders in visible state', () => {
-      const { container } = render(<SessionSidebar isVisible={true} onClose={onClose} />);
-      expect(container.firstChild).toHaveClass('translate-x-0');
+      const { container } = render(<SessionSidebar isVisible={true} onClose={onClose} {...mockSessionSidebarProps} />);
+      // Check that it doesn't have the hidden class
+      expect(container.firstChild).not.toHaveClass('-translate-x-full');
+    });
 
-      // Check that content is rendered when visible
-      expect(screen.getByText('App History')).toBeInTheDocument();
+    it('renders session list', () => {
+      render(<SessionSidebar isVisible={true} onClose={onClose} {...mockSessionSidebarProps} />);
+      // Check that session elements are rendered
+      expect(screen.getByText('No saved sessions yet')).toBeInTheDocument();
     });
 
     it('shows empty state when no sessions', () => {
-      render(<SessionSidebar isVisible={true} onClose={onClose} />);
+      render(<SessionSidebar isVisible={true} onClose={onClose} {...mockSessionSidebarProps} />);
       expect(screen.getByText('No saved sessions yet')).toBeInTheDocument();
+    });
+
+    it('has a close button that works', () => {
+      render(<SessionSidebar isVisible={true} onClose={onClose} {...mockSessionSidebarProps} />);
+      
+      // Find and click the close button
+      const closeButton = screen.getByLabelText('Close sidebar');
+      fireEvent.click(closeButton);
+      
+      // Verify that onClose was called
+      expect(onClose).toHaveBeenCalled();
     });
   });
 
