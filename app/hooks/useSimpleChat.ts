@@ -35,6 +35,8 @@ export function useSimpleChat(sessionId: string | undefined): ChatState {
   // Add throttling refs for performance
   const lastUpdateTimeRef = useRef<number>(0);
   const updateTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  // Add a flag to prevent infinite updates
+  const isProcessingRef = useRef<boolean>(false);
 
   const selectedResponseDoc = (isStreaming
     ? aiMessage
@@ -73,8 +75,15 @@ export function useSimpleChat(sessionId: string | undefined): ChatState {
 
   // Add a throttled update function
   const throttledMergeAiMessage = useCallback((content: string) => {
-    const now = Date.now();
+    // Store content in ref regardless of whether we update state
     streamBufferRef.current = content;
+    
+    // If we're already processing a database operation, don't trigger more updates
+    if (isProcessingRef.current) {
+      return;
+    }
+    
+    const now = Date.now();
     
     // For very small documents, update frequently
     // For larger documents, throttle more aggressively
@@ -139,25 +148,39 @@ export function useSimpleChat(sessionId: string | undefined): ChatState {
       })
       .then((response) => {
         return processStream(response, (content) => {
+          // Only append to the buffer here - don't update state for every tiny chunk
           streamBufferRef.current += content;
-          // Use the throttled update function instead
+          // Use the throttled update function
           throttledMergeAiMessage(streamBufferRef.current);
         });
       })
       .then(async () => {
-        aiMessage.text = streamBufferRef.current;
-        // Final update to ensure we have the complete message
-        mergeAiMessage({ text: streamBufferRef.current });
-        const ok = await database.put(aiMessage);
-      })
-      .then(() => {
-        const { segments } = parseContent(aiMessage.text);
-        if (!session?.title) {
-          return generateTitle(segments, TITLE_MODEL).then(updateTitle);
+        // Set processing flag to prevent infinite updates
+        isProcessingRef.current = true;
+        
+        try {
+          // Only do a final update if the current state doesn't match our buffer
+          if (aiMessage.text !== streamBufferRef.current) {
+            // First update the aiMessage object (no state update)
+            aiMessage.text = streamBufferRef.current;
+          }
+          
+          // Then persist to database
+          const ok = await database.put(aiMessage);
+          
+          // Finally, generate title if needed
+          const { segments } = parseContent(aiMessage.text);
+          if (!session?.title) {
+            await generateTitle(segments, TITLE_MODEL).then(updateTitle);
+          }
+        } finally {
+          // Always clear the processing flag
+          isProcessingRef.current = false;
         }
       })
       .catch((error) => {
         console.error('Error processing stream:', error);
+        isProcessingRef.current = false;
       })
       .finally(() => {
         setIsStreaming(false);
@@ -198,6 +221,7 @@ export function useSimpleChat(sessionId: string | undefined): ChatState {
         clearTimeout(updateTimeoutRef.current);
         updateTimeoutRef.current = null;
       }
+      isProcessingRef.current = false;
     };
   }, []);
 
