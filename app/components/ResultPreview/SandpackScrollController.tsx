@@ -19,6 +19,9 @@ const staticRefs = {
   mountDebounceTimeout: null as NodeJS.Timeout | null,
   isScrollingScheduled: false,
   lastHighlightTime: 0,
+  currentHighlightedLine: null as HTMLElement | null,
+  lastLineIndex: -1, // Track the last line index to avoid unnecessary DOM operations
+  documentLineCount: 0, // Track the total number of lines for adaptive timing
 };
 
 interface SandpackScrollControllerProps {
@@ -104,9 +107,13 @@ const SandpackScrollController: React.FC<SandpackScrollControllerProps> = ({
     const contentObserver = new MutationObserver((mutations) => {
       if (!staticRefs.scroller) return;
       
-      // Coalesce multiple mutations that happen close together
+      // Early exit if we've recently handled mutations
       if (staticRefs.isScrollingScheduled) return;
       staticRefs.isScrollingScheduled = true;
+      
+      // Count total line elements to track document size for adaptive timing
+      const lineElements = document.querySelectorAll('.cm-line');
+      staticRefs.documentLineCount = lineElements.length;
       
       // Debounce the scroll operation to handle rapid mutations
       setTimeout(() => {
@@ -120,10 +127,11 @@ const SandpackScrollController: React.FC<SandpackScrollControllerProps> = ({
         // Check if conditions still valid
         if (shouldScroll()) {
           highlightLastLine();
-        } else {
-          document.querySelectorAll('.cm-line-highlighted').forEach((el) => {
-            el.classList.remove('cm-line-highlighted');
-          });
+        } else if (staticRefs.currentHighlightedLine) {
+          // Only clear highlight if we're not in scroll mode anymore
+          staticRefs.currentHighlightedLine.classList.remove('cm-line-highlighted');
+          staticRefs.currentHighlightedLine = null;
+          staticRefs.lastLineIndex = -1;
         }
 
         // Always try to scroll when height changes during streaming
@@ -209,36 +217,62 @@ const SandpackScrollController: React.FC<SandpackScrollControllerProps> = ({
     requestAnimationFrame(ensureScrolled);
   };
 
-  // Highlight last line function with debounce
+  // Optimized highlight last line function - more efficient with large documents
   const highlightLastLine = () => {
     if (!staticRefs.scroller || !shouldScroll()) return;
     
+    // Throttle updates for performance
     const now = Date.now();
-    if (now - staticRefs.lastHighlightTime < 100) return; // Limit highlighting frequency
+    
+    // Calculate adaptive throttle interval based on document size
+    // For small documents, update frequently (100ms)
+    // For larger documents, gradually increase the interval up to 350ms
+    const lineCount = staticRefs.documentLineCount || 0;
+    const adaptiveInterval = Math.min(100 + Math.floor(lineCount / 4), 350);
+    
+    if (now - staticRefs.lastHighlightTime < adaptiveInterval) return;
     staticRefs.lastHighlightTime = now;
 
-    document.querySelectorAll('.cm-line-highlighted').forEach((el) => {
-      el.classList.remove('cm-line-highlighted');
-    });
-
-    const lines = Array.from(document.querySelectorAll('.cm-line'));
+    // Get all lines in the document
+    const lines = document.querySelectorAll('.cm-line');
+    if (lines.length === 0) return;
+    
+    // Find the last non-empty line
     let lastLine = null;
-
+    let lastLineIdx = -1;
+    
+    // ALWAYS start searching from the end of the document to avoid jumping up
+    // Previous implementation started from the last known line which could cause highlighting
+    // to jump up if multiple lines were added at once
     for (let i = lines.length - 1; i >= 0; i--) {
-      const line = lines[i];
+      const line = lines[i] as HTMLElement;
       const content = line.textContent || '';
       if (content.trim() && !content.includes('END OF CODE')) {
         lastLine = line;
+        lastLineIdx = i;
         break;
       }
     }
 
+    // If the last line is the same as before, no need to update DOM
+    if (lastLine === staticRefs.currentHighlightedLine) {
+      return;
+    }
+    
+    // Remove highlight from previous line
+    if (staticRefs.currentHighlightedLine) {
+      staticRefs.currentHighlightedLine.classList.remove('cm-line-highlighted');
+    }
+    
+    // Add highlight to new line
     if (lastLine) {
       lastLine.classList.add('cm-line-highlighted');
+      staticRefs.currentHighlightedLine = lastLine;
+      staticRefs.lastLineIndex = lastLineIdx;
       
       // Only scroll into view if we're in streaming mode
       if (shouldScroll()) {
-        // Use a more reliable way to scroll to the element
+        // Use a more efficient way to scroll the element into view
         const rect = lastLine.getBoundingClientRect();
         if (rect && staticRefs.scroller) {
           const scrollerRect = staticRefs.scroller.getBoundingClientRect();
@@ -250,7 +284,7 @@ const SandpackScrollController: React.FC<SandpackScrollControllerProps> = ({
     }
   };
 
-  // Main effect to handle mounting and cleanup - debounced to prevent rapid remounting issues
+  // Main effect to handle mounting and cleanup
   useEffect(() => {
     // Record mount timestamp
     const thisRenderTime = Date.now();
@@ -258,79 +292,74 @@ const SandpackScrollController: React.FC<SandpackScrollControllerProps> = ({
     // Clear any existing debounce timeout
     if (staticRefs.mountDebounceTimeout) {
       clearTimeout(staticRefs.mountDebounceTimeout);
+      staticRefs.mountDebounceTimeout = null;
     }
     
-    // Debounce the mount setup to prevent thrashing on frequent remounts
-    staticRefs.mountDebounceTimeout = setTimeout(() => {
-      // Only proceed if this is still the latest mount
-      if (thisRenderTime !== staticRefs.mountTimestamp) return;
-      
-      staticRefs.renderCount++;
-      cleanupCalled.current = false;
-      componentMounted.current = true;
-      
-      debugLog(`Component mounted, render count: ${staticRefs.renderCount}`);
-      
-      // Add the highlight styles if they don't exist
-      if (!document.getElementById('highlight-style')) {
-        const style = document.createElement('style');
-        style.id = 'highlight-style';
-        style.textContent = `
-          .cm-line-highlighted {
-            position: relative !important;
-            border-left: 3px solid rgba(0, 137, 249, 0.6) !important;
-            color: inherit !important;
-          }
-          
-          .cm-line-highlighted::before {
-            content: "" !important;
-            position: absolute !important;
-            top: 0 !important;
-            left: 0 !important;
-            right: 0 !important;
-            bottom: 0 !important;
-            background: linear-gradient(
-              90deg, 
-              rgba(0, 128, 255, 0.12) 0%, 
-              rgba(224, 255, 255, 0.2) 50%, 
-              rgba(0, 183, 255, 0.12) 100%
-            ) !important;
-            background-size: 200% 100% !important;
-            animation: sparkleFlow 1.8s ease-in-out infinite !important;
-            pointer-events: none !important;
-            z-index: -1 !important;
-          }
-          
-          @keyframes sparkleFlow {
-            0% { background-position: 0% 50%; opacity: 0.7; }
-            50% { background-position: 100% 50%; opacity: 0.85; }
-            100% { background-position: 0% 50%; opacity: 0.7; }
-          }
-        `;
-        document.head.appendChild(style);
-      }
+    staticRefs.renderCount++;
+    cleanupCalled.current = false;
+    componentMounted.current = true;
+    
+    debugLog(`Component mounted, render count: ${staticRefs.renderCount}`);
+    
+    // Add the highlight styles if they don't exist
+    if (!document.getElementById('highlight-style')) {
+      const style = document.createElement('style');
+      style.id = 'highlight-style';
+      style.textContent = `
+        .cm-line-highlighted {
+          position: relative !important;
+          border-left: 3px solid rgba(0, 137, 249, 0.6) !important;
+          color: inherit !important;
+        }
+        
+        .cm-line-highlighted::before {
+          content: "" !important;
+          position: absolute !important;
+          top: 0 !important;
+          left: 0 !important;
+          right: 0 !important;
+          bottom: 0 !important;
+          background: linear-gradient(
+            90deg, 
+            rgba(0, 128, 255, 0.12) 0%, 
+            rgba(224, 255, 255, 0.2) 50%, 
+            rgba(0, 183, 255, 0.12) 100%
+          ) !important;
+          background-size: 200% 100% !important;
+          animation: sparkleFlow 1.8s ease-in-out infinite !important;
+          pointer-events: none !important;
+          z-index: -1 !important;
+        }
+        
+        @keyframes sparkleFlow {
+          0% { background-position: 0% 50%; opacity: 0.7; }
+          50% { background-position: 100% 50%; opacity: 0.85; }
+          100% { background-position: 0% 50%; opacity: 0.7; }
+        }
+      `;
+      document.head.appendChild(style);
+    }
 
-      // If we already have a scroller, use it
-      if (staticRefs.scroller) {
-        setupScrollerOnce();
-      }
-      
-      // Otherwise, check for it periodically
-      if (!staticRefs.checkForScrollerInterval) {
-        staticRefs.checkForScrollerInterval = setInterval(() => {
-          if (staticRefs.scroller) return;
-          
-          const newScroller = document.querySelector('.cm-scroller');
-          if (newScroller && newScroller instanceof HTMLElement) {
-            staticRefs.scroller = newScroller;
-            setupScrollerOnce();
-          }
-        }, 100);
-      }
+    // If we already have a scroller, use it
+    if (staticRefs.scroller) {
+      setupScrollerOnce();
+    }
+    
+    // Otherwise, check for it periodically
+    if (!staticRefs.checkForScrollerInterval) {
+      staticRefs.checkForScrollerInterval = setInterval(() => {
+        if (staticRefs.scroller) return;
+        
+        const newScroller = document.querySelector('.cm-scroller');
+        if (newScroller && newScroller instanceof HTMLElement) {
+          staticRefs.scroller = newScroller;
+          setupScrollerOnce();
+        }
+      }, 100);
+    }
 
-      // Update highlight interval based on current conditions
-      updateHighlightInterval();
-    }, 150); // Debounce period - only set up if component stays mounted for 150ms
+    // Update highlight interval based on current conditions
+    updateHighlightInterval();
     
     // Record this mount as the latest
     staticRefs.mountTimestamp = thisRenderTime;
@@ -339,40 +368,74 @@ const SandpackScrollController: React.FC<SandpackScrollControllerProps> = ({
     return () => {
       debugLog(`Component cleanup triggered, render count: ${staticRefs.renderCount}`);
       
-      // Don't do expensive cleanup on rapid remounts
-      if (Date.now() - thisRenderTime < 100) {
-        debugLog(`Skipping cleanup due to short mount duration`);
-        return;
-      }
-      
       // Mark component as unmounted
       cleanupCalled.current = true;
       componentMounted.current = false;
     };
   }, []); // Empty dependency array - we manage state independently
 
-  // Function to update the highlight interval
+  // Function to update the highlight interval - optimized for performance
   const updateHighlightInterval = () => {
     const shouldBeScrolling = shouldScroll();
     
     if (shouldBeScrolling) {
       if (!staticRefs.highlightInterval) {
-        staticRefs.highlightInterval = setInterval(() => {
-          // Check again inside interval in case conditions changed
-          if (shouldScroll() && staticRefs.scroller) {
-            highlightLastLine();
-            scrollToBottom();
+        // Use requestAnimationFrame for smoother performance rather than setInterval
+        let animationFrameId: number | null = null;
+        let lastFrameTime = 0;
+        
+        const updateHighlight = (timestamp: number) => {
+          if (!shouldScroll() || !componentMounted.current) {
+            animationFrameId = null;
+            return;
           }
-        }, 200); // Less frequent interval to reduce CPU usage
+          
+          // Throttle based on document size - larger documents get slower updates
+          const lineCount = staticRefs.documentLineCount || 0;
+          const interval = Math.min(200 + Math.floor(lineCount / 5), 500);
+          
+          if (timestamp - lastFrameTime > interval) {
+            lastFrameTime = timestamp;
+            
+            if (staticRefs.scroller) {
+              highlightLastLine();
+              if (!staticRefs.hasUserScrolled) {
+                scrollToBottom();
+              }
+            }
+          }
+          
+          animationFrameId = requestAnimationFrame(updateHighlight);
+        };
+        
+        // Start the animation frame loop
+        animationFrameId = requestAnimationFrame(updateHighlight);
+        
+        // Store the ID and cleanup function
+        staticRefs.highlightInterval = {
+          clear: () => {
+            if (animationFrameId !== null) {
+              cancelAnimationFrame(animationFrameId);
+              animationFrameId = null;
+            }
+          }
+        } as unknown as NodeJS.Timeout;
       }
     } else if (staticRefs.highlightInterval) {
-      clearInterval(staticRefs.highlightInterval);
+      // Check if it's a regular interval or our custom object
+      if ('clear' in staticRefs.highlightInterval) {
+        (staticRefs.highlightInterval as unknown as { clear: () => void }).clear();
+      } else {
+        clearInterval(staticRefs.highlightInterval);
+      }
+      
       staticRefs.highlightInterval = null;
       
       // Clear highlights when not in streaming mode
-      document.querySelectorAll('.cm-line-highlighted').forEach((el) => {
-        el.classList.remove('cm-line-highlighted');
-      });
+      if (staticRefs.currentHighlightedLine) {
+        staticRefs.currentHighlightedLine.classList.remove('cm-line-highlighted');
+        staticRefs.currentHighlightedLine = null;
+      }
     }
   };
 

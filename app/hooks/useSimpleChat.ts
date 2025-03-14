@@ -32,6 +32,9 @@ export function useSimpleChat(sessionId: string | undefined): ChatState {
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const [isStreaming, setIsStreaming] = useState<boolean>(false);
   const [selectedResponseId, setSelectedResponseId] = useState<string>(''); // default most recent
+  // Add throttling refs for performance
+  const lastUpdateTimeRef = useRef<number>(0);
+  const updateTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const selectedResponseDoc = (isStreaming
     ? aiMessage
@@ -67,6 +70,37 @@ export function useSimpleChat(sessionId: string | undefined): ChatState {
   const selectedDependencies = selectedDependenciesString
     ? parseDependencies(selectedDependenciesString)
     : {};
+
+  // Add a throttled update function
+  const throttledMergeAiMessage = useCallback((content: string) => {
+    const now = Date.now();
+    streamBufferRef.current = content;
+    
+    // For very small documents, update frequently
+    // For larger documents, throttle more aggressively
+    const contentLength = content.length;
+    const throttleInterval = Math.min(50 + Math.floor(contentLength / 100), 300);
+    
+    // Clear any pending timeout
+    if (updateTimeoutRef.current) {
+      clearTimeout(updateTimeoutRef.current);
+      updateTimeoutRef.current = null;
+    }
+    
+    // If we've recently updated, schedule a delayed update
+    if (now - lastUpdateTimeRef.current < throttleInterval) {
+      updateTimeoutRef.current = setTimeout(() => {
+        lastUpdateTimeRef.current = Date.now();
+        mergeAiMessage({ text: streamBufferRef.current });
+      }, throttleInterval);
+      return;
+    }
+    
+    // Otherwise update immediately
+    lastUpdateTimeRef.current = now;
+    mergeAiMessage({ text: content });
+  }, [mergeAiMessage]);
+
   /**
    * Send a message and process the AI response
    * Returns a promise that resolves when the entire process is complete, including title generation
@@ -106,12 +140,14 @@ export function useSimpleChat(sessionId: string | undefined): ChatState {
       .then((response) => {
         return processStream(response, (content) => {
           streamBufferRef.current += content;
-          mergeAiMessage({ text: streamBufferRef.current });
+          // Use the throttled update function instead
+          throttledMergeAiMessage(streamBufferRef.current);
         });
       })
       .then(async () => {
         aiMessage.text = streamBufferRef.current;
-        // mergeAiMessage({ text: streamBufferRef.current });
+        // Final update to ensure we have the complete message
+        mergeAiMessage({ text: streamBufferRef.current });
         const ok = await database.put(aiMessage);
       })
       .then(() => {
@@ -135,6 +171,7 @@ export function useSimpleChat(sessionId: string | undefined): ChatState {
     submitUserMessage,
     buildMessageHistory,
     mergeAiMessage,
+    throttledMergeAiMessage,
     aiMessage,
     database,
     session?.title,
@@ -153,6 +190,16 @@ export function useSimpleChat(sessionId: string | undefined): ChatState {
   const codeReady = useMemo(() => {
     return !isStreaming || selectedSegments.length > 2;
   }, [isStreaming, selectedSegments]);
+
+  // Cleanup any pending updates when the component unmounts
+  useEffect(() => {
+    return () => {
+      if (updateTimeoutRef.current) {
+        clearTimeout(updateTimeoutRef.current);
+        updateTimeoutRef.current = null;
+      }
+    };
+  }, []);
 
   return {
     sessionId: session._id,
