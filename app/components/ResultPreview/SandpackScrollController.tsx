@@ -35,11 +35,6 @@ interface SandpackScrollControllerProps {
   activeView?: 'preview' | 'code';
 }
 
-// Debug logging function to track scroll issues
-const debugLog = (message: string, data?: any) => {
-  console.log(`[ScrollDebug] ${message}`, data || '');
-};
-
 const SandpackScrollController: React.FC<SandpackScrollControllerProps> = ({ 
   isStreaming,
   shouldEnableScrolling = isStreaming, // Default to isStreaming if not provided
@@ -68,9 +63,7 @@ const SandpackScrollController: React.FC<SandpackScrollControllerProps> = ({
   // Setup the scroller observer only once it's found - with debounce
   const setupScrollerOnce = () => {
     if (staticRefs.scrollerSetupComplete || !staticRefs.scroller) return;
-    
-    debugLog(`Setting up scroller for the first time`, { height: staticRefs.scroller.scrollHeight });
-    
+        
     // Setup scroll listener with throttling
     const handleScroll = () => {
       if (staticRefs.isScrolling || !staticRefs.scroller) return;
@@ -87,9 +80,7 @@ const SandpackScrollController: React.FC<SandpackScrollControllerProps> = ({
         staticRefs.hasUserScrolled = true;
         staticRefs.lastScrollPosition = currentPosition;
         
-        if (wasUserScrolled !== true) {
-          debugLog(`User scroll state changed to true`);
-        }
+        
 
         // Check if scrolled to bottom
         const atBottom = 
@@ -98,7 +89,6 @@ const SandpackScrollController: React.FC<SandpackScrollControllerProps> = ({
         
         if (atBottom) {
           staticRefs.hasUserScrolled = false;
-          debugLog(`User scrolled to bottom, resetting hasUserScrolled`);
         }
       }
     };
@@ -168,7 +158,6 @@ const SandpackScrollController: React.FC<SandpackScrollControllerProps> = ({
     staticRefs.contentObserver = contentObserver;
     staticRefs.scrollerSetupComplete = true;
     
-    debugLog(`Scroller setup complete`, { height: staticRefs.scroller.scrollHeight });
     
     // Do initial scroll and highlight
     if (shouldScroll()) {
@@ -182,7 +171,7 @@ const SandpackScrollController: React.FC<SandpackScrollControllerProps> = ({
     element.classList.add('cm-line-fade-out');
     setTimeout(() => {
       element.classList.remove('cm-line-highlighted', 'active', 'cm-line-fade-out');
-    }, 400);
+    }, 1500);
   };
 
   // Schedule a single animation frame for both scroll and highlight operations
@@ -297,7 +286,7 @@ const SandpackScrollController: React.FC<SandpackScrollControllerProps> = ({
         if (lastLine && lastLine.isConnected) {
           lastLine.classList.add('active');
         }
-      }, 20);
+      }, 1);
       
       // Check if we need to scroll
       if (shouldScroll() && !staticRefs.hasUserScrolled) {
@@ -321,9 +310,7 @@ const SandpackScrollController: React.FC<SandpackScrollControllerProps> = ({
     staticRefs.renderCount++;
     cleanupCalled.current = false;
     componentMounted.current = true;
-    
-    debugLog(`Component mounted, render count: ${staticRefs.renderCount}`);
-    
+        
     // Add the highlight styles if they don't exist
     if (!document.getElementById('highlight-style')) {
       const style = document.createElement('style');
@@ -353,7 +340,7 @@ const SandpackScrollController: React.FC<SandpackScrollControllerProps> = ({
           pointer-events: none !important;
           z-index: -1 !important;
           opacity: 0 !important;
-          transition: opacity 0.4s ease-in-out !important;
+          transition: opacity 1ms ease-in-out !important;
         }
         
         /* Simple animation for all document sizes */
@@ -371,13 +358,13 @@ const SandpackScrollController: React.FC<SandpackScrollControllerProps> = ({
         
         /* Fade out class with transition */
         .cm-line-fade-out {
-          transition: border-color 0.5s ease-out !important;
+          transition: border-color 1.5s cubic-bezier(0.25, 0.1, 0.25, 1) !important;
           border-left-color: rgba(0, 137, 249, 0.2) !important;
         }
         
         .cm-line-fade-out::before {
           opacity: 0 !important;
-          transition: opacity 0.5s ease-out !important;
+          transition: opacity 1.5s cubic-bezier(0.25, 0.1, 0.1, 1) !important;
         }
       `;
       document.head.appendChild(style);
@@ -408,9 +395,7 @@ const SandpackScrollController: React.FC<SandpackScrollControllerProps> = ({
     staticRefs.mountTimestamp = thisRenderTime;
 
     // Cleanup function
-    return () => {
-      debugLog(`Component cleanup triggered, render count: ${staticRefs.renderCount}`);
-      
+    return () => {      
       // Cancel any pending animation frame
       if (staticRefs.rafID !== null) {
         cancelAnimationFrame(staticRefs.rafID);
@@ -500,9 +485,7 @@ const SandpackScrollController: React.FC<SandpackScrollControllerProps> = ({
   };
 
   // Effect for responding to condition changes - with debounce
-  useEffect(() => {
-    debugLog(`Conditions updated: isStreaming=${isStreaming}, codeReady=${codeReady}, activeView=${activeView}, shouldScroll=${shouldScroll()}`);
-    
+  useEffect(() => {    
     // Don't immediately react to prop changes - debounce them
     const timeoutId = setTimeout(() => {
       // Update interval based on conditions
