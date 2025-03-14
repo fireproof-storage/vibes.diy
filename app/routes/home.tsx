@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router';
-import ChatInterface from '../components/ChatInterface';
+import ChatInterface, { getChatInputComponent, getSuggestionsComponent } from '../components/ChatInterface';
 import ResultPreview from '../components/ResultPreview/ResultPreview';
 import ChatHeaderContent from '../components/ChatHeaderContent';
 import ResultPreviewHeaderContent from '../components/ResultPreview/ResultPreviewHeaderContent';
@@ -59,6 +59,21 @@ export default function UnifiedSession() {
     }
   }, [location.search]);
 
+  // Get the chat input component to pass separately to AppLayout
+  const chatInputComponent = getChatInputComponent({
+    input: chatState.input,
+    setInput: chatState.setInput,
+    sendMessage: chatState.sendMessage,
+    isStreaming: chatState.isStreaming,
+    inputRef: chatState.inputRef,
+  });
+
+  // Get the suggestions component to pass separately to AppLayout
+  const suggestionsComponent = getSuggestionsComponent({
+    setInput: chatState.setInput,
+    inputRef: chatState.inputRef,
+  });
+
   return (
     <AppLayout
       headerLeft={
@@ -80,6 +95,8 @@ export default function UnifiedSession() {
           {...chatState}
           isSidebarVisible={isSidebarVisible}
           setIsSidebarVisible={setIsSidebarVisible}
+          renderChatInput={false} // Don't render chat input in the panel
+          renderSuggestions={false} // Don't render suggestions in the panel
         />
       }
       previewPanel={
@@ -95,6 +112,8 @@ export default function UnifiedSession() {
           onPreviewLoaded={handlePreviewLoaded}
         />
       }
+      chatInput={chatInputComponent}
+      suggestionsComponent={chatState.docs.length === 0 ? suggestionsComponent : undefined}
     />
   );
 }

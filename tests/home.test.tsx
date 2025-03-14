@@ -74,11 +74,23 @@ vi.mock('../app/components/SessionSidebar/utils', () => ({
 vi.mock('../app/components/AppLayout', () => {
   return {
     __esModule: true,
-    default: ({ chatPanel, previewPanel }: { chatPanel: any; previewPanel: any }) => {
+    default: ({ 
+      chatPanel, 
+      previewPanel, 
+      chatInput, 
+      suggestionsComponent 
+    }: { 
+      chatPanel: any; 
+      previewPanel: any; 
+      chatInput?: any;
+      suggestionsComponent?: any;
+    }) => {
       return (
         <div data-testid="app-layout">
           <div data-testid="chat-panel">{chatPanel}</div>
           <div data-testid="preview-panel">{previewPanel}</div>
+          {chatInput && <div data-testid="chat-input-container">{chatInput}</div>}
+          {suggestionsComponent && <div data-testid="suggestions-container">{suggestionsComponent}</div>}
         </div>
       );
     },
@@ -91,6 +103,12 @@ vi.mock('../app/components/ChatInterface', () => {
     __esModule: true,
     default: (props: any) => {
       return <div data-testid="chat-interface">Chat Interface</div>;
+    },
+    getChatInputComponent: (props: any) => {
+      return <div data-testid="chat-input">Chat Input</div>;
+    },
+    getSuggestionsComponent: (props: any) => {
+      return <div data-testid="suggestions">Suggestions</div>;
     },
   };
 });
