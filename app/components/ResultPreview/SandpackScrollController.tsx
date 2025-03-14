@@ -13,15 +13,18 @@ const SandpackScrollController: React.FC<SandpackScrollControllerProps> = ({
   codeReady = false,
   activeView = 'preview' // Default to preview view
 }) => {
-  // Simple refs for tracking state
+  // Tracking refs from main branch
+  const lastScrollHeight = useRef(0);
+  const lastScrollPosition = useRef(0);
+  const isScrolling = useRef(false);
+  const hasUserScrolled = useRef(false);
+  
+  // Our additional tracking refs
   const animationFrameRef = useRef<number | null>(null);
-  const isHighlighting = useRef(false);
   const lastLineRef = useRef<HTMLElement | null>(null);
-  const hasStartedScrolling = useRef(false);
-  const retryCount = useRef(0);
-  const maxRetries = 20; // Maximum number of retries to find the scroller
-  const initTimeoutRef = useRef<number | null>(null);
-  const scrollTimeoutRef = useRef<number | null>(null);
+  const scrollerRef = useRef<HTMLElement | null>(null);
+  const observerRef = useRef<MutationObserver | null>(null);
+  const checkForScrollerIntervalRef = useRef<number | null>(null);
   
   // Add the highlight styles regardless of streaming state
   useEffect(() => {
@@ -66,187 +69,236 @@ const SandpackScrollController: React.FC<SandpackScrollControllerProps> = ({
     
     return () => {
       // We're not removing the style on unmount as other instances may need it
-      // The test will handle cleanup if needed
     };
   }, []);
   
-  // Simple check if we should be scrolling
+  // Simple check if we should be scrolling (combines our condition with main branch logic)
   const shouldScroll = () => {
     return isStreaming && !codeReady && activeView === 'code';
   };
   
-  // Function to find the editor scroller, trying multiple possible selectors
-  const findEditorScroller = (): HTMLElement | null => {
-    // Try various selectors for better resilience
-    const selectors = [
-      '.cm-scroller', 
-      '.sp-editor-container .cm-scroller',
-      '.sp-layout .sp-editor .cm-scroller',
-      '[data-testid="code-editor"] .cm-scroller'
-    ];
-    
-    let foundScroller: HTMLElement | null = null;
-    
-    for (const selector of selectors) {
-      const scroller = document.querySelector(selector);
-      if (scroller instanceof HTMLElement) {
-        retryCount.current = 0; // Reset retry count when found
-        foundScroller = scroller;
-        break;
-      }
-    }
-    
-    // If we get here and didn't find any matching elements
-    if (!foundScroller) {
-      retryCount.current += 1;
-    }
-    
-    return foundScroller;
-  };
-  
-  // Function to find and get the last line
-  const findLastLine = (): HTMLElement | null => {
-    const lines = document.querySelectorAll('.cm-line');
-    if (lines.length > 0) {
-      return lines[lines.length - 1] as HTMLElement;
-    }
-    return null;
-  };
-  
-  // More conservative scrolling approach that won't cause rapid state updates
-  const scrollToBottom = (editorScroller: HTMLElement, lastLine: HTMLElement | null) => {
-    // Avoid using scrollIntoView which can trigger intersection observers
-    if (editorScroller) {
-      // Only set scrollTop which is less likely to trigger observers
-      editorScroller.scrollTop = editorScroller.scrollHeight;
-    }
-    
-    // Apply highlighting to the last line if we have one
-    if (lastLine && lastLine !== lastLineRef.current) {
-      // Remove previous highlight
-      if (lastLineRef.current) {
-        lastLineRef.current.classList.remove('cm-line-highlighted');
+  // Main scrolling and highlighting effect from main branch
+  useEffect(() => {
+    // Clean up function - defined at the top to avoid reference errors
+    const cleanup = () => {
+      // Clear all timers
+      if (checkForScrollerIntervalRef.current) {
+        window.clearInterval(checkForScrollerIntervalRef.current);
+        checkForScrollerIntervalRef.current = null;
       }
       
-      // Add highlight to new line
-      lastLine.classList.add('cm-line-highlighted');
-      lastLineRef.current = lastLine;
-    }
-  };
-  
-  // Main function to scroll to bottom and highlight the last line
-  const scrollAndHighlight = () => {
-    // Only proceed if we should be scrolling
+      if (animationFrameRef.current) {
+        window.cancelAnimationFrame(animationFrameRef.current);
+        animationFrameRef.current = null;
+      }
+      
+      // Disconnect observer
+      if (observerRef.current) {
+        observerRef.current.disconnect();
+        observerRef.current = null;
+      }
+      
+      // Remove event listeners
+      if (scrollerRef.current) {
+        scrollerRef.current.removeEventListener('scroll', () => {});
+      }
+      
+      // Clear highlights
+      if (lastLineRef.current) {
+        lastLineRef.current.classList.remove('cm-line-highlighted');
+        lastLineRef.current = null;
+      }
+      
+      // Reset state
+      hasUserScrolled.current = false;
+    };
+    
+    // Don't do anything if we're not supposed to be scrolling
     if (!shouldScroll()) {
-      cleanupScrolling();
+      cleanup();
       return;
     }
     
-    // Try to find the editor scroller
-    const editorScroller = findEditorScroller();
-    const lastLine = findLastLine();
+    // Main branch's scrollToBottom function
+    const scrollToBottom = () => {
+      if (!scrollerRef.current) return;
+      
+      isScrolling.current = true;
+      requestAnimationFrame(() => {
+        if (scrollerRef.current) {
+          scrollerRef.current.scrollTop = scrollerRef.current.scrollHeight;
+          lastScrollHeight.current = scrollerRef.current.scrollHeight;
+          lastScrollPosition.current = scrollerRef.current.scrollTop;
+        }
+        isScrolling.current = false;
+      });
+    };
     
-    if (editorScroller) {
-      // Use a less aggressive approach with timeout instead of animation frame
-      if (scrollTimeoutRef.current) {
-        clearTimeout(scrollTimeoutRef.current);
+    // Main branch's highlight function with our improvements
+    const highlightLastLine = () => {
+      if (!scrollerRef.current || !shouldScroll()) return;
+      
+      // Clear previous highlights
+      if (lastLineRef.current) {
+        lastLineRef.current.classList.remove('cm-line-highlighted');
+        lastLineRef.current = null;
       }
       
-      // Scroll at a reasonable interval that won't overwhelm React
-      scrollTimeoutRef.current = window.setTimeout(() => {
-        scrollToBottom(editorScroller, lastLine);
+      // Find the last meaningful line (directly from main branch)
+      const lines = Array.from(document.querySelectorAll('.cm-line'));
+      let lastLine = null;
+      
+      for (let i = lines.length - 1; i >= 0; i--) {
+        const line = lines[i];
+        const content = line.textContent || '';
+        if (content.trim() && !content.includes('END OF CODE')) {
+          lastLine = line as HTMLElement;
+          break;
+        }
+      }
+      
+      // Apply highlighting to last line
+      if (lastLine) {
+        lastLine.classList.add('cm-line-highlighted');
+        lastLineRef.current = lastLine;
+      }
+    };
+    
+    // Set up MutationObserver for content changes (main branch approach)
+    const setupContentObserver = () => {
+      if (!scrollerRef.current) return;
+      
+      // Don't create multiple observers
+      if (observerRef.current) {
+        observerRef.current.disconnect();
+      }
+      
+      // Create the observer (from main branch)
+      const contentObserver = new MutationObserver(() => {
+        if (!scrollerRef.current || !shouldScroll()) return;
         
-        // Schedule next update if we should still be scrolling
-        if (shouldScroll()) {
-          scrollTimeoutRef.current = window.setTimeout(() => {
-            scrollAndHighlight();
-          }, 100); // Scroll every 100ms instead of every frame
-        }
-      }, 0);
-    } else if (retryCount.current > maxRetries) {
-      // If we've exceeded max retries, pause and try again after a delay
-      console.warn('Could not find editor scroller after multiple attempts, will retry in 500ms');
-      retryCount.current = 0; // Reset for next run
-      
-      // Retry with a delay to allow for components to fully mount
-      if (scrollTimeoutRef.current) {
-        clearTimeout(scrollTimeoutRef.current);
-      }
-      
-      scrollTimeoutRef.current = window.setTimeout(() => {
-        if (shouldScroll()) {
-          scrollAndHighlight();
-        }
-      }, 500);
-    } else {
-      // Try again soon if we didn't find it but haven't exceeded retries
-      if (scrollTimeoutRef.current) {
-        clearTimeout(scrollTimeoutRef.current);
-      }
-      
-      scrollTimeoutRef.current = window.setTimeout(() => {
-        if (shouldScroll()) {
-          scrollAndHighlight();
-        }
-      }, 100);
-    }
-  };
-  
-  // Clean up all timers and state
-  const cleanupScrolling = () => {
-    // Cancel animation frame if running
-    if (animationFrameRef.current) {
-      cancelAnimationFrame(animationFrameRef.current);
-      animationFrameRef.current = null;
-    }
-    
-    // Clear any timeouts
-    if (scrollTimeoutRef.current) {
-      clearTimeout(scrollTimeoutRef.current);
-      scrollTimeoutRef.current = null;
-    }
-    
-    // Clear any highlighting
-    if (lastLineRef.current) {
-      lastLineRef.current.classList.remove('cm-line-highlighted');
-      lastLineRef.current = null;
-    }
-    
-    isHighlighting.current = false;
-    hasStartedScrolling.current = false;
-    retryCount.current = 0;
-  };
-  
-  // Main useEffect for scrolling and highlighting in CODE view
-  useEffect(() => {
-    // Clean up any existing timers
-    cleanupScrolling();
-    
-    if (initTimeoutRef.current) {
-      window.clearTimeout(initTimeoutRef.current);
-      initTimeoutRef.current = null;
-    }
-    
-    // We start or stop scrolling based on condition changes
-    if (shouldScroll()) {
-      // Only start if we haven't already
-      if (!hasStartedScrolling.current) {
-        hasStartedScrolling.current = true;
-        retryCount.current = 0;
+        const newHeight = scrollerRef.current.scrollHeight;
         
-        // Start with a small delay to allow CodeMirror to initialize
-        initTimeoutRef.current = window.setTimeout(() => {
-          scrollAndHighlight();
-          initTimeoutRef.current = null;
-        }, 300); // Longer delay to avoid interference with initialization
+        // Always highlight the last line when streaming
+        if (shouldScroll()) {
+          highlightLastLine();
+        }
+        
+        // Skip if height hasn't changed
+        if (newHeight === lastScrollHeight.current) return;
+        
+        // Calculate if we're near the bottom (from main branch)
+        const isNearBottom = 
+          scrollerRef.current.scrollTop + scrollerRef.current.clientHeight > 
+          lastScrollHeight.current - 100;
+        
+        // Only scroll if user hasn't scrolled or is already near bottom
+        if (!hasUserScrolled.current || isNearBottom) {
+          scrollToBottom();
+        }
+        
+        lastScrollHeight.current = newHeight;
+      });
+      
+      // Handle manual scrolling (from main branch)
+      const handleScroll = () => {
+        if (isScrolling.current || !scrollerRef.current) return;
+        
+        const currentPosition = scrollerRef.current.scrollTop;
+        if (Math.abs(currentPosition - lastScrollPosition.current) > 10) {
+          hasUserScrolled.current = true;
+          lastScrollPosition.current = currentPosition;
+          
+          // Reset when scrolled to bottom (allows auto-scrolling to resume)
+          if (
+            scrollerRef.current.scrollTop + scrollerRef.current.clientHeight >=
+            scrollerRef.current.scrollHeight - 50
+          ) {
+            hasUserScrolled.current = false;
+          }
+        }
+      };
+      
+      // Set up the observer and scroll handler
+      if (scrollerRef.current) {
+        contentObserver.observe(scrollerRef.current, {
+          childList: true,
+          subtree: true,
+          characterData: true,
+        });
+        
+        scrollerRef.current.addEventListener('scroll', handleScroll);
+        
+        // Initial highlight
+        if (shouldScroll()) {
+          highlightLastLine();
+        }
       }
-    } else {
-      // Make sure we clean up
-      cleanupScrolling();
-    }
+      
+      // Store the observer for cleanup
+      observerRef.current = contentObserver;
+    };
     
-    // Cleanup on unmount or when conditions change
-    return cleanupScrolling;
+    // Main branch's approach to finding the scroller with a fallback
+    const findAndSetupScroller = () => {
+      // Try various selectors to find the editor scroller
+      const selectors = [
+        '.cm-scroller', 
+        '.sp-editor-container .cm-scroller',
+        '.sp-layout .sp-editor .cm-scroller',
+        '[data-testid="code-editor"] .cm-scroller'
+      ];
+      
+      for (const selector of selectors) {
+        const scroller = document.querySelector(selector);
+        if (scroller instanceof HTMLElement) {
+          scrollerRef.current = scroller;
+          break;
+        }
+      }
+      
+      if (scrollerRef.current) {
+        // We found the scroller, set up observers
+        setupContentObserver();
+        
+        // Do an initial scroll to bottom
+        scrollToBottom();
+        
+        // Clear the interval since we found the scroller
+        if (checkForScrollerIntervalRef.current) {
+          window.clearInterval(checkForScrollerIntervalRef.current);
+          checkForScrollerIntervalRef.current = null;
+        }
+      }
+    };
+    
+    // Actively check for scroller (main branch approach)
+    checkForScrollerIntervalRef.current = window.setInterval(() => {
+      if (scrollerRef.current) {
+        window.clearInterval(checkForScrollerIntervalRef.current!);
+        checkForScrollerIntervalRef.current = null;
+        return;
+      }
+      
+      findAndSetupScroller();
+    }, 100);
+    
+    // Initial attempt to find and setup
+    findAndSetupScroller();
+    
+    // Do a delayed scroll to ensure we catch late-mounting editors
+    const initialScrollTimeoutId = window.setTimeout(() => {
+      if (scrollerRef.current) {
+        scrollToBottom();
+        highlightLastLine();
+      }
+    }, 300);
+    
+    // Return cleanup function
+    return () => {
+      cleanup();
+      window.clearTimeout(initialScrollTimeoutId);
+    };
   }, [isStreaming, codeReady, activeView]);
   
   return null;
