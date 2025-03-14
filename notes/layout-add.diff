@@ -1,0 +1,153 @@
+--- a/app/components/AppLayout.tsx
+-export default function AppLayout({ chatPanel, previewPanel }: AppLayoutProps) {
+-    <div className="flex h-dvh overflow-hidden">
+-      <div className="flex h-full w-1/3 flex-col">{chatPanel}</div>
+-      <div className="relative w-2/3">{previewPanel}</div>
+--- a/app/components/ChatInput.tsx
+-  onSend: () => void;
+-function ChatInput({ value, onChange, onSend, onKeyDown, disabled, inputRef }: ChatInputProps) {
+-          onClick={onSend}
+--- a/app/components/ChatInterface.tsx
+-import ChatHeader from './ChatHeader';
+-  // Convert docs to messages
+-  // const messages = useMemo(() => convertDocsToMessages(docs), [docs]);
+-
+-
+-      // Focus the input and position cursor at the end
+-      setTimeout(() => {
+-        if (inputRef.current) {
+-          inputRef.current.focus();
+-          // Move cursor to end of text
+-          inputRef.current.selectionStart = inputRef.current.selectionEnd = suggestion.length;
+-        }
+-      }, 0);
+-    [setInput, inputRef]
+-  // Callback for setting the selected response ID
+-  const handleSetSelectedResponseId = useCallback((id: string) => {
+-    setSelectedResponseId(id);
+-  }, []);
+-
+-  // Memoize the MessageList component to prevent unnecessary re-renders
+-  const memoizedMessageList = useMemo(() => {
+-    return (
+-      <MessageList
+-        messages={messages}
+-        isStreaming={isStreaming}
+-        isShrinking={isShrinking}
+-        isExpanding={isExpanding}
+-        setSelectedResponseId={handleSetSelectedResponseId}
+-      />
+-    );
+-  }, [sessionId, messages, isStreaming, isShrinking, isExpanding, handleSetSelectedResponseId]);
+-    <div className="flex h-screen flex-col">
+-      <ChatHeader onOpenSidebar={openSidebar} title={title} />
+-      <div className="flex flex-1 overflow-hidden">
+-        <div className="flex w-full flex-1 flex-col">
+-          {memoizedMessageList}
+-          {messages.length === 0 && (
+-            <QuickSuggestions onSelectSuggestion={handleSelectSuggestion} />
+-          )}
+-          <ChatInput
+-            value={input}
+-            onChange={handleInputChange}
+-            onKeyDown={handleKeyDown}
+-            onSend={sendMessage}
+-            disabled={isStreaming}
+-            inputRef={inputRef}
+-          />
+-      <SessionSidebar isVisible={isSidebarVisible} onClose={closeSidebar} />
+--- a/app/components/MessageList.tsx
+-  isStreaming: boolean;
+-  isStreaming,
+--- a/app/components/ResultPreview/ResultPreview.tsx
+-  initialView = 'code',
+-  const [activeView, setActiveView] = useState<'preview' | 'code'>(initialView);
+-      setActiveView('code');
+-  }, [isStreaming]); 
+-          setActiveView('preview');
+-    window.addEventListener('message', handleMessage);
+-    return () => window.removeEventListener('message', handleMessage);
+-  }, [onScreenshotCaptured]);
+-  useEffect(() => {
+-    if (!showWelcome) {
+-      const processedCode = processCodeForDisplay(code);
+-      filesRef.current = {
+-        ...filesRef.current,
+-        '/App.jsx': {
+-          code: processedCode,
+-          active: true,
+-        },
+-      };
+-    }
+-  }, [code, showWelcome]);
+-  const previewArea = showWelcome ? (
+-    <div className="h-full" style={{ height: 'calc(100vh - 49px)' }}>
+-      <WelcomeScreen />
+-    </div>
+-  ) : (
+-    (() => {
+-      // Initialize files content here, right before SandpackContent is rendered
+-      filesRef.current = {
+-        '/index.html': {
+-          code: indexHtml,
+-          hidden: true,
+-        },
+-        '/App.jsx': {
+-          code: processCodeForDisplay(code),
+-          active: true,
+-        },
+-      };
+-      return (
+-        <SandpackContent
+-          filesContent={filesRef.current}
+-          isStreaming={!codeReady}
+-          codeReady={codeReady}
+-          sandpackKey={sandpackKey}
+-          setActiveView={setActiveView}
+-          setBundlingComplete={setBundlingComplete}
+-      );
+-    })()
+-  );
+-
+-  return (
+-    <div className="h-full" style={{ overflow: 'hidden' }}>
+-      <style>{animationStyles}</style>
+-
+-      <ResultPreviewToolbar
+-        previewReady={previewReady}
+-        activeView={activeView}
+-        setActiveView={setActiveView}
+-        bundlingComplete={bundlingComplete}
+-        isStreaming={isStreaming}
+-        code={code}
+-        dependencies={dependencies}
+-      />
+-
+-      {previewArea}
+--- a/app/components/ResultPreview/ResultPreviewTypes.ts
+-  initialView?: 'code' | 'preview';
+--- a/app/components/ResultPreview/SandpackContent.tsx
+-interface SandpackContentProps {
+-  codeReady: boolean;
+-  setActiveView: (view: 'preview' | 'code') => void;
+-  setBundlingComplete: (complete: boolean) => void;
+-const SandpackContent: React.FC<SandpackContentProps> = ({
+-  codeReady,
+-  setActiveView,
+-  setBundlingComplete,
+-        <SandpackLayout className="h-full" style={{ height: 'calc(100vh - 49px)' }}>
+-            {!isStreaming && (
+-              <SandpackPreview
+-                showNavigator={false}
+-                showOpenInCodeSandbox={false}
+-                showRefreshButton={true}
+-                showRestartButton={false}
+-                showOpenNewtab={false}
+-                className="h-full w-full"
+-                style={{ height: '100%' }}
+-              />
+-            )}
+--- a/app/routes/home.tsx
+-import { useEffect } from 'react';
+-      chatPanel={<ChatInterface {...chatState} />}
+--- a/app/types/chat.ts

@@ -2,10 +2,12 @@ export interface ResultPreviewProps {
   code: string;
   dependencies?: Record<string, string>;
   onScreenshotCaptured?: (screenshotData: string) => void;
-  initialView?: 'code' | 'preview';
   sessionId?: string;
   isStreaming?: boolean;
   codeReady?: boolean;
+  activeView?: 'code' | 'preview';
+  setActiveView?: (view: 'code' | 'preview') => void;
+  onPreviewLoaded?: () => void;
 }
 
 export type SandpackFiles = {

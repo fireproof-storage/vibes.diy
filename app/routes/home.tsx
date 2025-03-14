@@ -1,7 +1,9 @@
-import { useEffect } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router';
 import ChatInterface from '../components/ChatInterface';
 import ResultPreview from '../components/ResultPreview/ResultPreview';
+import ChatHeaderContent from '../components/ChatHeaderContent';
+import ResultPreviewHeaderContent from '../components/ResultPreview/ResultPreviewHeaderContent';
 import { useSimpleChat } from '../hooks/useSimpleChat';
 import AppLayout from '../components/AppLayout';
 import { decodeStateFromUrl } from '../utils/sharing';
@@ -19,6 +21,22 @@ export default function UnifiedSession() {
   const navigate = useNavigate();
   const location = useLocation();
   const chatState = useSimpleChat(urlSessionId);
+  
+  // State for view management
+  const [activeView, setActiveView] = useState<'code' | 'preview'>('code');
+  const [previewReady, setPreviewReady] = useState(false);
+  const [bundlingComplete, setBundlingComplete] = useState(true);
+  const [sidebarOpener, setSidebarOpener] = useState<(() => void) | null>(null);
+
+  // Register sidebar opener function
+  const registerSidebarOpener = useCallback((opener: () => void) => {
+    setSidebarOpener(() => opener);
+  }, []);
+
+  // Handle preview loaded event
+  const handlePreviewLoaded = useCallback(() => {
+    setPreviewReady(true);
+  }, []);
 
   useEffect(() => {
     if (chatState.title) {
@@ -43,7 +61,30 @@ export default function UnifiedSession() {
 
   return (
     <AppLayout
-      chatPanel={<ChatInterface {...chatState} />}
+      headerLeft={
+        <ChatHeaderContent 
+          onOpenSidebar={sidebarOpener || (() => {})} 
+          title={chatState.title || 'New Chat'} 
+          registerSidebarOpener={registerSidebarOpener}
+        />
+      }
+      headerRight={
+        <ResultPreviewHeaderContent
+          previewReady={previewReady}
+          activeView={activeView}
+          setActiveView={setActiveView}
+          bundlingComplete={bundlingComplete}
+          isStreaming={chatState.isStreaming}
+          code={chatState.selectedCode?.content || ''}
+          dependencies={chatState.selectedDependencies || {}}
+        />
+      }
+      chatPanel={
+        <ChatInterface 
+          {...chatState} 
+          registerSidebarOpener={registerSidebarOpener}
+        />
+      }
       previewPanel={
         <ResultPreview
           sessionId={chatState.sessionId || ''}
@@ -52,6 +93,9 @@ export default function UnifiedSession() {
           isStreaming={chatState.isStreaming}
           codeReady={chatState.codeReady}
           onScreenshotCaptured={chatState.addScreenshot}
+          activeView={activeView}
+          setActiveView={setActiveView}
+          onPreviewLoaded={handlePreviewLoaded}
         />
       }
     />

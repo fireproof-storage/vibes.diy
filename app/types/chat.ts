@@ -99,6 +99,7 @@ export interface ChatState {
   selectedSegments?: Segment[];
   selectedCode?: Segment;
   selectedDependencies?: Record<string, string>;
+  registerSidebarOpener?: (opener: () => void) => void;
 }
 
 export interface ChatInterfaceProps {
@@ -113,6 +114,7 @@ export interface ChatInterfaceProps {
 export interface SessionSidebarProps {
   isVisible: boolean;
   onClose: () => void;
+  sessionId: string;
 }
 
 export type { GroupedSession };
