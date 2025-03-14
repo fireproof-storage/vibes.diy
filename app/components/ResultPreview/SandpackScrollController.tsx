@@ -13,36 +13,15 @@ const SandpackScrollController: React.FC<SandpackScrollControllerProps> = ({
   codeReady = false,
   activeView = 'preview' // Default to preview view
 }) => {
-  const lastScrollHeight = useRef(0);
-  const lastScrollPosition = useRef(0);
-  const isScrolling = useRef(false);
-  const hasUserScrolled = useRef(false);
+  // Simple refs for tracking state
   const animationFrameRef = useRef<number | null>(null);
   const isHighlighting = useRef(false);
   const lastLineRef = useRef<HTMLElement | null>(null);
-  const scrollThreshold = useRef(40);
-  const scrollIntervalRef = useRef<number | null>(null);
-  const checkIntervalRef = useRef<number | null>(null);
-  const contentObserverRef = useRef<MutationObserver | null>(null);
-  const scrollListenerRef = useRef<((e: Event) => void) | null>(null);
-  // Track if we've already cleaned up to avoid duplicate cleanup
-  const hasCleanedUp = useRef(false);
-  // Store the active view value to avoid dependency list issues
-  const activeViewRef = useRef(activeView);
-  
-  // Update the ref when activeView changes
-  useEffect(() => {
-    activeViewRef.current = activeView;
-  }, [activeView]);
-  
-  // Helper function to check if we're in code view
-  const isCodeView = () => activeViewRef.current === 'code';
-  
-  // Helper function to check if we're in preview view
-  const isPreviewView = () => activeViewRef.current === 'preview';
-  
-  // Helper function to determine if we should be pinning to bottom
-  const shouldPinToBottom = () => isStreaming && !codeReady;
+  const hasStartedScrolling = useRef(false);
+  const retryCount = useRef(0);
+  const maxRetries = 20; // Maximum number of retries to find the scroller
+  const initTimeoutRef = useRef<number | null>(null);
+  const scrollTimeoutRef = useRef<number | null>(null);
   
   // Add the highlight styles regardless of streaming state
   useEffect(() => {
@@ -91,315 +70,185 @@ const SandpackScrollController: React.FC<SandpackScrollControllerProps> = ({
     };
   }, []);
   
-  // Comprehensive cleanup function to stop all automatic scrolling
-  const stopAllScrolling = () => {
-    // If we've already cleaned up, don't do it again
-    if (hasCleanedUp.current) return;
+  // Simple check if we should be scrolling
+  const shouldScroll = () => {
+    return isStreaming && !codeReady && activeView === 'code';
+  };
+  
+  // Function to find the editor scroller, trying multiple possible selectors
+  const findEditorScroller = (): HTMLElement | null => {
+    // Try various selectors for better resilience
+    const selectors = [
+      '.cm-scroller', 
+      '.sp-editor-container .cm-scroller',
+      '.sp-layout .sp-editor .cm-scroller',
+      '[data-testid="code-editor"] .cm-scroller'
+    ];
     
-    // Mark as cleaned up
-    hasCleanedUp.current = true;
+    let foundScroller: HTMLElement | null = null;
     
-    // Clear the scroll interval
-    if (scrollIntervalRef.current !== null) {
-      clearInterval(scrollIntervalRef.current);
-      scrollIntervalRef.current = null;
+    for (const selector of selectors) {
+      const scroller = document.querySelector(selector);
+      if (scroller instanceof HTMLElement) {
+        retryCount.current = 0; // Reset retry count when found
+        foundScroller = scroller;
+        break;
+      }
     }
     
-    // Clear the check interval
-    if (checkIntervalRef.current !== null) {
-      clearInterval(checkIntervalRef.current);
-      checkIntervalRef.current = null;
+    // If we get here and didn't find any matching elements
+    if (!foundScroller) {
+      retryCount.current += 1;
     }
     
-    // Cancel any pending animation frames
-    if (animationFrameRef.current !== null) {
+    return foundScroller;
+  };
+  
+  // Function to find and get the last line
+  const findLastLine = (): HTMLElement | null => {
+    const lines = document.querySelectorAll('.cm-line');
+    if (lines.length > 0) {
+      return lines[lines.length - 1] as HTMLElement;
+    }
+    return null;
+  };
+  
+  // More conservative scrolling approach that won't cause rapid state updates
+  const scrollToBottom = (editorScroller: HTMLElement, lastLine: HTMLElement | null) => {
+    // Avoid using scrollIntoView which can trigger intersection observers
+    if (editorScroller) {
+      // Only set scrollTop which is less likely to trigger observers
+      editorScroller.scrollTop = editorScroller.scrollHeight;
+    }
+    
+    // Apply highlighting to the last line if we have one
+    if (lastLine && lastLine !== lastLineRef.current) {
+      // Remove previous highlight
+      if (lastLineRef.current) {
+        lastLineRef.current.classList.remove('cm-line-highlighted');
+      }
+      
+      // Add highlight to new line
+      lastLine.classList.add('cm-line-highlighted');
+      lastLineRef.current = lastLine;
+    }
+  };
+  
+  // Main function to scroll to bottom and highlight the last line
+  const scrollAndHighlight = () => {
+    // Only proceed if we should be scrolling
+    if (!shouldScroll()) {
+      cleanupScrolling();
+      return;
+    }
+    
+    // Try to find the editor scroller
+    const editorScroller = findEditorScroller();
+    const lastLine = findLastLine();
+    
+    if (editorScroller) {
+      // Use a less aggressive approach with timeout instead of animation frame
+      if (scrollTimeoutRef.current) {
+        clearTimeout(scrollTimeoutRef.current);
+      }
+      
+      // Scroll at a reasonable interval that won't overwhelm React
+      scrollTimeoutRef.current = window.setTimeout(() => {
+        scrollToBottom(editorScroller, lastLine);
+        
+        // Schedule next update if we should still be scrolling
+        if (shouldScroll()) {
+          scrollTimeoutRef.current = window.setTimeout(() => {
+            scrollAndHighlight();
+          }, 100); // Scroll every 100ms instead of every frame
+        }
+      }, 0);
+    } else if (retryCount.current > maxRetries) {
+      // If we've exceeded max retries, pause and try again after a delay
+      console.warn('Could not find editor scroller after multiple attempts, will retry in 500ms');
+      retryCount.current = 0; // Reset for next run
+      
+      // Retry with a delay to allow for components to fully mount
+      if (scrollTimeoutRef.current) {
+        clearTimeout(scrollTimeoutRef.current);
+      }
+      
+      scrollTimeoutRef.current = window.setTimeout(() => {
+        if (shouldScroll()) {
+          scrollAndHighlight();
+        }
+      }, 500);
+    } else {
+      // Try again soon if we didn't find it but haven't exceeded retries
+      if (scrollTimeoutRef.current) {
+        clearTimeout(scrollTimeoutRef.current);
+      }
+      
+      scrollTimeoutRef.current = window.setTimeout(() => {
+        if (shouldScroll()) {
+          scrollAndHighlight();
+        }
+      }, 100);
+    }
+  };
+  
+  // Clean up all timers and state
+  const cleanupScrolling = () => {
+    // Cancel animation frame if running
+    if (animationFrameRef.current) {
       cancelAnimationFrame(animationFrameRef.current);
       animationFrameRef.current = null;
     }
     
-    // Remove the content observer
-    if (contentObserverRef.current) {
-      contentObserverRef.current.disconnect();
-      contentObserverRef.current = null;
+    // Clear any timeouts
+    if (scrollTimeoutRef.current) {
+      clearTimeout(scrollTimeoutRef.current);
+      scrollTimeoutRef.current = null;
     }
     
-    // Remove scroll listener if it exists
-    const primaryScroller = document.querySelector('.cm-scroller');
-    if (primaryScroller && scrollListenerRef.current) {
-      primaryScroller.removeEventListener('scroll', scrollListenerRef.current);
-      scrollListenerRef.current = null;
-    }
-    
-    // Clear highlighting
+    // Clear any highlighting
     if (lastLineRef.current) {
       lastLineRef.current.classList.remove('cm-line-highlighted');
       lastLineRef.current = null;
     }
     
-    // Reset other state
     isHighlighting.current = false;
+    hasStartedScrolling.current = false;
+    retryCount.current = 0;
   };
   
-  // Effect that watches for changes to the scroll state conditions
+  // Main useEffect for scrolling and highlighting in CODE view
   useEffect(() => {
-    // If we should be pinning to bottom, set up scrolling
-    if (shouldPinToBottom() && isPreviewView()) {
-      // Only reset the cleanup flag if we're going to start scrolling
-      hasCleanedUp.current = false;
-      
-      // Set up scrolling - the main useEffect below will handle this
-    } else {
-      // Otherwise stop all scrolling (not streaming or code is ready)
-      stopAllScrolling();
+    // Clean up any existing timers
+    cleanupScrolling();
+    
+    if (initTimeoutRef.current) {
+      window.clearTimeout(initTimeoutRef.current);
+      initTimeoutRef.current = null;
     }
     
-    return () => {
-      if (!shouldPinToBottom()) {
-        stopAllScrolling();
+    // We start or stop scrolling based on condition changes
+    if (shouldScroll()) {
+      // Only start if we haven't already
+      if (!hasStartedScrolling.current) {
+        hasStartedScrolling.current = true;
+        retryCount.current = 0;
+        
+        // Start with a small delay to allow CodeMirror to initialize
+        initTimeoutRef.current = window.setTimeout(() => {
+          scrollAndHighlight();
+          initTimeoutRef.current = null;
+        }, 300); // Longer delay to avoid interference with initialization
       }
-    };
+    } else {
+      // Make sure we clean up
+      cleanupScrolling();
+    }
+    
+    // Cleanup on unmount or when conditions change
+    return cleanupScrolling;
   }, [isStreaming, codeReady, activeView]);
   
-  // Main useEffect for scroll handling
-  useEffect(() => {
-    // Don't do anything if code is ready, we're in code view, or we've already cleaned up
-    if (codeReady || isCodeView() || hasCleanedUp.current) {
-      return;
-    }
-    
-    let primaryScroller: HTMLElement | null = null;
-    
-    // Use nested requestAnimationFrame for smoother scrolling 
-    // This pattern was effective in previous implementations
-    const scrollToBottom = () => {
-      if (!primaryScroller || codeReady || isCodeView() || hasCleanedUp.current) return;
-      
-      isScrolling.current = true;
-      
-      // First frame to prepare for scroll
-      requestAnimationFrame(() => {
-        if (!primaryScroller || codeReady || isCodeView() || hasCleanedUp.current) {
-          isScrolling.current = false;
-          return;
-        }
-        
-        // First set the scroll position - quick jump
-        primaryScroller.scrollTop = primaryScroller.scrollHeight;
-        
-        // Then second frame for the final positioning - ensures browser has rendered properly
-        requestAnimationFrame(() => {
-          if (!primaryScroller || codeReady || isCodeView() || hasCleanedUp.current) {
-            isScrolling.current = false;
-            return;
-          }
-          
-          // Ensure we're at the bottom - this second call helps with the "blinking up" issue
-          primaryScroller.scrollTop = primaryScroller.scrollHeight;
-          
-          // Update our tracking references
-          lastScrollHeight.current = primaryScroller.scrollHeight;
-          lastScrollPosition.current = primaryScroller.scrollTop;
-          
-          isScrolling.current = false;
-        });
-      });
-    };
-    
-    // Find the scroller element
-    const findScrollerAndScroll = () => {
-      if (codeReady || isCodeView() || hasCleanedUp.current) return false;
-      
-      const scroller = document.querySelector('.cm-scroller');
-      if (scroller && scroller instanceof HTMLElement) {
-        primaryScroller = scroller;
-        
-        // Only set up scrolling if we're not in a cleaned up state
-        if (!codeReady && isPreviewView() && !hasCleanedUp.current) {
-          // Immediately scroll to bottom
-          scrollToBottom();
-          
-          // Set up content observation
-          setupContentObserver();
-          
-          // Only set up interval if we're streaming and not ready
-          if (scrollIntervalRef.current === null && isStreaming && !codeReady) {
-            scrollIntervalRef.current = window.setInterval(() => {
-              if (codeReady || isCodeView() || hasCleanedUp.current) {
-                if (scrollIntervalRef.current !== null) {
-                  clearInterval(scrollIntervalRef.current);
-                  scrollIntervalRef.current = null;
-                }
-                return;
-              }
-              
-              scrollToBottom();
-            }, 500); // Less frequent to reduce vibration chances
-          }
-        }
-        
-        return true;
-      }
-      return false;
-    };
-    
-    // Setup a mutation observer to detect content changes
-    const setupContentObserver = () => {
-      if (!primaryScroller || codeReady || isCodeView() || hasCleanedUp.current) return;
-      
-      // Create a content observer
-      const contentObserver = new MutationObserver((mutations) => {
-        // Skip if code is ready, we're in code view, or we've cleaned up
-        if (codeReady || isCodeView() || hasCleanedUp.current) {
-          contentObserver.disconnect();
-          return;
-        }
-        
-        // Check if the content actually changed
-        const hasContentChanged = mutations.some(mutation => {
-          return mutation.type === 'childList' || 
-                 (mutation.type === 'characterData' && mutation.target.textContent?.trim().length);
-        });
-        
-        if (!hasContentChanged) return;
-        
-        // Content changed, scroll to bottom
-        scrollToBottom();
-        
-        // Start highlighting if needed
-        if (isStreaming && !isHighlighting.current && !hasCleanedUp.current) {
-          startHighlighting();
-        }
-      });
-      
-      contentObserver.observe(primaryScroller, {
-        childList: true,
-        subtree: true,
-        characterData: true,
-      });
-      
-      // Store observer for cleanup
-      contentObserverRef.current = contentObserver;
-      
-      // Add a scroll event listener that forces scroll to bottom if user tries to scroll up
-      // But only if streaming and not ready
-      if (isStreaming && !codeReady && isPreviewView() && !hasCleanedUp.current) {
-        const handleScroll = (e: Event) => {
-          // Skip if already scrolling programmatically, code is ready, in code view, or we've cleaned up
-          if (isScrolling.current || codeReady || isCodeView() || hasCleanedUp.current) return;
-          
-          if (primaryScroller) {
-            // Always keep scroll at the bottom during streaming
-            scrollToBottom();
-          }
-        };
-        
-        // Store listener for potential cleanup
-        scrollListenerRef.current = handleScroll;
-        
-        primaryScroller.addEventListener('scroll', handleScroll);
-      }
-    };
-    
-    // Check for the scroller until we find it
-    if (!codeReady && isPreviewView() && !hasCleanedUp.current) {
-      checkIntervalRef.current = window.setInterval(() => {
-        if (codeReady || isCodeView() || hasCleanedUp.current) {
-          if (checkIntervalRef.current !== null) {
-            clearInterval(checkIntervalRef.current);
-            checkIntervalRef.current = null;
-          }
-          return;
-        }
-        
-        if (findScrollerAndScroll()) {
-          if (checkIntervalRef.current !== null) {
-            clearInterval(checkIntervalRef.current);
-            checkIntervalRef.current = null;
-          }
-        }
-      }, 100);
-    }
-    
-    // Try immediately as well
-    findScrollerAndScroll();
-    
-    // Highlight the last line of code
-    const highlightLastLine = () => {
-      if (!primaryScroller || codeReady || isCodeView() || hasCleanedUp.current) return; 
-
-      // Get all code lines
-      const lines = Array.from(document.querySelectorAll('.cm-line'));
-      if (lines.length === 0) return;
-
-      // Find the last non-empty line
-      let lastLine = null;
-
-      for (let i = lines.length - 1; i >= 0; i--) {
-        const line = lines[i] as HTMLElement;
-        const content = line.textContent || '';
-        if (content.trim() && !content.includes('END OF CODE')) {
-          lastLine = line;
-          break;
-        }
-      }
-
-      // Only update if necessary
-      if (lastLine && (lastLineRef.current !== lastLine)) {
-        // Remove previous highlight
-        if (lastLineRef.current) {
-          lastLineRef.current.classList.remove('cm-line-highlighted');
-        }
-        
-        // Add highlight to new line
-        lastLine.classList.add('cm-line-highlighted');
-        lastLineRef.current = lastLine;
-      }
-    };
-
-    // Animation loop for highlighting using requestAnimationFrame
-    const animateHighlight = () => {
-      if (!isStreaming || codeReady || isCodeView() || hasCleanedUp.current) {
-        // Stop animation
-        if (animationFrameRef.current) {
-          cancelAnimationFrame(animationFrameRef.current);
-          animationFrameRef.current = null;
-        }
-        return;
-      }
-      
-      highlightLastLine();
-      
-      // Continue animation loop
-      animationFrameRef.current = requestAnimationFrame(animateHighlight);
-    };
-
-    // Start highlight animation
-    const startHighlighting = () => {
-      if (isHighlighting.current || codeReady || isCodeView() || hasCleanedUp.current) return;
-      isHighlighting.current = true;
-      animationFrameRef.current = requestAnimationFrame(animateHighlight);
-    };
-
-    // Start highlighting if streaming and not code ready
-    if (isStreaming && !codeReady && isPreviewView() && !hasCleanedUp.current) {
-      startHighlighting();
-    }
-    
-    // Do an initial scroll after a timeout to ensure content is loaded
-    if (!codeReady && isPreviewView() && !hasCleanedUp.current) {
-      setTimeout(() => {
-        if (!codeReady && isPreviewView() && !hasCleanedUp.current) {
-          scrollToBottom();
-        }
-      }, 100);
-    }
-
-    // Cleanup function
-    return () => {
-      stopAllScrolling();
-    };
-  }, [isStreaming, shouldEnableScrolling, codeReady]);
-
   return null;
 };
 

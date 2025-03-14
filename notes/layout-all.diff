@@ -1,40 +1,62 @@
- app/app.css                                        |  37 +++
+ app/app.css                                        |  53 +++-
  app/components/AppLayout.tsx                       |  26 +-
- app/components/ChatHeader.tsx                      |  26 +-
+ app/components/ChatHeader.tsx                      |   2 +-
  app/components/ChatHeaderContent.tsx               |  76 ++++++
- app/{ => components}/ChatInterface.tsx             |  82 ++++---
- app/components/Message.tsx                         |  87 +++++--
- app/components/MessageList.tsx                     |  39 ++-
+ app/components/ChatInterface.tsx                   |  65 ++---
+ app/components/MessageList.tsx                     |  18 +-
  app/components/QuickSuggestions.tsx                |   2 +-
- app/components/ResultPreview/ResultPreview.tsx     | 137 +++++------
- .../ResultPreview/ResultPreviewHeaderContent.tsx   | 155 ++++++++++++
- .../ResultPreview/ResultPreviewTemplates.ts        |  30 ++-
- .../ResultPreview/ResultPreviewToolbar.tsx         |  55 +++--
- app/components/ResultPreview/ResultPreviewTypes.ts |   6 +-
- app/components/ResultPreview/ResultPreviewUtils.ts |   3 +-
- app/components/ResultPreview/SandpackContent.tsx   |  37 +--
- .../ResultPreview/SandpackEventListener.tsx        |  81 -------
- .../ResultPreview/SandpackScrollController.tsx     | 270 +++++++++++++++------
- app/components/SessionSidebar.tsx                  |  93 ++-----
- app/components/SessionSidebar/ImgFile.tsx          |  29 +++
- app/components/SessionSidebar/utils.ts             |  12 +
- app/components/StructuredMessage.tsx               |  13 +-
- app/hooks/useSession.ts                            |  25 +-
- app/hooks/useSimpleChat.ts                         |  78 ++++--
+ app/components/ResultPreview/ResultPreview.tsx     |  40 ++-
+ .../ResultPreview/ResultPreviewHeaderContent.tsx   | 155 +++++++++++
+ .../ResultPreview/ResultPreviewTemplates.ts        |   4 +-
+ .../ResultPreview/ResultPreviewToolbar.tsx         |   2 +-
+ app/components/ResultPreview/ResultPreviewTypes.ts |   5 +-
+ app/components/ResultPreview/SandpackContent.tsx   |  39 ++-
+ .../ResultPreview/SandpackScrollController.tsx     | 288 +++++++++------------
+ app/components/ResultPreview/WelcomeScreen.tsx     |   2 +-
+ app/components/StructuredMessage.tsx               |   2 +-
+ app/hooks/useSimpleChat.ts                         |   5 +
  app/prompts.ts                                     |   2 +-
- app/routes/home.tsx                                |  85 +++++--
- app/types/chat.ts                                  |  64 ++++-
- app/utils/segmentParser.ts                         |  45 +++-
- app/utils/titleGenerator.ts                        |   2 +-
- 28 files changed, 1056 insertions(+), 541 deletions(-)
+ app/routes/home.tsx                                |  49 +++-
+ app/types/chat.ts                                  |   2 +
+ 20 files changed, 588 insertions(+), 249 deletions(-)
 diff --git a/app/app.css b/app/app.css
-index 7d7e885..b721cb1 100644
+index 7d7e885..0e5febf 100644
 --- a/app/app.css
 +++ b/app/app.css
-@@ -294,3 +294,40 @@ a,
+@@ -263,7 +263,7 @@ a,
+ .pulsing {
+   width: 100%;
+   height: auto;
+-  transform: rotate(-5deg) scale(4);
++  transform: rotate(-5deg) scale(6);
+   animation: pulse 8s infinite;
+ }
+ 
+@@ -280,7 +280,7 @@ a,
+ }
+ .logo-pulse {
+   transform: rotate(-5deg) scale(4);
+-  animation: logo-rotate 30s ease-in-out infinite;
++  animation: logo-rotate 33s ease-in-out infinite, logo-pulse-height 21s ease-in-out infinite;
+ }
+ 
+ @keyframes logo-rotate {
+@@ -294,3 +294,52 @@ a,
      transform: rotate(0deg) scale(1);
    }
  }
++
++@keyframes logo-pulse-height {
++  0% {
++    width: 80%;
++  }
++  50% {
++    width: 120%;
++  }
++  100% {
++    width: 80%;
++  }
++}
 +
 +.ai-markdown ul {
 +  list-style-type: disc;
@@ -117,59 +139,18 @@ index 7bb7d61..3f7dbb8 100644
    );
  }
 diff --git a/app/components/ChatHeader.tsx b/app/components/ChatHeader.tsx
-index 7ca9de7..93aaeb2 100644
+index b75e71c..93aaeb2 100644
 --- a/app/components/ChatHeader.tsx
 +++ b/app/components/ChatHeader.tsx
-@@ -4,23 +4,13 @@ import { useNavigate } from 'react-router';
- interface ChatHeaderProps {
-   onOpenSidebar: () => void;
-   title: string;
--  onNewChat?: () => void;
--  isStreaming?: () => boolean;
- }
- 
--function ChatHeader({ onOpenSidebar, title, onNewChat, isStreaming }: ChatHeaderProps) {
-+function ChatHeader({ onOpenSidebar, title }: ChatHeaderProps) {
+@@ -10,7 +10,7 @@ function ChatHeader({ onOpenSidebar, title }: ChatHeaderProps) {
    const navigate = useNavigate();
  
--  const handleNewChat = () => {
--    if (onNewChat) {
--      onNewChat();
--    } else {
--      navigate('/');
--    }
--  };
--
    return (
 -    <div className="border-light-decorative-00 dark:border-dark-decorative-00 bg-light-background-00 dark:bg-dark-background-00 flex min-h-[4rem] items-center justify-between border-b px-6 py-4">
 +    <div className="border-light-decorative-00 dark:border-dark-decorative-00 bg-light-background-00 dark:bg-dark-background-00 flex h-[4rem] items-center justify-between border-b px-6 py-4">
        <div className="flex items-center">
          <button
            type="button"
-@@ -49,7 +39,9 @@ function ChatHeader({ onOpenSidebar, title, onNewChat, isStreaming }: ChatHeader
-       <div className="relative">
-         <button
-           type="button"
--          onClick={handleNewChat}
-+          onClick={() => {
-+            document.location = '/';
-+          }}
-           className="peer bg-accent-02-light dark:bg-accent-02-dark hover:bg-accent-03-light dark:hover:bg-accent-03-dark flex cursor-pointer items-center justify-center rounded-full p-2.5 text-white transition-colors"
-           aria-label="New Chat"
-           title="New Chat"
-@@ -82,10 +74,6 @@ function ChatHeader({ onOpenSidebar, title, onNewChat, isStreaming }: ChatHeader
- // Use React.memo with a custom comparison function to ensure the component only
- // re-renders when its props actually change
- export default memo(ChatHeader, (prevProps, nextProps) => {
--  // Only re-render if title or openSidebar or onNewChat changes
--  return (
--    prevProps.onOpenSidebar === nextProps.onOpenSidebar &&
--    prevProps.title === nextProps.title &&
--    prevProps.onNewChat === nextProps.onNewChat
--  );
-+  // Only re-render if title or openSidebar or title changes
-+  return prevProps.onOpenSidebar === nextProps.onOpenSidebar && prevProps.title === nextProps.title;
- });
 diff --git a/app/components/ChatHeaderContent.tsx b/app/components/ChatHeaderContent.tsx
 new file mode 100644
 index 0000000..6d18b9c
@@ -253,36 +234,28 @@ index 0000000..6d18b9c
 +  return prevProps.onOpenSidebar === nextProps.onOpenSidebar && prevProps.title === nextProps.title;
 +}); 
 \ No newline at end of file
-diff --git a/app/ChatInterface.tsx b/app/components/ChatInterface.tsx
-similarity index 52%
-rename from app/ChatInterface.tsx
-rename to app/components/ChatInterface.tsx
-index 9f8a1c9..42b90d4 100644
---- a/app/ChatInterface.tsx
+diff --git a/app/components/ChatInterface.tsx b/app/components/ChatInterface.tsx
+index dea3b6c..42b90d4 100644
+--- a/app/components/ChatInterface.tsx
 +++ b/app/components/ChatInterface.tsx
-@@ -1,11 +1,15 @@
- import { useState, useMemo, useCallback, useRef } from 'react';
+@@ -2,11 +2,15 @@ import { useState, useMemo, useCallback, useRef } from 'react';
  import type { ChangeEvent } from 'react';
--import type { ChatState } from './types/chat';
--import SessionSidebar from './components/SessionSidebar';
--import ChatHeader from './components/ChatHeader';
--import MessageList from './components/MessageList';
--import ChatInput from './components/ChatInput';
--import QuickSuggestions from './components/QuickSuggestions';
-+import type { ChatState } from '../types/chat';
-+import SessionSidebar from './SessionSidebar';
-+import MessageList from './MessageList';
-+import ChatInput from './ChatInput';
-+import QuickSuggestions from './QuickSuggestions';
-+
+ import type { ChatState } from '../types/chat';
+ import SessionSidebar from './SessionSidebar';
+-import ChatHeader from './ChatHeader';
+ import MessageList from './MessageList';
+ import ChatInput from './ChatInput';
+ import QuickSuggestions from './QuickSuggestions';
+ 
 +interface ChatInterfaceProps extends ChatState {
 +  isSidebarVisible: boolean;
 +  setIsSidebarVisible: (isVisible: boolean) => void;
 +}
- 
++
  function ChatInterface({
    docs: messages,
-@@ -16,23 +20,20 @@ function ChatInterface({
+   input,
+@@ -16,24 +20,20 @@ function ChatInterface({
    sendMessage,
    sessionId,
    title,
@@ -296,7 +269,8 @@ index 9f8a1c9..42b90d4 100644
    const [isShrinking, setIsShrinking] = useState(false);
    const [isExpanding, setIsExpanding] = useState(false);
 -  const [isSidebarVisible, setIsSidebarVisible] = useState(false);
--
+   const [selectedResponseId, setSelectedResponseId] = useState<string | null>(null);
+ 
 -  // Convert docs to messages
 -  // const messages = useMemo(() => convertDocsToMessages(docs), [docs]);
 -
@@ -304,8 +278,7 @@ index 9f8a1c9..42b90d4 100644
 -  const openSidebar = useCallback(() => {
 -    setIsSidebarVisible(true);
 -  }, []);
-+  const [selectedResponseId, setSelectedResponseId] = useState<string | null>(null);
- 
+-
 +  // Sidebar visibility function
    const closeSidebar = useCallback(() => {
      setIsSidebarVisible(false);
@@ -314,26 +287,11 @@ index 9f8a1c9..42b90d4 100644
  
    // Function to handle input changes
    const handleInputChange = useCallback(
-@@ -70,6 +71,11 @@ function ChatInterface({
-     [setInput, inputRef]
-   );
- 
-+  // Callback for setting the selected response ID
-+  const handleSetSelectedResponseId = useCallback((id: string) => {
-+    setSelectedResponseId(id);
-+  }, []);
-+
-   // Memoize the MessageList component to prevent unnecessary re-renders
-   const memoizedMessageList = useMemo(() => {
-     return (
-@@ -78,30 +84,36 @@ function ChatInterface({
-         isStreaming={isStreaming}
-         isShrinking={isShrinking}
-         isExpanding={isExpanding}
-+        setSelectedResponseId={handleSetSelectedResponseId}
+@@ -87,28 +87,33 @@ function ChatInterface({
+         setSelectedResponseId={handleSetSelectedResponseId}
        />
      );
--  }, [sessionId, messages, isStreaming, isShrinking, isExpanding]);
+-  }, [sessionId, messages, isStreaming, isShrinking, isExpanding, handleSetSelectedResponseId]);
 +  }, [messages, isStreaming, isShrinking, isExpanding, handleSetSelectedResponseId]);
  
    return (
@@ -381,140 +339,8 @@ index 9f8a1c9..42b90d4 100644
      </div>
    );
  }
-diff --git a/app/components/Message.tsx b/app/components/Message.tsx
-index fe07330..15b3545 100644
---- a/app/components/Message.tsx
-+++ b/app/components/Message.tsx
-@@ -9,6 +9,7 @@ interface MessageProps {
-   isShrinking: boolean;
-   isExpanding: boolean;
-   isStreaming: boolean;
-+  setSelectedResponseId?: (id: string) => void;
- }
- 
- // Helper function to get animation classes
-@@ -20,14 +21,33 @@ const getAnimationClasses = (isShrinking: boolean, isExpanding: boolean): string
- const AIMessage = memo(
-   ({ message, isStreaming }: { message: AiChatMessageDocument; isStreaming: boolean }) => {
-     const { segments } = parseContent(message.text);
--
-     return (
-       <div className="mb-4 flex flex-row justify-start px-4">
--        <div className="max-w-[85%] rounded-lg bg-white px-4 py-2 text-gray-900 dark:bg-gray-800 dark:text-gray-100">
-+        <div className="flex-shrink-0 mr-2">
-+          <div className="h-8 w-8 rounded-full bg-accent-02-light dark:bg-accent-02-dark flex items-center justify-center shadow-sm">
-+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 18.657A8 8 0 016.343 7.343S7 9 9 10c0-2 .5-5 2.986-7C14 5 16.09 5.777 17.656 7.343A7.975 7.975 0 0120 13a7.975 7.975 0 01-2.343 5.657z" />
-+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.879 16.121A3 3 0 1012.015 11L11 14H9c0 .768.293 1.536.879 2.121z" />
-+            </svg>
-+          </div>
-+        </div>
-+        <div className="max-w-[85%] rounded-2xl bg-white px-5 py-3 text-gray-900 shadow-md dark:bg-gray-800 dark:text-gray-100">
-           <StructuredMessage segments={segments || []} isStreaming={isStreaming} />
-         </div>
-       </div>
-     );
-+  },
-+  (prevProps, nextProps) => {
-+    // If either the message text or streaming state changed, we need to re-render
-+    // Return false to signal React to re-render the component
-+    if (
-+      prevProps.message.text !== nextProps.message.text ||
-+      prevProps.isStreaming !== nextProps.isStreaming
-+    ) {
-+      return false;
-+    }
-+    // Otherwise, skip re-render
-+    return true;
-   }
- );
- 
-@@ -35,8 +55,8 @@ const AIMessage = memo(
- const UserMessage = memo(({ message }: { message: ChatMessageDocument }) => {
-   return (
-     <div className="mb-4 flex flex-row justify-end px-4">
--      <div className="max-w-[85%] rounded-lg bg-blue-500 px-4 py-2 text-white dark:bg-blue-600 dark:text-white">
--        <div className="prose prose-sm dark:prose-invert max-w-none">
-+      <div className="max-w-[85%] rounded-2xl bg-gray-300 px-5 py-3 text-gray-800 shadow-md dark:bg-gray-700 dark:text-gray-100">
-+        <div className="prose prose-sm dark:prose-invert max-w-none prose-ul:pl-5 prose-ul:list-disc prose-ol:pl-5 prose-ol:list-decimal prose-li:my-0">
-           <ReactMarkdown>{message.text}</ReactMarkdown>
-         </div>
-       </div>
-@@ -45,17 +65,52 @@ const UserMessage = memo(({ message }: { message: ChatMessageDocument }) => {
- });
- 
- // Main Message component that handles animation and decides which subcomponent to render
--const Message = memo(({ message, isShrinking, isExpanding, isStreaming }: MessageProps) => {
--  return (
--    <div className={getAnimationClasses(isShrinking, isExpanding)}>
--      {message.type === 'ai' ? (
--        <AIMessage message={message as AiChatMessageDocument} isStreaming={isStreaming} />
--      ) : (
--        <UserMessage message={message} />
--      )}
--    </div>
--  );
--});
-+const Message = memo(
-+  ({ message, isShrinking, isExpanding, isStreaming, setSelectedResponseId }: MessageProps) => {
-+    const handleClick = () => {
-+      console.log('handleClick', message._id);
-+      if (setSelectedResponseId && message._id) {
-+        setSelectedResponseId(message._id);
-+      }
-+    };
-+
-+    return (
-+      <div 
-+        className={`transition-all duration-150 ease-in hover:opacity-95 ${getAnimationClasses(isShrinking, isExpanding)}`}
-+        onClick={handleClick}
-+      >
-+        {message.type === 'ai' ? (
-+          <AIMessage message={message as AiChatMessageDocument} isStreaming={isStreaming} />
-+        ) : (
-+          <UserMessage message={message} />
-+        )}
-+      </div>
-+    );
-+  },
-+  (prevProps, nextProps) => {
-+    // Check for message content changes
-+    if (prevProps.message.text !== nextProps.message.text) {
-+      return false; // Text changed, need to re-render
-+    }
-+
-+    // Check for animation or streaming state changes
-+    if (
-+      prevProps.isShrinking !== nextProps.isShrinking ||
-+      prevProps.isExpanding !== nextProps.isExpanding ||
-+      prevProps.isStreaming !== nextProps.isStreaming
-+    ) {
-+      return false; // State changed, need to re-render
-+    }
-+
-+    // Check if the setSelectedResponseId function reference changed
-+    if (prevProps.setSelectedResponseId !== nextProps.setSelectedResponseId) {
-+      return false; // Function reference changed, need to re-render
-+    }
-+
-+    // If we get here, props are equal enough to skip re-render
-+    return true;
-+  }
-+);
- 
- export default Message;
- 
-@@ -63,8 +118,6 @@ export default Message;
- export const WelcomeScreen = memo(() => {
-   return (
-     <div className="text-accent-02 mx-auto max-w-2xl space-y-4 px-12 pt-8 text-center italic">
--      <h2 className="mb-4 text-xl font-semibold">Welcome to Fireproof App Builder</h2>
--      <p>Ask me to generate a web application for you</p>
-       <p>
-         Quickly create React apps in your browser, no setup required. Apps are sharable, or eject
-         them to GitHub for easy deploys.{' '}
 diff --git a/app/components/MessageList.tsx b/app/components/MessageList.tsx
-index 0d19976..b5ff2b8 100644
+index 6f7c4b4..b5ff2b8 100644
 --- a/app/components/MessageList.tsx
 +++ b/app/components/MessageList.tsx
 @@ -1,4 +1,4 @@
@@ -523,35 +349,19 @@ index 0d19976..b5ff2b8 100644
  import Message, { WelcomeScreen } from './Message';
  import type { ChatMessageDocument } from '../types/chat';
  
-@@ -7,6 +7,7 @@ interface MessageListProps {
-   isStreaming: boolean;
-   isShrinking?: boolean;
-   isExpanding?: boolean;
-+  setSelectedResponseId?: (id: string) => void;
- }
- 
- function MessageList({
-@@ -14,9 +15,8 @@ function MessageList({
-   isStreaming,
-   isShrinking = false,
+@@ -17,8 +17,6 @@ function MessageList({
    isExpanding = false,
-+  setSelectedResponseId,
+   setSelectedResponseId,
  }: MessageListProps) {
 -  const messagesEndRef = useRef<HTMLDivElement>(null);
 -
    const messageElements = useMemo(() => {
      return messages.map((msg, i) => {
        return (
-@@ -26,29 +26,17 @@ function MessageList({
-           isStreaming={isStreaming}
-           isShrinking={isShrinking}
-           isExpanding={isExpanding}
-+          setSelectedResponseId={setSelectedResponseId}
-         />
-       );
+@@ -34,22 +32,11 @@ function MessageList({
      });
--  }, [messages, isShrinking, isExpanding]);
--
+   }, [messages, isShrinking, isExpanding, isStreaming, setSelectedResponseId]);
+ 
 -  useEffect(() => {
 -    try {
 -      if (messagesEndRef.current && typeof messagesEndRef.current.scrollIntoView === 'function') {
@@ -562,12 +372,9 @@ index 0d19976..b5ff2b8 100644
 -    }
 -  }, [messages, isStreaming]);
 -
--  console.log('MessageList messages', messages);
-+  }, [messages, isShrinking, isExpanding, isStreaming, setSelectedResponseId]);
- 
    return (
      <div
--      className={`flex-1 overflow-y-auto ${
+-      className={`flex-1 overflow-y-auto bg-light-background-01 dark:bg-dark-background-01 ${
 +      className={`flex-1 ${
          isShrinking ? 'animate-width-shrink' : isExpanding ? 'animate-width-expand' : ''
        }`}
@@ -575,7 +382,7 @@ index 0d19976..b5ff2b8 100644
      >
        <div className="mx-auto flex min-h-full max-w-5xl flex-col py-4">
          {messages.length === 0 && !isStreaming ? (
-@@ -56,7 +44,6 @@ function MessageList({
+@@ -57,7 +44,6 @@ function MessageList({
          ) : (
            <div className="flex flex-col space-y-4">
              {messageElements}
@@ -583,28 +390,6 @@ index 0d19976..b5ff2b8 100644
            </div>
          )}
        </div>
-@@ -70,10 +57,18 @@ export default memo(MessageList, (prevProps, nextProps) => {
-     prevProps.isShrinking === nextProps.isShrinking &&
-     prevProps.isExpanding === nextProps.isExpanding;
- 
--  // Content equality check for messages
-+  // Check if setSelectedResponseId changed
-+  const setSelectedResponseIdEqual =
-+    prevProps.setSelectedResponseId === nextProps.setSelectedResponseId;
-+
-+  // Content equality check for messages - must compare text content
-   const messagesEqual =
-     prevProps.messages.length === nextProps.messages.length &&
--    prevProps.messages.every((msg, i) => msg._id === nextProps.messages[i]._id);
-+    prevProps.messages.every((msg, i) => {
-+      const nextMsg = nextProps.messages[i];
-+      // Check message ID and text content
-+      return msg._id === nextMsg._id && msg.text === nextMsg.text;
-+    });
- 
--  return animationStateEqual && messagesEqual;
-+  return animationStateEqual && messagesEqual && setSelectedResponseIdEqual;
- });
 diff --git a/app/components/QuickSuggestions.tsx b/app/components/QuickSuggestions.tsx
 index 3b85d25..80cbabe 100644
 --- a/app/components/QuickSuggestions.tsx
@@ -619,15 +404,11 @@ index 3b85d25..80cbabe 100644
          {suggestions.map((suggestion, index) => (
            <button
 diff --git a/app/components/ResultPreview/ResultPreview.tsx b/app/components/ResultPreview/ResultPreview.tsx
-index e317b00..04bb7f9 100644
+index fd880db..04bb7f9 100644
 --- a/app/components/ResultPreview/ResultPreview.tsx
 +++ b/app/components/ResultPreview/ResultPreview.tsx
-@@ -1,59 +1,67 @@
- import { useState, useEffect, useRef, useMemo } from 'react';
- import type { ResultPreviewProps } from './ResultPreviewTypes';
- import type { SandpackFiles } from './ResultPreviewTypes';
--import { indexHtml, defaultCode, animationStyles } from './ResultPreviewTemplates';
-+import { indexHtml, animationStyles } from './ResultPreviewTemplates';
+@@ -4,41 +4,46 @@ import type { SandpackFiles } from './ResultPreviewTypes';
+ import { indexHtml, animationStyles } from './ResultPreviewTemplates';
  import { processCodeForDisplay } from './ResultPreviewUtils';
  import WelcomeScreen from './WelcomeScreen';
 -import ResultPreviewToolbar from './ResultPreviewToolbar';
@@ -636,9 +417,8 @@ index e317b00..04bb7f9 100644
  function ResultPreview({
    code,
    dependencies = {},
--  onShare,
    onScreenshotCaptured,
--  initialView = 'preview',
+-  initialView = 'code',
    sessionId,
    isStreaming = false,
 +  codeReady = false,
@@ -647,60 +427,44 @@ index e317b00..04bb7f9 100644
 +  onPreviewLoaded,
  }: ResultPreviewProps) {
 -  const [activeView, setActiveView] = useState<'preview' | 'code'>(initialView);
--  const [displayCode, setDisplayCode] = useState(code || defaultCode);
    const [bundlingComplete, setBundlingComplete] = useState(true);
--  const [showWelcome, setShowWelcome] = useState(true);
--  const [lockCodeView, setLockCodeView] = useState(false);
--  const filesRef = useRef<SandpackFiles>({
--    '/index.html': {
--      code: indexHtml,
--      hidden: true,
--    },
--    '/App.jsx': {
--      code: code || defaultCode,
--      active: true,
--    },
--  });
-+  const [previewReady, setPreviewReady] = useState(false);
-+
-+  const filesRef = useRef<SandpackFiles>({});
+   const [previewReady, setPreviewReady] = useState(false);
+ 
+   const filesRef = useRef<SandpackFiles>({});
+-  const showWelcome = !code || code.length === 0;
 +  const showWelcome = !isStreaming && (!code || code.length === 0);
-+
-+  const sandpackKey = useMemo(() => {
-+    if (showWelcome) return `${sessionId || 'default'}-welcome`;
-+    return `${sessionId || 'default'}-${isStreaming ? 'streaming' : 'static'}-${code}`;
+ 
+   const sandpackKey = useMemo(() => {
+     if (showWelcome) return `${sessionId || 'default'}-welcome`;
+     return `${sessionId || 'default'}-${isStreaming ? 'streaming' : 'static'}-${code}`;
+-  }, [sessionId, isStreaming, code, showWelcome]);
 +  }, [sessionId, codeReady, code, showWelcome]);
  
    useEffect(() => {
--    const handleMessage = (event: MessageEvent) => {
--      if (event.data && event.data.screenshot) {
--        const screenshotData = event.data.screenshot;
-+    if (isStreaming) {
+     if (isStreaming) {
 +      // Reset to code view when streaming starts
-+      setActiveView('code');
-+    }
+       setActiveView('code');
+     }
+-  }, [isStreaming]); 
 +  }, [isStreaming, setActiveView]);
  
--        if (onScreenshotCaptured) {
--          onScreenshotCaptured(screenshotData);
-+  useEffect(() => {
-+    const handleMessage = ({ data }: MessageEvent) => {
-+      if (data) {
-+        if (data.type === 'preview-loaded') {
-+          setPreviewReady(true);
+   useEffect(() => {
+     const handleMessage = ({ data }: MessageEvent) => {
+       if (data) {
+         if (data.type === 'preview-loaded') {
+           setPreviewReady(true);
 +          // Automatically switch to preview view when it's ready
-+          setActiveView('preview');
+           setActiveView('preview');
 +          // Notify parent component that preview is loaded
 +          onPreviewLoaded();
-+        } else if (data.type === 'screenshot' && data.data) {
-+          console.log('ResultPreview: Received screenshot');
-+          if (onScreenshotCaptured) {
-+            onScreenshotCaptured(data.data);
-+          }
+         } else if (data.type === 'screenshot' && data.data) {
+           console.log('ResultPreview: Received screenshot');
+           if (onScreenshotCaptured) {
+@@ -47,9 +52,12 @@ function ResultPreview({
          }
        }
      };
- 
++
      window.addEventListener('message', handleMessage);
 -    return () => window.removeEventListener('message', handleMessage);
 -  }, [onScreenshotCaptured]);
@@ -709,105 +473,45 @@ index e317b00..04bb7f9 100644
 +    };
 +  }, [onScreenshotCaptured, setActiveView, onPreviewLoaded]);
  
--  // Update code when it changes
    useEffect(() => {
--    if (code) {
--      console.log('ResultPreview: Updating code, length:', code?.length || 0);
-+    if (!showWelcome) {
-       const processedCode = processCodeForDisplay(code);
--      setDisplayCode(processedCode);
--
-       filesRef.current = {
-         ...filesRef.current,
-         '/App.jsx': {
-@@ -61,59 +69,46 @@ function ResultPreview({
-           active: true,
-         },
-       };
--
--      setShowWelcome(false);
-     }
--  }, [code]);
--
--  // Create a unique key for SandpackProvider that changes when relevant props change
--  const sandpackKey = useMemo(() => {
--    return `${sessionId || 'default'}-${isStreaming ? 'streaming' : 'static' + code}`;
--  }, [sessionId, isStreaming, code]);
-+  }, [code, showWelcome]);
+     if (!showWelcome) {
+@@ -65,7 +73,7 @@ function ResultPreview({
+   }, [code, showWelcome]);
  
--  return (
--    <div className="h-full" style={{ overflow: 'hidden' }}>
--      <style>{animationStyles}</style>
--
--      <ResultPreviewToolbar
--        showWelcome={showWelcome}
--        activeView={activeView}
--        setActiveView={setActiveView}
--        bundlingComplete={bundlingComplete}
--        isStreaming={isStreaming}
--        onShare={onShare}
--        setShowWelcome={setShowWelcome}
--      />
-+  const previewArea = showWelcome ? (
+   const previewArea = showWelcome ? (
+-    <div className="h-full" style={{ height: 'calc(100vh - 49px)' }}>
 +    <div className="h-full">
-+      <WelcomeScreen />
-+    </div>
-+  ) : (
-+    (() => {
-+      // Initialize files content here, right before SandpackContent is rendered
-+      filesRef.current = {
-+        '/index.html': {
-+          code: indexHtml,
-+          hidden: true,
-+        },
-+        '/App.jsx': {
-+          code: processCodeForDisplay(code),
-+          active: true,
-+        },
-+      };
- 
--      {showWelcome ? (
--        <div className="h-full" style={{ height: 'calc(100vh - 49px)' }}>
--          <WelcomeScreen />
--        </div>
--      ) : (
-+      return (
+       <WelcomeScreen />
+     </div>
+   ) : (
+@@ -86,7 +94,8 @@ function ResultPreview({
          <SandpackContent
            activeView={activeView}
            filesContent={filesRef.current}
 -          isStreaming={isStreaming}
--          lockCodeView={lockCodeView}
 +          isStreaming={!codeReady}
 +          codeReady={codeReady}
            sandpackKey={sandpackKey}
            setActiveView={setActiveView}
            setBundlingComplete={setBundlingComplete}
-           dependencies={dependencies}
--          onScreenshotCaptured={onScreenshotCaptured}
-         />
--      )}
-+      );
-+    })()
-+  );
- 
--      <div className="result-content">
--        {!showWelcome && (
--          <button
--            data-testid="copy-button"
--            onClick={() => navigator.clipboard.writeText(displayCode)}
--            className="text-light-primary dark:text-dark-primary hover:bg-light-decorative-01 dark:hover:bg-dark-decorative-01 rounded-md px-4 py-1.5 text-sm font-medium transition-colors"
--          >
--            Copy to Clipboard
--          </button>
--        )}
--      </div>
-+  return (
-+    <div className="h-full" style={{ overflow: 'hidden' }}>
-+      <style>{animationStyles}</style>
-+      {previewArea}
+@@ -99,17 +108,6 @@ function ResultPreview({
+   return (
+     <div className="h-full" style={{ overflow: 'hidden' }}>
+       <style>{animationStyles}</style>
+-
+-      <ResultPreviewToolbar
+-        previewReady={previewReady}
+-        activeView={activeView}
+-        setActiveView={setActiveView}
+-        bundlingComplete={bundlingComplete}
+-        isStreaming={isStreaming}
+-        code={code}
+-        dependencies={dependencies}
+-      />
+-
+       {previewArea}
      </div>
    );
- }
 diff --git a/app/components/ResultPreview/ResultPreviewHeaderContent.tsx b/app/components/ResultPreview/ResultPreviewHeaderContent.tsx
 new file mode 100644
 index 0000000..f5a4f2d
@@ -971,41 +675,19 @@ index 0000000..f5a4f2d
 +export default ResultPreviewHeaderContent; 
 \ No newline at end of file
 diff --git a/app/components/ResultPreview/ResultPreviewTemplates.ts b/app/components/ResultPreview/ResultPreviewTemplates.ts
-index ed6fcf0..561dbc9 100644
+index c6439be..561dbc9 100644
 --- a/app/components/ResultPreview/ResultPreviewTemplates.ts
 +++ b/app/components/ResultPreview/ResultPreviewTemplates.ts
-@@ -43,25 +43,37 @@ export const indexHtml = `<!DOCTYPE html>
-       function captureScreenshot() {
-         html2canvas(document.body).then(canvas => {
-           const dataURI = canvas.toDataURL();
--          window.parent.postMessage({ screenshot: dataURI }, '*');
-+          window.parent.postMessage({ type: 'screenshot', data: dataURI }, '*');
-         });
+@@ -48,7 +48,7 @@ export const indexHtml = `<!DOCTYPE html>
        }
--      
--      // Automatically capture screenshot when page is fully loaded
--      window.addEventListener('load', function() {
--        // Wait a short moment for any final rendering
--        setTimeout(captureScreenshot, 500);
-+
-+      function pageIsLoaded() {
+ 
+       function pageIsLoaded() {
+-\        window.parent.postMessage({ type: 'preview-loaded' }, '*');
 +        window.parent.postMessage({ type: 'preview-loaded' }, '*');
-+        setTimeout(captureScreenshot, 100);
-+      }
-+
-+      window.addEventListener('DOMContentLoaded', function() {        
-+        const rootElement = document.getElementById('root');
-+        if (rootElement) {
-+          const observer = new MutationObserver(function(mutations) {
-+            if (rootElement.children.length > 0) {
-+              pageIsLoaded();
-+              observer.disconnect();
-+            }
-+          });          
-+          observer.observe(rootElement, { childList: true, subtree: true });
-+        } else {
-+          pageIsLoaded();
-+        }
+         setTimeout(captureScreenshot, 100);
+       }
+ 
+@@ -68,7 +68,7 @@ export const indexHtml = `<!DOCTYPE html>
        });
      </script>
    </head>
@@ -1014,130 +696,26 @@ index ed6fcf0..561dbc9 100644
      <div id="root"></div>
      <script type="module" src="/index.jsx"></script>
    </body>
- </html>`;
- 
--export const defaultCode = '';
--
- export const animationStyles = `
-   @keyframes spin-slow {
-     from {
 diff --git a/app/components/ResultPreview/ResultPreviewToolbar.tsx b/app/components/ResultPreview/ResultPreviewToolbar.tsx
-index c202ceb..a3d8ac3 100644
+index 869ee62..a3d8ac3 100644
 --- a/app/components/ResultPreview/ResultPreviewToolbar.tsx
 +++ b/app/components/ResultPreview/ResultPreviewToolbar.tsx
-@@ -1,41 +1,66 @@
--import React from 'react';
-+import React, { useState } from 'react';
-+import { copyToClipboard, encodeStateToUrl } from '../../utils/sharing';
+@@ -41,7 +41,7 @@ const ResultPreviewToolbar: React.FC<ResultPreviewToolbarProps> = ({
+   const showSwitcher = code.length > 0;
  
- interface ResultPreviewToolbarProps {
--  showWelcome: boolean;
-+  previewReady: boolean;
-   activeView: 'preview' | 'code';
-   setActiveView: (view: 'preview' | 'code') => void;
-   bundlingComplete: boolean;
-   isStreaming: boolean;
--  onShare?: () => void;
--  setShowWelcome: (show: boolean) => void;
-+  code: string;
-+  dependencies?: Record<string, string>;
- }
- 
- const ResultPreviewToolbar: React.FC<ResultPreviewToolbarProps> = ({
--  showWelcome,
-+  previewReady,
-   activeView,
-   setActiveView,
-   bundlingComplete,
-   isStreaming,
--  onShare,
--  setShowWelcome,
-+  code,
-+  dependencies = {},
- }) => {
-+  const [shareStatus, setShareStatus] = useState<string>('');
-+
-+  function handleShare() {
-+    if (!code) {
-+      alert('Generate an app first before sharing!');
-+      return;
-+    }
-+
-+    const encoded = encodeStateToUrl(code, dependencies);
-+    if (encoded) {
-+      copyToClipboard(`${window.location.origin}/shared?state=${encoded}`);
-+      setShareStatus('Share URL copied to clipboard!');
-+      setTimeout(() => {
-+        setShareStatus('');
-+      }, 3000);
-+    }
-+  }
-+
-+  const showSwitcher = code.length > 0;
-+
    return (
 -    <div className="border-light-decorative-00 dark:border-dark-decorative-00 bg-light-background-00 dark:bg-dark-background-00 flex min-h-[4rem] items-center justify-between border-b px-6 py-4">
--      {!showWelcome ? (
 +    <div className="border-light-decorative-00 dark:border-dark-decorative-00 bg-light-background-00 dark:bg-dark-background-00 flex h-[4rem] items-center justify-between border-b px-6 py-4">
-+      {showSwitcher ? (
+       {showSwitcher ? (
          <div className="bg-light-decorative-00 dark:bg-dark-decorative-00 flex space-x-1 rounded-lg p-1 shadow-sm">
            <button
-             type="button"
-+            disabled={!previewReady}
-             onClick={() => setActiveView('preview')}
-             className={`flex items-center space-x-1.5 rounded-md px-4 py-1.5 text-sm font-medium transition-colors ${
-               activeView === 'preview'
-                 ? 'bg-light-background-00 dark:bg-dark-background-00 text-light-primary dark:text-dark-primary shadow-sm'
--                : 'text-light-primary dark:text-dark-primary hover:bg-light-decorative-01 dark:hover:bg-dark-decorative-01'
-+                : 'text-light-primary dark:text-dark-primary' +
-+                  (previewReady
-+                    ? ' hover:bg-light-decorative-01 dark:hover:bg-dark-decorative-01'
-+                    : ' cursor-not-allowed opacity-50')
-             }`}
-             aria-label="Switch to preview"
-           >
-             <svg
-               xmlns="http://www.w3.org/2000/svg"
--              className={`h-4 w-4 ${!bundlingComplete && !isStreaming ? 'animate-spin-slow' : ''}`}
-+              className={`h-4 w-4 ${bundlingComplete && !previewReady ? 'animate-spin-slow' : ''}`}
-               fill="none"
-               viewBox="0 0 24 24"
-               stroke="currentColor"
-@@ -60,7 +85,6 @@ const ResultPreviewToolbar: React.FC<ResultPreviewToolbarProps> = ({
-             type="button"
-             onClick={() => {
-               setActiveView('code');
--              setShowWelcome(false);
-             }}
-             className={`flex items-center space-x-1.5 rounded-md px-4 py-1.5 text-sm font-medium transition-colors ${
-               activeView === 'code'
-@@ -90,12 +114,15 @@ const ResultPreviewToolbar: React.FC<ResultPreviewToolbarProps> = ({
-       ) : (
-         <div className="h-10"></div>
-       )}
--      {onShare ? (
-+      {code ? (
-         <div className="flex items-center gap-2">
-+          {shareStatus && (
-+            <span className="text-sm text-green-600 dark:text-green-400">{shareStatus}</span>
-+          )}
-           <div className="bg-light-decorative-00 dark:bg-dark-decorative-00 flex space-x-1 rounded-lg p-1 shadow-sm">
-             <button
-               type="button"
--              onClick={onShare}
-+              onClick={handleShare}
-               className="text-light-primary dark:text-dark-primary hover:bg-light-decorative-01 dark:hover:bg-dark-decorative-01 flex items-center space-x-1.5 rounded-md px-4 py-1.5 text-sm font-medium transition-colors"
-               aria-label="Share app"
-             >
 diff --git a/app/components/ResultPreview/ResultPreviewTypes.ts b/app/components/ResultPreview/ResultPreviewTypes.ts
-index 8e3af02..d436bcd 100644
+index 1b64d41..d436bcd 100644
 --- a/app/components/ResultPreview/ResultPreviewTypes.ts
 +++ b/app/components/ResultPreview/ResultPreviewTypes.ts
-@@ -1,11 +1,13 @@
- export interface ResultPreviewProps {
+@@ -2,9 +2,12 @@ export interface ResultPreviewProps {
    code: string;
    dependencies?: Record<string, string>;
--  onShare?: () => void;
    onScreenshotCaptured?: (screenshotData: string) => void;
 -  initialView?: 'code' | 'preview';
    sessionId?: string;
@@ -1149,216 +727,132 @@ index 8e3af02..d436bcd 100644
  }
  
  export type SandpackFiles = {
-diff --git a/app/components/ResultPreview/ResultPreviewUtils.ts b/app/components/ResultPreview/ResultPreviewUtils.ts
-index 3a24a8a..ae38fe6 100644
---- a/app/components/ResultPreview/ResultPreviewUtils.ts
-+++ b/app/components/ResultPreview/ResultPreviewUtils.ts
-@@ -2,7 +2,8 @@
-  * Cleans the code string by removing any content before the first import or export statement
-  */
- export function cleanCodeBeforeImport(codeString: string): string {
--  return codeString.replace(/^[\s\S]*?(import|export)/, '$1');
-+  return codeString;
-+  // return codeString.replace(/^[\s\S]*?(import|export)/, '$1');
- }
- 
- /**
 diff --git a/app/components/ResultPreview/SandpackContent.tsx b/app/components/ResultPreview/SandpackContent.tsx
-index 969bb15..4831fb3 100644
+index ce4c116..72a5a1b 100644
 --- a/app/components/ResultPreview/SandpackContent.tsx
 +++ b/app/components/ResultPreview/SandpackContent.tsx
-@@ -5,7 +5,6 @@ import {
-   SandpackPreview,
-   SandpackProvider,
- } from '@codesandbox/sandpack-react';
--import SandpackEventListener from './SandpackEventListener';
- import SandpackScrollController from './SandpackScrollController';
- import type { SandpackFiles } from './ResultPreviewTypes';
- 
-@@ -13,24 +12,22 @@ interface SandpackContentProps {
+@@ -12,6 +12,7 @@ interface SandpackContentProps {
    activeView: 'preview' | 'code';
    filesContent: SandpackFiles;
    isStreaming: boolean;
--  lockCodeView: boolean;
 +  codeReady: boolean;
    sandpackKey: string;
    setActiveView: (view: 'preview' | 'code') => void;
    setBundlingComplete: (complete: boolean) => void;
-   dependencies: Record<string, string>;
--  onScreenshotCaptured?: (screenshotData: string) => void;
- }
- 
- const SandpackContent: React.FC<SandpackContentProps> = ({
-   activeView,
+@@ -23,12 +24,15 @@ const SandpackContent: React.FC<SandpackContentProps> = ({
    filesContent,
    isStreaming,
--  lockCodeView,
    sandpackKey,
 +  codeReady,
    setActiveView,
    setBundlingComplete,
    dependencies,
--  onScreenshotCaptured,
  }) => {
    const codeEditorRef = useRef<HTMLDivElement>(null);
    const [isDarkMode, setIsDarkMode] = useState(false);
-@@ -66,16 +63,6 @@ const SandpackContent: React.FC<SandpackContentProps> = ({
++  const previousViewRef = useRef(activeView);
++  const scrollPositionRef = useRef(0);
+ 
+   useEffect(() => {
+     const prefersDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches;
+@@ -43,6 +47,34 @@ const SandpackContent: React.FC<SandpackContentProps> = ({
+     return () => mediaQuery.removeEventListener('change', handleChange);
+   }, []);
+ 
++  // Handle view changes to preserve scroll position
++  useEffect(() => {
++    if (activeView !== previousViewRef.current) {
++      if (previousViewRef.current === 'code' && codeEditorRef.current) {
++        // Store scroll position when leaving code view
++        const scroller = codeEditorRef.current.querySelector('.cm-scroller');
++        if (scroller instanceof HTMLElement) {
++          scrollPositionRef.current = scroller.scrollTop;
++        }
++      }
++      
++      previousViewRef.current = activeView;
++      
++      if (activeView === 'code') {
++        // Restore scroll position when returning to code view
++        // Use requestAnimationFrame to ensure DOM is ready
++        requestAnimationFrame(() => {
++          if (codeEditorRef.current) {
++            const scroller = codeEditorRef.current.querySelector('.cm-scroller');
++            if (scroller instanceof HTMLElement) {
++              scroller.scrollTop = scrollPositionRef.current;
++            }
++          }
++        });
++      }
++    }
++  }, [activeView]);
++
+   return (
+     <div data-testid="sandpack-provider">
+       <SandpackProvider
+@@ -61,7 +93,12 @@ const SandpackContent: React.FC<SandpackContentProps> = ({
          files={filesContent}
          theme={isDarkMode ? 'dark' : 'light'}
        >
--        <SandpackEventListener
--          setActiveView={(view) => {
--            if (!lockCodeView) {
--              setActiveView(view);
--            }
--          }}
--          setBundlingComplete={setBundlingComplete}
--          isStreaming={isStreaming}
--          onScreenshotCaptured={onScreenshotCaptured}
--        />
-         {isStreaming && <SandpackScrollController isStreaming={isStreaming} />}
+-        {isStreaming && <SandpackScrollController isStreaming={isStreaming} />}
++        <SandpackScrollController 
++          isStreaming={isStreaming} 
++          shouldEnableScrolling={isStreaming || !codeReady}
++          codeReady={codeReady}
++          activeView={activeView}
++        />
          <SandpackLayout className="h-full" style={{ height: 'calc(100vh - 49px)' }}>
            <div
-@@ -85,15 +72,17 @@ const SandpackContent: React.FC<SandpackContentProps> = ({
-               width: '100%',
-             }}
-           >
--            <SandpackPreview
--              showNavigator={false}
--              showOpenInCodeSandbox={false}
--              showRefreshButton={true}
--              showRestartButton={false}
--              showOpenNewtab={false}
--              className="h-full w-full"
--              style={{ height: '100%' }}
--            />
-+            {!isStreaming && (
-+              <SandpackPreview
-+                showNavigator={false}
-+                showOpenInCodeSandbox={false}
-+                showRefreshButton={true}
-+                showRestartButton={false}
-+                showOpenNewtab={false}
-+                className="h-full w-full"
-+                style={{ height: '100%' }}
-+              />
-+            )}
-           </div>
-           <div
              style={{
-diff --git a/app/components/ResultPreview/SandpackEventListener.tsx b/app/components/ResultPreview/SandpackEventListener.tsx
-deleted file mode 100644
-index 58cdaf2..0000000
---- a/app/components/ResultPreview/SandpackEventListener.tsx
-+++ /dev/null
-@@ -1,81 +0,0 @@
--import { useEffect } from 'react';
--import { useSandpack } from '@codesandbox/sandpack-react';
--
--interface SandpackEventListenerProps {
--  setActiveView: (view: 'preview' | 'code') => void;
--  setBundlingComplete: (complete: boolean) => void;
--  isStreaming: boolean;
--  onScreenshotCaptured?: (screenshotData: string) => void;
--}
--
--const SandpackEventListener: React.FC<SandpackEventListenerProps> = ({
--  setActiveView,
--  setBundlingComplete,
--  isStreaming,
--  onScreenshotCaptured,
--}) => {
--  const { listen } = useSandpack();
--
--  useEffect(() => {
--    setBundlingComplete(false);
--    let startTime = Date.now();
--
--    const resetTimer = () => {
--      startTime = Date.now();
--    };
--
--    const unsubscribe = listen((message) => {
--      if (message.type === 'start') {
--        setBundlingComplete(false);
--        resetTimer();
--      } else if (message.type === 'urlchange') {
--        setBundlingComplete(true);
--
--        if (!isStreaming) {
--          setActiveView('preview');
--
--          // Screenshot capture logic
--          if (onScreenshotCaptured) {
--            const timeElapsed = Date.now() - startTime;
--            const delay = timeElapsed < 1000 ? 1500 - timeElapsed : 500;
--
--            setTimeout(() => {
--              const sandpackPreview =
--                document.querySelector<HTMLIFrameElement>('.sp-preview-iframe');
--              if (sandpackPreview?.contentWindow) {
--                try {
--                  // Try to access the iframe content
--                  const iframeDocument = sandpackPreview.contentWindow.document;
--                  // Access html2canvas if available in the iframe (safe type cast)
--                  const html2canvas = (sandpackPreview.contentWindow as any).html2canvas;
--
--                  if (html2canvas && iframeDocument.body) {
--                    html2canvas(iframeDocument.body, {
--                      allowTaint: true,
--                      useCORS: true,
--                      backgroundColor: null,
--                      scale: 2,
--                    }).then((canvas: HTMLCanvasElement) => {
--                      const screenshot = canvas.toDataURL('image/png');
--                      onScreenshotCaptured(screenshot);
--                    });
--                  }
--                } catch (e) {
--                  console.error('Failed to capture screenshot:', e);
--                }
--              }
--            }, delay);
--          }
--        }
--      }
--    });
--
--    return () => {
--      unsubscribe();
--    };
--  }, [listen, setActiveView, setBundlingComplete, isStreaming, onScreenshotCaptured]);
--
--  return null;
--};
--
--export default SandpackEventListener;
 diff --git a/app/components/ResultPreview/SandpackScrollController.tsx b/app/components/ResultPreview/SandpackScrollController.tsx
-index 01581fd..10bb1a8 100644
+index 01581fd..34eea09 100644
 --- a/app/components/ResultPreview/SandpackScrollController.tsx
 +++ b/app/components/ResultPreview/SandpackScrollController.tsx
-@@ -9,7 +9,10 @@ const SandpackScrollController: React.FC<SandpackScrollControllerProps> = ({ isS
-   const lastScrollPosition = useRef(0);
-   const isScrolling = useRef(false);
-   const hasUserScrolled = useRef(false);
+@@ -2,25 +2,33 @@ import { useEffect, useRef } from 'react';
+ 
+ interface SandpackScrollControllerProps {
+   isStreaming: boolean;
++  shouldEnableScrolling?: boolean;
++  codeReady?: boolean;
++  activeView?: 'preview' | 'code';
+ }
+ 
+-const SandpackScrollController: React.FC<SandpackScrollControllerProps> = ({ isStreaming }) => {
+-  const lastScrollHeight = useRef(0);
+-  const lastScrollPosition = useRef(0);
+-  const isScrolling = useRef(false);
+-  const hasUserScrolled = useRef(false);
 -  const highlightIntervalRef = useRef<NodeJS.Timeout | null>(null);
+-
++const SandpackScrollController: React.FC<SandpackScrollControllerProps> = ({ 
++  isStreaming,
++  shouldEnableScrolling = isStreaming, // Default to isStreaming if not provided
++  codeReady = false,
++  activeView = 'preview' // Default to preview view
++}) => {
++  // Simple refs for tracking state
 +  const animationFrameRef = useRef<number | null>(null);
 +  const isHighlighting = useRef(false);
 +  const lastLineRef = useRef<HTMLElement | null>(null);
-+  const scrollThreshold = useRef(40); // Smaller threshold for more responsive scrolling
- 
++  const hasStartedScrolling = useRef(false);
++  
++  // Add the highlight styles regardless of streaming state
    useEffect(() => {
-     let primaryScroller: HTMLElement | null = null;
-@@ -20,7 +23,7 @@ const SandpackScrollController: React.FC<SandpackScrollControllerProps> = ({ isS
+-    let primaryScroller: HTMLElement | null = null;
+-
++    // Create highlighting styles if needed
+     if (!document.getElementById('highlight-style')) {
+       const style = document.createElement('style');
+       style.id = 'highlight-style';
        style.textContent = `
          .cm-line-highlighted {
            position: relative !important;
 -          border-left: 3px solid rgba(0, 137, 249, 0.27) !important;
-+          border-left: 3px solid rgba(0, 137, 249, 0.6) !important; /* Slightly more visible border */
++          border-left: 3px solid rgba(0, 137, 249, 0.6) !important;
            color: inherit !important;
          }
          
-@@ -31,23 +34,22 @@ const SandpackScrollController: React.FC<SandpackScrollControllerProps> = ({ isS
+@@ -31,178 +39,130 @@ const SandpackScrollController: React.FC<SandpackScrollControllerProps> = ({ isS
            left: 0 !important;
            right: 0 !important;
            bottom: 0 !important;
@@ -1372,7 +866,7 @@ index 01581fd..10bb1a8 100644
 +            rgba(0, 183, 255, 0.12) 100%
 +          ) !important;
 +          background-size: 200% 100% !important;
-+          animation: sparkleFlow 1.8s ease-in-out infinite !important; /* Slightly faster animation */
++          animation: sparkleFlow 1.8s ease-in-out infinite !important;
            pointer-events: none !important;
            z-index: -1 !important;
          }
@@ -1389,266 +883,245 @@ index 01581fd..10bb1a8 100644
 -          100% { opacity: 0.1; }
 +        @keyframes sparkleFlow {
 +          0% { background-position: 0% 50%; opacity: 0.7; }
-+          50% { background-position: 100% 50%; opacity: 0.85; } /* Higher peak opacity */
++          50% { background-position: 100% 50%; opacity: 0.85; }
 +          100% { background-position: 0% 50%; opacity: 0.7; }
          }
        `;
        document.head.appendChild(style);
-@@ -57,40 +59,88 @@ const SandpackScrollController: React.FC<SandpackScrollControllerProps> = ({ isS
-       if (!primaryScroller) return;
-       isScrolling.current = true;
- 
-+      // Use requestAnimationFrame for smoother scrolling
-       requestAnimationFrame(() => {
+     }
+-
+-    const scrollToBottom = () => {
+-      if (!primaryScroller) return;
+-      isScrolling.current = true;
+-
+-      requestAnimationFrame(() => {
 -        if (primaryScroller) {
 -          primaryScroller.scrollTop = primaryScroller.scrollHeight;
 -          lastScrollHeight.current = primaryScroller.scrollHeight;
 -          lastScrollPosition.current = primaryScroller.scrollTop;
-+        if (!primaryScroller) {
-+          isScrolling.current = false;
-+          return;
-         }
+-        }
 -        isScrolling.current = false;
-+        
-+        // First immediate jump to get close
-+        primaryScroller.scrollTop = primaryScroller.scrollHeight;
-+        
-+        // Then use another requestAnimationFrame for smooth final adjustment
-+        requestAnimationFrame(() => {
-+          if (primaryScroller) {
-+            // Use scrollIntoView for smoother scrolling
-+            const lastElement = primaryScroller.lastElementChild;
-+            if (lastElement && lastElement instanceof HTMLElement) {
-+              lastElement.scrollIntoView({ block: 'end', behavior: 'auto' });
-+            } else {
-+              primaryScroller.scrollTop = primaryScroller.scrollHeight;
-+            }
-+            
-+            lastScrollHeight.current = primaryScroller.scrollHeight;
-+            lastScrollPosition.current = primaryScroller.scrollTop;
-+          }
-+          isScrolling.current = false;
-+        });
-       });
-     };
- 
-     const highlightLastLine = () => {
-       if (!primaryScroller || !isStreaming) return;
- 
+-      });
+-    };
+-
+-    const highlightLastLine = () => {
+-      if (!primaryScroller || !isStreaming) return;
+-
 -      document.querySelectorAll('.cm-line-highlighted').forEach((el) => {
 -        el.classList.remove('cm-line-highlighted');
 -      });
-+      // Only update if streaming is active
-+      if (!isStreaming) return;
- 
-+      // Avoid duplicate DOM operations
-       const lines = Array.from(document.querySelectorAll('.cm-line'));
-+      if (lines.length === 0) return;
-+
-+      // Find the last non-empty line
-       let lastLine = null;
-+      let lastLineIndex = -1;
- 
-       for (let i = lines.length - 1; i >= 0; i--) {
+-
+-      const lines = Array.from(document.querySelectorAll('.cm-line'));
+-      let lastLine = null;
+-
+-      for (let i = lines.length - 1; i >= 0; i--) {
 -        const line = lines[i];
-+        const line = lines[i] as HTMLElement;
-         const content = line.textContent || '';
-         if (content.trim() && !content.includes('END OF CODE')) {
-           lastLine = line;
-+          lastLineIndex = i;
-           break;
-         }
-       }
- 
+-        const content = line.textContent || '';
+-        if (content.trim() && !content.includes('END OF CODE')) {
+-          lastLine = line;
+-          break;
+-        }
+-      }
+-
 -      if (lastLine) {
-+      // Only update DOM if necessary (either no line highlighted or different line needs highlighting)
-+      if (lastLine && (lastLineRef.current !== lastLine)) {
-+        // Remove highlight from previous line if it exists and is different
-+        if (lastLineRef.current) {
-+          lastLineRef.current.classList.remove('cm-line-highlighted');
-+        }
-+        
-+        // Apply highlight to the found line
-         lastLine.classList.add('cm-line-highlighted');
-+        lastLineRef.current = lastLine;
-+        
-+        // If this line is near the bottom, ensure it's visible
-+        const isNearEnd = lastLineIndex > lines.length - 5;
-+        if (isNearEnd && !hasUserScrolled.current) {
-+          scrollToBottom();
-+        }
-       }
+-        lastLine.classList.add('cm-line-highlighted');
+-      }
++    
++    return () => {
++      // We're not removing the style on unmount as other instances may need it
++      // The test will handle cleanup if needed
      };
- 
-+    // Single animateHighlight function used throughout
-+    const animateHighlight = () => {
-+      if (!isStreaming) return;
-+      
-+      highlightLastLine();
-+      
-+      // Continue the animation loop
-+      animationFrameRef.current = requestAnimationFrame(animateHighlight);
-+    };
-+
-     const checkForScroller = setInterval(() => {
-       if (primaryScroller) {
-         clearInterval(checkForScroller);
-@@ -100,9 +150,7 @@ const SandpackScrollController: React.FC<SandpackScrollControllerProps> = ({ isS
-       const newScroller = document.querySelector('.cm-scroller');
-       if (newScroller && newScroller instanceof HTMLElement) {
-         primaryScroller = newScroller;
 -
-         scrollToBottom();
--
-         setupContentObserver();
+-    const checkForScroller = setInterval(() => {
+-      if (primaryScroller) {
+-        clearInterval(checkForScroller);
+-        return;
++  }, []);
++  
++  // Simple check if we should be scrolling
++  const shouldScroll = () => {
++    return isStreaming && !codeReady && activeView === 'code';
++  };
++  
++  // Main useEffect for scrolling and highlighting in CODE view
++  useEffect(() => {
++    // If we're not in the scrolling state, don't do anything
++    if (!shouldScroll()) {
++      if (animationFrameRef.current) {
++        cancelAnimationFrame(animationFrameRef.current);
++        animationFrameRef.current = null;
        }
-     }, 100);
-@@ -110,26 +158,35 @@ const SandpackScrollController: React.FC<SandpackScrollControllerProps> = ({ isS
-     const setupContentObserver = () => {
-       if (!primaryScroller) return;
- 
+-
+-      const newScroller = document.querySelector('.cm-scroller');
+-      if (newScroller && newScroller instanceof HTMLElement) {
+-        primaryScroller = newScroller;
+-
+-        scrollToBottom();
+-
+-        setupContentObserver();
++      
++      // Clear any highlighting
++      if (lastLineRef.current) {
++        lastLineRef.current.classList.remove('cm-line-highlighted');
++        lastLineRef.current = null;
+       }
+-    }, 100);
+-
+-    const setupContentObserver = () => {
+-      if (!primaryScroller) return;
+-
 -      const contentObserver = new MutationObserver(() => {
-+      const contentObserver = new MutationObserver((mutations) => {
-         if (!primaryScroller) return;
- 
+-        if (!primaryScroller) return;
+-
 -        const newHeight = primaryScroller.scrollHeight;
-+        // Check if we've had any meaningful content changes
-+        const hasContentChanged = mutations.some(mutation => {
-+          return mutation.type === 'childList' || 
-+                 (mutation.type === 'characterData' && mutation.target.textContent?.trim().length);
-+        });
- 
+-
 -        if (isStreaming) {
 -          highlightLastLine();
 -        } else {
 -          document.querySelectorAll('.cm-line-highlighted').forEach((el) => {
 -            el.classList.remove('cm-line-highlighted');
--          });
++      
++      isHighlighting.current = false;
++      hasStartedScrolling.current = false;
++      return;
++    }
++    
++    // Combined function to scroll to bottom and highlight the last line
++    const scrollAndHighlight = () => {
++      // Find the editor and scroll it
++      const editorScroller = document.querySelector('.cm-scroller');
++      
++      if (editorScroller instanceof HTMLElement) {
++        // Use triple-nested requestAnimationFrame
++        // First frame prepares for scroll
++        requestAnimationFrame(() => {
++          // Set the scroll position directly
++          editorScroller.scrollTop = editorScroller.scrollHeight;
++          
++          // Second frame ensures elements are rendered
++          requestAnimationFrame(() => {
++            // Try again to make sure we're at the bottom
++            editorScroller.scrollTop = editorScroller.scrollHeight;
++            
++            // Also try scrolling using the last line for redundancy
++            const lines = document.querySelectorAll('.cm-line');
++            if (lines.length > 0) {
++              const lastLine = lines[lines.length - 1] as HTMLElement;
++              
++              // Use scrollIntoView as backup
++              lastLine.scrollIntoView({ block: 'end', behavior: 'auto' });
++              
++              // Highlight the last line
++              if (lastLine !== lastLineRef.current) {
++                // Remove previous highlight
++                if (lastLineRef.current) {
++                  lastLineRef.current.classList.remove('cm-line-highlighted');
++                }
++                
++                // Add highlight to new line
++                lastLine.classList.add('cm-line-highlighted');
++                lastLineRef.current = lastLine;
++              }
++            }
++            
++            // Third frame ensures everything is set
++            requestAnimationFrame(() => {
++              // Final adjustment to ensure we stay at the bottom
++              editorScroller.scrollTop = editorScroller.scrollHeight;
++            });
+           });
 -        }
-+        if (!hasContentChanged) return;
- 
+-
 -        if (newHeight === lastScrollHeight.current) return;
-+        const newHeight = primaryScroller.scrollHeight;
-+        
-+        // Always attempt to highlight on content change if streaming
-+        if (isStreaming && !isHighlighting.current) {
-+          startHighlighting();
-+        }
- 
+-
 -        const isNearBottom =
 -          primaryScroller.scrollTop + primaryScroller.clientHeight > lastScrollHeight.current - 100;
-+        // More intelligent auto-scrolling during streaming
-+        if (newHeight !== lastScrollHeight.current) {
-+          const isNearBottom =
-+            primaryScroller.scrollTop + primaryScroller.clientHeight > 
-+            lastScrollHeight.current - scrollThreshold.current;
- 
+-
 -        if (!hasUserScrolled.current || isNearBottom) {
 -          scrollToBottom();
-+          // Auto-scroll if user hasn't scrolled up or is near bottom
-+          if (!hasUserScrolled.current || isNearBottom || 
-+              (isStreaming && primaryScroller.scrollTop > lastScrollPosition.current)) {
-+            scrollToBottom();
-+          }
-         }
- 
-         lastScrollHeight.current = newHeight;
-@@ -139,16 +196,22 @@ const SandpackScrollController: React.FC<SandpackScrollControllerProps> = ({ isS
-         if (isScrolling.current || !primaryScroller) return;
- 
-         const currentPosition = primaryScroller.scrollTop;
+-        }
+-
+-        lastScrollHeight.current = newHeight;
+-      });
+-
+-      const handleScroll = () => {
+-        if (isScrolling.current || !primaryScroller) return;
+-
+-        const currentPosition = primaryScroller.scrollTop;
 -        if (Math.abs(currentPosition - lastScrollPosition.current) > 10) {
-+        const scrollChange = Math.abs(currentPosition - lastScrollPosition.current);
-+        
-+        // Detect manual scrolling with more sensitivity
-+        if (scrollChange > 5) {
-           hasUserScrolled.current = true;
+-          hasUserScrolled.current = true;
 -          lastScrollPosition.current = currentPosition;
 -
 -          if (
-+          
-+          // Reset user scroll flag if they've scrolled close to the bottom
-+          const isAtBottom = 
-             primaryScroller.scrollTop + primaryScroller.clientHeight >=
+-            primaryScroller.scrollTop + primaryScroller.clientHeight >=
 -            primaryScroller.scrollHeight - 50
 -          ) {
-+            primaryScroller.scrollHeight - scrollThreshold.current;
-+            
-+          if (isAtBottom) {
-             hasUserScrolled.current = false;
-           }
-+          
-+          lastScrollPosition.current = currentPosition;
-         }
-       };
- 
-@@ -160,46 +223,113 @@ const SandpackScrollController: React.FC<SandpackScrollControllerProps> = ({ isS
+-            hasUserScrolled.current = false;
+-          }
+-        }
+-      };
+-
+-      if (primaryScroller) {
+-        contentObserver.observe(primaryScroller, {
+-          childList: true,
+-          subtree: true,
+-          characterData: true,
          });
- 
-         primaryScroller.addEventListener('scroll', handleScroll);
+-
+-        primaryScroller.addEventListener('scroll', handleScroll);
 -
 -        if (isStreaming) {
 -          highlightLastLine();
 -        }
--      }
+       }
 -
 -      if (isStreaming) {
 -        highlightIntervalRef.current = setInterval(highlightLastLine, 10);
-       }
- 
-       return () => {
-         clearInterval(checkForScroller);
+-      }
+-
+-      return () => {
+-        clearInterval(checkForScroller);
 -        if (highlightIntervalRef.current) {
 -          clearInterval(highlightIntervalRef.current);
 -          highlightIntervalRef.current = null;
 -        }
-+        stopHighlighting();
-         contentObserver.disconnect();
-         primaryScroller?.removeEventListener('scroll', handleScroll);
-       };
+-        contentObserver.disconnect();
+-        primaryScroller?.removeEventListener('scroll', handleScroll);
+-      };
++      
++      // Continue the animation loop
++      animationFrameRef.current = requestAnimationFrame(scrollAndHighlight);
      };
- 
-+    // Helper to start highlighting
-+    const startHighlighting = () => {
-+      if (isHighlighting.current) return;
-+      isHighlighting.current = true;
-+      animationFrameRef.current = requestAnimationFrame(animateHighlight);
-+    };
-+
-+    // Helper to stop highlighting
-+    const stopHighlighting = () => {
+-
+-    setTimeout(scrollToBottom, 100);
+-
++    
++    // Start the animation loop
++    if (!hasStartedScrolling.current) {
++      hasStartedScrolling.current = true;
++      animationFrameRef.current = requestAnimationFrame(scrollAndHighlight);
++    }
++    
++    // Cleanup on unmount or when conditions change
+     return () => {
+-      clearInterval(checkForScroller);
+-      if (highlightIntervalRef.current) {
+-        clearInterval(highlightIntervalRef.current);
+-        highlightIntervalRef.current = null;
 +      if (animationFrameRef.current) {
 +        cancelAnimationFrame(animationFrameRef.current);
 +        animationFrameRef.current = null;
 +      }
-+      isHighlighting.current = false;
 +      
-+      // Clean up highlights
++      // Clear any highlighting
 +      if (lastLineRef.current) {
 +        lastLineRef.current.classList.remove('cm-line-highlighted');
 +        lastLineRef.current = null;
-+      }
-+    };
-+
-+    // Initial setup
-     setTimeout(scrollToBottom, 100);
-+    
-+    // Start highlighting if streaming
-+    if (isStreaming) {
-+      startHighlighting();
-+    }
- 
-     return () => {
-       clearInterval(checkForScroller);
--      if (highlightIntervalRef.current) {
--        clearInterval(highlightIntervalRef.current);
--        highlightIntervalRef.current = null;
--      }
-+      stopHighlighting();
+       }
      };
-   }, [isStreaming]);
- 
-   useEffect(() => {
+-  }, [isStreaming]);
+-
+-  useEffect(() => {
 -    if (!isStreaming && highlightIntervalRef.current) {
 -      clearInterval(highlightIntervalRef.current);
 -      highlightIntervalRef.current = null;
@@ -1656,547 +1129,63 @@ index 01581fd..10bb1a8 100644
 -      document.querySelectorAll('.cm-line-highlighted').forEach((el) => {
 -        el.classList.remove('cm-line-highlighted');
 -      });
-+    // Handle streaming state changes
-+    if (!isStreaming) {
-+      // Clean up when streaming stops
-+      if (animationFrameRef.current) {
-+        cancelAnimationFrame(animationFrameRef.current);
-+        animationFrameRef.current = null;
-+      }
-+      isHighlighting.current = false;
-+      
-+      // Remove highlight from any highlighted lines
-+      if (lastLineRef.current) {
-+        lastLineRef.current.classList.remove('cm-line-highlighted');
-+        lastLineRef.current = null;
-+      } else {
-+        document.querySelectorAll('.cm-line-highlighted').forEach((el) => {
-+          el.classList.remove('cm-line-highlighted');
-+        });
-+      }
-+    } else if (!isHighlighting.current) {
-+      // Start highlighting when streaming starts
-+      isHighlighting.current = true;
-+      
-+      const animateHighlight = () => {
-+        if (!isStreaming) return;
-+        
-+        // Find and highlight the last line
-+        const scroller = document.querySelector('.cm-scroller');
-+        if (!scroller) return;
-+        
-+        // Remove highlight from previous line
-+        if (lastLineRef.current) {
-+          lastLineRef.current.classList.remove('cm-line-highlighted');
-+          lastLineRef.current = null;
-+        }
-+        
-+        // Find all code lines and highlight the last non-empty one
-+        const lines = Array.from(document.querySelectorAll('.cm-line'));
-+        let lastLine = null;
-+        
-+        for (let i = lines.length - 1; i >= 0; i--) {
-+          const line = lines[i] as HTMLElement;
-+          const content = line.textContent || '';
-+          if (content.trim() && !content.includes('END OF CODE')) {
-+            lastLine = line;
-+            break;
-+          }
-+        }
-+        
-+        if (lastLine) {
-+          lastLine.classList.add('cm-line-highlighted');
-+          lastLineRef.current = lastLine as HTMLElement;
-+        }
-+        
-+        // Continue the animation loop if still streaming
-+        if (isStreaming) {
-+          animationFrameRef.current = requestAnimationFrame(animateHighlight);
-+        }
-+      };
-+      
-+      animationFrameRef.current = requestAnimationFrame(animateHighlight);
-     }
-   }, [isStreaming]);
- 
-diff --git a/app/components/SessionSidebar.tsx b/app/components/SessionSidebar.tsx
-index 9d3e587..fd8ce6d 100644
---- a/app/components/SessionSidebar.tsx
-+++ b/app/components/SessionSidebar.tsx
-@@ -1,71 +1,8 @@
--import { useEffect, useRef, memo, useMemo, useState } from 'react';
--import { Link } from 'react-router';
--import { useSessionList, type GroupedSession } from '../hooks/sidebar/useSessionList';
--
--function ImgFile({
--  file,
--  alt,
--  className,
--}: {
--  file: { file: () => Promise<File>; type: string };
--  alt: string;
--  className: string;
--}) {
--  const [imgDataUrl, setImgDataUrl] = useState('');
--  useEffect(() => {
--    if (file.type && /image/.test(file.type)) {
--      file.file().then((file: File) => {
--        const src = URL.createObjectURL(file);
--        setImgDataUrl(src);
--        return () => URL.revokeObjectURL(src);
--      });
 -    }
--  }, [file]);
--  return imgDataUrl ? (
--    <img className={`${className} max-h-60 max-w-full object-contain`} alt={alt} src={imgDataUrl} />
--  ) : null;
--}
+-  }, [isStreaming]);
 -
--// Add these type definitions at the top of the file
--interface DocBase {
--  _id: string;
--}
--
--interface ScreenshotDocument extends DocBase {
--  type: 'screenshot';
--  session_id: string;
--  _files?: {
--    screenshot: { file: () => Promise<File>; type: string };
--  };
--}
--
--// Modify SessionDocument to include optional type
--interface SessionDocument extends DocBase {
--  type?: 'session'; // Make it optional since existing docs might not have it
--  title?: string;
--  created_at: number;
--  messages?: Array<{
--    text: string;
--    type: 'user' | 'ai';
--    code?: string;
--    dependencies?: Record<string, string>;
--  }>;
--}
--
--// Union type for documents returned by query
--type SessionOrScreenshot = SessionDocument | ScreenshotDocument;
--
--// Helper function to encode titles for URLs
--function encodeTitle(title: string): string {
--  return encodeURIComponent(title || 'untitled-chat')
--    .toLowerCase()
--    .replace(/%20/g, '-');
--}
--
--interface SessionSidebarProps {
--  isVisible: boolean;
--  onClose: () => void;
--}
-+import { useEffect, useRef, memo, useMemo } from 'react';
-+import { useSessionList } from '../hooks/sidebar/useSessionList';
-+import { ImgFile } from './SessionSidebar/ImgFile';
-+import { encodeTitle } from './SessionSidebar/utils';
-+import type { SessionSidebarProps, SessionOrScreenshot, SessionDocument } from '../types/chat';
++  }, [isStreaming, codeReady, activeView]);
++  
+   return null;
+ };
  
- /**
-  * Component that displays a collapsible sidebar with chat session history
-@@ -113,26 +50,26 @@ function SessionSidebar({ isVisible, onClose }: SessionSidebarProps) {
-       const title = session.title || 'New Chat';
-       const encodedTitle = encodeTitle(title);
- 
-+      // first and last screenshots, if they exist, and unique
-+      const shownScreenshots = [screenshots[0], screenshots[screenshots.length - 1]]
-+        .filter((screenshot) => screenshot !== undefined)
-+        .filter((screenshot, index, self) => self.findIndex((t) => t._id === screenshot._id) === index);
-+
-       return (
-         <li
-           key={session._id}
-           className="cursor-pointer border-b border-gray-200 p-3 hover:bg-gray-100 dark:border-gray-700 dark:hover:bg-gray-800"
-         >
--          <Link
--            to={`/chat/${session._id}/${encodedTitle}`}
-+          <a
-+            href={`/chat/${session._id}/${encodedTitle}`}
-             className="block"
--            onClick={() => {
--              // Close the sidebar on mobile
--              if (window.innerWidth < 768) {
--                onClose();
--              }
--            }}
-+            onClick={() => onClose()}
-           >
-             <div className="text-sm font-semibold text-gray-900 dark:text-white">{title}</div>
-             <div className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-               {new Date(session.created_at).toLocaleString()}
-             </div>
--            {screenshots.map(
-+            {shownScreenshots.map(
-               (screenshot) =>
-                 screenshot._files?.screenshot && (
-                   <ImgFile
-@@ -143,7 +80,7 @@ function SessionSidebar({ isVisible, onClose }: SessionSidebarProps) {
-                   />
-                 )
-             )}
--          </Link>
-+          </a>
-         </li>
-       );
-     });
-diff --git a/app/components/SessionSidebar/ImgFile.tsx b/app/components/SessionSidebar/ImgFile.tsx
-new file mode 100644
-index 0000000..6315ee3
---- /dev/null
-+++ b/app/components/SessionSidebar/ImgFile.tsx
-@@ -0,0 +1,29 @@
-+import { useEffect, useState } from 'react';
-+
-+interface ImgFileProps {
-+  file: { file: () => Promise<File>; type: string };
-+  alt: string;
-+  className: string;
-+}
-+
-+/**
-+ * Component to display an image file from a Fireproof file attachment
-+ * It handles loading the file and converting it to a data URL
-+ */
-+export function ImgFile({ file, alt, className }: ImgFileProps) {
-+  const [imgDataUrl, setImgDataUrl] = useState('');
-+
-+  useEffect(() => {
-+    if (file.type && /image/.test(file.type)) {
-+      file.file().then((file: File) => {
-+        const src = URL.createObjectURL(file);
-+        setImgDataUrl(src);
-+        return () => URL.revokeObjectURL(src);
-+      });
-+    }
-+  }, [file]);
-+
-+  return imgDataUrl ? (
-+    <img className={`${className} max-h-60 max-w-full object-contain`} alt={alt} src={imgDataUrl} />
-+  ) : null;
-+}
-diff --git a/app/components/SessionSidebar/utils.ts b/app/components/SessionSidebar/utils.ts
-new file mode 100644
-index 0000000..41064cd
---- /dev/null
-+++ b/app/components/SessionSidebar/utils.ts
-@@ -0,0 +1,12 @@
-+/**
-+ * Helper function to encode titles for URLs
-+ * Converts spaces to hyphens and encodes special characters
-+ *
-+ * @param title - The title string to encode
-+ * @returns Encoded URL-friendly string
-+ */
-+export function encodeTitle(title: string): string {
-+  return encodeURIComponent(title || 'untitled-chat')
-+    .toLowerCase()
-+    .replace(/%20/g, '-');
-+}
+diff --git a/app/components/ResultPreview/WelcomeScreen.tsx b/app/components/ResultPreview/WelcomeScreen.tsx
+index e63f911..7498c2c 100644
+--- a/app/components/ResultPreview/WelcomeScreen.tsx
++++ b/app/components/ResultPreview/WelcomeScreen.tsx
+@@ -3,7 +3,7 @@ import React from 'react';
+ const WelcomeScreen = () => {
+   return (
+     <div className="bg-light-background-00 dark:bg-dark-background-00 flex h-full flex-col items-center justify-center">
+-      <img src="/lightup.png" alt="Lightup" className="logo-pulse h-auto w-full max-w-xs" />
++      <img src="/lightup.png" alt="Lightup" className="logo-pulse h-auto w-full max-w-xs opacity-10" />
+     </div>
+   );
+ };
 diff --git a/app/components/StructuredMessage.tsx b/app/components/StructuredMessage.tsx
-index c084ffc..41cdc49 100644
+index 791cacf..41cdc49 100644
 --- a/app/components/StructuredMessage.tsx
 +++ b/app/components/StructuredMessage.tsx
-@@ -28,7 +28,7 @@ const StructuredMessage = memo(({ segments, isStreaming }: StructuredMessageProp
-     <div className="structured-message">
-       {!hasContent ? (
-         // Show placeholder if there are no segments with content
--        <div className="prose prose-sm dark:prose-invert max-w-none">
-+        <div className="prose prose-sm dark:prose-invert max-w-none prose-ul:pl-5 prose-ul:list-disc prose-ol:pl-5 prose-ol:list-decimal prose-li:my-0">
-           <p>Processing response...</p>
-         </div>
-       ) : (
 @@ -40,7 +40,7 @@ const StructuredMessage = memo(({ segments, isStreaming }: StructuredMessageProp
                return (
                  <div
                    key={`markdown-${index}`}
--                  className="prose prose-sm dark:prose-invert max-w-none"
+-                  className="prose prose-sm dark:prose-invert max-w-none prose-ul:pl-5 prose-ul:list-disc prose-ol:pl-5 prose-ol:list-decimal prose-li:my-0"
 +                  className="ai-markdown prose"
                  >
                    <ReactMarkdown>{segment.content || ''}</ReactMarkdown>
                  </div>
-@@ -51,7 +51,7 @@ const StructuredMessage = memo(({ segments, isStreaming }: StructuredMessageProp
-               return (
-                 <div
-                   key={`code-${index}`}
--                  className="my-4 rounded-md border border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-800"
-+                  className="my-4 rounded-lg border border-gray-200 bg-gray-50 p-4 shadow-sm dark:border-gray-700 dark:bg-gray-800"
-                 >
-                   <div className="mb-2 flex items-center justify-between">
-                     <span className="font-mono text-sm text-gray-500 dark:text-gray-400">
-@@ -64,12 +64,15 @@ const StructuredMessage = memo(({ segments, isStreaming }: StructuredMessageProp
-                       }}
-                       className="rounded bg-gray-200 px-2 py-1 text-xs transition-colors hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600"
-                     >
--                      Copy Code
-+                      <code className="mr-3 font-mono text-gray-400 dark:text-gray-600">
-+                        App.jsx
-+                      </code>
-+                      Copy
-                     </button>
-                   </div>
- 
-                   {/* Preview of first few lines */}
--                  <div className="max-h-24 overflow-hidden rounded bg-gray-100 p-2 font-mono text-sm dark:bg-gray-800">
-+                  <div className="max-h-24 overflow-hidden rounded bg-gray-200 p-2 font-mono text-sm shadow-inner dark:bg-gray-900">
-                     {content
-                       .split('\n')
-                       .slice(0, 3)
-diff --git a/app/hooks/useSession.ts b/app/hooks/useSession.ts
-index 9b15653..6ad9034 100644
---- a/app/hooks/useSession.ts
-+++ b/app/hooks/useSession.ts
-@@ -6,6 +6,7 @@ import type {
-   AiChatMessageDocument,
-   SessionDocument,
-   Segment,
-+  ScreenshotDocument,
- } from '../types/chat';
- 
- export function useSession(routedSessionId: string | undefined) {
-@@ -19,7 +20,7 @@ export function useSession(routedSessionId: string | undefined) {
-     (routedSessionId
-       ? { _id: routedSessionId }
-       : {
--          _id: `${Date.now().toString(36).padStart(9, '0')}${Math.random().toString(36).slice(2, 11).padEnd(9, '0')}`,
-+          _id: `${Date.now().toString(36).padStart(9, 'f')}${Math.random().toString(36).slice(2, 11).padEnd(9, '0')}`,
-           type: 'session',
-           title: '',
-           created_at: Date.now(),
-@@ -55,8 +56,9 @@ export function useSession(routedSessionId: string | undefined) {
-   // Update session title
-   const updateTitle = useCallback(
-     async (title: string) => {
--      await mergeSession({ title });
--      await saveSession();
-+      session.title = title;
-+      await database.put(session);
-+      mergeSession({ title });
-     },
-     [mergeSession, saveSession]
-   );
-@@ -72,28 +74,26 @@ export function useSession(routedSessionId: string | undefined) {
-         type: 'image/png',
-         lastModified: Date.now(),
-       });
--
--      await database.put({
-+      const screenshot = {
-         type: 'screenshot',
-         session_id: session._id,
-         _files: {
-           screenshot: file,
-         },
--      });
-+      };
-+      console.log('add screenshot', screenshot);
-+      await database.put(screenshot);
-     },
-     [session._id, database]
-   );
- 
--  // const updateAiMessage = useCallback(
--  //   async (rawMessage: string) => {
--  //     await mergeAiMessage({ text: rawMessage });
--  //   },
--  //   [mergeAiMessage]
--  // );
-+  // const { docs: screenshots } = useLiveQuery<ScreenshotDocument>((doc) => [doc.session_id, doc.type], { prefix: [ 'screenshot' ] });
- 
-   return {
-     session,
-     docs,
-+    // screenshots,
-+    database,
-     updateTitle,
-     addScreenshot,
-     userMessage,
-@@ -103,5 +103,6 @@ export function useSession(routedSessionId: string | undefined) {
-     aiMessage,
-     submitAiMessage,
-     mergeAiMessage,
-+    saveAiMessage,
-   };
- }
 diff --git a/app/hooks/useSimpleChat.ts b/app/hooks/useSimpleChat.ts
-index edccbe5..cdc4361 100644
+index 32d7546..cdc4361 100644
 --- a/app/hooks/useSimpleChat.ts
 +++ b/app/hooks/useSimpleChat.ts
-@@ -1,13 +1,13 @@
- import { useState, useRef, useCallback, useEffect, useMemo } from 'react';
--import type { Segment, ChatMessageDocument, ChatState } from '../types/chat';
-+import type { Segment, ChatMessageDocument, ChatState, ScreenshotDocument } from '../types/chat';
- import { makeBaseSystemPrompt } from '../prompts';
- import { parseContent, parseDependencies } from '../utils/segmentParser';
- import { useSession } from './useSession';
- import { generateTitle } from '../utils/titleGenerator';
- import { processStream, callOpenRouterAPI } from '../utils/streamHandler';
- 
--const CHOSEN_MODEL = 'anthropic/claude-3.7-sonnet';
--
-+const CODING_MODEL = 'anthropic/claude-3.7-sonnet';
-+const TITLE_MODEL = 'google/gemini-2.0-flash-lite-001';
- /**
-  * Simplified chat hook that focuses on data-driven state management
-  * Uses session-based architecture with individual message documents
-@@ -22,10 +22,11 @@ export function useSimpleChat(sessionId: string | undefined): ChatState {
-     mergeUserMessage,
-     submitUserMessage,
-     mergeAiMessage,
--    submitAiMessage,
-+    addScreenshot,
-+    // screenshots,
-+    database,
-     aiMessage,
-   } = useSession(sessionId);
--  // const [input, setInput] = useState<string>('');
-   const [systemPrompt, setSystemPrompt] = useState('');
-   const streamBufferRef = useRef<string>('');
-   const inputRef = useRef<HTMLTextAreaElement>(null);
-@@ -35,26 +36,25 @@ export function useSimpleChat(sessionId: string | undefined): ChatState {
-   const selectedResponseDoc = (isStreaming
-     ? aiMessage
-     : docs.find((doc: any) => doc.type === 'ai' && doc._id === selectedResponseId) ||
--      docs.find((doc: any) => doc.type === 'ai')) as unknown as ChatMessageDocument;
-+      docs.filter((doc: any) => doc.type === 'ai').reverse()[0]) as unknown as ChatMessageDocument;
- 
--  function setInput(input: string) {
--    // is this is wrong I dont want to be right
-+  const setInput = useCallback((input: string) => {
-     mergeUserMessage({ text: input });
--  }
-+  }, [mergeUserMessage]);
- 
-   // Process docs into messages for the UI
-   const filteredDocs = docs.filter((doc: any) => doc.type === 'ai' || doc.type === 'user');
- 
--  const messages = (aiMessage.text.length > 0
--    ? [ ...filteredDocs, aiMessage]
-+  const messages = (isStreaming && aiMessage.text.length > 0
-+    ? [...filteredDocs, aiMessage]
-     : filteredDocs) as unknown as ChatMessageDocument[];
- 
--  function buildMessageHistory() {
-+  const buildMessageHistory = useCallback(() => {
-     return messages.map((msg) => ({
-       role: msg.type === 'user' ? ('user' as const) : ('assistant' as const),
-       content: msg.text || '',
-     }));
--  }
-+  }, [messages]);
- 
-   const { segments: selectedSegments, dependenciesString: selectedDependenciesString } =
-     selectedResponseDoc
-@@ -71,7 +71,7 @@ export function useSimpleChat(sessionId: string | undefined): ChatState {
-    * Send a message and process the AI response
-    * Returns a promise that resolves when the entire process is complete, including title generation
-    */
--  async function sendMessage(): Promise<void> {
-+  const sendMessage = useCallback(async (): Promise<void> => {
-     if (!userMessage.text.trim()) return;
- 
-     // First, ensure we have the system prompt
-@@ -82,7 +82,7 @@ export function useSimpleChat(sessionId: string | undefined): ChatState {
-         currentSystemPrompt = 'Test system prompt';
-         setSystemPrompt(currentSystemPrompt);
-       } else {
--        currentSystemPrompt = await makeBaseSystemPrompt(CHOSEN_MODEL);
-+        currentSystemPrompt = await makeBaseSystemPrompt(CODING_MODEL);
-         setSystemPrompt(currentSystemPrompt);
-       }
+@@ -150,6 +150,10 @@ export function useSimpleChat(sessionId: string | undefined): ChatState {
      }
-@@ -97,7 +97,7 @@ export function useSimpleChat(sessionId: string | undefined): ChatState {
-         const messageHistory = buildMessageHistory();
-         // Use the locally captured system prompt value, not the state variable
-         return callOpenRouterAPI(
--          CHOSEN_MODEL,
-+          CODING_MODEL,
-           currentSystemPrompt,
-           messageHistory,
-           userMessage.text
-@@ -105,21 +105,19 @@ export function useSimpleChat(sessionId: string | undefined): ChatState {
-       })
-       .then((response) => {
-         return processStream(response, (content) => {
--          console.log('>', content);
-           streamBufferRef.current += content;
-           mergeAiMessage({ text: streamBufferRef.current });
-         });
-       })
--      .then(() => {
--        console.log('saving final message', streamBufferRef.current);
--        mergeAiMessage({ text: streamBufferRef.current });
--        console.log('ai message', aiMessage);
--        return submitAiMessage();
-+      .then(async () => {
-+        aiMessage.text = streamBufferRef.current;
-+        // mergeAiMessage({ text: streamBufferRef.current });
-+        const ok = await database.put(aiMessage);
-       })
-       .then(() => {
-         const { segments } = parseContent(aiMessage.text);
-         if (!session?.title) {
--          return generateTitle(segments, CHOSEN_MODEL).then(updateTitle);
-+          return generateTitle(segments, TITLE_MODEL).then(updateTitle);
-         }
-       })
-       .catch((error) => {
-@@ -128,10 +126,37 @@ export function useSimpleChat(sessionId: string | undefined): ChatState {
-       .finally(() => {
-         setIsStreaming(false);
-       });
--  }
-+  }, [
-+    userMessage.text,
-+    systemPrompt,
-+    setSystemPrompt,
-+    streamBufferRef,
-+    setIsStreaming,
-+    submitUserMessage,
-+    buildMessageHistory,
-+    mergeAiMessage,
-+    aiMessage,
-+    database,
-+    session?.title,
-+    updateTitle
-+  ]);
-+
-+  const addFirstScreenshot = useCallback(async (screenshotData: string) => {
-+    const { rows: screenshots } = await database.query((doc: any) => [doc.session_id, doc.type], {
-+      key: [session._id, 'screenshot'],
-+    });
-+    if (screenshots.length === 0) {
-+      addScreenshot(screenshotData);
-+    }
-+  }, [session._id, database, addScreenshot]);
-+
+   }, [session._id, database, addScreenshot]);
+ 
 +  const codeReady = useMemo(() => {
 +    return !isStreaming || selectedSegments.length > 2;
 +  }, [isStreaming, selectedSegments]);
- 
++
    return {
--    sessionId,
-+    sessionId: session._id,
-+    addScreenshot,
-     docs: messages,
-     selectedResponseDoc,
-     selectedSegments,
-@@ -140,8 +165,9 @@ export function useSimpleChat(sessionId: string | undefined): ChatState {
+     sessionId: session._id,
+     addScreenshot,
+@@ -161,6 +165,7 @@ export function useSimpleChat(sessionId: string | undefined): ChatState {
      input: userMessage.text,
      setInput,
      isStreaming,
 +    codeReady,
      sendMessage,
      inputRef,
--    title: session?.title || 'New Chat',
-+    title: session?.title || '',
-   };
- }
+     title: session?.title || '',
 diff --git a/app/prompts.ts b/app/prompts.ts
 index fa8510c..5a6de78 100644
 --- a/app/prompts.ts
@@ -2211,87 +1200,45 @@ index fa8510c..5a6de78 100644
  Begin the component with the import statements. Use react and use-fireproof:
  
 diff --git a/app/routes/home.tsx b/app/routes/home.tsx
-index b3f8687..3ad738d 100644
+index 17fb126..3ad738d 100644
 --- a/app/routes/home.tsx
 +++ b/app/routes/home.tsx
-@@ -1,10 +1,13 @@
--import { useEffect, useState } from 'react';
+@@ -1,7 +1,9 @@
+-import { useEffect } from 'react';
 +import { useEffect, useState, useCallback } from 'react';
  import { useParams, useNavigate, useLocation } from 'react-router';
--import ChatInterface from '../ChatInterface';
-+import ChatInterface from '../components/ChatInterface';
+ import ChatInterface from '../components/ChatInterface';
  import ResultPreview from '../components/ResultPreview/ResultPreview';
 +import ChatHeaderContent from '../components/ChatHeaderContent';
 +import ResultPreviewHeaderContent from '../components/ResultPreview/ResultPreviewHeaderContent';
  import { useSimpleChat } from '../hooks/useSimpleChat';
  import AppLayout from '../components/AppLayout';
--import { copyToClipboard, encodeStateToUrl, decodeStateFromUrl } from '../utils/sharing';
-+import { decodeStateFromUrl } from '../utils/sharing';
-+import { encodeTitle } from '~/components/SessionSidebar/utils';
- 
- export function meta() {
-   return [
-@@ -14,14 +17,35 @@ export function meta() {
- }
- 
- export default function UnifiedSession() {
--  // Get sessionId from URL params if it exists
-   const { sessionId: urlSessionId } = useParams<{ sessionId: string }>();
+ import { decodeStateFromUrl } from '../utils/sharing';
+@@ -19,6 +21,22 @@ export default function UnifiedSession() {
    const navigate = useNavigate();
    const location = useLocation();
-+  const chatState = useSimpleChat(urlSessionId);
+   const chatState = useSimpleChat(urlSessionId);
 +  
 +  // State for view management
 +  const [activeView, setActiveView] = useState<'code' | 'preview'>('code');
 +  const [previewReady, setPreviewReady] = useState(false);
 +  const [bundlingComplete, setBundlingComplete] = useState(true);
 +  const [isSidebarVisible, setIsSidebarVisible] = useState(false);
- 
--  const [shareStatus, setShareStatus] = useState<string>('');
++
 +  // Directly create an openSidebar function
 +  const openSidebar = useCallback(() => {
 +    setIsSidebarVisible(true);
 +  }, []);
- 
--  const chatState = useSimpleChat(urlSessionId);
++
 +  // Handle preview loaded event
 +  const handlePreviewLoaded = useCallback(() => {
 +    setPreviewReady(true);
 +  }, []);
-+
-+  useEffect(() => {
-+    if (chatState.title) {
-+      const newUrl = `/chat/${chatState.sessionId}/${encodeTitle(chatState.title)}`;
-+      if (newUrl !== location.pathname) {
-+        navigate(newUrl, { replace: true });
-+      }
-+    }
-+  }, [chatState.title]);
  
-   // Check if there's a state parameter in the URL (for shared apps)
    useEffect(() => {
-@@ -35,34 +59,43 @@ export default function UnifiedSession() {
-     }
-   }, [location.search]);
+     if (chatState.title) {
+@@ -43,14 +61,41 @@ export default function UnifiedSession() {
  
--  function handleShare() {
--    if (!chatState.selectedCode?.content) {
--      alert('Generate an app first before sharing!');
--      return;
--    }
--    const encoded = encodeStateToUrl(
--      chatState.selectedCode.content,
--      chatState.selectedDependencies || {}
--    );
--    if (encoded) {
--      copyToClipboard(`${window.location.origin}/shared?state=${encoded}`);
--      setShareStatus('Share URL copied to clipboard!');
--      setTimeout(() => {
--        setShareStatus('');
--      }, 3000);
--    }
--  }
--
    return (
      <AppLayout
 -      chatPanel={<ChatInterface {...chatState} />}
@@ -2325,9 +1272,8 @@ index b3f8687..3ad738d 100644
            code={chatState.selectedCode?.content || ''}
            dependencies={chatState.selectedDependencies || {}}
            isStreaming={chatState.isStreaming}
--          onShare={handleShare}
 +          codeReady={chatState.codeReady}
-+          onScreenshotCaptured={chatState.addScreenshot}
+           onScreenshotCaptured={chatState.addScreenshot}
 +          activeView={activeView}
 +          setActiveView={setActiveView}
 +          onPreviewLoaded={handlePreviewLoaded}
@@ -2335,88 +1281,10 @@ index b3f8687..3ad738d 100644
        }
      />
 diff --git a/app/types/chat.ts b/app/types/chat.ts
-index 3145c6c..7a93ec6 100644
+index f6cef39..7a93ec6 100644
 --- a/app/types/chat.ts
 +++ b/app/types/chat.ts
-@@ -1,4 +1,5 @@
- import type { DocTypes } from 'use-fireproof';
-+import type { GroupedSession } from '../hooks/sidebar/useSessionList';
- 
- // ===== Content Segment Types =====
- export type Segment = {
-@@ -7,32 +8,61 @@ export type Segment = {
- };
- 
- // ===== Document Types =====
--// Base message document types for Fireproof storage
--export type UserChatMessageDocument = {
--  type: 'user';
-+
-+export type BaseChatMessageDocument = {
-+  _id?: string;
-   session_id: string;
-   text: string;
-   created_at: number;
- };
- 
--export type AiChatMessageDocument = {
--  type: 'ai';
--  session_id: string;
--  text: string; // Raw text content
--  created_at: number;
-+export type UserChatMessageDocument = BaseChatMessageDocument & {
-+  type: 'user';
- };
- 
--export type ChatMessageDocument = (UserChatMessageDocument | AiChatMessageDocument) & {
--  _id?: string;
-+export type AiChatMessageDocument = BaseChatMessageDocument & {
-+  type: 'ai';
- };
- 
-+export type ChatMessageDocument = UserChatMessageDocument | AiChatMessageDocument;
-+
-+/**
-+ * Base document interface with common properties
-+ */
-+export interface DocBase {
-+  _id: string;
-+}
-+
-+/**
-+ * Document type for screenshot entries
-+ */
-+export interface ScreenshotDocument extends DocBase {
-+  type: 'screenshot';
-+  session_id: string;
-+  _files?: {
-+    screenshot: { file: () => Promise<File>; type: string };
-+  };
-+}
-+
-+// Note: We already have a SessionDocument interface, so merged the properties
- export interface SessionDocument extends DocTypes {
-   _id?: string;
-   type: 'session'; // Document type for Fireproof queries
-   title?: string;
-   created_at: number;
-+  messages?: Array<{
-+    text: string;
-+    type: 'user' | 'ai';
-+    code?: string;
-+    dependencies?: Record<string, string>;
-+  }>;
- }
- 
-+/**
-+ * Union type for documents returned by query
-+ */
-+export type SessionOrScreenshot = SessionDocument | ScreenshotDocument;
-+
- // ===== UI Enhanced Types =====
- // Enhanced types with additional UI properties
- export type ChatMessage = ChatMessageDocument & {
-@@ -59,9 +89,11 @@ export interface ChatState {
+@@ -89,6 +89,7 @@ export interface ChatState {
    input: string;
    setInput: (input: string) => void;
    isStreaming: boolean;
@@ -2424,114 +1292,11 @@ index 3145c6c..7a93ec6 100644
    inputRef: React.RefObject<HTMLTextAreaElement | null>;
    sendMessage: () => Promise<void>;
    title: string;
-+  addScreenshot: (screenshot: string) => Promise<void>;
-   sessionId?: string | null;
-   selectedResponseDoc?: ChatMessageDocument;
-   selectedSegments?: Segment[];
-@@ -73,5 +105,15 @@ export interface ChatInterfaceProps {
-   chatState: ChatState;
-   sessionId?: string | null;
-   onSessionCreated?: (newSessionId: string) => void;
--  onNewChat?: () => void;
- }
-+
-+/**
-+ * Props for the SessionSidebar component
-+ */
-+export interface SessionSidebarProps {
-+  isVisible: boolean;
-+  onClose: () => void;
+@@ -112,6 +113,7 @@ export interface ChatInterfaceProps {
+ export interface SessionSidebarProps {
+   isVisible: boolean;
+   onClose: () => void;
 +  sessionId: string;
-+}
-+
-+export type { GroupedSession };
-diff --git a/app/utils/segmentParser.ts b/app/utils/segmentParser.ts
-index e9374de..0a5ce7f 100644
---- a/app/utils/segmentParser.ts
-+++ b/app/utils/segmentParser.ts
-@@ -26,15 +26,18 @@ export function parseContent(text: string): {
-     // Remove the dependencies part from the text
-     text = text.substring(text.indexOf(depsFormat2[1]) + depsFormat2[1].length).trim();
-   }
--  
--  // Look for code blocks delimited by ```js or ```jsx
--  const codeBlockMatch = text.match(/(.*?)\s*```(?:js|jsx)\s*\n([\s\S]*?)```\s*([\s\S]*)/s);
--
--  if (codeBlockMatch) {
--    const beforeCode = codeBlockMatch[1]?.trim();
--    const codeContent = codeBlockMatch[2]?.trim();
--    const afterCode = codeBlockMatch[3]?.trim();
--    
-+
-+  // First look for complete code blocks delimited by ```js or ```jsx and a closing ```
-+  const completeCodeBlockMatch = text.match(/(.*?)\s*```(?:js|jsx)\s*\n([\s\S]*?)```\s*([\s\S]*)/s);
-+
-+  // Then check for incomplete code blocks with just the opening delimiter
-+  const incompleteCodeBlockMatch = text.match(/(.*?)\s*```(?:js|jsx)\s*\n([\s\S]*?)$/s);
-+
-+  if (completeCodeBlockMatch) {
-+    const beforeCode = completeCodeBlockMatch[1]?.trim();
-+    const codeContent = completeCodeBlockMatch[2]?.trim();
-+    const afterCode = completeCodeBlockMatch[3]?.trim();
-+
-     // Add the markdown content before the code block if it exists
-     if (beforeCode) {
-       segments.push({
-@@ -42,7 +45,7 @@ export function parseContent(text: string): {
-         content: beforeCode,
-       });
-     }
--    
-+
-     // Add the code block
-     if (codeContent) {
-       segments.push({
-@@ -50,7 +53,7 @@ export function parseContent(text: string): {
-         content: codeContent,
-       });
-     }
--    
-+
-     // Add the markdown content after the code block if it exists
-     if (afterCode) {
-       segments.push({
-@@ -58,6 +61,26 @@ export function parseContent(text: string): {
-         content: afterCode,
-       });
-     }
-+  } else if (incompleteCodeBlockMatch) {
-+    // Handle incomplete code blocks (missing closing delimiter)
-+    const beforeCode = incompleteCodeBlockMatch[1]?.trim();
-+    const codeContent = incompleteCodeBlockMatch[2]?.trim();
-+
-+    // Add the markdown content before the code block if it exists
-+    if (beforeCode) {
-+      segments.push({
-+        type: 'markdown',
-+        content: beforeCode,
-+      });
-+    }
-+
-+    // Add the incomplete code block
-+    if (codeContent) {
-+      segments.push({
-+        type: 'code',
-+        content: codeContent,
-+      });
-+    }
-   } else {
-     // If no code blocks are found, treat the whole content as markdown
-     segments.push({
-diff --git a/app/utils/titleGenerator.ts b/app/utils/titleGenerator.ts
-index 30e3abe..7729b18 100644
---- a/app/utils/titleGenerator.ts
-+++ b/app/utils/titleGenerator.ts
-@@ -39,7 +39,7 @@ export async function generateTitle(segments: Segment[], model: string): Promise
-         {
-           role: 'system',
-           content:
--            'You are a helpful assistant that generates short, descriptive titles. Create a concise title (3-5 words) that captures the essence of the content. Return only the title, no other text or markup.',
-+            'You are a helpful assistant that generates short, descriptive titles. Create a concise title (3-5 words) that captures the essence of the content. Return only the title, no other text or markup. Don\'t say "Fireproof" or "app".',
-         },
-         {
-           role: 'user',
+ }
+ 
+ export type { GroupedSession };
