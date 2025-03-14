@@ -7,7 +7,6 @@ const staticRefs = {
   contentObserver: null as MutationObserver | null,
   checkForScrollerInterval: null as NodeJS.Timeout | null,
   scrollIntervalRef: null as NodeJS.Timeout | null,
-  hasUserScrolled: false,
   isScrolling: false,
   lastScrollHeight: 0,
   lastScrollTop: 0,
@@ -31,6 +30,7 @@ const SandpackScrollController: React.FC<SandpackScrollControllerProps> = ({
   // Keep component-level refs for React's hook rules
   const componentMounted = useRef(false);
   const propsRef = useRef({ isStreaming, codeReady, activeView });
+  const preventScrollRef = useRef<((e: Event) => boolean) | null>(null);
 
   // Update props ref when they change
   useEffect(() => {
@@ -82,19 +82,6 @@ const SandpackScrollController: React.FC<SandpackScrollControllerProps> = ({
     });
   };
 
-  // Setup scroll interrupt handler (prevent user scrolling)
-  const handleScrollInterrupt = (e: Event) => {
-    if (shouldLockScroll()) {
-      // If we should be auto-scrolling, prevent user scroll
-      e.preventDefault();
-      e.stopPropagation();
-      // Force scroll to bottom immediately to give feedback
-      scrollToBottom(true);
-      return false;
-    }
-    return true;
-  };
-
   // Setup the scroller observer
   const setupScroller = (scroller: HTMLElement) => {
     if (!scroller) return;
@@ -106,8 +93,8 @@ const SandpackScrollController: React.FC<SandpackScrollControllerProps> = ({
       staticRefs.contentObserver.disconnect();
     }
     
-    // Setup custom scroll prevention
-    const preventScroll = (e: WheelEvent) => {
+    // Setup unified scroll prevention handler
+    const preventScroll = (e: Event) => {
       if (shouldLockScroll()) {
         e.preventDefault();
         e.stopPropagation();
@@ -116,9 +103,12 @@ const SandpackScrollController: React.FC<SandpackScrollControllerProps> = ({
       return true;
     };
     
+    // Store in ref for cleanup access
+    preventScrollRef.current = preventScroll;
+    
     // Add event listeners for scroll prevention - use proper TypeScript casting
     scroller.addEventListener('wheel', preventScroll, { capture: true, passive: false } as AddEventListenerOptions);
-    scroller.addEventListener('touchmove', handleScrollInterrupt, { capture: true, passive: false } as AddEventListenerOptions);
+    scroller.addEventListener('touchmove', preventScroll, { capture: true, passive: false } as AddEventListenerOptions);
     
     // Setup content observer with simplified mutation handling
     const contentObserver = new MutationObserver((mutations) => {
@@ -285,10 +275,10 @@ const SandpackScrollController: React.FC<SandpackScrollControllerProps> = ({
       }
       
       // Remove event listeners if scroller exists
-      if (staticRefs.scroller) {
+      if (staticRefs.scroller && preventScrollRef.current) {
         // Need to provide the same functions to removeEventListener
-        staticRefs.scroller.removeEventListener('wheel', () => {}, { capture: true } as EventListenerOptions);
-        staticRefs.scroller.removeEventListener('touchmove', handleScrollInterrupt, { capture: true } as EventListenerOptions);
+        staticRefs.scroller.removeEventListener('wheel', preventScrollRef.current, { capture: true } as EventListenerOptions);
+        staticRefs.scroller.removeEventListener('touchmove', preventScrollRef.current, { capture: true } as EventListenerOptions);
       }
     };
   }, []);
