@@ -30,7 +30,7 @@ function ResultPreview({
   useEffect(() => {
     if (isStreaming !== isStreamingRef.current) {
       isStreamingRef.current = isStreaming;
-      
+
       // Reset streaming key when streaming stops
       if (!isStreaming) {
         hasGeneratedStreamingKeyRef.current = false;
@@ -40,22 +40,22 @@ function ResultPreview({
 
   const sandpackKey = useMemo(() => {
     if (showWelcome) return `${sessionId || 'default'}-welcome`;
-    
+
     // During streaming, use a stable key that doesn't include the changing code
     if (isStreaming) {
       // Only generate a new streaming key once per streaming session
       if (!hasGeneratedStreamingKeyRef.current) {
         // Use timestamp to ensure unique key between different streaming sessions
-        streamingKeyRef.current = `${sessionId || 'default'}-streaming-${Date.now()}`;
+        streamingKeyRef.current = `${sessionId || 'default'}-streaming`;
         hasGeneratedStreamingKeyRef.current = true;
       }
       return streamingKeyRef.current;
     }
-    
+
     // For non-streaming mode, we can include the code in the key (content is stable)
     // But to prevent the key from being too long, just use a hash of the code
-    return `${sessionId || 'default'}-static-${codeReady}-${code.length}-${Date.now()}`;
-  }, [sessionId, isStreaming, codeReady, showWelcome, code.length]);
+    return `${sessionId || 'default'}-static-${codeReady}}`;
+  }, [sessionId, isStreaming, codeReady, showWelcome]);
 
   useEffect(() => {
     if (isStreaming) {
@@ -98,8 +98,18 @@ function ResultPreview({
           active: true,
         },
       };
+      if (codeReady) {
+        setTimeout(() => {
+          const iframe = document.querySelector('.sp-preview-iframe') as HTMLIFrameElement;
+          iframe?.contentWindow?.postMessage({
+            type: 'command',
+            command: 'reload-preview'
+          }, '*');
+        }, 200);
+
+      }
     }
-  }, [code, showWelcome]);
+  }, [code, showWelcome, codeReady]);
 
   const previewArea = showWelcome ? (
     <div className="h-full">

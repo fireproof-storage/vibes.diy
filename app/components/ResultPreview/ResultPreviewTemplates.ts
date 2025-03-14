@@ -52,6 +52,12 @@ export const indexHtml = `<!DOCTYPE html>
         setTimeout(captureScreenshot, 100);
       }
 
+      window.addEventListener('message', function(event) {        
+        if (event.data && event.data.type === 'command' && event.data.command === 'reload-preview') {
+          window.location.reload();
+        }
+      });
+
       window.addEventListener('DOMContentLoaded', function() {        
         const rootElement = document.getElementById('root');
         if (rootElement) {
