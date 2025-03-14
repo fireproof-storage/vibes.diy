@@ -14,6 +14,7 @@ const TITLE_MODEL = 'google/gemini-2.0-flash-lite-001';
  * @returns ChatState object with all chat functionality and state
  */
 export function useSimpleChat(sessionId: string | undefined): ChatState {
+  // Get session data
   const {
     session,
     updateTitle,
@@ -27,16 +28,18 @@ export function useSimpleChat(sessionId: string | undefined): ChatState {
     database,
     aiMessage,
   } = useSession(sessionId);
-  const [systemPrompt, setSystemPrompt] = useState('');
+  
+  // First declare ALL ref hooks to maintain hook order consistency
   const streamBufferRef = useRef<string>('');
   const inputRef = useRef<HTMLTextAreaElement>(null);
-  const [isStreaming, setIsStreaming] = useState<boolean>(false);
-  const [selectedResponseId, setSelectedResponseId] = useState<string>(''); // default most recent
-  // Add throttling refs for performance
+  const isProcessingRef = useRef<boolean>(false);
   const lastUpdateTimeRef = useRef<number>(0);
   const updateTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  // Add a flag to prevent infinite updates
-  const isProcessingRef = useRef<boolean>(false);
+  
+  // Then declare state hooks
+  const [systemPrompt, setSystemPrompt] = useState('');
+  const [isStreaming, setIsStreaming] = useState<boolean>(false);
+  const [selectedResponseId, setSelectedResponseId] = useState<string>(''); // default most recent
 
   const selectedResponseDoc = (isStreaming
     ? aiMessage
@@ -73,9 +76,9 @@ export function useSimpleChat(sessionId: string | undefined): ChatState {
     ? parseDependencies(selectedDependenciesString)
     : {};
 
-  // Add a throttled update function
+  // Throttled update function with fixed 10ms delay
   const throttledMergeAiMessage = useCallback((content: string) => {
-    // Store content in ref regardless of whether we update state
+    // Store content in ref
     streamBufferRef.current = content;
     
     // If we're already processing a database operation, don't trigger more updates
@@ -83,31 +86,20 @@ export function useSimpleChat(sessionId: string | undefined): ChatState {
       return;
     }
     
-    const now = Date.now();
-    
-    // For very small documents, update frequently
-    // For larger documents, throttle more aggressively
-    const contentLength = content.length;
-    const throttleInterval = Math.min(50 + Math.floor(contentLength / 100), 300);
-    
     // Clear any pending timeout
     if (updateTimeoutRef.current) {
       clearTimeout(updateTimeoutRef.current);
       updateTimeoutRef.current = null;
     }
     
-    // If we've recently updated, schedule a delayed update
-    if (now - lastUpdateTimeRef.current < throttleInterval) {
-      updateTimeoutRef.current = setTimeout(() => {
-        lastUpdateTimeRef.current = Date.now();
-        mergeAiMessage({ text: streamBufferRef.current });
-      }, throttleInterval);
-      return;
-    }
+    // Use a fixed 10ms throttle delay
+    const THROTTLE_DELAY = 10;
     
-    // Otherwise update immediately
-    lastUpdateTimeRef.current = now;
-    mergeAiMessage({ text: content });
+    // Schedule update with fixed delay
+    updateTimeoutRef.current = setTimeout(() => {
+      lastUpdateTimeRef.current = Date.now();
+      mergeAiMessage({ text: streamBufferRef.current });
+    }, THROTTLE_DELAY);
   }, [mergeAiMessage]);
 
   /**
@@ -148,9 +140,8 @@ export function useSimpleChat(sessionId: string | undefined): ChatState {
       })
       .then((response) => {
         return processStream(response, (content) => {
-          // Only append to the buffer here - don't update state for every tiny chunk
+          // Append to buffer and use throttled update
           streamBufferRef.current += content;
-          // Use the throttled update function
           throttledMergeAiMessage(streamBufferRef.current);
         });
       })
@@ -193,7 +184,6 @@ export function useSimpleChat(sessionId: string | undefined): ChatState {
     setIsStreaming,
     submitUserMessage,
     buildMessageHistory,
-    mergeAiMessage,
     throttledMergeAiMessage,
     aiMessage,
     database,
@@ -221,7 +211,6 @@ export function useSimpleChat(sessionId: string | undefined): ChatState {
         clearTimeout(updateTimeoutRef.current);
         updateTimeoutRef.current = null;
       }
-      isProcessingRef.current = false;
     };
   }, []);
 
