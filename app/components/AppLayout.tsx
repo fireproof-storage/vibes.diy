@@ -27,7 +27,7 @@ export default function AppLayout({
   return (
     <div className="flex h-dvh flex-col relative">
       {/* Header - stacked on mobile, side-by-side on desktop */}
-      <div className="border-light-decorative-00 dark:border-dark-decorative-00 flex w-full border-b flex-col md:flex-row z-10 h-[5rem] md:h-[3rem]">
+      <div className="border-light-decorative-00 dark:border-dark-decorative-00 flex w-full border-b flex-col md:flex-row z-10 h-[2.5rem] md:h-[3rem]">
         {/* HeaderLeft is always in the header */}
         <div className="border-light-decorative-00 dark:border-dark-decorative-00 flex items-center w-full md:w-1/3 p-2">
           {headerLeft}
@@ -48,13 +48,6 @@ export default function AppLayout({
             {chatPanel}
           </div>
           
-          {/* HeaderRight placed before preview panel only on mobile */}
-          {headerRight && (
-            <div className="w-full p-2 border-t border-light-decorative-00 dark:border-dark-decorative-00 md:hidden">
-              {headerRight}
-            </div>
-          )}
-          
           {/* Suggestions component on desktop goes inside chat panel */}
           {suggestionsComponent && (
             <div className="hidden md:block mt-auto">
@@ -68,6 +61,13 @@ export default function AppLayout({
           {previewPanel}
         </div>
         
+        {/* HeaderRight placed after preview panel only on mobile */}
+        {headerRight && (
+          <div className="w-full p-2 border-t border-light-decorative-00 dark:border-dark-decorative-00 md:hidden">
+            {headerRight}
+          </div>
+        )}
+        
         {/* Mobile-only suggestions below preview */}
         {suggestionsComponent && (
           <div className="w-full md:hidden">
@@ -77,7 +77,7 @@ export default function AppLayout({
       </div>
       
       {/* Spacer element to prevent content from being hidden under the chat input - reduced height */}
-      <div className="h-[75px] md:hidden"></div>
+      <div className="h-[50px] md:hidden"></div>
       
       {/* Chat input fixed to bottom on mobile */}
       <div className="fixed bottom-0 left-0 right-0 md:hidden bg-white dark:bg-gray-900 border-t border-light-decorative-00 dark:border-dark-decorative-00 p-2 z-10">
