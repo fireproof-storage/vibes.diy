@@ -228,7 +228,7 @@ const SandpackScrollController: React.FC<SandpackScrollControllerProps> = ({
     staticRefs.scrollInProgress = false;
   };
 
-  // Highlight last line function - simplified
+  // Highlight last line function - SCAN DISABLED, only scrolling enabled
   const highlightLastLine = () => {
     if (!staticRefs.scroller || !shouldScroll()) return;
     
@@ -243,6 +243,8 @@ const SandpackScrollController: React.FC<SandpackScrollControllerProps> = ({
     }
     staticRefs.lastHighlightTime = now;
 
+    // DISABLED FOR PERF TESTING - Skip the line scanning entirely
+    /*
     // Get all lines
     const lines = document.querySelectorAll('.cm-line');
     if (lines.length === 0) return;
@@ -261,6 +263,11 @@ const SandpackScrollController: React.FC<SandpackScrollControllerProps> = ({
         break;
       }
     }
+    */
+
+    // Skip finding last line for perf testing
+    const lastLine = null;
+    const lastLineIdx = -1;
 
     // If the last line is the same as before, no need to update DOM
     if (lastLine === staticRefs.currentHighlightedLine) {
@@ -269,30 +276,34 @@ const SandpackScrollController: React.FC<SandpackScrollControllerProps> = ({
     
     // Fade out previous highlight if it exists
     if (staticRefs.currentHighlightedLine) {
-      fadeOutHighlight(staticRefs.currentHighlightedLine);
+      // DISABLED FOR PERF TESTING - Don't apply visual effects
+      // fadeOutHighlight(staticRefs.currentHighlightedLine);
+      staticRefs.currentHighlightedLine.classList.remove('cm-line-highlighted', 'active', 'cm-line-fade-out');
     }
     
-    // Add highlight to new line with fade-in effect
+    // Add highlight to new line with fade-in effect - DISABLED FOR PERF TESTING
     if (lastLine) {
-      lastLine.classList.add('cm-line-highlighted');
+      // Still track the current line but don't apply visual effects
+      // lastLine.classList.add('cm-line-highlighted');
       staticRefs.currentHighlightedLine = lastLine;
       staticRefs.lastLineIndex = lastLineIdx;
       
+      // DISABLED FOR PERF TESTING - Don't apply visual effects
       // Trigger a reflow before adding the active class for transition to work
-      void lastLine.offsetWidth;
+      // void lastLine.offsetWidth;
       
       // Add active class after a very short delay to ensure transition works
-      setTimeout(() => {
-        if (lastLine && lastLine.isConnected) {
-          lastLine.classList.add('active');
-        }
-      }, 1);
-      
-      // Check if we need to scroll
-      if (shouldScroll() && !staticRefs.hasUserScrolled) {
-        staticRefs.pendingScroll = true;
-        scheduleAnimationFrame();
-      }
+      // setTimeout(() => {
+      //   if (lastLine && lastLine.isConnected) {
+      //     lastLine.classList.add('active');
+      //   }
+      // }, 1);
+    }
+    
+    // Always enable scrolling for perf testing, regardless of current line
+    if (shouldScroll() && !staticRefs.hasUserScrolled) {
+      staticRefs.pendingScroll = true;
+      scheduleAnimationFrame();
     }
   };
 
@@ -316,6 +327,8 @@ const SandpackScrollController: React.FC<SandpackScrollControllerProps> = ({
       const style = document.createElement('style');
       style.id = 'highlight-style';
       style.textContent = `
+        /* TEMPORARILY DISABLED FOR PERF TESTING */
+        /*
         .cm-line-highlighted {
           position: relative !important;
           border-left: 3px solid rgba(0, 137, 249, 0.6) !important;
@@ -366,6 +379,7 @@ const SandpackScrollController: React.FC<SandpackScrollControllerProps> = ({
           opacity: 0 !important;
           transition: opacity 1.5s cubic-bezier(0.25, 0.1, 0.1, 1) !important;
         }
+        */
       `;
       document.head.appendChild(style);
     }
