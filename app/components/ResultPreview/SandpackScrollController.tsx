@@ -6,7 +6,6 @@ const staticRefs = {
   scroller: null as HTMLElement | null,
   contentObserver: null as MutationObserver | null,
   checkForScrollerInterval: null as NodeJS.Timeout | null,
-  scrollIntervalRef: null as NodeJS.Timeout | null,
   isScrolling: false,
   lastScrollHeight: 0,
   lastScrollTop: 0,
@@ -147,21 +146,8 @@ const SandpackScrollController: React.FC<SandpackScrollControllerProps> = ({
   
   // Setup or tear down the periodic scrolling
   const setupScrollInterval = () => {
-    // Clear any existing interval
-    if (staticRefs.scrollIntervalRef) {
-      clearInterval(staticRefs.scrollIntervalRef);
-      staticRefs.scrollIntervalRef = null;
-    }
-    
-    // If we should auto-scroll, set up the interval
-    if (shouldAutoScroll() && staticRefs.scroller) {
-      // Scroll 4 times per second (every 250ms)
-      staticRefs.scrollIntervalRef = setInterval(() => {
-        if (componentMounted.current && shouldAutoScroll()) {
-          scrollToBottom();
-        }
-      }, 250);
-    }
+    // This function is now a no-op since we're only using the MutationObserver
+    // Keeping the function for API compatibility, but not creating any intervals
   };
 
   // Main effect to handle mounting and setup
@@ -262,11 +248,6 @@ const SandpackScrollController: React.FC<SandpackScrollControllerProps> = ({
       if (staticRefs.checkForScrollerInterval) {
         clearInterval(staticRefs.checkForScrollerInterval);
         staticRefs.checkForScrollerInterval = null;
-      }
-      
-      if (staticRefs.scrollIntervalRef) {
-        clearInterval(staticRefs.scrollIntervalRef);
-        staticRefs.scrollIntervalRef = null;
       }
       
       // Disconnect observer
