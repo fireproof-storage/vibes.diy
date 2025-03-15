@@ -89,7 +89,7 @@ function ChatInterface({
         isShrinking={isShrinking}
         isExpanding={isExpanding}
         setSelectedResponseId={setSelectedResponseId}
-        selectedResponseDocId={selectedResponseDoc?._id}
+        selectedResponseId={selectedResponseDoc?._id}
       />
     );
   }, [messages, isStreaming, isShrinking, isExpanding, setSelectedResponseId, selectedResponseDoc]);

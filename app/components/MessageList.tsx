@@ -8,7 +8,7 @@ interface MessageListProps {
   isShrinking?: boolean;
   isExpanding?: boolean;
   setSelectedResponseId?: (id: string) => void;
-  selectedResponseDocId?: string;
+  selectedResponseId?: string;
 }
 
 function MessageList({
@@ -17,7 +17,7 @@ function MessageList({
   isShrinking = false,
   isExpanding = false,
   setSelectedResponseId,
-  selectedResponseDocId,
+  selectedResponseId,
 }: MessageListProps) {
   const messageElements = useMemo(() => {
     return messages.map((msg, i) => {
@@ -29,7 +29,7 @@ function MessageList({
           isShrinking={isShrinking}
           isExpanding={isExpanding}
           setSelectedResponseId={setSelectedResponseId}
-          selectedResponseDocId={selectedResponseDocId}
+          selectedResponseId={selectedResponseDocId}
         />
       );
     });
