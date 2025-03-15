@@ -45,7 +45,7 @@ describe('ChatInterface Component', () => {
     // This test passes now that we've fixed the 'input is not defined' error
     // by properly destructuring input from chatState
     const { container } = render(
-      <ChatInterface {...mockChatState} isSidebarVisible={false} setIsSidebarVisible={vi.fn()} />
+      <ChatInterface {...mockChatState} />
     );
     expect(container).toBeDefined();
   });
