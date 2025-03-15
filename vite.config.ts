@@ -1,9 +1,10 @@
 import { reactRouter } from '@react-router/dev/vite';
 import tailwindcss from '@tailwindcss/vite';
 import { defineConfig } from 'vite';
+import type { ConfigEnv, UserConfig } from 'vite';
 import tsconfigPaths from 'vite-tsconfig-paths';
 
-export default defineConfig(({ command, mode }) => {
+export default defineConfig(({ command, mode }: ConfigEnv): UserConfig => {
   // Disable React Router plugin for tests or when explicitly disabled
   const disableReactRouter = mode === 'test' || process.env.DISABLE_REACT_ROUTER === 'true';
 
@@ -14,6 +15,15 @@ export default defineConfig(({ command, mode }) => {
       ...(!disableReactRouter ? [reactRouter()] : []),
       tsconfigPaths(),
     ],
+    // Server configuration for local development
+    server: {
+      host: '0.0.0.0', // Listen on all local IPs
+      allowedHosts: ['7c94-97-120-74-156.ngrok-free.app'], // Specific ngrok hostname
+      cors: true, // Enable CORS for all origins
+      hmr: {
+        clientPort: 443, // Use the HTTPS port for HMR when tunneling
+      },
+    },
     // Ensure JSON imports are properly handled
     json: {
       stringify: true,
@@ -38,11 +48,6 @@ export default defineConfig(({ command, mode }) => {
       globals: true,
       setupFiles: ['./tests/setup.ts'],
       exclude: ['node_modules', 'dist', '.idea', '.git', '.cache'],
-      server: {
-        deps: {
-          inline: ['react-router', '@react-router/dev'],
-        },
-      },
       deps: {
         inline: ['react-router', '@react-router/dev'],
       },
