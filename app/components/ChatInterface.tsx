@@ -1,15 +1,12 @@
 import { useState, useMemo, useCallback, useRef, useEffect } from 'react';
 import type { ChangeEvent } from 'react';
 import type { ChatState } from '../types/chat';
-import SessionSidebar from './SessionSidebar';
 import MessageList from './MessageList';
 import ChatInput from './ChatInput';
 import QuickSuggestions from './QuickSuggestions';
 import { WelcomeScreen } from './Message';
 
 interface ChatInterfaceProps extends ChatState {
-  isSidebarVisible: boolean;
-  setIsSidebarVisible: (isVisible: boolean) => void;
   renderChatInput?: boolean; // Flag to control whether chat input is rendered here
   renderSuggestions?: boolean; // Flag to control whether suggestions are rendered inside
 }
@@ -25,8 +22,6 @@ function ChatInterface({
   title,
   codeReady,
   addScreenshot,
-  isSidebarVisible,
-  setIsSidebarVisible,
   setSelectedResponseId,
   renderChatInput = true, // Default to true for backward compatibility
   renderSuggestions = true, // Default to true for backward compatibility
@@ -35,11 +30,6 @@ function ChatInterface({
   const [isShrinking] = useState(false);
   const [isExpanding] = useState(false);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
-
-  // Sidebar visibility function
-  const closeSidebar = useCallback(() => {
-    setIsSidebarVisible(false);
-  }, [setIsSidebarVisible]);
 
   // Function to handle input changes
   const handleInputChange = useCallback(
@@ -147,11 +137,6 @@ function ChatInterface({
       )}
       {/* Only render the chat input here if requested */}
       {renderChatInput && chatInputComponent}
-      <SessionSidebar
-        isVisible={isSidebarVisible}
-        onClose={closeSidebar}
-        sessionId={sessionId || ''}
-      />
     </div>
   );
 }
