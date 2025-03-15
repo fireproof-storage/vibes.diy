@@ -1,9 +1,8 @@
 interface QuickSuggestionsProps {
   onSelectSuggestion: (suggestion: string) => void;
-  isMobile?: boolean;
 }
 
-function QuickSuggestions({ onSelectSuggestion, isMobile = false }: QuickSuggestionsProps) {
+function QuickSuggestions({ onSelectSuggestion }: QuickSuggestionsProps) {
   const suggestions = [
     {
       label: 'Todos',
@@ -52,16 +51,14 @@ function QuickSuggestions({ onSelectSuggestion, isMobile = false }: QuickSuggest
   ];
 
   return (
-    <div className={`${isMobile ? 'px-2 py-2' : 'px-4 py-3'}`}>
+    <div className="px-4 py-3">
       <div className="flex flex-wrap gap-2">
         {suggestions.map((suggestion, index) => (
           <button
             key={index}
             type="button"
             onClick={() => onSelectSuggestion(suggestion.text)}
-            className={`bg-light-background-00 dark:bg-dark-background-00 text-light-primary dark:text-dark-primary hover:bg-light-decorative-01 dark:hover:bg-dark-decorative-01 cursor-pointer rounded-lg transition-colors ${
-              isMobile ? 'px-2 py-1 text-xs' : 'px-3 py-1.5 text-sm font-medium'
-            }`}
+            className="bg-light-background-00 dark:bg-dark-background-00 text-light-primary dark:text-dark-primary hover:bg-light-decorative-01 dark:hover:bg-dark-decorative-01 cursor-pointer rounded-lg transition-colors px-3 py-1.5 text-sm font-medium"
           >
             {suggestion.label}
           </button>

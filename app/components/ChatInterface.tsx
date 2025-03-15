@@ -100,25 +100,6 @@ export function getChatInputComponent({
     }
   };
 
-  // Detect if we're on mobile
-  const [isMobile, setIsMobile] = useState(false);
-
-  useEffect(() => {
-    // Check if we're on mobile using window.matchMedia
-    const mediaQuery = window.matchMedia('(max-width: 768px)');
-    setIsMobile(mediaQuery.matches);
-
-    // Add listener for screen size changes
-    const handleResize = (e: MediaQueryListEvent) => {
-      setIsMobile(e.matches);
-    };
-
-    mediaQuery.addEventListener('change', handleResize);
-    return () => {
-      mediaQuery.removeEventListener('change', handleResize);
-    };
-  }, []);
-
   return (
     <ChatInput
       value={input}
@@ -127,7 +108,7 @@ export function getChatInputComponent({
       onSend={sendMessage}
       disabled={isStreaming}
       inputRef={inputRef}
-      isMobile={isMobile}
+      
     />
   );
 }
@@ -154,24 +135,5 @@ export function getSuggestionsComponent({
     [setInput, inputRef]
   );
 
-  // Detect if we're on mobile
-  const [isMobile, setIsMobile] = useState(false);
-
-  useEffect(() => {
-    // Check if we're on mobile using window.matchMedia
-    const mediaQuery = window.matchMedia('(max-width: 768px)');
-    setIsMobile(mediaQuery.matches);
-
-    // Add listener for screen size changes
-    const handleResize = (e: MediaQueryListEvent) => {
-      setIsMobile(e.matches);
-    };
-
-    mediaQuery.addEventListener('change', handleResize);
-    return () => {
-      mediaQuery.removeEventListener('change', handleResize);
-    };
-  }, []);
-
-  return <QuickSuggestions onSelectSuggestion={handleSelectSuggestion} isMobile={isMobile} />;
+  return <QuickSuggestions onSelectSuggestion={handleSelectSuggestion}/>;
 }
