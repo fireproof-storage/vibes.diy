@@ -30,7 +30,7 @@ export default function UnifiedSession() {
   const [activeView, setActiveView] = useState<'code' | 'preview'>('code');
   const [previewReady, setPreviewReady] = useState(false);
   const [bundlingComplete] = useState(true);
-  const [mobilePreviewShown, _setMobilePreviewShown] = useState(false);
+  const [mobilePreviewShown, setMobilePreviewShown] = useState(true);
 
   const [isSidebarVisible, setIsSidebarVisible] = useState(false);
 
@@ -100,6 +100,7 @@ export default function UnifiedSession() {
             previewReady={previewReady}
             activeView={activeView}
             setActiveView={setActiveView}
+            setMobilePreviewShown={setMobilePreviewShown}
             bundlingComplete={bundlingComplete}
             isStreaming={chatState.isStreaming}
             code={chatState.selectedCode?.content || ''}
