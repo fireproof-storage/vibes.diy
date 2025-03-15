@@ -25,55 +25,67 @@ export default function AppLayout({
   suggestionsComponent,
 }: AppLayoutProps) {
   return (
-    <div className="relative flex h-dvh flex-col">
+    <div className="flex h-dvh flex-col md:overflow-hidden">
       {/* Header - stacked on mobile, side-by-side on desktop */}
-      <div className="border-light-decorative-00 dark:border-dark-decorative-00 z-10 flex h-[5rem] w-full flex-col border-b md:h-[3rem] md:flex-row">
+      <div className="border-light-decorative-00 dark:border-dark-decorative-00 flex h-[5rem] w-full flex-col border-b md:h-[4rem] md:flex-row">
         {/* HeaderLeft is always in the header */}
         <div className="border-light-decorative-00 dark:border-dark-decorative-00 flex w-full items-center p-2 md:w-1/3">
           {headerLeft}
         </div>
 
-        {/* HeaderRight only in header on desktop */}
-        <div className="hidden w-full items-center p-2 md:flex md:w-2/3">{headerRight}</div>
+        {/* HeaderRight - in header on desktop, below preview on mobile */}
+        <div className="hidden w-2/3 md:flex">{headerRight}</div>
       </div>
 
-      {/* Main content area */}
-      <div className="flex flex-1 flex-col overflow-auto md:flex-row md:overflow-hidden">
-        {/* Mobile order: preview -> headerRight -> chat -> suggestions */}
-        {/* Desktop order: chat+suggestions | preview */}
+      {/* Desktop layout - simple side-by-side */}
+      <div className="hidden md:flex md:flex-1">
+        {/* Left panel - chat + suggestions + chat input */}
+        <div className="flex h-full w-1/3 flex-col bg-light-background-01 dark:bg-dark-background-01">
+          {/* Chat messages */}
+          <div className="flex-auto">{chatPanel}</div>
+          
+          {/* Suggestions on desktop */}
+          {suggestionsComponent && <div className="mt-auto">{suggestionsComponent}</div>}
+          
+          {/* Chat input on desktop */}
+          <div className="border-light-decorative-00 dark:border-dark-decorative-00 border-t">
+            {chatInput}
+          </div>
+        </div>
+        
+        {/* Right panel - preview */}
+        <div className="relative w-2/3 h-full">{previewPanel}</div>
+      </div>
 
-        {/* Preview panel - single instance with positioning controlled by responsive classes */}
-        <div className="order-1 w-full h-full md:order-none md:h-full md:w-2/3">{previewPanel}</div>
+      {/* Mobile layout - stacked with custom order */}
+      <div className="flex flex-1 flex-col overflow-auto md:hidden">
+        {/* Preview panel - first on mobile */}
+        <div className="order-1 w-full h-60">{previewPanel}</div>
 
-        {/* HeaderRight placed after preview panel only on mobile */}
+        {/* HeaderRight placed after preview panel on mobile */}
         {headerRight && (
-          <div className="border-light-decorative-00 dark:border-dark-decorative-00 order-2 w-full border-t p-2 md:hidden">
+          <div className="border-light-decorative-00 dark:border-dark-decorative-00 order-2 w-full border-t p-2">
             {headerRight}
           </div>
         )}
 
-        {/* Chat panel layout */}
-        <div className="flex w-full flex-col order-3 md:order-first md:h-full md:w-1/3">
-          {/* Chat panel (flex-auto to take available space) */}
+        {/* Chat panel - comes after header right */}
+        <div className="flex w-full flex-col order-3 bg-light-background-01 dark:bg-dark-background-01">
+          {/* Chat panel content */}
           <div className="flex-auto">{chatPanel}</div>
-
-          {/* Suggestions component on desktop goes inside chat panel */}
-          {suggestionsComponent && (
-            <div className="mt-auto hidden md:block">{suggestionsComponent}</div>
-          )}
         </div>
 
         {/* Mobile-only suggestions below chat */}
         {suggestionsComponent && (
-          <div className="order-4 w-full md:hidden">{suggestionsComponent}</div>
+          <div className="order-4 w-full">{suggestionsComponent}</div>
         )}
       </div>
 
-      {/* Mobile chat input container */}
+      {/* Mobile chat input container - fixed to bottom */}
       <div className="md:hidden">
         {/* Chat input fixed to bottom on mobile */}
         <div
-          className="border-light-decorative-00 dark:border-dark-decorative-00 fixed right-0 bottom-0 left-0 z-10 border-t bg-white md:hidden dark:bg-gray-900"
+          className="border-light-decorative-00 dark:border-dark-decorative-00 fixed right-0 bottom-0 left-0 z-10 border-t bg-white dark:bg-gray-900"
           style={{ '--input-height': 'var(--self-height)' } as React.CSSProperties}
           ref={(el) => {
             if (el) {
@@ -86,7 +98,7 @@ export default function AppLayout({
         </div>
 
         {/* This spacer prevents content from being hidden under the fixed chat input */}
-        <div className="block h-[var(--input-height,70px)] min-h-[70px] md:hidden"></div>
+        <div className="block h-[var(--input-height,70px)] min-h-[70px]"></div>
       </div>
     </div>
   );
