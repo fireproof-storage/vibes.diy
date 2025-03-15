@@ -77,7 +77,8 @@ const AIMessage = memo(
     if (
       prevProps.message.text !== nextProps.message.text ||
       prevProps.isStreaming !== nextProps.isStreaming ||
-      prevProps.setSelectedResponseId !== nextProps.setSelectedResponseId
+      prevProps.setSelectedResponseId !== nextProps.setSelectedResponseId ||
+      prevProps.selectedResponseId !== nextProps.selectedResponseId
     ) {
       return false;
     }

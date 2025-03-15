@@ -25,7 +25,7 @@ const StructuredMessage = memo(
     // Special case: if we're streaming and there's no messageId or selectedResponseId, consider it selected
     const isSelected = 
       (messageId === selectedResponseId) || 
-      (isStreaming && (!messageId || !selectedResponseId));
+      (isStreaming && (!messageId && !selectedResponseId));
 
 
       console.log('isSelected', isSelected, 'id', messageId, 'sel', selectedResponseId);
@@ -133,7 +133,28 @@ const StructuredMessage = memo(
     );
   },
   (prevProps, nextProps) => {
-    return prevProps.messageId === nextProps.messageId && prevProps.selectedResponseId === nextProps.selectedResponseId;
+    // Return false (force re-render) if selectedResponseId changes
+    if (prevProps.selectedResponseId !== nextProps.selectedResponseId) {
+      return false;
+    }
+    
+    // Return false if messageId changes
+    if (prevProps.messageId !== nextProps.messageId) {
+      return false;
+    }
+    
+    // Return false if streaming state changes
+    if (prevProps.isStreaming !== nextProps.isStreaming) {
+      return false;
+    }
+    
+    // For segments, do a shallow comparison of length and content
+    if (prevProps.segments.length !== nextProps.segments.length) {
+      return false;
+    }
+    
+    // Default to true (skip re-render) if nothing important changed
+    return true;
   }
 );
 

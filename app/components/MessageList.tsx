@@ -29,7 +29,7 @@ function MessageList({
           isShrinking={isShrinking}
           isExpanding={isExpanding}
           setSelectedResponseId={setSelectedResponseId}
-          selectedResponseId={selectedResponseDocId}
+          selectedResponseId={selectedResponseId}
         />
       );
     });
