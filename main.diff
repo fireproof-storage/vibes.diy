@@ -167,7 +167,7 @@ index 1da8d36..0715c00 100644
 +              ? 'max-h-[60px] min-h-[40px] p-2 text-sm'
 +              : 'max-h-[200px] min-h-[90px] p-2.5 text-sm'
 +          }`}
-+          placeholder={isMobile ? 'Ask me anything...' : 'Vibe coding? Use Fireproof.'}
++          placeholder={'Vibe coding? Use Fireproof.'}
            disabled={disabled}
 -          rows={2}
 +          rows={isMobile ? 1 : 2}

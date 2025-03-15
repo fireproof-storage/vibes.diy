@@ -89,7 +89,7 @@ function SessionSidebar({ isVisible, onClose }: SessionSidebarProps) {
         isVisible ? 'w-64 translate-x-0' : 'w-0 -translate-x-full'
       }`}
     >
-      <div className="flex h-full flex-col overflow-hidden">
+      <div className="flex h-full flex-col overflow-scroll">
         <div className="flex items-center justify-between border-b border-gray-200 p-4 dark:border-gray-700">
           <h2 className="text-light-primary dark:text-dark-primary text-lg font-semibold">
             App History

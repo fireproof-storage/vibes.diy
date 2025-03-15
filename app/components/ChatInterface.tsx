@@ -131,7 +131,7 @@ function ChatInterface({
   }, [renderSuggestions, messages.length, handleSelectSuggestion]);
 
   return (
-    <div className="bg-light-background-01 dark:bg-dark-background-01 flex h-full flex-col overflow-hidden">
+    <div className="flex h-full flex-col overflow-hidden">
       {messages.length > 0 ? (
         <div ref={messagesContainerRef} className="flex flex-grow flex-col-reverse overflow-y-auto">
           {memoizedMessageList}

@@ -39,7 +39,7 @@ function ChatInput({
 
   return (
     <div
-      className={`border-light-decorative-00 dark:border-dark-decorative-00 bg-light-background-01 dark:bg-dark-background-01 border-t ${isMobile ? 'px-3 py-3' : 'px-4 py-3'}`}
+      className={`border-light-decorative-00 dark:border-dark-decorative-00 bg-light-background-00 dark:bg-dark-background-00 border-t ${isMobile ? 'px-3 py-3' : 'px-4 py-3'}`}
     >
       <div className="relative">
         <textarea
@@ -47,12 +47,12 @@ function ChatInput({
           value={value}
           onChange={onChange}
           onKeyDown={onKeyDown}
-          className={`border-light-decorative-00 dark:border-dark-decorative-00 text-light-primary dark:text-dark-primary bg-light-background-00 dark:bg-dark-background-00 focus:ring-accent-01-light dark:focus:ring-accent-01-dark w-full resize-y rounded-xl border focus:border-transparent focus:ring-2 focus:outline-none ${
+          className={`border-light-decorative-00 dark:border-dark-decorative-00 text-light-primary dark:text-dark-primary bg-light-background-01 dark:bg-dark-background-01 focus:ring-accent-01-light dark:focus:ring-accent-01-dark w-full resize-y rounded-xl border focus:border-transparent focus:ring-2 focus:outline-none ${
             isMobile
               ? 'max-h-[60px] min-h-[40px] p-2 text-sm'
               : 'max-h-[200px] min-h-[90px] p-2.5 text-sm'
           }`}
-          placeholder={isMobile ? 'Ask me anything...' : 'Vibe coding? Use Fireproof.'}
+          placeholder={'Vibe coding? Use Fireproof.'}
           disabled={disabled}
           rows={isMobile ? 1 : 2}
         />

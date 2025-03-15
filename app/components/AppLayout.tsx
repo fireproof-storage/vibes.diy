@@ -40,7 +40,7 @@ export default function AppLayout({
       {/* Desktop layout - simple side-by-side */}
       <div className="hidden md:flex md:flex-1">
         {/* Left panel - chat + suggestions + chat input */}
-        <div className="flex h-full w-1/3 flex-col bg-light-background-01 dark:bg-dark-background-01">
+        <div className="flex h-full w-1/3 flex-col">
           {/* Chat messages */}
           <div className="flex-auto">{chatPanel}</div>
           
