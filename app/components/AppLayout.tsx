@@ -37,47 +37,34 @@ export default function AppLayout({
         <div className="hidden w-2/3 md:flex">{headerRight}</div>
       </div>
 
-      {/* Desktop layout - simple side-by-side */}
-      <div className="hidden md:flex md:flex-1">
-        {/* Left panel - chat + suggestions + chat input */}
-        <div className="flex h-full w-1/3 flex-col">
+      {/* Main content container - takes up remaining height */}
+      <div className="flex flex-1 flex-col md:flex-row overflow-hidden">
+        {/* Left panel - chat + suggestions + chat input (on desktop) */}
+        <div className="flex flex-col order-3 w-full h-full md:order-none md:w-1/3">
           {/* Chat messages */}
-          <div className="flex-auto">{chatPanel}</div>
+          <div className="flex-auto overflow-auto">{chatPanel}</div>
           
-          {/* Suggestions on desktop */}
-          {suggestionsComponent && <div className="mt-auto">{suggestionsComponent}</div>}
+          {/* Suggestions - visible on both desktop and mobile */}
+          {suggestionsComponent && (
+            <div className="mt-auto order-4 w-full md:order-none">{suggestionsComponent}</div>
+          )}
           
           {/* Chat input on desktop */}
-          {chatInput}
-        </div>
-        
-        {/* Right panel - preview */}
-        <div className="relative w-2/3 h-full">{previewPanel}</div>
-      </div>
-
-      {/* Mobile layout - stacked with custom order */}
-      <div className="flex flex-1 flex-col overflow-auto md:hidden">
-        {/* Preview panel - first on mobile */}
-        <div className="order-1 w-full h-full">{previewPanel}</div>
-
-        {/* HeaderRight placed after preview panel on mobile */}
-        {headerRight && (
-          <div className="border-light-decorative-00 dark:border-dark-decorative-00 order-2 w-full border-t p-2">
-            {headerRight}
-          </div>
-        )}
-
-        {/* Chat panel - comes after header right */}
-        <div className="flex w-full flex-col order-3">
-          {/* Chat panel content */}
-          <div className="flex-auto">{chatPanel}</div>
+          <div className="hidden md:block">{chatInput}</div>
         </div>
 
-        {/* Mobile-only suggestions below chat */}
-        {suggestionsComponent && (
-          <div className="order-4 w-full">{suggestionsComponent}</div>
-        )}
+        {/* Right panel - preview (single instance, conditionally styled) */}
+        <div className="order-1 w-full h-full md:w-2/3 flex-shrink-0 md:order-none">
+          {previewPanel}
+        </div>
       </div>
+
+      {/* HeaderRight placed after preview panel on mobile */}
+      {headerRight && (
+        <div className="border-light-decorative-00 dark:border-dark-decorative-00 order-2 w-full border-t p-2 md:hidden">
+          {headerRight}
+        </div>
+      )}
 
       {/* Mobile chat input container - fixed to bottom */}
       <div className="md:hidden">

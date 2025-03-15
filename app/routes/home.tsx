@@ -77,6 +77,10 @@ export default function UnifiedSession() {
     inputRef: chatState.inputRef,
   });
 
+  // useEffect(() => {
+  //   console.log('chatState.sessionId', chatState.sessionId);
+  // }, [chatState.sessionId]);
+
   return (
     <AppLayout
       headerLeft={
