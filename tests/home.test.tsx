@@ -74,14 +74,14 @@ vi.mock('../app/components/SessionSidebar/utils', () => ({
 vi.mock('../app/components/AppLayout', () => {
   return {
     __esModule: true,
-    default: ({ 
-      chatPanel, 
-      previewPanel, 
-      chatInput, 
-      suggestionsComponent 
-    }: { 
-      chatPanel: any; 
-      previewPanel: any; 
+    default: ({
+      chatPanel,
+      previewPanel,
+      chatInput,
+      suggestionsComponent,
+    }: {
+      chatPanel: any;
+      previewPanel: any;
       chatInput?: any;
       suggestionsComponent?: any;
     }) => {
@@ -90,7 +90,9 @@ vi.mock('../app/components/AppLayout', () => {
           <div data-testid="chat-panel">{chatPanel}</div>
           <div data-testid="preview-panel">{previewPanel}</div>
           {chatInput && <div data-testid="chat-input-container">{chatInput}</div>}
-          {suggestionsComponent && <div data-testid="suggestions-container">{suggestionsComponent}</div>}
+          {suggestionsComponent && (
+            <div data-testid="suggestions-container">{suggestionsComponent}</div>
+          )}
         </div>
       );
     },

@@ -108,16 +108,19 @@ function ChatInterface({
   }, [messages, isStreaming, isShrinking, isExpanding, handleSetSelectedResponseId]);
 
   // Create the chat input component (used both in this component and passed to parent)
-  const chatInputComponent = useMemo(() => (
-    <ChatInput
-      value={input}
-      onChange={handleInputChange}
-      onKeyDown={handleKeyDown}
-      onSend={sendMessage}
-      disabled={isStreaming}
-      inputRef={inputRef}
-    />
-  ), [input, handleInputChange, handleKeyDown, sendMessage, isStreaming, inputRef]);
+  const chatInputComponent = useMemo(
+    () => (
+      <ChatInput
+        value={input}
+        onChange={handleInputChange}
+        onKeyDown={handleKeyDown}
+        onSend={sendMessage}
+        disabled={isStreaming}
+        inputRef={inputRef}
+      />
+    ),
+    [input, handleInputChange, handleKeyDown, sendMessage, isStreaming, inputRef]
+  );
 
   // Create suggestions component only if we should render it
   const suggestionsComponent = useMemo(() => {
@@ -177,17 +180,17 @@ export function getChatInputComponent({
 
   // Detect if we're on mobile
   const [isMobile, setIsMobile] = useState(false);
-  
+
   useEffect(() => {
     // Check if we're on mobile using window.matchMedia
     const mediaQuery = window.matchMedia('(max-width: 768px)');
     setIsMobile(mediaQuery.matches);
-    
+
     // Add listener for screen size changes
     const handleResize = (e: MediaQueryListEvent) => {
       setIsMobile(e.matches);
     };
-    
+
     mediaQuery.addEventListener('change', handleResize);
     return () => {
       mediaQuery.removeEventListener('change', handleResize);
@@ -231,17 +234,17 @@ export function getSuggestionsComponent({
 
   // Detect if we're on mobile
   const [isMobile, setIsMobile] = useState(false);
-  
+
   useEffect(() => {
     // Check if we're on mobile using window.matchMedia
     const mediaQuery = window.matchMedia('(max-width: 768px)');
     setIsMobile(mediaQuery.matches);
-    
+
     // Add listener for screen size changes
     const handleResize = (e: MediaQueryListEvent) => {
       setIsMobile(e.matches);
     };
-    
+
     mediaQuery.addEventListener('change', handleResize);
     return () => {
       mediaQuery.removeEventListener('change', handleResize);

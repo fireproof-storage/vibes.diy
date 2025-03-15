@@ -1,6 +1,9 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router';
-import ChatInterface, { getChatInputComponent, getSuggestionsComponent } from '../components/ChatInterface';
+import ChatInterface, {
+  getChatInputComponent,
+  getSuggestionsComponent,
+} from '../components/ChatInterface';
 import ResultPreview from '../components/ResultPreview/ResultPreview';
 import ChatHeaderContent from '../components/ChatHeaderContent';
 import ResultPreviewHeaderContent from '../components/ResultPreview/ResultPreviewHeaderContent';

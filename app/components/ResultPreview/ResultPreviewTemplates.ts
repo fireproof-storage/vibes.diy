@@ -81,7 +81,7 @@ export const indexHtml = `<!DOCTYPE html>
       });
     </script>
   </head>
-  <body style="margin-bottom: 20px;">
+  <body>
     <div id="root"></div>
     <script type="module" src="/index.jsx"></script>
   </body>
