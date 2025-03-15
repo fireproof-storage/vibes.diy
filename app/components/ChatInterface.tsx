@@ -12,18 +12,12 @@ interface ChatInterfaceProps extends ChatState {
 
 function ChatInterface({
   docs: messages,
-  input,
-  setInput,
   isStreaming,
-  inputRef,
-  sendMessage,
   selectedResponseDoc,
   setSelectedResponseId,
   setMobilePreviewShown,
 }: ChatInterfaceProps) {
   // State for UI transitions and sharing
-  const [isShrinking] = useState(false);
-  const [isExpanding] = useState(false);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
 
   // Scroll to bottom when message count changes or when streaming starts/stops
@@ -44,8 +38,6 @@ function ChatInterface({
       <MessageList
         messages={messages}
         isStreaming={isStreaming}
-        isShrinking={isShrinking}
-        isExpanding={isExpanding}
         setSelectedResponseId={setSelectedResponseId}
         selectedResponseId={selectedResponseDoc?._id || ''}
         setMobilePreviewShown={setMobilePreviewShown}
@@ -54,8 +46,6 @@ function ChatInterface({
   }, [
     messages,
     isStreaming,
-    isShrinking,
-    isExpanding,
     setSelectedResponseId,
     selectedResponseDoc,
     setMobilePreviewShown,
@@ -108,7 +98,6 @@ export function getChatInputComponent({
       onSend={sendMessage}
       disabled={isStreaming}
       inputRef={inputRef}
-      
     />
   );
 }

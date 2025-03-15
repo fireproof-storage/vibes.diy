@@ -6,18 +6,11 @@ import { parseContent } from '~/utils/segmentParser';
 
 interface MessageProps {
   message: ChatMessageDocument;
-  isShrinking: boolean;
-  isExpanding: boolean;
   isStreaming: boolean;
   setSelectedResponseId: (id: string) => void;
   selectedResponseId: string;
   setMobilePreviewShown: (shown: boolean) => void;
 }
-
-// Helper function to get animation classes
-const getAnimationClasses = (isShrinking: boolean, isExpanding: boolean): string => {
-  return isShrinking ? 'animate-width-shrink' : isExpanding ? 'animate-width-expand' : '';
-};
 
 // AI Message component (simplified without animation handling)
 const AIMessage = memo(
@@ -109,17 +102,13 @@ const UserMessage = memo(({ message }: { message: ChatMessageDocument }) => {
 const Message = memo(
   ({
     message,
-    isShrinking,
-    isExpanding,
     isStreaming,
     setSelectedResponseId,
     selectedResponseId,
     setMobilePreviewShown,
   }: MessageProps) => {
     return (
-      <div
-        className={`transition-all duration-150 ease-in hover:opacity-95 ${getAnimationClasses(isShrinking, isExpanding)}`}
-      >
+      <div className="transition-all duration-150 ease-in hover:opacity-95">
         {message.type === 'ai' ? (
           <AIMessage
             message={message as AiChatMessageDocument}
@@ -140,12 +129,8 @@ const Message = memo(
       return false; // Text changed, need to re-render
     }
 
-    // Check for animation or streaming state changes
-    if (
-      prevProps.isShrinking !== nextProps.isShrinking ||
-      prevProps.isExpanding !== nextProps.isExpanding ||
-      prevProps.isStreaming !== nextProps.isStreaming
-    ) {
+    // Check for streaming state changes
+    if (prevProps.isStreaming !== nextProps.isStreaming) {
       return false; // State changed, need to re-render
     }
 
