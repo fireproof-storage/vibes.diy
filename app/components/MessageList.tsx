@@ -30,13 +30,7 @@ function MessageList({
         />
       );
     });
-  }, [
-    messages,
-    isStreaming,
-    setSelectedResponseId,
-    selectedResponseId,
-    setMobilePreviewShown,
-  ]);
+  }, [messages, isStreaming, setSelectedResponseId, selectedResponseId, setMobilePreviewShown]);
 
   return (
     <div className="flex-1">

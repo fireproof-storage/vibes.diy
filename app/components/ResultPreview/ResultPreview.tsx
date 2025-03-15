@@ -67,7 +67,7 @@ function ResultPreview({
           setPreviewReady(true);
           // Automatically switch to preview view when it's ready
           setActiveView('preview');
-          
+
           // Notify parent component that preview is loaded
           onPreviewLoaded();
         } else if (data.type === 'screenshot' && data.data) {

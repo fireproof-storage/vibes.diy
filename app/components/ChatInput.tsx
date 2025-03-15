@@ -10,14 +10,7 @@ interface ChatInputProps {
   inputRef: RefObject<HTMLTextAreaElement | null>;
 }
 
-function ChatInput({
-  value,
-  onChange,
-  onSend,
-  onKeyDown,
-  disabled,
-  inputRef,
-}: ChatInputProps) {
+function ChatInput({ value, onChange, onSend, onKeyDown, disabled, inputRef }: ChatInputProps) {
   // Auto-resize textarea function
   const autoResizeTextarea = useCallback(() => {
     const textarea = inputRef.current;
@@ -35,16 +28,14 @@ function ChatInput({
   }, [value, autoResizeTextarea]);
 
   return (
-    <div
-      className="border-light-decorative-00 dark:border-dark-decorative-00 bg-light-background-00 dark:bg-dark-background-00 border-t px-4 py-3"
-    >
+    <div className="border-light-decorative-00 dark:border-dark-decorative-00 bg-light-background-00 dark:bg-dark-background-00 border-t px-4 py-3">
       <div className="relative">
         <textarea
           ref={inputRef}
           value={value}
           onChange={onChange}
           onKeyDown={onKeyDown}
-          className="border-light-decorative-00 dark:border-dark-decorative-00 text-light-primary dark:text-dark-primary bg-light-background-01 dark:bg-dark-background-01 focus:ring-accent-01-light dark:focus:ring-accent-01-dark w-full resize-y rounded-xl border focus:border-transparent focus:ring-2 focus:outline-none max-h-[200px] min-h-[90px] p-2.5 text-sm"
+          className="border-light-decorative-00 dark:border-dark-decorative-00 text-light-primary dark:text-dark-primary bg-light-background-01 dark:bg-dark-background-01 focus:ring-accent-01-light dark:focus:ring-accent-01-dark max-h-[200px] min-h-[90px] w-full resize-y rounded-xl border p-2.5 text-sm focus:border-transparent focus:ring-2 focus:outline-none"
           placeholder={'Vibe coding? Use Fireproof.'}
           disabled={disabled}
           rows={2}
@@ -68,12 +59,12 @@ function ChatInput({
             <img
               src="/fp-logo.svg"
               alt="Fireproof"
-              className="block transition-all hover:brightness-110 active:brightness-125 dark:hidden h-5"
+              className="block h-5 transition-all hover:brightness-110 active:brightness-125 dark:hidden"
             />
             <img
               src="/fp-logo-white.svg"
               alt="Fireproof"
-              className="hidden transition-all hover:brightness-110 active:brightness-125 dark:block h-5"
+              className="hidden h-5 transition-all hover:brightness-110 active:brightness-125 dark:block"
             />
           </div>
         </button>

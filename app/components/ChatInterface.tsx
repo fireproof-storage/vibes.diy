@@ -43,13 +43,7 @@ function ChatInterface({
         setMobilePreviewShown={setMobilePreviewShown}
       />
     );
-  }, [
-    messages,
-    isStreaming,
-    setSelectedResponseId,
-    selectedResponseDoc,
-    setMobilePreviewShown,
-  ]);
+  }, [messages, isStreaming, setSelectedResponseId, selectedResponseDoc, setMobilePreviewShown]);
 
   return (
     <div className="flex h-full flex-col overflow-hidden">
@@ -124,5 +118,5 @@ export function getSuggestionsComponent({
     [setInput, inputRef]
   );
 
-  return <QuickSuggestions onSelectSuggestion={handleSelectSuggestion}/>;
+  return <QuickSuggestions onSelectSuggestion={handleSelectSuggestion} />;
 }
