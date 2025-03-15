@@ -99,8 +99,8 @@ export function useSimpleChat(sessionId: string | undefined): ChatState {
       }
 
       // Throttle parameters
-      const THROTTLE_DELAY = 30; // Increased from 10ms for better stability
-      const MIN_UPDATE_INTERVAL = 100; // Minimum time between updates
+      const THROTTLE_DELAY = 10; // Increased from 10ms for better stability
+      const MIN_UPDATE_INTERVAL = 50; // Minimum time between updates
 
       // Add minimum time between updates check
       const now = Date.now();

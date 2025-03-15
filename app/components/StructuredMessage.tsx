@@ -27,9 +27,6 @@ const StructuredMessage = memo(
       (messageId === selectedResponseId) || 
       (isStreaming && (!messageId && !selectedResponseId));
 
-
-      console.log('isSelected', isSelected, 'id', messageId, 'sel', selectedResponseId);
-
       // Count number of lines in code segments
     const codeLines = validSegments
       .filter((segment) => segment.type === 'code')
@@ -43,7 +40,6 @@ const StructuredMessage = memo(
     // Handle click on code segments to select the response
     const handleCodeClick = () => {
       if (setSelectedResponseId && messageId) {
-        console.log('xxx', messageId, 'old', selectedResponseId);
         setSelectedResponseId(messageId);
       }
     };
@@ -74,43 +70,54 @@ const StructuredMessage = memo(
                 return (
                   <div
                     key={`code-${index}`}
-                    className="my-4 cursor-pointer rounded-lg border border-gray-200 bg-gray-50 p-4 shadow-sm hover:bg-gray-100 dark:border-gray-700 dark:bg-gray-700 dark:hover:bg-gray-600"
+                    className="my-4 cursor-pointer rounded-lg border border-gray-200 bg-gray-50 p-4 shadow-sm hover:bg-gray-100 dark:border-gray-700 dark:bg-gray-700 dark:hover:bg-gray-600 relative transition-colors"
                     onClick={handleCodeClick}
                   >
-                    <div className="mb-2 flex items-center justify-between">
-                      <span className={`font-mono text-sm ${
-                        isSelected 
-                          ? 'text-green-800 dark:text-green-200' 
-                          : 'text-gray-500 dark:text-gray-400'
-                      }`}>
-                        {`${codeLines} line${codeLines !== 1 ? 's' : ''} of code`}
+                    <div className={`absolute -top-1 left-1 text-lg ${
+                      !codeReady 
+                        ? 'text-orange-500 dark:text-orange-400' 
+                        : isSelected
+                          ? 'text-green-500 dark:text-green-400'
+                          : 'text-gray-400 dark:text-gray-600'
+                    }`}>
+                      •
+                    </div>
+                    <div className="mb-2 flex items-center justify-between rounded p-2">
+                      <span className="font-mono text-sm text-gray-500 dark:text-gray-400">
+                        {`${codeLines} line${codeLines !== 1 ? 's' : ''}`}
                       </span>
-                      {isSelected && (<span className="text-green-800 dark:text-green-200">Selected</span>)}
                       <button
                         onClick={(e: React.MouseEvent) => {
                           e.stopPropagation(); // Prevent triggering the parent's onClick
                           navigator.clipboard.writeText(content);
                         }}
-                        className="rounded bg-gray-200 px-2 py-1 text-xs transition-colors hover:bg-gray-300 dark:bg-gray-800 dark:hover:bg-gray-700"
+                        className="rounded bg-gray-200 px-2 py-1 text-sm transition-colors hover:bg-gray-300 dark:bg-gray-800 dark:hover:bg-gray-700 text-gray-500 dark:text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 active:bg-orange-400 dark:active:bg-orange-600 active:text-orange-800 dark:active:text-orange-200"
                       >
-                        <code className="mr-3 font-mono text-gray-400 dark:text-gray-600">
-                          App.jsx
+                        <code className="font-mono ">
+                          <span className="mr-3">App.jsx</span>
+                        
+                        <svg 
+                          aria-hidden="true" 
+                          height="16" 
+                          viewBox="0 0 16 16" 
+                          version="1.1" 
+                          width="16" 
+                          className="inline-block"
+                        >
+                          <path fill="currentColor" d="M0 6.75C0 5.784.784 5 1.75 5h1.5a.75.75 0 0 1 0 1.5h-1.5a.25.25 0 0 0-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 0 0 .25-.25v-1.5a.75.75 0 0 1 1.5 0v1.5A1.75 1.75 0 0 1 9.25 16h-7.5A1.75 1.75 0 0 1 0 14.25Z"></path>
+                          <path fill="currentColor" d="M5 1.75C5 .784 5.784 0 6.75 0h7.5C15.216 0 16 .784 16 1.75v7.5A1.75 1.75 0 0 1 14.25 11h-7.5A1.75 1.75 0 0 1 5 9.25Zm1.75-.25a.25.25 0 0 0-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 0 0 .25-.25v-7.5a.25.25 0 0 0-.25-.25Z"></path>
+                        </svg>
                         </code>
-                        Copy
                       </button>
                     </div>
 
                     {/* Preview of first few lines */}
-                    <div className={`max-h-24 overflow-hidden rounded p-2 font-mono text-sm shadow-inner ${
-                      codeReady 
-                        ? 'bg-orange-50 dark:bg-orange-950' 
-                        : 'bg-gray-200 dark:bg-gray-900'
-                    }`}>
+                    <div className="max-h-24 overflow-hidden rounded p-2 font-mono text-sm shadow-inner bg-gray-100 dark:bg-gray-800">
                       {content
                         .split('\n')
                         .slice(0, 3)
                         .map((line, i) => (
-                          <div key={i} className="truncate">
+                          <div key={i} className="truncate text-gray-800 dark:text-gray-300">
                             {line || ' '}
                           </div>
                         ))}
@@ -152,6 +159,18 @@ const StructuredMessage = memo(
     if (prevProps.segments.length !== nextProps.segments.length) {
       return false;
     }
+
+    // Compare segments content by checking each segment
+    for (let i = 0; i < prevProps.segments.length; i++) {
+      const prevSegment = prevProps.segments[i];
+      const nextSegment = nextProps.segments[i];
+      
+      if (prevSegment.type !== nextSegment.type || 
+          prevSegment.content !== nextSegment.content) {
+        return false;
+      }
+    }
+
     
     // Default to true (skip re-render) if nothing important changed
     return true;
