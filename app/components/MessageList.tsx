@@ -7,8 +7,9 @@ interface MessageListProps {
   isStreaming: boolean;
   isShrinking?: boolean;
   isExpanding?: boolean;
-  setSelectedResponseId?: (id: string) => void;
-  selectedResponseId?: string;
+  setSelectedResponseId: (id: string) => void;
+  selectedResponseId: string;
+  setMobilePreviewShown: (shown: boolean) => void;
 }
 
 function MessageList({
@@ -18,6 +19,7 @@ function MessageList({
   isExpanding = false,
   setSelectedResponseId,
   selectedResponseId,
+  setMobilePreviewShown,
 }: MessageListProps) {
   const messageElements = useMemo(() => {
     return messages.map((msg, i) => {
@@ -30,10 +32,19 @@ function MessageList({
           isExpanding={isExpanding}
           setSelectedResponseId={setSelectedResponseId}
           selectedResponseId={selectedResponseId}
+          setMobilePreviewShown={setMobilePreviewShown}
         />
       );
     });
-  }, [messages, isShrinking, isExpanding, isStreaming, setSelectedResponseId, selectedResponseId]);
+  }, [
+    messages,
+    isShrinking,
+    isExpanding,
+    isStreaming,
+    setSelectedResponseId,
+    selectedResponseId,
+    setMobilePreviewShown,
+  ]);
 
   return (
     <div
@@ -57,10 +68,13 @@ export default memo(MessageList, (prevProps, nextProps) => {
   // Check if setSelectedResponseId changed
   const setSelectedResponseIdEqual =
     prevProps.setSelectedResponseId === nextProps.setSelectedResponseId;
-  
+
   // Check if selectedResponseId changed
-  const selectedResponseIdEqual =
-    prevProps.selectedResponseId === nextProps.selectedResponseId;
+  const selectedResponseIdEqual = prevProps.selectedResponseId === nextProps.selectedResponseId;
+
+  // Check if setMobilePreviewShown changed
+  const setMobilePreviewShownEqual =
+    prevProps.setMobilePreviewShown === nextProps.setMobilePreviewShown;
 
   // Content equality check for messages - must compare text content
   const messagesEqual =
@@ -71,5 +85,11 @@ export default memo(MessageList, (prevProps, nextProps) => {
       return msg._id === nextMsg._id && msg.text === nextMsg.text;
     });
 
-  return animationStateEqual && messagesEqual && setSelectedResponseIdEqual && selectedResponseIdEqual;
+  return (
+    animationStateEqual &&
+    messagesEqual &&
+    setSelectedResponseIdEqual &&
+    selectedResponseIdEqual &&
+    setMobilePreviewShownEqual
+  );
 });

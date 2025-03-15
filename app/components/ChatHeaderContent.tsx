@@ -12,7 +12,7 @@ function ChatHeaderContent({ onOpenSidebar, title }: ChatHeaderContentProps) {
         <button
           type="button"
           onClick={onOpenSidebar}
-          className="text-light-primary dark:text-dark-primary hover:text-accent-02-light dark:hover:text-accent-02-dark mr-3 py-4 px-2"
+          className="text-light-primary dark:text-dark-primary hover:text-accent-02-light dark:hover:text-accent-02-dark mr-3 px-2 py-4"
           aria-label="Open chat history"
         >
           <svg

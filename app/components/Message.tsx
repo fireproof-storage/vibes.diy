@@ -9,8 +9,9 @@ interface MessageProps {
   isShrinking: boolean;
   isExpanding: boolean;
   isStreaming: boolean;
-  setSelectedResponseId?: (id: string) => void;
-  selectedResponseId?: string;
+  setSelectedResponseId: (id: string) => void;
+  selectedResponseId: string;
+  setMobilePreviewShown: (shown: boolean) => void;
 }
 
 // Helper function to get animation classes
@@ -25,11 +26,13 @@ const AIMessage = memo(
     isStreaming,
     setSelectedResponseId,
     selectedResponseId,
+    setMobilePreviewShown,
   }: {
     message: AiChatMessageDocument;
     isStreaming: boolean;
     setSelectedResponseId?: (id: string) => void;
     selectedResponseId?: string;
+    setMobilePreviewShown: (shown: boolean) => void;
   }) => {
     const { segments } = parseContent(message.text);
     return (
@@ -66,6 +69,7 @@ const AIMessage = memo(
             messageId={message._id}
             setSelectedResponseId={setSelectedResponseId}
             selectedResponseId={selectedResponseId}
+            setMobilePreviewShown={setMobilePreviewShown}
           />
         </div>
       </div>
@@ -78,7 +82,8 @@ const AIMessage = memo(
       prevProps.message.text !== nextProps.message.text ||
       prevProps.isStreaming !== nextProps.isStreaming ||
       prevProps.setSelectedResponseId !== nextProps.setSelectedResponseId ||
-      prevProps.selectedResponseId !== nextProps.selectedResponseId
+      prevProps.selectedResponseId !== nextProps.selectedResponseId ||
+      prevProps.setMobilePreviewShown !== nextProps.setMobilePreviewShown
     ) {
       return false;
     }
@@ -102,7 +107,15 @@ const UserMessage = memo(({ message }: { message: ChatMessageDocument }) => {
 
 // Main Message component that handles animation and decides which subcomponent to render
 const Message = memo(
-  ({ message, isShrinking, isExpanding, isStreaming, setSelectedResponseId, selectedResponseId }: MessageProps) => {
+  ({
+    message,
+    isShrinking,
+    isExpanding,
+    isStreaming,
+    setSelectedResponseId,
+    selectedResponseId,
+    setMobilePreviewShown,
+  }: MessageProps) => {
     return (
       <div
         className={`transition-all duration-150 ease-in hover:opacity-95 ${getAnimationClasses(isShrinking, isExpanding)}`}
@@ -113,6 +126,7 @@ const Message = memo(
             isStreaming={isStreaming}
             setSelectedResponseId={setSelectedResponseId}
             selectedResponseId={selectedResponseId}
+            setMobilePreviewShown={setMobilePreviewShown}
           />
         ) : (
           <UserMessage message={message} />
@@ -139,10 +153,15 @@ const Message = memo(
     if (prevProps.setSelectedResponseId !== nextProps.setSelectedResponseId) {
       return false; // Function reference changed, need to re-render
     }
-    
+
     // Check if selectedResponseId changed
     if (prevProps.selectedResponseId !== nextProps.selectedResponseId) {
       return false; // Selection changed, need to re-render
+    }
+
+    // Check if setMobilePreviewShown changed
+    if (prevProps.setMobilePreviewShown !== nextProps.setMobilePreviewShown) {
+      return false; // Mobile preview function changed, need to re-render
     }
 
     // If we get here, props are equal enough to skip re-render

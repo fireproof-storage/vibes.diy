@@ -30,7 +30,7 @@ export default function UnifiedSession() {
   const [activeView, setActiveView] = useState<'code' | 'preview'>('code');
   const [previewReady, setPreviewReady] = useState(false);
   const [bundlingComplete] = useState(true);
-  const [mobilePreviewShown, setMobilePreviewShown] = useState(true);
+  const [mobilePreviewShown, setMobilePreviewShown] = useState(false);
 
   const [isSidebarVisible, setIsSidebarVisible] = useState(false);
 
@@ -110,6 +110,7 @@ export default function UnifiedSession() {
         chatPanel={
           <ChatInterface
             {...chatState}
+            setMobilePreviewShown={setMobilePreviewShown}
             renderChatInput={false} // Don't render chat input in the panel
             renderSuggestions={false} // Don't render suggestions in the panel
           />
@@ -125,6 +126,7 @@ export default function UnifiedSession() {
             activeView={activeView}
             setActiveView={setActiveView}
             onPreviewLoaded={handlePreviewLoaded}
+            setMobilePreviewShown={setMobilePreviewShown}
           />
         }
         chatInput={chatInputComponent}

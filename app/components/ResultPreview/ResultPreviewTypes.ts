@@ -8,6 +8,7 @@ export interface ResultPreviewProps {
   activeView: 'code' | 'preview';
   setActiveView: (view: 'code' | 'preview') => void;
   onPreviewLoaded: () => void;
+  setMobilePreviewShown: (shown: boolean) => void;
 }
 
 export type SandpackFiles = {

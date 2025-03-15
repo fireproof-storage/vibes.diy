@@ -64,7 +64,7 @@ function ChatInput({
             disabled
               ? 'border-gray-300 dark:border-gray-500'
               : 'border-gray-200 dark:border-gray-700'
-          } ${isMobile ? 'w-[80px] px-1 py-1.5 -right-1 bottom-0' : 'w-[110px] px-1 py-2 right-0 bottom-0 -mr-2 -mb-1'}`}
+          } ${isMobile ? '-right-1 bottom-0 w-[80px] px-1 py-1.5' : 'right-0 bottom-0 -mr-2 -mb-1 w-[110px] px-1 py-2'}`}
           style={{
             backdropFilter: 'blur(1px)',
           }}

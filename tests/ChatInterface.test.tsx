@@ -44,9 +44,7 @@ describe('ChatInterface Component', () => {
   it('renders without crashing', () => {
     // This test passes now that we've fixed the 'input is not defined' error
     // by properly destructuring input from chatState
-    const { container } = render(
-      <ChatInterface {...mockChatState} />
-    );
+    const { container } = render(<ChatInterface {...mockChatState} />);
     expect(container).toBeDefined();
   });
 });

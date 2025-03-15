@@ -17,6 +17,7 @@ function ResultPreview({
   activeView,
   setActiveView,
   onPreviewLoaded,
+  setMobilePreviewShown,
 }: ResultPreviewProps) {
   const [, setBundlingComplete] = useState(true);
   const [, setPreviewReady] = useState(false);
@@ -62,9 +63,11 @@ function ResultPreview({
             '*'
           );
 
+          setMobilePreviewShown(true);
           setPreviewReady(true);
           // Automatically switch to preview view when it's ready
           setActiveView('preview');
+          
           // Notify parent component that preview is loaded
           onPreviewLoaded();
         } else if (data.type === 'screenshot' && data.data) {

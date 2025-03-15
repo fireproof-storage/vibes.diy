@@ -48,7 +48,7 @@ const ResultPreviewHeaderContent: React.FC<ResultPreviewHeaderContentProps> = ({
         <button
           type="button"
           onClick={() => setMobilePreviewShown(false)}
-          className="md:hidden flex items-center justify-center p-2 rounded-lg bg-light-decorative-00 dark:bg-dark-decorative-00 text-light-primary dark:text-dark-primary hover:bg-light-decorative-01 dark:hover:bg-dark-decorative-01 transition-colors"
+          className="bg-light-decorative-00 dark:bg-dark-decorative-00 text-light-primary dark:text-dark-primary hover:bg-light-decorative-01 dark:hover:bg-dark-decorative-01 flex items-center justify-center rounded-lg p-2 transition-colors md:hidden"
           aria-label="Back to chat"
         >
           <svg
@@ -66,7 +66,7 @@ const ResultPreviewHeaderContent: React.FC<ResultPreviewHeaderContentProps> = ({
             />
           </svg>
         </button>
-        
+
         {showSwitcher ? (
           <div className="bg-light-decorative-00 dark:bg-dark-decorative-00 flex space-x-1 rounded-lg p-1 shadow-sm">
             <button

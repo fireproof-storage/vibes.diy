@@ -9,6 +9,7 @@ import { WelcomeScreen } from './Message';
 interface ChatInterfaceProps extends ChatState {
   renderChatInput?: boolean; // Flag to control whether chat input is rendered here
   renderSuggestions?: boolean; // Flag to control whether suggestions are rendered inside
+  setMobilePreviewShown: (shown: boolean) => void;
 }
 
 function ChatInterface({
@@ -26,6 +27,7 @@ function ChatInterface({
   setSelectedResponseId,
   renderChatInput = true, // Default to true for backward compatibility
   renderSuggestions = true, // Default to true for backward compatibility
+  setMobilePreviewShown,
 }: ChatInterfaceProps) {
   // State for UI transitions and sharing
   const [isShrinking] = useState(false);
@@ -90,9 +92,18 @@ function ChatInterface({
         isExpanding={isExpanding}
         setSelectedResponseId={setSelectedResponseId}
         selectedResponseId={selectedResponseDoc?._id}
+        setMobilePreviewShown={setMobilePreviewShown}
       />
     );
-  }, [messages, isStreaming, isShrinking, isExpanding, setSelectedResponseId, selectedResponseDoc]);
+  }, [
+    messages,
+    isStreaming,
+    isShrinking,
+    isExpanding,
+    setSelectedResponseId,
+    selectedResponseDoc,
+    setMobilePreviewShown,
+  ]);
 
   // Create the chat input component (used both in this component and passed to parent)
   const chatInputComponent = useMemo(
