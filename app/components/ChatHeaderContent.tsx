@@ -7,12 +7,12 @@ interface ChatHeaderContentProps {
 
 function ChatHeaderContent({ onOpenSidebar, title }: ChatHeaderContentProps) {
   return (
-    <div className="flex h-full w-full items-center justify-between px-6 py-4">
+    <div className="flex h-full w-full items-center justify-between p-2 py-4">
       <div className="flex items-center">
         <button
           type="button"
           onClick={onOpenSidebar}
-          className="text-light-primary dark:text-dark-primary hover:text-accent-02-light dark:hover:text-accent-02-dark mr-3"
+          className="text-light-primary dark:text-dark-primary hover:text-accent-02-light dark:hover:text-accent-02-dark mr-3 py-4 px-2"
           aria-label="Open chat history"
         >
           <svg
@@ -32,8 +32,8 @@ function ChatHeaderContent({ onOpenSidebar, title }: ChatHeaderContentProps) {
           </svg>
         </button>
       </div>
-      <div className="text-light-primary dark:text-dark-primary text-sm">{title}</div>
-      <div className="relative">
+      <div className="text-light-primary dark:text-dark-primary text-center text-sm">{title}</div>
+      <div className="relative px-2">
         <button
           type="button"
           onClick={() => {

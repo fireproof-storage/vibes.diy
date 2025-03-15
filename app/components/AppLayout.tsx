@@ -48,9 +48,7 @@ export default function AppLayout({
           {suggestionsComponent && <div className="mt-auto">{suggestionsComponent}</div>}
           
           {/* Chat input on desktop */}
-          <div className="border-light-decorative-00 dark:border-dark-decorative-00 border-t">
-            {chatInput}
-          </div>
+          {chatInput}
         </div>
         
         {/* Right panel - preview */}
@@ -60,7 +58,7 @@ export default function AppLayout({
       {/* Mobile layout - stacked with custom order */}
       <div className="flex flex-1 flex-col overflow-auto md:hidden">
         {/* Preview panel - first on mobile */}
-        <div className="order-1 w-full h-60">{previewPanel}</div>
+        <div className="order-1 w-full h-full">{previewPanel}</div>
 
         {/* HeaderRight placed after preview panel on mobile */}
         {headerRight && (
@@ -70,7 +68,7 @@ export default function AppLayout({
         )}
 
         {/* Chat panel - comes after header right */}
-        <div className="flex w-full flex-col order-3 bg-light-background-01 dark:bg-dark-background-01">
+        <div className="flex w-full flex-col order-3">
           {/* Chat panel content */}
           <div className="flex-auto">{chatPanel}</div>
         </div>
