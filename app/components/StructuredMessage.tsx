@@ -7,17 +7,30 @@ interface StructuredMessageProps {
   isStreaming?: boolean;
   messageId?: string;
   setSelectedResponseId?: (id: string) => void;
+  selectedResponseId?: string;
 }
 
 /**
  * Component for displaying structured messages with markdown and code segments
  */
 const StructuredMessage = memo(
-  ({ segments, isStreaming, messageId, setSelectedResponseId }: StructuredMessageProps) => {
+  ({ segments, isStreaming, messageId, setSelectedResponseId, selectedResponseId }: StructuredMessageProps) => {
     // Ensure segments is an array (defensive)
     const validSegments = Array.isArray(segments) ? segments : [];
 
-    // Count number of lines in code segments
+    // Calculate local codeReady state based on segments.length > 2 or !isStreaming
+    const codeReady = validSegments.length > 2 || isStreaming === false;
+    
+    // Check if this message is currently selected
+    // Special case: if we're streaming and there's no messageId or selectedResponseId, consider it selected
+    const isSelected = 
+      (messageId === selectedResponseId) || 
+      (isStreaming && (!messageId || !selectedResponseId));
+
+
+      console.log('isSelected', isSelected, 'id', messageId, 'sel', selectedResponseId);
+
+      // Count number of lines in code segments
     const codeLines = validSegments
       .filter((segment) => segment.type === 'code')
       .reduce((acc, segment) => acc + (segment.content?.split('\n').length || 0), 0);
@@ -30,6 +43,7 @@ const StructuredMessage = memo(
     // Handle click on code segments to select the response
     const handleCodeClick = () => {
       if (setSelectedResponseId && messageId) {
+        console.log('xxx', messageId, 'old', selectedResponseId);
         setSelectedResponseId(messageId);
       }
     };
@@ -64,10 +78,14 @@ const StructuredMessage = memo(
                     onClick={handleCodeClick}
                   >
                     <div className="mb-2 flex items-center justify-between">
-                      <span className="font-mono text-sm text-gray-500 dark:text-gray-400">
+                      <span className={`font-mono text-sm ${
+                        isSelected 
+                          ? 'text-green-800 dark:text-green-200' 
+                          : 'text-gray-500 dark:text-gray-400'
+                      }`}>
                         {`${codeLines} line${codeLines !== 1 ? 's' : ''} of code`}
                       </span>
-
+                      {isSelected && (<span className="text-green-800 dark:text-green-200">Selected</span>)}
                       <button
                         onClick={(e: React.MouseEvent) => {
                           e.stopPropagation(); // Prevent triggering the parent's onClick
@@ -83,7 +101,11 @@ const StructuredMessage = memo(
                     </div>
 
                     {/* Preview of first few lines */}
-                    <div className="max-h-24 overflow-hidden rounded bg-gray-200 p-2 font-mono text-sm shadow-inner dark:bg-gray-900">
+                    <div className={`max-h-24 overflow-hidden rounded p-2 font-mono text-sm shadow-inner ${
+                      codeReady 
+                        ? 'bg-orange-50 dark:bg-orange-950' 
+                        : 'bg-gray-200 dark:bg-gray-900'
+                    }`}>
                       {content
                         .split('\n')
                         .slice(0, 3)
@@ -109,6 +131,9 @@ const StructuredMessage = memo(
         )}
       </div>
     );
+  },
+  (prevProps, nextProps) => {
+    return prevProps.messageId === nextProps.messageId && prevProps.selectedResponseId === nextProps.selectedResponseId;
   }
 );
 

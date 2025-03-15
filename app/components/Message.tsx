@@ -10,6 +10,7 @@ interface MessageProps {
   isExpanding: boolean;
   isStreaming: boolean;
   setSelectedResponseId?: (id: string) => void;
+  selectedResponseId?: string;
 }
 
 // Helper function to get animation classes
@@ -23,10 +24,12 @@ const AIMessage = memo(
     message,
     isStreaming,
     setSelectedResponseId,
+    selectedResponseId,
   }: {
     message: AiChatMessageDocument;
     isStreaming: boolean;
     setSelectedResponseId?: (id: string) => void;
+    selectedResponseId?: string;
   }) => {
     const { segments } = parseContent(message.text);
     return (
@@ -62,6 +65,7 @@ const AIMessage = memo(
             isStreaming={isStreaming}
             messageId={message._id}
             setSelectedResponseId={setSelectedResponseId}
+            selectedResponseId={selectedResponseId}
           />
         </div>
       </div>
@@ -97,7 +101,7 @@ const UserMessage = memo(({ message }: { message: ChatMessageDocument }) => {
 
 // Main Message component that handles animation and decides which subcomponent to render
 const Message = memo(
-  ({ message, isShrinking, isExpanding, isStreaming, setSelectedResponseId }: MessageProps) => {
+  ({ message, isShrinking, isExpanding, isStreaming, setSelectedResponseId, selectedResponseId }: MessageProps) => {
     return (
       <div
         className={`transition-all duration-150 ease-in hover:opacity-95 ${getAnimationClasses(isShrinking, isExpanding)}`}
@@ -107,6 +111,7 @@ const Message = memo(
             message={message as AiChatMessageDocument}
             isStreaming={isStreaming}
             setSelectedResponseId={setSelectedResponseId}
+            selectedResponseId={selectedResponseId}
           />
         ) : (
           <UserMessage message={message} />
@@ -132,6 +137,11 @@ const Message = memo(
     // Check if the setSelectedResponseId function reference changed
     if (prevProps.setSelectedResponseId !== nextProps.setSelectedResponseId) {
       return false; // Function reference changed, need to re-render
+    }
+    
+    // Check if selectedResponseId changed
+    if (prevProps.selectedResponseId !== nextProps.selectedResponseId) {
+      return false; // Selection changed, need to re-render
     }
 
     // If we get here, props are equal enough to skip re-render

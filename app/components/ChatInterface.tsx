@@ -22,6 +22,7 @@ function ChatInterface({
   title,
   codeReady,
   addScreenshot,
+  selectedResponseDoc,
   setSelectedResponseId,
   renderChatInput = true, // Default to true for backward compatibility
   renderSuggestions = true, // Default to true for backward compatibility
@@ -67,11 +68,6 @@ function ChatInterface({
     [setInput, inputRef]
   );
 
-  // Callback for setting the selected response ID
-  const handleSetSelectedResponseId = useCallback((id: string) => {
-    setSelectedResponseId(id);
-  }, []);
-
   // Scroll to bottom when message count changes or when streaming starts/stops
   useEffect(() => {
     if (messagesContainerRef.current && messages.length > 0) {
@@ -92,10 +88,11 @@ function ChatInterface({
         isStreaming={isStreaming}
         isShrinking={isShrinking}
         isExpanding={isExpanding}
-        setSelectedResponseId={handleSetSelectedResponseId}
+        setSelectedResponseId={setSelectedResponseId}
+        selectedResponseDocId={selectedResponseDoc?._id}
       />
     );
-  }, [messages, isStreaming, isShrinking, isExpanding, handleSetSelectedResponseId]);
+  }, [messages, isStreaming, isShrinking, isExpanding, setSelectedResponseId, selectedResponseDoc]);
 
   // Create the chat input component (used both in this component and passed to parent)
   const chatInputComponent = useMemo(

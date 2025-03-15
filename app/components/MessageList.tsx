@@ -8,6 +8,7 @@ interface MessageListProps {
   isShrinking?: boolean;
   isExpanding?: boolean;
   setSelectedResponseId?: (id: string) => void;
+  selectedResponseDocId?: string;
 }
 
 function MessageList({
@@ -16,6 +17,7 @@ function MessageList({
   isShrinking = false,
   isExpanding = false,
   setSelectedResponseId,
+  selectedResponseDocId,
 }: MessageListProps) {
   const messageElements = useMemo(() => {
     return messages.map((msg, i) => {
@@ -27,10 +29,11 @@ function MessageList({
           isShrinking={isShrinking}
           isExpanding={isExpanding}
           setSelectedResponseId={setSelectedResponseId}
+          selectedResponseDocId={selectedResponseDocId}
         />
       );
     });
-  }, [messages, isShrinking, isExpanding, isStreaming, setSelectedResponseId]);
+  }, [messages, isShrinking, isExpanding, isStreaming, setSelectedResponseId, selectedResponseId]);
 
   return (
     <div
@@ -54,6 +57,10 @@ export default memo(MessageList, (prevProps, nextProps) => {
   // Check if setSelectedResponseId changed
   const setSelectedResponseIdEqual =
     prevProps.setSelectedResponseId === nextProps.setSelectedResponseId;
+  
+  // Check if selectedResponseId changed
+  const selectedResponseIdEqual =
+    prevProps.selectedResponseId === nextProps.selectedResponseId;
 
   // Content equality check for messages - must compare text content
   const messagesEqual =
@@ -64,5 +71,5 @@ export default memo(MessageList, (prevProps, nextProps) => {
       return msg._id === nextMsg._id && msg.text === nextMsg.text;
     });
 
-  return animationStateEqual && messagesEqual && setSelectedResponseIdEqual;
+  return animationStateEqual && messagesEqual && setSelectedResponseIdEqual && selectedResponseIdEqual;
 });
