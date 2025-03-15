@@ -111,8 +111,6 @@ export default function UnifiedSession() {
           <ChatInterface
             {...chatState}
             setMobilePreviewShown={setMobilePreviewShown}
-            renderChatInput={false} // Don't render chat input in the panel
-            renderSuggestions={false} // Don't render suggestions in the panel
           />
         }
         previewPanel={

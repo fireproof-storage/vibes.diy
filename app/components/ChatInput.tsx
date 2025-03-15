@@ -8,7 +8,7 @@ interface ChatInputProps {
   onKeyDown: (e: KeyboardEvent<HTMLTextAreaElement>) => void;
   disabled: boolean;
   inputRef: RefObject<HTMLTextAreaElement | null>;
-  isMobile?: boolean; // Optional prop to optimize for mobile
+  isMobile: boolean; // Optional prop to optimize for mobile
 }
 
 function ChatInput({
@@ -18,7 +18,7 @@ function ChatInput({
   onKeyDown,
   disabled,
   inputRef,
-  isMobile = false, // Default to desktop layout
+  isMobile, // Default to desktop layout
 }: ChatInputProps) {
   // Auto-resize textarea function
   const autoResizeTextarea = useCallback(() => {

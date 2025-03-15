@@ -58,7 +58,7 @@ export default function AppLayout({
 
       {/* Code/Preview Panel - Always visible on desktop, conditionally visible on mobile */}
       <div
-        className={`flex h-full w-full flex-col md:w-2/3 ${mobilePreviewShown ? 'flex' : 'hidden md:flex'}`}
+        className={`flex h-full w-full flex-col md:w-2/3 ${mobilePreviewShown ? 'flex' : 'invisible md:flex'}`}
       >
         {/* Header Right Section */}
         <div className="border-light-decorative-00 dark:border-dark-decorative-00 flex h-[4rem] items-center border-b p-2">

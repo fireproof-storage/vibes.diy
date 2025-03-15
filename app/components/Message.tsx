@@ -30,8 +30,8 @@ const AIMessage = memo(
   }: {
     message: AiChatMessageDocument;
     isStreaming: boolean;
-    setSelectedResponseId?: (id: string) => void;
-    selectedResponseId?: string;
+    setSelectedResponseId: (id: string) => void;
+    selectedResponseId: string;
     setMobilePreviewShown: (shown: boolean) => void;
   }) => {
     const { segments } = parseContent(message.text);

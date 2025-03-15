@@ -7,8 +7,6 @@ import QuickSuggestions from './QuickSuggestions';
 import { WelcomeScreen } from './Message';
 
 interface ChatInterfaceProps extends ChatState {
-  renderChatInput?: boolean; // Flag to control whether chat input is rendered here
-  renderSuggestions?: boolean; // Flag to control whether suggestions are rendered inside
   setMobilePreviewShown: (shown: boolean) => void;
 }
 
@@ -19,56 +17,14 @@ function ChatInterface({
   isStreaming,
   inputRef,
   sendMessage,
-  sessionId,
-  title,
-  codeReady,
-  addScreenshot,
   selectedResponseDoc,
   setSelectedResponseId,
-  renderChatInput = true, // Default to true for backward compatibility
-  renderSuggestions = true, // Default to true for backward compatibility
   setMobilePreviewShown,
 }: ChatInterfaceProps) {
   // State for UI transitions and sharing
   const [isShrinking] = useState(false);
   const [isExpanding] = useState(false);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
-
-  // Function to handle input changes
-  const handleInputChange = useCallback(
-    (e: ChangeEvent<HTMLTextAreaElement>) => {
-      setInput(e.target.value);
-    },
-    [setInput]
-  );
-
-  // Function to handle keyboard events in textarea
-  const handleKeyDown = useCallback(
-    (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-      if (e.key === 'Enter' && !e.shiftKey && !isStreaming) {
-        e.preventDefault();
-        sendMessage();
-      }
-    },
-    [isStreaming, sendMessage]
-  );
-
-  // Function to handle suggestion selection
-  const handleSelectSuggestion = useCallback(
-    (suggestion: string) => {
-      setInput(suggestion);
-
-      // Focus the input and position cursor at the end
-      setTimeout(() => {
-        if (inputRef.current) {
-          inputRef.current.focus();
-          // Move cursor to end of text
-          inputRef.current.selectionStart = inputRef.current.selectionEnd = suggestion.length;
-        }
-      }, 0);
-    },
-    [setInput, inputRef]
-  );
 
   // Scroll to bottom when message count changes or when streaming starts/stops
   useEffect(() => {
@@ -91,7 +47,7 @@ function ChatInterface({
         isShrinking={isShrinking}
         isExpanding={isExpanding}
         setSelectedResponseId={setSelectedResponseId}
-        selectedResponseId={selectedResponseDoc?._id}
+        selectedResponseId={selectedResponseDoc?._id || ''}
         setMobilePreviewShown={setMobilePreviewShown}
       />
     );
@@ -105,29 +61,6 @@ function ChatInterface({
     setMobilePreviewShown,
   ]);
 
-  // Create the chat input component (used both in this component and passed to parent)
-  const chatInputComponent = useMemo(
-    () => (
-      <ChatInput
-        value={input}
-        onChange={handleInputChange}
-        onKeyDown={handleKeyDown}
-        onSend={sendMessage}
-        disabled={isStreaming}
-        inputRef={inputRef}
-      />
-    ),
-    [input, handleInputChange, handleKeyDown, sendMessage, isStreaming, inputRef]
-  );
-
-  // Create suggestions component only if we should render it
-  const suggestionsComponent = useMemo(() => {
-    if (renderSuggestions && messages.length === 0) {
-      return <QuickSuggestions onSelectSuggestion={handleSelectSuggestion} />;
-    }
-    return null;
-  }, [renderSuggestions, messages.length, handleSelectSuggestion]);
-
   return (
     <div className="flex h-full flex-col overflow-hidden">
       {messages.length > 0 ? (
@@ -139,12 +72,8 @@ function ChatInterface({
           <div className="flex-grow pb-4">
             <WelcomeScreen />
           </div>
-          {/* Only render suggestions inside the component if explicitly requested */}
-          {suggestionsComponent}
         </div>
       )}
-      {/* Only render the chat input here if requested */}
-      {renderChatInput && chatInputComponent}
     </div>
   );
 }
