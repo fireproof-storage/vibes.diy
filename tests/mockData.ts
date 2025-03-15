@@ -2,6 +2,7 @@ export const mockResultPreviewProps = {
   activeView: 'code' as const,
   setActiveView: () => {},
   onPreviewLoaded: () => {},
+  setMobilePreviewShown: () => {},
 };
 
 export const mockChatStateProps = {
