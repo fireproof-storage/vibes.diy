@@ -7,6 +7,7 @@ interface AppLayoutProps {
   headerRight?: ReactNode;
   chatInput?: ReactNode;
   suggestionsComponent?: ReactNode;
+  mobilePreviewShown?: boolean;
 }
 
 /**
@@ -15,6 +16,8 @@ interface AppLayoutProps {
  * - On mobile: Vertical layout with header -> preview -> headerRight -> chat -> suggestions -> fixed chat input
  * - On desktop: Side-by-side layout with 1:3 ratio between chat and preview panels
  * Can optionally render header components above the content panels
+ * 
+ * On mobile devices, preview panel and header right can be hidden by default and shown on demand
  */
 export default function AppLayout({
   chatPanel,
@@ -23,6 +26,7 @@ export default function AppLayout({
   headerRight,
   chatInput,
   suggestionsComponent,
+  mobilePreviewShown = false,
 }: AppLayoutProps) {
   return (
     <div className="flex h-dvh flex-col md:overflow-hidden">
@@ -54,23 +58,22 @@ export default function AppLayout({
         </div>
 
         {/* Right panel - preview (single instance, conditionally styled) */}
-        <div className="order-1 w-full h-full md:w-2/3 flex-shrink-0 md:order-none">
+        <div className={`order-1 w-full h-full md:w-2/3 flex-shrink-0 md:order-none md:block ${mobilePreviewShown ? 'block' : 'hidden'}`}>
           {previewPanel}
         </div>
       </div>
 
       {/* HeaderRight placed after preview panel on mobile */}
       {headerRight && (
-        <div className="border-light-decorative-00 dark:border-dark-decorative-00 order-2 w-full border-t p-2 md:hidden">
+        <div className={`border-light-decorative-00 dark:border-dark-decorative-00 order-2 w-full border-t p-2 md:block ${mobilePreviewShown ? 'block' : 'hidden'}`}>
           {headerRight}
         </div>
       )}
-
       {/* Mobile chat input container - fixed to bottom */}
       <div className="md:hidden">
         {/* Chat input fixed to bottom on mobile */}
         <div
-          className="border-light-decorative-00 dark:border-dark-decorative-00 fixed right-0 bottom-0 left-0 z-10 border-t bg-white dark:bg-gray-900"
+          className="border-light-decorative-00 dark:border-dark-decorative-00 fixed right-0 bottom-0 left-0 z-30 border-t bg-white dark:bg-gray-900"
           style={{ '--input-height': 'var(--self-height)' } as React.CSSProperties}
           ref={(el) => {
             if (el) {

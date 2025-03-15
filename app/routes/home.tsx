@@ -30,6 +30,8 @@ export default function UnifiedSession() {
   const [activeView, setActiveView] = useState<'code' | 'preview'>('code');
   const [previewReady, setPreviewReady] = useState(false);
   const [bundlingComplete] = useState(true);
+  const [mobilePreviewShown, _setMobilePreviewShown] = useState(false);
+
   const [isSidebarVisible, setIsSidebarVisible] = useState(false);
 
   // Directly create an openSidebar function
@@ -126,6 +128,7 @@ export default function UnifiedSession() {
         }
         chatInput={chatInputComponent}
         suggestionsComponent={chatState.docs.length === 0 ? suggestionsComponent : undefined}
+        mobilePreviewShown={mobilePreviewShown}
       />
       <SessionSidebar
         isVisible={isSidebarVisible}
