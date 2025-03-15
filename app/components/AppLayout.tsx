@@ -12,7 +12,7 @@ interface AppLayoutProps {
 /**
  * AppLayout - Common layout component for the application
  * Provides consistent structure with panels that adapt based on screen size:
- * - On mobile: Vertical layout with chat -> preview -> suggestions -> fixed chat input
+ * - On mobile: Vertical layout with header -> preview -> headerRight -> chat -> suggestions -> fixed chat input
  * - On desktop: Side-by-side layout with 1:3 ratio between chat and preview panels
  * Can optionally render header components above the content panels
  */
@@ -39,8 +39,21 @@ export default function AppLayout({
 
       {/* Main content area */}
       <div className="flex flex-1 flex-col overflow-auto md:flex-row md:overflow-hidden">
-        {/* Chat panel layout (mobile: full width, desktop: 1/3 width) */}
-        <div className="flex w-full flex-col md:h-full md:w-1/3">
+        {/* Mobile order: preview -> headerRight -> chat -> suggestions */}
+        {/* Desktop order: chat+suggestions | preview */}
+
+        {/* Preview panel - single instance with positioning controlled by responsive classes */}
+        <div className="order-1 w-full h-full md:order-none md:h-full md:w-2/3">{previewPanel}</div>
+
+        {/* HeaderRight placed after preview panel only on mobile */}
+        {headerRight && (
+          <div className="border-light-decorative-00 dark:border-dark-decorative-00 order-2 w-full border-t p-2 md:hidden">
+            {headerRight}
+          </div>
+        )}
+
+        {/* Chat panel layout */}
+        <div className="flex w-full flex-col order-3 md:order-first md:h-full md:w-1/3">
           {/* Chat panel (flex-auto to take available space) */}
           <div className="flex-auto">{chatPanel}</div>
 
@@ -50,18 +63,10 @@ export default function AppLayout({
           )}
         </div>
 
-        {/* Preview panel - rendered once, different layouts for mobile/desktop */}
-        <div className="w-full md:h-full md:w-2/3">{previewPanel}</div>
-
-        {/* HeaderRight placed after preview panel only on mobile */}
-        {headerRight && (
-          <div className="border-light-decorative-00 dark:border-dark-decorative-00 w-full border-t p-2 md:hidden">
-            {headerRight}
-          </div>
+        {/* Mobile-only suggestions below chat */}
+        {suggestionsComponent && (
+          <div className="order-4 w-full md:hidden">{suggestionsComponent}</div>
         )}
-
-        {/* Mobile-only suggestions below preview */}
-        {suggestionsComponent && <div className="w-full md:hidden">{suggestionsComponent}</div>}
       </div>
 
       {/* Mobile chat input container */}

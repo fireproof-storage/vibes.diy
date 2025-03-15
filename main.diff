@@ -1,0 +1,532 @@
+diff --git a/app/components/AppLayout.tsx b/app/components/AppLayout.tsx
+index 58562f3..d4d5db8 100644
+--- a/app/components/AppLayout.tsx
++++ b/app/components/AppLayout.tsx
+@@ -5,11 +5,15 @@ interface AppLayoutProps {
+   previewPanel: ReactNode;
+   headerLeft?: ReactNode;
+   headerRight?: ReactNode;
++  chatInput?: ReactNode;
++  suggestionsComponent?: ReactNode;
+ }
+ 
+ /**
+  * AppLayout - Common layout component for the application
+- * Provides consistent structure with 1:3 ratio between chat panel and preview panel
++ * Provides consistent structure with panels that adapt based on screen size:
++ * - On mobile: Vertical layout with header -> preview -> headerRight -> chat -> suggestions -> fixed chat input
++ * - On desktop: Side-by-side layout with 1:3 ratio between chat and preview panels
+  * Can optionally render header components above the content panels
+  */
+ export default function AppLayout({
+@@ -17,18 +21,72 @@ export default function AppLayout({
+   previewPanel,
+   headerLeft,
+   headerRight,
++  chatInput,
++  suggestionsComponent,
+ }: AppLayoutProps) {
+   return (
+-    <div className="flex h-dvh flex-col overflow-hidden">
+-      <div className="border-light-decorative-00 dark:border-dark-decorative-00 flex h-[4rem] w-full border-b">
+-        <div className="border-light-decorative-00 dark:border-dark-decorative-00 w-1/3">
++    <div className="relative flex h-dvh flex-col">
++      {/* Header - stacked on mobile, side-by-side on desktop */}
++      <div className="border-light-decorative-00 dark:border-dark-decorative-00 z-10 flex h-[5rem] w-full flex-col border-b md:h-[3rem] md:flex-row">
++        {/* HeaderLeft is always in the header */}
++        <div className="border-light-decorative-00 dark:border-dark-decorative-00 flex w-full items-center p-2 md:w-1/3">
+           {headerLeft}
+         </div>
+-        <div className="w-2/3">{headerRight}</div>
++
++        {/* HeaderRight only in header on desktop */}
++        <div className="hidden w-full items-center p-2 md:flex md:w-2/3">{headerRight}</div>
++      </div>
++
++      {/* Main content area */}
++      <div className="flex flex-1 flex-col overflow-auto md:flex-row md:overflow-hidden">
++        {/* Mobile order: preview -> headerRight -> chat -> suggestions */}
++        {/* Desktop order: chat+suggestions | preview */}
++
++        {/* Preview panel - single instance with positioning controlled by responsive classes */}
++        <div className="order-1 w-full h-full md:order-none md:h-full md:w-2/3">{previewPanel}</div>
++
++        {/* HeaderRight placed after preview panel only on mobile */}
++        {headerRight && (
++          <div className="border-light-decorative-00 dark:border-dark-decorative-00 order-2 w-full border-t p-2 md:hidden">
++            {headerRight}
++          </div>
++        )}
++
++        {/* Chat panel layout */}
++        <div className="flex w-full flex-col order-3 md:order-first md:h-full md:w-1/3">
++          {/* Chat panel (flex-auto to take available space) */}
++          <div className="flex-auto">{chatPanel}</div>
++
++          {/* Suggestions component on desktop goes inside chat panel */}
++          {suggestionsComponent && (
++            <div className="mt-auto hidden md:block">{suggestionsComponent}</div>
++          )}
++        </div>
++
++        {/* Mobile-only suggestions below chat */}
++        {suggestionsComponent && (
++          <div className="order-4 w-full md:hidden">{suggestionsComponent}</div>
++        )}
+       </div>
+-      <div className="flex flex-1 overflow-hidden">
+-        <div className="flex h-full w-1/3 flex-col">{chatPanel}</div>
+-        <div className="relative w-2/3">{previewPanel}</div>
++
++      {/* Mobile chat input container */}
++      <div className="md:hidden">
++        {/* Chat input fixed to bottom on mobile */}
++        <div
++          className="border-light-decorative-00 dark:border-dark-decorative-00 fixed right-0 bottom-0 left-0 z-10 border-t bg-white md:hidden dark:bg-gray-900"
++          style={{ '--input-height': 'var(--self-height)' } as React.CSSProperties}
++          ref={(el) => {
++            if (el) {
++              const height = el.offsetHeight;
++              el.style.setProperty('--self-height', `${height}px`);
++            }
++          }}
++        >
++          {chatInput}
++        </div>
++
++        {/* This spacer prevents content from being hidden under the fixed chat input */}
++        <div className="block h-[var(--input-height,70px)] min-h-[70px] md:hidden"></div>
+       </div>
+     </div>
+   );
+diff --git a/app/components/ChatInput.tsx b/app/components/ChatInput.tsx
+index 1da8d36..0715c00 100644
+--- a/app/components/ChatInput.tsx
++++ b/app/components/ChatInput.tsx
+@@ -8,17 +8,29 @@ interface ChatInputProps {
+   onKeyDown: (e: KeyboardEvent<HTMLTextAreaElement>) => void;
+   disabled: boolean;
+   inputRef: RefObject<HTMLTextAreaElement | null>;
++  isMobile?: boolean; // Optional prop to optimize for mobile
+ }
+ 
+-function ChatInput({ value, onChange, onSend, onKeyDown, disabled, inputRef }: ChatInputProps) {
++function ChatInput({
++  value,
++  onChange,
++  onSend,
++  onKeyDown,
++  disabled,
++  inputRef,
++  isMobile = false, // Default to desktop layout
++}: ChatInputProps) {
+   // Auto-resize textarea function
+   const autoResizeTextarea = useCallback(() => {
+     const textarea = inputRef.current;
+     if (textarea) {
+       textarea.style.height = 'auto';
+-      textarea.style.height = `${Math.max(60, textarea.scrollHeight)}px`;
++      // Much smaller max height on mobile to prevent excessive growth
++      const maxHeight = isMobile ? 60 : 200;
++      const minHeight = isMobile ? 40 : 90;
++      textarea.style.height = `${Math.max(minHeight, Math.min(maxHeight, textarea.scrollHeight))}px`;
+     }
+-  }, [inputRef]);
++  }, [inputRef, isMobile]);
+ 
+   // Initial auto-resize
+   useEffect(() => {
+@@ -26,27 +38,33 @@ function ChatInput({ value, onChange, onSend, onKeyDown, disabled, inputRef }: C
+   }, [value, autoResizeTextarea]);
+ 
+   return (
+-    <div className="border-light-decorative-00 dark:border-dark-decorative-00 bg-light-background-01 dark:bg-dark-background-01 border-t px-4 py-3">
++    <div
++      className={`border-light-decorative-00 dark:border-dark-decorative-00 bg-light-background-01 dark:bg-dark-background-01 border-t ${isMobile ? 'px-3 py-3' : 'px-4 py-3'}`}
++    >
+       <div className="relative">
+         <textarea
+           ref={inputRef}
+           value={value}
+           onChange={onChange}
+           onKeyDown={onKeyDown}
+-          className="border-light-decorative-00 dark:border-dark-decorative-00 text-light-primary dark:text-dark-primary bg-light-background-00 dark:bg-dark-background-00 focus:ring-accent-01-light dark:focus:ring-accent-01-dark max-h-[200px] min-h-[90px] w-full resize-y rounded-xl border p-2.5 text-sm focus:border-transparent focus:ring-2 focus:outline-none"
+-          placeholder="Vibe coding? Use Fireproof."
++          className={`border-light-decorative-00 dark:border-dark-decorative-00 text-light-primary dark:text-dark-primary bg-light-background-00 dark:bg-dark-background-00 focus:ring-accent-01-light dark:focus:ring-accent-01-dark w-full resize-y rounded-xl border focus:border-transparent focus:ring-2 focus:outline-none ${
++            isMobile
++              ? 'max-h-[60px] min-h-[40px] p-2 text-sm'
++              : 'max-h-[200px] min-h-[90px] p-2.5 text-sm'
++          }`}
++          placeholder={isMobile ? 'Ask me anything...' : 'Vibe coding? Use Fireproof.'}
+           disabled={disabled}
+-          rows={2}
++          rows={isMobile ? 1 : 2}
+         />
+         <button
+           type="button"
+           onClick={onSend}
+           disabled={disabled}
+-          className={`light-gradient absolute right-0 bottom-0 -mr-2 -mb-1 flex w-[110px] items-center justify-center overflow-hidden rounded-lg border px-1 py-2 shadow-sm transition-all duration-300 hover:border-gray-300 hover:shadow-md active:shadow-inner dark:hover:border-gray-600 ${
++          className={`light-gradient absolute flex items-center justify-center overflow-hidden rounded-lg border shadow-sm transition-all duration-300 hover:border-gray-300 hover:shadow-md active:shadow-inner dark:hover:border-gray-600 ${
+             disabled
+               ? 'border-gray-300 dark:border-gray-500'
+               : 'border-gray-200 dark:border-gray-700'
+-          }`}
++          } ${isMobile ? 'w-[80px] px-1 py-1.5 -right-1 bottom-0' : 'w-[110px] px-1 py-2 right-1 bottom-1'}`}
+           style={{
+             backdropFilter: 'blur(1px)',
+           }}
+@@ -57,12 +75,16 @@ function ChatInput({ value, onChange, onSend, onKeyDown, disabled, inputRef }: C
+             <img
+               src="/fp-logo.svg"
+               alt="Fireproof"
+-              className="block h-5 transition-all hover:brightness-110 active:brightness-125 dark:hidden"
++              className={`block transition-all hover:brightness-110 active:brightness-125 dark:hidden ${
++                isMobile ? 'h-3.5' : 'h-5'
++              }`}
+             />
+             <img
+               src="/fp-logo-white.svg"
+               alt="Fireproof"
+-              className="hidden h-5 transition-all hover:brightness-110 active:brightness-125 dark:block"
++              className={`hidden transition-all hover:brightness-110 active:brightness-125 dark:block ${
++                isMobile ? 'h-3.5' : 'h-5'
++              }`}
+             />
+           </div>
+         </button>
+diff --git a/app/components/ChatInterface.tsx b/app/components/ChatInterface.tsx
+index c6daf70..7146562 100644
+--- a/app/components/ChatInterface.tsx
++++ b/app/components/ChatInterface.tsx
+@@ -10,6 +10,8 @@ import { WelcomeScreen } from './Message';
+ interface ChatInterfaceProps extends ChatState {
+   isSidebarVisible: boolean;
+   setIsSidebarVisible: (isVisible: boolean) => void;
++  renderChatInput?: boolean; // Flag to control whether chat input is rendered here
++  renderSuggestions?: boolean; // Flag to control whether suggestions are rendered inside
+ }
+ 
+ function ChatInterface({
+@@ -26,6 +28,8 @@ function ChatInterface({
+   isSidebarVisible,
+   setIsSidebarVisible,
+   setSelectedResponseId,
++  renderChatInput = true, // Default to true for backward compatibility
++  renderSuggestions = true, // Default to true for backward compatibility
+ }: ChatInterfaceProps) {
+   // State for UI transitions and sharing
+   const [isShrinking] = useState(false);
+@@ -103,6 +107,29 @@ function ChatInterface({
+     );
+   }, [messages, isStreaming, isShrinking, isExpanding, handleSetSelectedResponseId]);
+ 
++  // Create the chat input component (used both in this component and passed to parent)
++  const chatInputComponent = useMemo(
++    () => (
++      <ChatInput
++        value={input}
++        onChange={handleInputChange}
++        onKeyDown={handleKeyDown}
++        onSend={sendMessage}
++        disabled={isStreaming}
++        inputRef={inputRef}
++      />
++    ),
++    [input, handleInputChange, handleKeyDown, sendMessage, isStreaming, inputRef]
++  );
++
++  // Create suggestions component only if we should render it
++  const suggestionsComponent = useMemo(() => {
++    if (renderSuggestions && messages.length === 0) {
++      return <QuickSuggestions onSelectSuggestion={handleSelectSuggestion} />;
++    }
++    return null;
++  }, [renderSuggestions, messages.length, handleSelectSuggestion]);
++
+   return (
+     <div className="bg-light-background-01 dark:bg-dark-background-01 flex h-full flex-col overflow-hidden">
+       {messages.length > 0 ? (
+@@ -111,20 +138,15 @@ function ChatInterface({
+         </div>
+       ) : (
+         <div className="flex flex-grow flex-col justify-between">
+-          <div className="flex-grow">
++          <div className="flex-grow pb-4">
+             <WelcomeScreen />
+           </div>
+-          <QuickSuggestions onSelectSuggestion={handleSelectSuggestion} />
++          {/* Only render suggestions inside the component if explicitly requested */}
++          {suggestionsComponent}
+         </div>
+       )}
+-      <ChatInput
+-        value={input}
+-        onChange={handleInputChange}
+-        onKeyDown={handleKeyDown}
+-        onSend={sendMessage}
+-        disabled={isStreaming}
+-        inputRef={inputRef}
+-      />
++      {/* Only render the chat input here if requested */}
++      {renderChatInput && chatInputComponent}
+       <SessionSidebar
+         isVisible={isSidebarVisible}
+         onClose={closeSidebar}
+@@ -134,4 +156,100 @@ function ChatInterface({
+   );
+ }
+ 
++// Export the component
+ export default ChatInterface;
++
++// Also export a function to get just the chat input component
++export function getChatInputComponent({
++  input,
++  setInput,
++  sendMessage,
++  isStreaming,
++  inputRef,
++}: Pick<ChatState, 'input' | 'setInput' | 'sendMessage' | 'isStreaming' | 'inputRef'>) {
++  const handleInputChange = (e: ChangeEvent<HTMLTextAreaElement>) => {
++    setInput(e.target.value);
++  };
++
++  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
++    if (e.key === 'Enter' && !e.shiftKey && !isStreaming) {
++      e.preventDefault();
++      sendMessage();
++    }
++  };
++
++  // Detect if we're on mobile
++  const [isMobile, setIsMobile] = useState(false);
++
++  useEffect(() => {
++    // Check if we're on mobile using window.matchMedia
++    const mediaQuery = window.matchMedia('(max-width: 768px)');
++    setIsMobile(mediaQuery.matches);
++
++    // Add listener for screen size changes
++    const handleResize = (e: MediaQueryListEvent) => {
++      setIsMobile(e.matches);
++    };
++
++    mediaQuery.addEventListener('change', handleResize);
++    return () => {
++      mediaQuery.removeEventListener('change', handleResize);
++    };
++  }, []);
++
++  return (
++    <ChatInput
++      value={input}
++      onChange={handleInputChange}
++      onKeyDown={handleKeyDown}
++      onSend={sendMessage}
++      disabled={isStreaming}
++      inputRef={inputRef}
++      isMobile={isMobile}
++    />
++  );
++}
++
++// Export a function to get suggestions component
++export function getSuggestionsComponent({
++  setInput,
++  inputRef,
++}: Pick<ChatState, 'setInput' | 'inputRef'>) {
++  // Function to handle suggestion selection
++  const handleSelectSuggestion = useCallback(
++    (suggestion: string) => {
++      setInput(suggestion);
++
++      // Focus the input and position cursor at the end
++      setTimeout(() => {
++        if (inputRef.current) {
++          inputRef.current.focus();
++          // Move cursor to end of text
++          inputRef.current.selectionStart = inputRef.current.selectionEnd = suggestion.length;
++        }
++      }, 0);
++    },
++    [setInput, inputRef]
++  );
++
++  // Detect if we're on mobile
++  const [isMobile, setIsMobile] = useState(false);
++
++  useEffect(() => {
++    // Check if we're on mobile using window.matchMedia
++    const mediaQuery = window.matchMedia('(max-width: 768px)');
++    setIsMobile(mediaQuery.matches);
++
++    // Add listener for screen size changes
++    const handleResize = (e: MediaQueryListEvent) => {
++      setIsMobile(e.matches);
++    };
++
++    mediaQuery.addEventListener('change', handleResize);
++    return () => {
++      mediaQuery.removeEventListener('change', handleResize);
++    };
++  }, []);
++
++  return <QuickSuggestions onSelectSuggestion={handleSelectSuggestion} isMobile={isMobile} />;
++}
+diff --git a/app/components/QuickSuggestions.tsx b/app/components/QuickSuggestions.tsx
+index 8bf7856..bb0b385 100644
+--- a/app/components/QuickSuggestions.tsx
++++ b/app/components/QuickSuggestions.tsx
+@@ -1,8 +1,9 @@
+ interface QuickSuggestionsProps {
+   onSelectSuggestion: (suggestion: string) => void;
++  isMobile?: boolean;
+ }
+ 
+-function QuickSuggestions({ onSelectSuggestion }: QuickSuggestionsProps) {
++function QuickSuggestions({ onSelectSuggestion, isMobile = false }: QuickSuggestionsProps) {
+   const suggestions = [
+     {
+       label: 'Todos',
+@@ -51,14 +52,16 @@ function QuickSuggestions({ onSelectSuggestion }: QuickSuggestionsProps) {
+   ];
+ 
+   return (
+-    <div className="px-4 py-3">
++    <div className={`${isMobile ? 'px-2 py-2' : 'px-4 py-3'}`}>
+       <div className="flex flex-wrap gap-2">
+         {suggestions.map((suggestion, index) => (
+           <button
+             key={index}
+             type="button"
+             onClick={() => onSelectSuggestion(suggestion.text)}
+-            className="bg-light-background-00 dark:bg-dark-background-00 text-light-primary dark:text-dark-primary hover:bg-light-decorative-01 dark:hover:bg-dark-decorative-01 cursor-pointer rounded-lg px-3 py-1.5 text-sm font-medium transition-colors"
++            className={`bg-light-background-00 dark:bg-dark-background-00 text-light-primary dark:text-dark-primary hover:bg-light-decorative-01 dark:hover:bg-dark-decorative-01 cursor-pointer rounded-lg transition-colors ${
++              isMobile ? 'px-2 py-1 text-xs' : 'px-3 py-1.5 text-sm font-medium'
++            }`}
+           >
+             {suggestion.label}
+           </button>
+diff --git a/app/components/ResultPreview/ResultPreviewTemplates.ts b/app/components/ResultPreview/ResultPreviewTemplates.ts
+index 01798bb..6659ef6 100644
+--- a/app/components/ResultPreview/ResultPreviewTemplates.ts
++++ b/app/components/ResultPreview/ResultPreviewTemplates.ts
+@@ -81,7 +81,7 @@ export const indexHtml = `<!DOCTYPE html>
+       });
+     </script>
+   </head>
+-  <body style="margin-bottom: 20px;">
++  <body>
+     <div id="root"></div>
+     <script type="module" src="/index.jsx"></script>
+   </body>
+diff --git a/app/hooks/useSimpleChat.ts b/app/hooks/useSimpleChat.ts
+index 41fab1b..5d91e0e 100644
+--- a/app/hooks/useSimpleChat.ts
++++ b/app/hooks/useSimpleChat.ts
+@@ -101,14 +101,14 @@ export function useSimpleChat(sessionId: string | undefined): ChatState {
+       // Throttle parameters
+       const THROTTLE_DELAY = 30; // Increased from 10ms for better stability
+       const MIN_UPDATE_INTERVAL = 100; // Minimum time between updates
+-      
++
+       // Add minimum time between updates check
+       const now = Date.now();
+       const timeSinceLastUpdate = now - lastUpdateTimeRef.current;
+-      
++
+       // Calculate delay - use a longer delay if we've updated recently
+       let delay = THROTTLE_DELAY;
+-      
++
+       if (timeSinceLastUpdate < MIN_UPDATE_INTERVAL) {
+         // If we've updated too recently, use adaptive delay
+         delay = Math.max(
+@@ -116,15 +116,15 @@ export function useSimpleChat(sessionId: string | undefined): ChatState {
+           MIN_UPDATE_INTERVAL
+         );
+       }
+-      
++
+       // Schedule update with calculated delay
+       updateTimeoutRef.current = setTimeout(() => {
+         // Capture the current content at time of execution
+         const currentContent = streamBufferRef.current;
+-        
++
+         // Record update time before the actual update
+         lastUpdateTimeRef.current = Date.now();
+-        
++
+         // Only update if the content has actually changed
+         mergeAiMessage({ text: currentContent });
+       }, delay);
+diff --git a/app/prompts.ts b/app/prompts.ts
+index 65cc89f..ee2d119 100644
+--- a/app/prompts.ts
++++ b/app/prompts.ts
+@@ -20,7 +20,7 @@ ${llmsTxt}
+ You are an AI assistant tasked with creating React components. You should create components that:
+ - Use modern React practices and follow the rules of hooks
+ - Don't use any TypeScript, just use JavaScript
+-- Use Tailwind CSS for styling, have a orange synthwave vibe if unspecified
++- Use Tailwind CSS for mobile-first styling, have an orange synthwave vibe if unspecified
+ - For dynamic components, like autocomplete, don't use external libraries, implement your own
+ - Avoid using external libraries unless they are essential for the component to function
+ - Always import the libraries you need at the top of the file
+diff --git a/app/routes/home.tsx b/app/routes/home.tsx
+index c7dd9de..fbe72df 100644
+--- a/app/routes/home.tsx
++++ b/app/routes/home.tsx
+@@ -1,6 +1,9 @@
+ import { useEffect, useState, useCallback } from 'react';
+ import { useParams, useNavigate, useLocation } from 'react-router';
+-import ChatInterface from '../components/ChatInterface';
++import ChatInterface, {
++  getChatInputComponent,
++  getSuggestionsComponent,
++} from '../components/ChatInterface';
+ import ResultPreview from '../components/ResultPreview/ResultPreview';
+ import ChatHeaderContent from '../components/ChatHeaderContent';
+ import ResultPreviewHeaderContent from '../components/ResultPreview/ResultPreviewHeaderContent';
+@@ -59,6 +62,21 @@ export default function UnifiedSession() {
+     }
+   }, [location.search]);
+ 
++  // Get the chat input component to pass separately to AppLayout
++  const chatInputComponent = getChatInputComponent({
++    input: chatState.input,
++    setInput: chatState.setInput,
++    sendMessage: chatState.sendMessage,
++    isStreaming: chatState.isStreaming,
++    inputRef: chatState.inputRef,
++  });
++
++  // Get the suggestions component to pass separately to AppLayout
++  const suggestionsComponent = getSuggestionsComponent({
++    setInput: chatState.setInput,
++    inputRef: chatState.inputRef,
++  });
++
+   return (
+     <AppLayout
+       headerLeft={
+@@ -80,6 +98,8 @@ export default function UnifiedSession() {
+           {...chatState}
+           isSidebarVisible={isSidebarVisible}
+           setIsSidebarVisible={setIsSidebarVisible}
++          renderChatInput={false} // Don't render chat input in the panel
++          renderSuggestions={false} // Don't render suggestions in the panel
+         />
+       }
+       previewPanel={
+@@ -95,6 +115,8 @@ export default function UnifiedSession() {
+           onPreviewLoaded={handlePreviewLoaded}
+         />
+       }
++      chatInput={chatInputComponent}
++      suggestionsComponent={chatState.docs.length === 0 ? suggestionsComponent : undefined}
+     />
+   );
+ }
