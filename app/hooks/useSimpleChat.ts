@@ -75,17 +75,27 @@ export function useSimpleChat(sessionId: string | undefined): ChatState {
     }));
   }, [filteredDocs]);
 
-  const { segments: selectedSegments, dependenciesString: selectedDependenciesString } =
-    selectedResponseDoc
-      ? parseContent(selectedResponseDoc.text)
-      : { segments: [], dependenciesString: '' };
+  const { selectedSegments, selectedCode, selectedDependencies } = useMemo(() => {
+    const { segments, dependenciesString } =
+      selectedResponseDoc
+        ? parseContent(selectedResponseDoc.text)
+        : { segments: [], dependenciesString: '' };
 
-  const selectedCode =
-    selectedSegments.find((segment) => segment.type === 'code') || ({ content: '' } as Segment);
+    const code =
+      segments.find((segment) => segment.type === 'code') || ({ content: '' } as Segment);
 
-  const selectedDependencies = selectedDependenciesString
-    ? parseDependencies(selectedDependenciesString)
-    : {};
+    const dependencies = dependenciesString
+      ? parseDependencies(dependenciesString)
+      : {};
+
+    return {
+      selectedSegments: segments,
+      selectedCode: code,
+      selectedDependencies: dependencies
+    };
+  }, [selectedResponseDoc]);
+
+
 
   // Throttled update function with fixed delay and debouncing
   const throttledMergeAiMessage = useCallback(
