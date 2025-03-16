@@ -28,7 +28,7 @@ function ChatInput({ value, onChange, onSend, onKeyDown, disabled, inputRef }: C
   }, [value, autoResizeTextarea]);
 
   return (
-    <div className="border-light-decorative-00 dark:border-dark-decorative-00 bg-light-background-00 dark:bg-dark-background-00 border-t px-4 py-3">
+    <div className="px-4 py-2">
       <div className="relative">
         <textarea
           ref={inputRef}

@@ -174,8 +174,8 @@ export const WelcomeScreen = memo(() => {
         , no backend required.
       </p>
 
-      <div className="mt-6 border-t border-gray-200 pt-4 dark:border-gray-700">
-        <h3 className="py-2 text-lg font-semibold">About Fireproof</h3>
+      <div className="mt-8">
+        <h3 className="py-2 font-semibold">About Fireproof</h3>
         <p className="text-sm">
           Fireproof enables secure saving and sharing of your data, providing encrypted live
           synchronization and offline-first capabilities. Learn more about{' '}
