@@ -153,7 +153,7 @@ const StructuredMessage = memo(
           }`}>
             •
           </div>
-          <div className="mb-2 flex items-center justify-between rounded p-2">
+          <div className="flex items-center justify-between rounded p-2">
             <span className="font-mono text-sm text-gray-500 dark:text-gray-400">
               {`${codeLines} line${codeLines !== 1 ? 's' : ''}`}
             </span>
@@ -190,8 +190,10 @@ const StructuredMessage = memo(
 
           {/* Code preview with height transition instead of conditional rendering */}
           <div 
-            className={`overflow-hidden rounded bg-gray-100 p-2 font-mono text-sm shadow-inner dark:bg-gray-800 transition-all ${
-              isSticky ? 'h-0 p-0' : 'max-h-24'
+            className={`overflow-hidden rounded bg-gray-100 font-mono text-sm shadow-inner dark:bg-gray-800 transition-all ${
+              isSticky 
+                ? 'h-0 p-0 m-0 opacity-0 border-0 max-h-0 min-h-0' 
+                : 'max-h-24 mt-2 p-2'
             }`}
           >
             {content
