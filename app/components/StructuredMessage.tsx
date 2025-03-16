@@ -35,7 +35,7 @@ const CodeSegment = memo(({
 }: CodeSegmentProps) => {
   const content = segment.content || '';
   const codeSegmentRef = useRef<HTMLDivElement>(null);
-  const [isSticky, setIsSticky] = useState(false);
+  const [isSticky, setIsSticky] = useState(true);
   
   // Utility function to check if parents are scrollable
   useEffect(() => {
