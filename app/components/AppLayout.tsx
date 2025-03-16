@@ -29,6 +29,12 @@ export default function AppLayout({
         <LightUpYourData />
       </div>
 
+      {/* Mobile address bar handling optimization - helps with scroll behavior */}
+      <div className="absolute -z-10 h-[200%] w-0 overflow-hidden opacity-0" aria-hidden="true">
+        {/* This empty div ensures content is scrollable even with minimal content,
+            helping mobile browsers to properly hide/show the address bar */}
+      </div>
+
       {/* Content with relative positioning to appear above the background */}
       <div
         className={`flex w-full flex-col md:w-1/3 ${
