@@ -11,6 +11,200 @@ interface StructuredMessageProps {
   setMobilePreviewShown: (shown: boolean) => void;
 }
 
+// Extracted CodeSegment as a separate component to avoid hooks in render functions
+interface CodeSegmentProps {
+  segment: Segment;
+  index: number;
+  codeReady: boolean;
+  isSelected: boolean;
+  messageId?: string;
+  setSelectedResponseId: (id: string) => void;
+  setMobilePreviewShown: (shown: boolean) => void;
+  codeLines: number;
+}
+
+const CodeSegment = memo(({
+  segment,
+  index,
+  codeReady,
+  isSelected,
+  messageId,
+  setSelectedResponseId,
+  setMobilePreviewShown,
+  codeLines
+}: CodeSegmentProps) => {
+  const content = segment.content || '';
+  const codeSegmentRef = useRef<HTMLDivElement>(null);
+  const [isSticky, setIsSticky] = useState(false);
+  
+  // Utility function to check if parents are scrollable
+  useEffect(() => {
+    if (!codeSegmentRef.current) return;
+    
+    // Check if any parent is scrollable
+    let el = codeSegmentRef.current.parentElement;
+    while (el) {
+      const style = window.getComputedStyle(el);
+      const overflow = style.getPropertyValue('overflow');
+      const overflowY = style.getPropertyValue('overflow-y');
+      
+      if (
+        overflow === 'auto' || 
+        overflow === 'scroll' || 
+        overflowY === 'auto' || 
+        overflowY === 'scroll'
+      ) {
+        // Parent is scrollable
+      }
+      
+      el = el.parentElement;
+    }
+  }, []);
+  
+  // Set up intersection observer to detect when element becomes sticky
+  useEffect(() => {
+    if (!codeSegmentRef.current) return;
+    
+    // Create a sentinel element that will be placed above the sticky element
+    const sentinel = document.createElement('div');
+    sentinel.style.height = '1px';
+    sentinel.style.width = '100%';
+    sentinel.style.position = 'absolute';
+    sentinel.style.top = '0';
+    sentinel.style.left = '0';
+    sentinel.style.zIndex = '1000'; // Ensure it's on top
+    
+    if (codeSegmentRef.current.parentElement) {
+      codeSegmentRef.current.parentElement.insertBefore(sentinel, codeSegmentRef.current);
+    }
+    
+    // Check if IntersectionObserver is available (for tests and older browsers)
+    if (typeof IntersectionObserver === 'undefined') {
+      // Simple fallback for test environment
+      const handleScroll = () => {
+        if (codeSegmentRef.current) {
+          const rect = codeSegmentRef.current.getBoundingClientRect();
+          setIsSticky(rect.top <= 20); // 20px threshold
+        }
+      };
+      
+      window.addEventListener('scroll', handleScroll);
+      return () => {
+        window.removeEventListener('scroll', handleScroll);
+        sentinel.remove();
+      };
+    }
+    
+    // Create observer for the sentinel
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        // When sentinel is not intersecting, the element is sticky
+        const isNowSticky = !entry.isIntersecting;
+        setIsSticky(isNowSticky);
+      },
+      { threshold: 0 }
+    );
+    
+    observer.observe(sentinel);
+    
+    return () => {
+      observer.disconnect();
+      sentinel.remove();
+    };
+  }, []);
+
+  // Handle click on code segments to select the response
+  const handleCodeClick = () => {
+    if (messageId) {
+      setSelectedResponseId(messageId);
+    }
+    if (isSelected) {
+      setMobilePreviewShown(true);
+    }
+  };
+  
+  return (
+    <div
+      ref={codeSegmentRef}
+      data-code-segment={index}
+      style={{
+        position: 'sticky',
+        top: '8px',
+        zIndex: 10,
+      }}
+      className={`relative my-4 cursor-pointer rounded-lg border border-gray-200 bg-gray-50 p-4 shadow-sm transition-all hover:bg-gray-100 dark:border-gray-700 dark:bg-gray-700 dark:hover:bg-gray-600 ${
+        isSticky ? 'sticky-active' : ''
+      }`}
+      onClick={handleCodeClick}
+    >
+      <div className={`absolute -top-1 left-1 text-lg ${
+        !codeReady
+          ? 'text-orange-500 dark:text-orange-400'
+          : isSelected
+            ? 'text-green-500 dark:text-green-400'
+            : 'text-gray-400 dark:text-gray-600'
+      }`}>
+        •
+      </div>
+      <div className="flex items-center justify-between rounded p-2">
+        <span className="font-mono text-sm text-gray-500 dark:text-gray-400">
+          {`${codeLines} line${codeLines !== 1 ? 's' : ''}`}
+        </span>
+        <button
+          onClick={(e: React.MouseEvent) => {
+            e.stopPropagation(); // Prevent triggering the parent's onClick
+            navigator.clipboard.writeText(content);
+          }}
+          className="rounded bg-gray-200 px-2 py-1 text-sm text-gray-500 transition-colors hover:bg-gray-300 hover:text-gray-600 active:bg-orange-400 active:text-orange-800 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-gray-300 dark:active:bg-orange-600 dark:active:text-orange-200"
+        >
+          <code className="font-mono">
+            <span className="mr-3">App.jsx</span>
+
+            <svg
+              aria-hidden="true"
+              height="16"
+              viewBox="0 0 16 16"
+              version="1.1"
+              width="16"
+              className="inline-block"
+            >
+              <path
+                fill="currentColor"
+                d="M0 6.75C0 5.784.784 5 1.75 5h1.5a.75.75 0 0 1 0 1.5h-1.5a.25.25 0 0 0-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 0 0 .25-.25v-1.5a.75.75 0 0 1 1.5 0v1.5A1.75 1.75 0 0 1 9.25 16h-7.5A1.75 1.75 0 0 1 0 14.25Z"
+              ></path>
+              <path
+                fill="currentColor"
+                d="M5 1.75C5 .784 5.784 0 6.75 0h7.5C15.216 0 16 .784 16 1.75v7.5A1.75 1.75 0 0 1 14.25 11h-7.5A1.75 1.75 0 0 1 5 9.25Zm1.75-.25a.25.25 0 0 0-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 0 0 .25-.25v-7.5a.25.25 0 0 0-.25-.25Z"
+              ></path>
+            </svg>
+          </code>
+        </button>
+      </div>
+
+      {/* Code preview with height transition instead of conditional rendering */}
+      <div 
+        className={`overflow-hidden rounded bg-gray-100 font-mono text-sm shadow-inner dark:bg-gray-800 transition-all ${
+          isSticky 
+            ? 'h-0 p-0 m-0 opacity-0 border-0 max-h-0 min-h-0' 
+            : 'max-h-24 mt-2 p-2'
+        }`}
+      >
+        {content
+          .split('\n')
+          .slice(0, 3)
+          .map((line, i) => (
+            <div key={i} className="truncate text-gray-800 dark:text-gray-300">
+              {line || ' '}
+            </div>
+          ))}
+        {content.split('\n').length > 3 && (
+          <div className="text-gray-500 dark:text-gray-400">...</div>
+        )}
+      </div>
+    </div>
+  );
+});
+
 /**
  * Component for displaying structured messages with markdown and code segments
  */
@@ -31,8 +225,9 @@ const StructuredMessage = memo(
 
     // Check if this message is currently selected
     // Special case: if we're streaming and there's no messageId or selectedResponseId, consider it selected
-    const isSelected =
-      messageId === selectedResponseId || (isStreaming && !messageId && !selectedResponseId);
+    // Ensure it's always a boolean by using !! for the conditional part
+    const isSelected = messageId === selectedResponseId || 
+      !!(isStreaming && !messageId && !selectedResponseId);
 
     // Count number of lines in code segments
     const codeLines = validSegments
@@ -43,174 +238,6 @@ const StructuredMessage = memo(
     const hasContent =
       validSegments.length > 0 &&
       validSegments.some((segment) => segment?.content && segment.content.trim().length > 0);
-
-    // Reference and state for sticky detection
-    const [stickyCodeSegments, setStickyCodeSegments] = useState<{[key: string]: boolean}>({});
-
-    // Handle click on code segments to select the response
-    const handleCodeClick = () => {
-      if (messageId) {
-        setSelectedResponseId(messageId);
-      }
-      if (isSelected) {
-        setMobilePreviewShown(true);
-      }
-    };
-
-    // Function to render code segments with sticky behavior
-    const renderCodeSegment = (segment: Segment, index: number) => {
-      const content = segment.content || '';
-      const codeSegmentRef = useRef<HTMLDivElement>(null);
-      const segmentKey = `code-${index}`;
-      
-      // Utility function to check if parents are scrollable
-      useEffect(() => {
-        if (!codeSegmentRef.current) return;
-        
-        // Check if any parent is scrollable
-        let el = codeSegmentRef.current.parentElement;
-        while (el) {
-          const style = window.getComputedStyle(el);
-          const overflow = style.getPropertyValue('overflow');
-          const overflowY = style.getPropertyValue('overflow-y');
-          
-          if (
-            overflow === 'auto' || 
-            overflow === 'scroll' || 
-            overflowY === 'auto' || 
-            overflowY === 'scroll'
-          ) {
-            // Parent is scrollable
-          }
-          
-          el = el.parentElement;
-        }
-      }, []);
-      
-      // Set up intersection observer to detect when element becomes sticky
-      useEffect(() => {
-        if (!codeSegmentRef.current) return;
-        
-        // Create a sentinel element that will be placed above the sticky element
-        const sentinel = document.createElement('div');
-        sentinel.style.height = '1px';
-        sentinel.style.width = '100%';
-        sentinel.style.position = 'absolute';
-        sentinel.style.top = '0';
-        sentinel.style.left = '0';
-        sentinel.style.zIndex = '1000'; // Ensure it's on top
-        
-        
-        if (codeSegmentRef.current.parentElement) {
-          codeSegmentRef.current.parentElement.insertBefore(sentinel, codeSegmentRef.current);
-        }
-        
-        // Create observer for the sentinel
-        const observer = new IntersectionObserver(
-          ([entry]) => {
-            // When sentinel is not intersecting, the element is sticky
-            const isNowSticky = !entry.isIntersecting;
-            
-            setStickyCodeSegments(prev => ({
-              ...prev,
-              [segmentKey]: isNowSticky
-            }));
-          },
-          { threshold: 0 }
-        );
-        
-        observer.observe(sentinel);
-        
-        return () => {
-          observer.disconnect();
-          sentinel.remove();
-        };
-      }, [segmentKey, index]);
-      
-      const isSticky = stickyCodeSegments[segmentKey];
-      
-      return (
-        <div
-          key={segmentKey}
-          ref={codeSegmentRef}
-          data-code-segment={index}
-          style={{
-            position: 'sticky',
-            top: '8px',
-            zIndex: 10,
-          }}
-          className={`relative my-4 cursor-pointer rounded-lg border border-gray-200 bg-gray-50 p-4 shadow-sm transition-all hover:bg-gray-100 dark:border-gray-700 dark:bg-gray-700 dark:hover:bg-gray-600 ${
-            isSticky ? 'sticky-active' : ''
-          }`}
-          onClick={handleCodeClick}
-        >
-          <div className={`absolute -top-1 left-1 text-lg ${
-            !codeReady
-              ? 'text-orange-500 dark:text-orange-400'
-              : isSelected
-                ? 'text-green-500 dark:text-green-400'
-                : 'text-gray-400 dark:text-gray-600'
-          }`}>
-            •
-          </div>
-          <div className="flex items-center justify-between rounded p-2">
-            <span className="font-mono text-sm text-gray-500 dark:text-gray-400">
-              {`${codeLines} line${codeLines !== 1 ? 's' : ''}`}
-            </span>
-            <button
-              onClick={(e: React.MouseEvent) => {
-                e.stopPropagation(); // Prevent triggering the parent's onClick
-                navigator.clipboard.writeText(content);
-              }}
-              className="rounded bg-gray-200 px-2 py-1 text-sm text-gray-500 transition-colors hover:bg-gray-300 hover:text-gray-600 active:bg-orange-400 active:text-orange-800 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-gray-300 dark:active:bg-orange-600 dark:active:text-orange-200"
-            >
-              <code className="font-mono">
-                <span className="mr-3">App.jsx</span>
-
-                <svg
-                  aria-hidden="true"
-                  height="16"
-                  viewBox="0 0 16 16"
-                  version="1.1"
-                  width="16"
-                  className="inline-block"
-                >
-                  <path
-                    fill="currentColor"
-                    d="M0 6.75C0 5.784.784 5 1.75 5h1.5a.75.75 0 0 1 0 1.5h-1.5a.25.25 0 0 0-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 0 0 .25-.25v-1.5a.75.75 0 0 1 1.5 0v1.5A1.75 1.75 0 0 1 9.25 16h-7.5A1.75 1.75 0 0 1 0 14.25Z"
-                  ></path>
-                  <path
-                    fill="currentColor"
-                    d="M5 1.75C5 .784 5.784 0 6.75 0h7.5C15.216 0 16 .784 16 1.75v7.5A1.75 1.75 0 0 1 14.25 11h-7.5A1.75 1.75 0 0 1 5 9.25Zm1.75-.25a.25.25 0 0 0-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 0 0 .25-.25v-7.5a.25.25 0 0 0-.25-.25Z"
-                  ></path>
-                </svg>
-              </code>
-            </button>
-          </div>
-
-          {/* Code preview with height transition instead of conditional rendering */}
-          <div 
-            className={`overflow-hidden rounded bg-gray-100 font-mono text-sm shadow-inner dark:bg-gray-800 transition-all ${
-              isSticky 
-                ? 'h-0 p-0 m-0 opacity-0 border-0 max-h-0 min-h-0' 
-                : 'max-h-24 mt-2 p-2'
-            }`}
-          >
-            {content
-              .split('\n')
-              .slice(0, 3)
-              .map((line, i) => (
-                <div key={i} className="truncate text-gray-800 dark:text-gray-300">
-                  {line || ' '}
-                </div>
-              ))}
-            {content.split('\n').length > 3 && (
-              <div className="text-gray-500 dark:text-gray-400">...</div>
-            )}
-          </div>
-        </div>
-      );
-    };
 
     // Add CSS for sticky elements
     useEffect(() => {
@@ -268,7 +295,19 @@ const StructuredMessage = memo(
                   </div>
                 );
               } else if (segment.type === 'code') {
-                return renderCodeSegment(segment, index);
+                return (
+                  <CodeSegment
+                    key={`code-${index}`}
+                    segment={segment}
+                    index={index}
+                    codeReady={codeReady}
+                    isSelected={isSelected}
+                    messageId={messageId}
+                    setSelectedResponseId={setSelectedResponseId}
+                    setMobilePreviewShown={setMobilePreviewShown}
+                    codeLines={codeLines}
+                  />
+                );
               }
               return null;
             })
