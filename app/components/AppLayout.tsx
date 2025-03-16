@@ -32,11 +32,11 @@ export default function AppLayout({
 
         {suggestionsComponent && <div className="w-full">{suggestionsComponent}</div>}
 
-        <div className="">{chatInput}</div>
+        <div className="sticky bottom-0 w-full">{chatInput}</div>
       </div>
 
       <div
-        className={`flex h-full w-full flex-col md:w-2/3 ${mobilePreviewShown ? 'flex' : 'invisible md:flex'}`}
+        className={`flex h-full w-full flex-col md:w-2/3 ${mobilePreviewShown ? 'flex' : 'opacity-0 h-0 overflow-hidden md:opacity-100 md:h-full md:overflow-visible'}`}
       >
         <div className="flex h-[4rem] items-center p-2">{headerRight}</div>
 

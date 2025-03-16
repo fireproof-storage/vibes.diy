@@ -25,14 +25,10 @@ const SandpackContent: React.FC<SandpackContentProps> = ({
   isStreaming,
   sandpackKey,
   codeReady,
-  setActiveView,
-  setBundlingComplete,
   dependencies,
 }) => {
   const codeEditorRef = useRef<HTMLDivElement>(null);
   const [isDarkMode, setIsDarkMode] = useState(false);
-  const previousViewRef = useRef(activeView);
-  const scrollPositionRef = useRef(0);
 
   useEffect(() => {
     const prefersDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches;
@@ -46,34 +42,6 @@ const SandpackContent: React.FC<SandpackContentProps> = ({
     mediaQuery.addEventListener('change', handleChange);
     return () => mediaQuery.removeEventListener('change', handleChange);
   }, []);
-
-  // Handle view changes to preserve scroll position
-  useEffect(() => {
-    if (activeView !== previousViewRef.current) {
-      if (previousViewRef.current === 'code' && codeEditorRef.current) {
-        // Store scroll position when leaving code view
-        const scroller = codeEditorRef.current.querySelector('.cm-scroller');
-        if (scroller instanceof HTMLElement) {
-          scrollPositionRef.current = scroller.scrollTop;
-        }
-      }
-
-      previousViewRef.current = activeView;
-
-      if (activeView === 'code') {
-        // Restore scroll position when returning to code view
-        // Use requestAnimationFrame to ensure DOM is ready
-        requestAnimationFrame(() => {
-          if (codeEditorRef.current) {
-            const scroller = codeEditorRef.current.querySelector('.cm-scroller');
-            if (scroller instanceof HTMLElement) {
-              scroller.scrollTop = scrollPositionRef.current;
-            }
-          }
-        });
-      }
-    }
-  }, [activeView]);
 
   return (
     <div data-testid="sandpack-provider">

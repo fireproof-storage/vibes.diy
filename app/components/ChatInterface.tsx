@@ -46,7 +46,7 @@ function ChatInterface({
   }, [messages, isStreaming, setSelectedResponseId, selectedResponseDoc, setMobilePreviewShown]);
 
   return (
-    <div className="flex h-full flex-col overflow-hidden">
+    <div className="flex h-full flex-col overflow-scroll">
       {messages.length > 0 ? (
         <div ref={messagesContainerRef} className="flex flex-grow flex-col-reverse overflow-y-auto">
           {memoizedMessageList}
