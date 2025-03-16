@@ -162,9 +162,9 @@ describe('Component Rendering', () => {
   describe('MessageList', () => {
     it('renders empty list', () => {
       render(
-        <MessageList 
-          messages={[]} 
-          isStreaming={false} 
+        <MessageList
+          messages={[]}
+          isStreaming={false}
           setSelectedResponseId={() => {}}
           selectedResponseId=""
           setMobilePreviewShown={() => {}}
@@ -197,9 +197,9 @@ describe('Component Rendering', () => {
       ];
 
       render(
-        <MessageList 
-          messages={messages} 
-          isStreaming={false} 
+        <MessageList
+          messages={messages}
+          isStreaming={false}
           setSelectedResponseId={() => {}}
           selectedResponseId=""
           setMobilePreviewShown={() => {}}
@@ -230,9 +230,9 @@ describe('Component Rendering', () => {
       ];
 
       render(
-        <MessageList 
-          messages={messages} 
-          isStreaming={true} 
+        <MessageList
+          messages={messages}
+          isStreaming={true}
           setSelectedResponseId={() => {}}
           selectedResponseId=""
           setMobilePreviewShown={() => {}}
@@ -257,9 +257,9 @@ describe('Component Rendering', () => {
       ];
 
       render(
-        <MessageList 
-          messages={messages} 
-          isStreaming={true} 
+        <MessageList
+          messages={messages}
+          isStreaming={true}
           setSelectedResponseId={() => {}}
           selectedResponseId=""
           setMobilePreviewShown={() => {}}
@@ -270,9 +270,9 @@ describe('Component Rendering', () => {
 
     it('renders without crashing', () => {
       render(
-        <MessageList 
-          messages={[]} 
-          isStreaming={false} 
+        <MessageList
+          messages={[]}
+          isStreaming={false}
           setSelectedResponseId={() => {}}
           selectedResponseId=""
           setMobilePreviewShown={() => {}}
@@ -295,8 +295,8 @@ describe('Component Rendering', () => {
       ] as ChatMessageDocument[];
 
       render(
-        <MessageList 
-          messages={messages} 
+        <MessageList
+          messages={messages}
           isStreaming={false}
           setSelectedResponseId={() => {}}
           selectedResponseId=""
@@ -320,8 +320,8 @@ describe('Component Rendering', () => {
       ] as ChatMessageDocument[];
 
       render(
-        <MessageList 
-          messages={messages} 
+        <MessageList
+          messages={messages}
           isStreaming={true}
           setSelectedResponseId={() => {}}
           selectedResponseId=""
@@ -344,8 +344,8 @@ describe('Component Rendering', () => {
       ] as unknown as ChatMessageDocument[];
 
       render(
-        <MessageList 
-          messages={messages} 
+        <MessageList
+          messages={messages}
           isStreaming={true}
           setSelectedResponseId={() => {}}
           selectedResponseId=""
@@ -365,17 +365,15 @@ describe('Component Rendering', () => {
           _id: 'ai1',
           type: 'ai' as const,
           text: 'This is a test',
-          segments: [
-            { type: 'markdown', content: 'This is a test' },
-          ]
+          segments: [{ type: 'markdown', content: 'This is a test' }],
         },
       ] as unknown as ChatMessageDocument[];
 
       render(
-        <MessageList 
-          messages={messages} 
-          isStreaming={false} 
-          setSelectedResponseId={() => {}} 
+        <MessageList
+          messages={messages}
+          isStreaming={false}
+          setSelectedResponseId={() => {}}
           selectedResponseId=""
           setMobilePreviewShown={() => {}}
         />

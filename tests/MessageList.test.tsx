@@ -30,8 +30,8 @@ describe('MessageList', () => {
     ];
 
     render(
-      <MessageList 
-        messages={messages} 
+      <MessageList
+        messages={messages}
         isStreaming={false}
         setSelectedResponseId={() => {}}
         selectedResponseId=""
@@ -46,8 +46,8 @@ describe('MessageList', () => {
 
   test('renders empty state correctly', () => {
     const { container } = render(
-      <MessageList 
-        messages={[]} 
+      <MessageList
+        messages={[]}
         isStreaming={false}
         setSelectedResponseId={() => {}}
         selectedResponseId=""
@@ -82,8 +82,8 @@ describe('MessageList', () => {
     ];
 
     render(
-      <MessageList 
-        messages={messages} 
+      <MessageList
+        messages={messages}
         isStreaming={true}
         setSelectedResponseId={() => {}}
         selectedResponseId=""
@@ -117,8 +117,8 @@ describe('MessageList', () => {
     ];
 
     render(
-      <MessageList 
-        messages={messages} 
+      <MessageList
+        messages={messages}
         isStreaming={true}
         setSelectedResponseId={() => {}}
         selectedResponseId=""
@@ -150,8 +150,8 @@ describe('MessageList', () => {
     ];
 
     render(
-      <MessageList 
-        messages={messages} 
+      <MessageList
+        messages={messages}
         isStreaming={true}
         setSelectedResponseId={() => {}}
         selectedResponseId=""

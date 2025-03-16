@@ -40,10 +40,10 @@ describe('MessageList streaming tests', () => {
     ] as ChatMessageDocument[];
 
     render(
-      <MessageList 
-        messages={messages} 
-        isStreaming={true} 
-        setSelectedResponseId={() => {}} 
+      <MessageList
+        messages={messages}
+        isStreaming={true}
+        setSelectedResponseId={() => {}}
         selectedResponseId=""
         setMobilePreviewShown={() => {}}
       />
@@ -74,17 +74,19 @@ describe('MessageList streaming tests', () => {
     ] as ChatMessageDocument[];
 
     render(
-      <MessageList 
-        messages={messages} 
-        isStreaming={true} 
-        setSelectedResponseId={() => {}} 
+      <MessageList
+        messages={messages}
+        isStreaming={true}
+        setSelectedResponseId={() => {}}
         selectedResponseId=""
         setMobilePreviewShown={() => {}}
       />
     );
 
     // Output some debug info about what the component sees
-    console.log(`🔍 STREAM UPDATE: length=${messages[1].text.length} - content="${messages[1].text}"`);
+    console.log(
+      `🔍 STREAM UPDATE: length=${messages[1].text.length} - content="${messages[1].text}"`
+    );
 
     // Check that the partial content is visible
     const partialContent = screen.getByText(/This qui/);
@@ -101,7 +103,8 @@ describe('MessageList streaming tests', () => {
   // Add more tests for specific streaming behaviors
 
   test('should display both markdown and code when segments are present', () => {
-    const markdownContent = '{"dependencies": {}}\n\nThis quick example shows how to use React hooks with TypeScript.\n\nFirst, let\'s create a simple counter component:';
+    const markdownContent =
+      '{"dependencies": {}}\n\nThis quick example shows how to use React hooks with TypeScript.\n\nFirst, let\'s create a simple counter component:';
     const codeContent = 'import React, { useState, use';
 
     const messages = [
@@ -118,10 +121,10 @@ describe('MessageList streaming tests', () => {
     ] as ChatMessageDocument[];
 
     render(
-      <MessageList 
-        messages={messages} 
-        isStreaming={true} 
-        setSelectedResponseId={() => {}} 
+      <MessageList
+        messages={messages}
+        isStreaming={true}
+        setSelectedResponseId={() => {}}
         selectedResponseId=""
         setMobilePreviewShown={() => {}}
       />

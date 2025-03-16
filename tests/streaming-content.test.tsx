@@ -17,9 +17,9 @@ describe('Streaming Content Tests', () => {
     ];
 
     render(
-      <StructuredMessage 
-        segments={segments} 
-        isStreaming={true} 
+      <StructuredMessage
+        segments={segments}
+        isStreaming={true}
         setSelectedResponseId={() => {}}
         selectedResponseId=""
         setMobilePreviewShown={() => {}}
@@ -33,14 +33,12 @@ describe('Streaming Content Tests', () => {
 
   test('shows markdown content immediately when streaming', () => {
     // Arrange: Create a test message with some markdown content
-    const segments = [
-      { type: 'markdown', content: 'This is a test message' },
-    ] as Segment[];
+    const segments = [{ type: 'markdown', content: 'This is a test message' }] as Segment[];
 
     // Act: Render the component with streaming flag
     render(
-      <StructuredMessage 
-        segments={segments} 
+      <StructuredMessage
+        segments={segments}
         isStreaming={true}
         setSelectedResponseId={() => {}}
         selectedResponseId=""

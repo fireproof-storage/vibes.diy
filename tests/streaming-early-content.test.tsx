@@ -25,9 +25,9 @@ describe('Early Streaming Content Display', () => {
 
     // Act: Render the component with isStreaming=true
     render(
-      <StructuredMessage 
-        segments={segments} 
-        isStreaming={true} 
+      <StructuredMessage
+        segments={segments}
+        isStreaming={true}
         setSelectedResponseId={() => {}}
         selectedResponseId=""
         setMobilePreviewShown={() => {}}
@@ -49,8 +49,8 @@ describe('Early Streaming Content Display', () => {
 
     // Act: Render the component with isStreaming=true
     render(
-      <StructuredMessage 
-        segments={segments} 
+      <StructuredMessage
+        segments={segments}
         isStreaming={true}
         setSelectedResponseId={() => {}}
         selectedResponseId=""
@@ -70,8 +70,8 @@ describe('Early Streaming Content Display', () => {
   test('thinking indicator is only visible when segments length is zero', () => {
     // First test with empty segments array
     render(
-      <StructuredMessage 
-        segments={[]} 
+      <StructuredMessage
+        segments={[]}
         isStreaming={true}
         setSelectedResponseId={() => {}}
         selectedResponseId=""
@@ -87,8 +87,8 @@ describe('Early Streaming Content Display', () => {
 
     // Now test with a segment that has empty content
     render(
-      <StructuredMessage 
-        segments={[{ type: 'markdown', content: '' }]} 
+      <StructuredMessage
+        segments={[{ type: 'markdown', content: '' }]}
         isStreaming={true}
         setSelectedResponseId={() => {}}
         selectedResponseId=""
@@ -104,8 +104,8 @@ describe('Early Streaming Content Display', () => {
 
     // Finally test with a segment that has content
     render(
-      <StructuredMessage 
-        segments={[{ type: 'markdown', content: 'Hello' }]} 
+      <StructuredMessage
+        segments={[{ type: 'markdown', content: 'Hello' }]}
         isStreaming={true}
         setSelectedResponseId={() => {}}
         selectedResponseId=""
@@ -124,8 +124,8 @@ describe('Early Streaming Content Handling', () => {
   test('handles empty segment array correctly', () => {
     const segments: Segment[] = [];
     render(
-      <StructuredMessage 
-        segments={segments} 
+      <StructuredMessage
+        segments={segments}
         isStreaming={true}
         setSelectedResponseId={() => {}}
         selectedResponseId=""
@@ -138,8 +138,8 @@ describe('Early Streaming Content Handling', () => {
   test('handles empty markdown content', () => {
     const segments: Segment[] = [{ type: 'markdown', content: '' }];
     render(
-      <StructuredMessage 
-        segments={segments} 
+      <StructuredMessage
+        segments={segments}
         isStreaming={true}
         setSelectedResponseId={() => {}}
         selectedResponseId=""

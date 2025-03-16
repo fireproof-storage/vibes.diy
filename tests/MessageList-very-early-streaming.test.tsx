@@ -62,8 +62,8 @@ describe('MessageList Real-World Streaming Tests', () => {
     ];
 
     render(
-      <MessageList 
-        messages={messages} 
+      <MessageList
+        messages={messages}
         isStreaming={true}
         setSelectedResponseId={() => {}}
         selectedResponseId=""
@@ -117,8 +117,8 @@ describe('MessageList Real-World Streaming Tests', () => {
     ];
 
     render(
-      <MessageList 
-        messages={messages} 
+      <MessageList
+        messages={messages}
         isStreaming={true}
         setSelectedResponseId={() => {}}
         selectedResponseId=""
@@ -174,8 +174,8 @@ describe('MessageList Real-World Streaming Tests', () => {
     ];
 
     render(
-      <MessageList 
-        messages={messages} 
+      <MessageList
+        messages={messages}
         isStreaming={true}
         setSelectedResponseId={() => {}}
         selectedResponseId=""
@@ -215,8 +215,8 @@ describe('MessageList Real-World Streaming Tests', () => {
     ] as ChatMessageDocument[];
 
     render(
-      <MessageList 
-        messages={messages} 
+      <MessageList
+        messages={messages}
         isStreaming={true}
         setSelectedResponseId={() => {}}
         selectedResponseId=""
