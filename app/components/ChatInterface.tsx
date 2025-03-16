@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback, useRef, useEffect } from 'react';
+import { useMemo, useCallback, useRef, useEffect } from 'react';
 import type { ChangeEvent } from 'react';
 import type { ChatState } from '../types/chat';
 import MessageList from './MessageList';

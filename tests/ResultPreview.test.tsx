@@ -289,6 +289,7 @@ describe('ResultPreview', () => {
         activeView="code"
         setActiveView={setActiveView}
         onPreviewLoaded={() => {}}
+        setMobilePreviewShown={() => {}}
       />
     );
 

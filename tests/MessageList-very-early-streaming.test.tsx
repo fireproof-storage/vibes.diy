@@ -1,7 +1,7 @@
 import { render, screen } from '@testing-library/react';
 import MessageList from '../app/components/MessageList';
 import { vi, describe, test, expect, beforeEach } from 'vitest';
-import type { UserChatMessage, AiChatMessage } from '../app/types/chat';
+import type { UserChatMessage, AiChatMessage, ChatMessageDocument } from '../app/types/chat';
 
 // For direct stdout logging that bypasses Node's buffering
 function writeToStdout(message: string) {
@@ -61,7 +61,15 @@ describe('MessageList Real-World Streaming Tests', () => {
       } as AiChatMessage,
     ];
 
-    render(<MessageList messages={messages} isStreaming={true} />);
+    render(
+      <MessageList 
+        messages={messages} 
+        isStreaming={true}
+        setSelectedResponseId={() => {}}
+        selectedResponseId=""
+        setMobilePreviewShown={() => {}}
+      />
+    );
 
     // Check if we see the minimal content in the DOM
     const messageContent = screen.queryByText(/\{\"/);
@@ -108,7 +116,15 @@ describe('MessageList Real-World Streaming Tests', () => {
       } as AiChatMessage,
     ];
 
-    render(<MessageList messages={messages} isStreaming={true} />);
+    render(
+      <MessageList 
+        messages={messages} 
+        isStreaming={true}
+        setSelectedResponseId={() => {}}
+        selectedResponseId=""
+        setMobilePreviewShown={() => {}}
+      />
+    );
 
     // Check if we see the content
     const contentElement = screen.queryByText(/This quiz app allows users to create/);
@@ -157,7 +173,15 @@ describe('MessageList Real-World Streaming Tests', () => {
       } as AiChatMessage,
     ];
 
-    render(<MessageList messages={messages} isStreaming={true} />);
+    render(
+      <MessageList 
+        messages={messages} 
+        isStreaming={true}
+        setSelectedResponseId={() => {}}
+        selectedResponseId=""
+        setMobilePreviewShown={() => {}}
+      />
+    );
 
     // Check if we see both types of content
     const markdownElement = screen.queryByText(/This quiz app allows users/);
@@ -174,5 +198,32 @@ describe('MessageList Real-World Streaming Tests', () => {
 
     expect(markdownElement).toBeInTheDocument();
     expect(codeElement).toBeInTheDocument();
+  });
+
+  test('should handle streaming with zero length content', () => {
+    const messages = [
+      {
+        type: 'user',
+        text: 'Hello',
+        _id: 'user1',
+      },
+      {
+        type: 'ai',
+        text: '',
+        _id: 'ai1',
+      },
+    ] as ChatMessageDocument[];
+
+    render(
+      <MessageList 
+        messages={messages} 
+        isStreaming={true}
+        setSelectedResponseId={() => {}}
+        selectedResponseId=""
+        setMobilePreviewShown={() => {}}
+      />
+    );
+
+    // ... rest of the test ...
   });
 });

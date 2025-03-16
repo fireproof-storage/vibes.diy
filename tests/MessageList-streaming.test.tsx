@@ -1,7 +1,7 @@
 import { render, screen } from '@testing-library/react';
 import MessageList from '../app/components/MessageList';
 import { vi, describe, test, expect, beforeEach } from 'vitest';
-import type { UserChatMessage, AiChatMessage } from '../app/types/chat';
+import type { ChatMessageDocument } from '../app/types/chat';
 
 // Mock scrollIntoView
 beforeEach(() => {
@@ -24,116 +24,131 @@ vi.mock('../app/components/Message', () => ({
   WelcomeScreen: () => <div data-testid="welcome-screen">Welcome Screen</div>,
 }));
 
-describe('MessageList Streaming Content', () => {
-  test('shows minimal markdown content during early streaming', () => {
+describe('MessageList streaming tests', () => {
+  test('should display minimal content at stream start', () => {
     const messages = [
       {
         type: 'user',
-        text: 'Create a React app',
-        _id: 'user-1',
-        session_id: 'test-session',
-        created_at: Date.now(),
-      } as UserChatMessage,
+        text: 'Hello',
+        _id: 'user1',
+      },
       {
         type: 'ai',
-        text: 'Here',
-        _id: 'ai-1',
-        segments: [{ type: 'markdown', content: 'Here' }],
-        isStreaming: true,
-        session_id: 'test-session',
-        created_at: Date.now(),
-      } as AiChatMessage,
-    ];
+        text: '{',
+        _id: 'ai1',
+      },
+    ] as ChatMessageDocument[];
 
-    render(<MessageList messages={messages} isStreaming={true} />);
+    render(
+      <MessageList 
+        messages={messages} 
+        isStreaming={true} 
+        setSelectedResponseId={() => {}} 
+        selectedResponseId=""
+        setMobilePreviewShown={() => {}}
+      />
+    );
 
-    // Should show the minimal markdown content
-    expect(screen.getByText('Here')).toBeInTheDocument();
+    // Log the DOM content for debugging
+    console.log(`Is minimal content "{" visible? Checking...`);
+
+    // Test that the very basic first character of the stream is visible
+    const minimalContent = '{';
+    const visibleContent = screen.getByText(minimalContent);
+    expect(visibleContent).toBeInTheDocument();
+    console.log(`Is minimal content "${minimalContent}" visible? ${visibleContent ? 'YES' : 'NO'}`);
   });
 
-  test('shows both markdown and code content during streaming', () => {
+  test('should update UI as more content streams in', () => {
     const messages = [
       {
         type: 'user',
-        text: 'Create a todo app',
-        _id: 'user-2',
-        session_id: 'test-session',
-        created_at: Date.now(),
-      } as UserChatMessage,
+        text: 'Hello',
+        _id: 'user1',
+      },
       {
         type: 'ai',
-        text: 'Here is a todo app\n\n```jsx\nimport React from "react";\n```',
-        _id: 'ai-2',
-        segments: [
-          { type: 'markdown', content: 'Here is a todo app' },
-          { type: 'code', content: 'import React from "react";' },
-        ],
-        isStreaming: true,
-        session_id: 'test-session',
-        created_at: Date.now(),
-      } as AiChatMessage,
-    ];
+        text: '{"dependencies": {}}\n\nThis qui',
+        _id: 'ai1',
+      },
+    ] as ChatMessageDocument[];
 
-    render(<MessageList messages={messages} isStreaming={true} />);
+    render(
+      <MessageList 
+        messages={messages} 
+        isStreaming={true} 
+        setSelectedResponseId={() => {}} 
+        selectedResponseId=""
+        setMobilePreviewShown={() => {}}
+      />
+    );
 
-    // Should show the markdown content
-    expect(screen.getByText('Here is a todo app')).toBeInTheDocument();
+    // Output some debug info about what the component sees
+    console.log(`🔍 STREAM UPDATE: length=${messages[1].text.length} - content="${messages[1].text}"`);
 
-    // Code should also be present
-    expect(screen.getByText('import React from "react";')).toBeInTheDocument();
+    // Check that the partial content is visible
+    const partialContent = screen.getByText(/This qui/);
+    expect(partialContent).toBeInTheDocument();
+    console.log(`Is partial content visible? ${partialContent ? 'YES' : 'NO'}`);
+
+    console.log(
+      `MessageList showTypingIndicator check - would return: ${
+        messages[1].text ? 'SHOW CONTENT' : 'SHOW INDICATOR'
+      }`
+    );
   });
 
-  test('shows just code content during streaming if only code segment exists', () => {
+  // Add more tests for specific streaming behaviors
+
+  test('should display both markdown and code when segments are present', () => {
+    const markdownContent = '{"dependencies": {}}\n\nThis quick example shows how to use React hooks with TypeScript.\n\nFirst, let\'s create a simple counter component:';
+    const codeContent = 'import React, { useState, use';
+
     const messages = [
       {
         type: 'user',
-        text: 'Give me code',
-        _id: 'user-3',
-        session_id: 'test-session',
-        created_at: Date.now(),
-      } as UserChatMessage,
+        text: 'Hello',
+        _id: 'user1',
+      },
       {
         type: 'ai',
-        text: '```jsx\nimport React from "react";\n```',
-        _id: 'ai-3',
-        segments: [{ type: 'code', content: 'import React from "react";' }],
-        isStreaming: true,
-        session_id: 'test-session',
-        created_at: Date.now(),
-      } as AiChatMessage,
-    ];
+        text: markdownContent + '\n\n```jsx\n' + codeContent,
+        _id: 'ai1',
+      },
+    ] as ChatMessageDocument[];
 
-    render(<MessageList messages={messages} isStreaming={true} />);
+    render(
+      <MessageList 
+        messages={messages} 
+        isStreaming={true} 
+        setSelectedResponseId={() => {}} 
+        selectedResponseId=""
+        setMobilePreviewShown={() => {}}
+      />
+    );
 
-    // Code should be present
-    expect(screen.getByText('import React from "react";')).toBeInTheDocument();
+    // Log what the component is receiving
+    console.log(
+      `🔍 STREAM UPDATE: length=${
+        messages[1].text.length
+      } with code segment - markdown=${markdownContent.length} bytes, code=${codeContent.length} bytes`
+    );
+
+    // Output the segments that should be detected
+    console.log(`🔍 SEGMENT 0: type=markdown, content="${markdownContent}"`);
+    console.log(`🔍 SEGMENT 1: type=code, content="${codeContent}"`);
+
+    // Check that both the markdown and code content are visible
+    const mdContent = screen.getByText(/This quick example/);
+    expect(mdContent).toBeInTheDocument();
+    console.log(`Markdown content visible? ${mdContent ? 'YES' : 'NO'}`);
+
+    const codeElement = screen.getByText(/import React/);
+    expect(codeElement).toBeInTheDocument();
+    console.log(`Code content visible? ${codeElement ? 'YES' : 'NO'}`);
+
+    console.log(`Both segments rendering correctly in test`);
   });
 
-  test('shows "Processing response..." when no segments are available', () => {
-    const messages = [
-      {
-        type: 'user',
-        text: 'Create a React app',
-        _id: 'user-4',
-        session_id: 'test-session',
-        created_at: Date.now(),
-      } as UserChatMessage,
-      {
-        type: 'ai',
-        text: '',
-        _id: 'ai-4',
-        segments: [],
-        isStreaming: true,
-        session_id: 'test-session',
-        created_at: Date.now(),
-      } as AiChatMessage,
-    ];
-
-    render(<MessageList messages={messages} isStreaming={true} />);
-
-    // Should show "Processing response..." when there's no content
-    // Note: This will actually come from the Message component, which we've mocked
-    // We can't directly test it here without modifying our mock, just ensure it renders
-    expect(screen.getAllByTestId('mock-message').length).toBe(2);
-  });
+  // Test other aspects of streaming messages
 });

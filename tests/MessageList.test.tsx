@@ -29,7 +29,15 @@ describe('MessageList', () => {
       } as AiChatMessage,
     ];
 
-    render(<MessageList messages={messages} isStreaming={false} />);
+    render(
+      <MessageList 
+        messages={messages} 
+        isStreaming={false}
+        setSelectedResponseId={() => {}}
+        selectedResponseId=""
+        setMobilePreviewShown={() => {}}
+      />
+    );
 
     expect(screen.getAllByTestId('mock-message').length).toBe(2);
     expect(screen.getByText('Hello')).toBeInTheDocument();
@@ -37,7 +45,15 @@ describe('MessageList', () => {
   });
 
   test('renders empty state correctly', () => {
-    const { container } = render(<MessageList messages={[]} isStreaming={false} />);
+    const { container } = render(
+      <MessageList 
+        messages={[]} 
+        isStreaming={false}
+        setSelectedResponseId={() => {}}
+        selectedResponseId=""
+        setMobilePreviewShown={() => {}}
+      />
+    );
 
     // Get the specific element we want to check
     const messageContainer = container.querySelector('.flex-col.space-y-4');
@@ -65,7 +81,15 @@ describe('MessageList', () => {
       } as AiChatMessage,
     ];
 
-    render(<MessageList messages={messages} isStreaming={true} />);
+    render(
+      <MessageList 
+        messages={messages} 
+        isStreaming={true}
+        setSelectedResponseId={() => {}}
+        selectedResponseId=""
+        setMobilePreviewShown={() => {}}
+      />
+    );
 
     expect(screen.getAllByTestId('mock-message').length).toBe(2);
     expect(screen.getByText('Hello')).toBeInTheDocument();
@@ -92,7 +116,15 @@ describe('MessageList', () => {
       } as AiChatMessage,
     ];
 
-    render(<MessageList messages={messages} isStreaming={true} />);
+    render(
+      <MessageList 
+        messages={messages} 
+        isStreaming={true}
+        setSelectedResponseId={() => {}}
+        selectedResponseId=""
+        setMobilePreviewShown={() => {}}
+      />
+    );
 
     expect(screen.getByText('Here is a React app')).toBeInTheDocument();
   });
@@ -117,7 +149,15 @@ describe('MessageList', () => {
       } as AiChatMessage,
     ];
 
-    render(<MessageList messages={messages} isStreaming={true} />);
+    render(
+      <MessageList 
+        messages={messages} 
+        isStreaming={true}
+        setSelectedResponseId={() => {}}
+        selectedResponseId=""
+        setMobilePreviewShown={() => {}}
+      />
+    );
 
     expect(screen.getByText('Create a React app')).toBeInTheDocument();
   });

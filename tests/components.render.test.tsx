@@ -1,9 +1,9 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import ChatHeader from '../app/components/ChatHeader';
 import SessionSidebar from '../app/components/SessionSidebar';
 import MessageList from '../app/components/MessageList';
-import type { UserChatMessage, AiChatMessage } from '../app/types/chat';
+import type { UserChatMessage, AiChatMessage, ChatMessageDocument } from '../app/types/chat';
 import { mockSessionSidebarProps } from './mockData';
 
 // Mock dependencies
@@ -147,7 +147,8 @@ describe('Component Rendering', () => {
     });
 
     it('has a close button that works', () => {
-      render(<SessionSidebar isVisible={true} onClose={onClose} {...mockSessionSidebarProps} />);
+      const onClose = vi.fn();
+      render(<SessionSidebar {...mockSessionSidebarProps} isVisible={true} onClose={onClose} />);
 
       // Find and click the close button
       const closeButton = screen.getByLabelText('Close sidebar');
@@ -160,7 +161,15 @@ describe('Component Rendering', () => {
 
   describe('MessageList', () => {
     it('renders empty list', () => {
-      render(<MessageList messages={[]} isStreaming={false} />);
+      render(
+        <MessageList 
+          messages={[]} 
+          isStreaming={false} 
+          setSelectedResponseId={() => {}}
+          selectedResponseId=""
+          setMobilePreviewShown={() => {}}
+        />
+      );
 
       // Verify the container is rendered but empty
       const messageContainer = document.querySelector('.flex-col.space-y-4');
@@ -187,7 +196,15 @@ describe('Component Rendering', () => {
         } as AiChatMessage,
       ];
 
-      render(<MessageList messages={messages} isStreaming={false} />);
+      render(
+        <MessageList 
+          messages={messages} 
+          isStreaming={false} 
+          setSelectedResponseId={() => {}}
+          selectedResponseId=""
+          setMobilePreviewShown={() => {}}
+        />
+      );
       expect(screen.getByText('Hello')).toBeInTheDocument();
       expect(screen.getByText('Hi there')).toBeInTheDocument();
     });
@@ -212,7 +229,15 @@ describe('Component Rendering', () => {
         } as AiChatMessage,
       ];
 
-      render(<MessageList messages={messages} isStreaming={true} />);
+      render(
+        <MessageList 
+          messages={messages} 
+          isStreaming={true} 
+          setSelectedResponseId={() => {}}
+          selectedResponseId=""
+          setMobilePreviewShown={() => {}}
+        />
+      );
       // The Message component in our test displays "Processing response..." in a markdown element
       // when there's no content but streaming is true
       expect(screen.getAllByTestId('markdown').length).toBeGreaterThan(0);
@@ -231,8 +256,133 @@ describe('Component Rendering', () => {
         } as AiChatMessage,
       ];
 
-      render(<MessageList messages={messages} isStreaming={true} />);
+      render(
+        <MessageList 
+          messages={messages} 
+          isStreaming={true} 
+          setSelectedResponseId={() => {}}
+          selectedResponseId=""
+          setMobilePreviewShown={() => {}}
+        />
+      );
       expect(screen.getByText('I am thinking...')).toBeInTheDocument();
+    });
+
+    it('renders without crashing', () => {
+      render(
+        <MessageList 
+          messages={[]} 
+          isStreaming={false} 
+          setSelectedResponseId={() => {}}
+          selectedResponseId=""
+          setMobilePreviewShown={() => {}}
+        />
+      );
+    });
+
+    it('renders messages with no streaming', () => {
+      const messages = [
+        {
+          _id: '1',
+          type: 'user',
+          text: 'Hello, world!',
+        },
+        {
+          _id: '2',
+          type: 'ai',
+          text: 'Hi there!',
+        },
+      ] as ChatMessageDocument[];
+
+      render(
+        <MessageList 
+          messages={messages} 
+          isStreaming={false}
+          setSelectedResponseId={() => {}}
+          selectedResponseId=""
+          setMobilePreviewShown={() => {}}
+        />
+      );
+    });
+
+    it('renders messages with streaming', () => {
+      const messages = [
+        {
+          _id: '1',
+          type: 'user',
+          text: 'Hello, world!',
+        },
+        {
+          _id: '2',
+          type: 'ai',
+          text: 'Hi there!',
+        },
+      ] as ChatMessageDocument[];
+
+      render(
+        <MessageList 
+          messages={messages} 
+          isStreaming={true}
+          setSelectedResponseId={() => {}}
+          selectedResponseId=""
+          setMobilePreviewShown={() => {}}
+        />
+      );
+    });
+
+    it('renders AI messages with streaming segments', () => {
+      const messages = [
+        {
+          _id: '1',
+          type: 'ai',
+          text: 'This is a streaming message',
+          segments: [
+            { type: 'markdown', content: 'This is a ' },
+            { type: 'code', content: 'const x = "streaming message";' },
+          ],
+        },
+      ] as unknown as ChatMessageDocument[];
+
+      render(
+        <MessageList 
+          messages={messages} 
+          isStreaming={true}
+          setSelectedResponseId={() => {}}
+          selectedResponseId=""
+          setMobilePreviewShown={() => {}}
+        />
+      );
+    });
+
+    it('MessageList renders correctly with segments', () => {
+      const messages = [
+        {
+          _id: 'user1',
+          type: 'user' as const,
+          text: 'Hello',
+        },
+        {
+          _id: 'ai1',
+          type: 'ai' as const,
+          text: 'This is a test',
+          segments: [
+            { type: 'markdown', content: 'This is a test' },
+          ]
+        },
+      ] as unknown as ChatMessageDocument[];
+
+      render(
+        <MessageList 
+          messages={messages} 
+          isStreaming={false} 
+          setSelectedResponseId={() => {}} 
+          selectedResponseId=""
+          setMobilePreviewShown={() => {}}
+        />
+      );
+
+      expect(screen.getByText('Hello')).toBeInTheDocument();
+      expect(screen.getByText('This is a test')).toBeInTheDocument();
     });
   });
 });

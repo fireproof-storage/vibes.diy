@@ -1,20 +1,55 @@
-import { render, screen } from '@testing-library/react';
 import { describe, test, expect } from 'vitest';
+import { render, screen } from '@testing-library/react';
 import StructuredMessage from '../app/components/StructuredMessage';
+import type { Segment } from '../app/types/chat';
 
-describe('Streaming Content Display', () => {
+describe('Streaming Content Tests', () => {
+  test('renders code and markdown segments', () => {
+    const segments: Segment[] = [
+      {
+        type: 'markdown',
+        content: 'This is a markdown segment',
+      },
+      {
+        type: 'code',
+        content: 'const x = "hello";',
+      },
+    ];
+
+    render(
+      <StructuredMessage 
+        segments={segments} 
+        isStreaming={true} 
+        setSelectedResponseId={() => {}}
+        selectedResponseId=""
+        setMobilePreviewShown={() => {}}
+      />
+    );
+
+    // Ensure both segments are rendered
+    expect(screen.getByText('This is a markdown segment')).toBeInTheDocument();
+    expect(screen.getByText('const x = "hello";')).toBeInTheDocument();
+  });
+
   test('shows markdown content immediately when streaming', () => {
     // Arrange: Create a test message with some markdown content
     const segments = [
-      { type: 'markdown' as const, content: 'Here is a rainbow todo app' },
-      { type: 'code' as const, content: 'console.log("hello");' },
-    ];
+      { type: 'markdown', content: 'This is a test message' },
+    ] as Segment[];
 
-    // Act: Render the component with isStreaming=true
-    render(<StructuredMessage segments={segments} isStreaming={true} />);
+    // Act: Render the component with streaming flag
+    render(
+      <StructuredMessage 
+        segments={segments} 
+        isStreaming={true}
+        setSelectedResponseId={() => {}}
+        selectedResponseId=""
+        setMobilePreviewShown={() => {}}
+      />
+    );
 
-    // Assert: The markdown content should be visible
-    expect(screen.getByText('Here is a rainbow todo app')).toBeInTheDocument();
+    // Assert: The content should be visible
+    expect(screen.getByText('This is a test message')).toBeInTheDocument();
   });
 
   test('should not show "Thinking..." when content is available', () => {
