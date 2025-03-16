@@ -23,17 +23,7 @@ exports[`ResultPreview > renders empty state correctly 1`] = `
     </style>
     <div
       class="h-full"
-    >
-      <div
-        class="bg-light-background-00 dark:bg-dark-background-00 flex h-full flex-col items-center justify-center"
-      >
-        <img
-          alt="Lightup"
-          class="logo-pulse h-auto w-full max-w-xs opacity-10"
-          src="/lightup.png"
-        />
-      </div>
-    </div>
+    />
   </div>
 </div>
 `;

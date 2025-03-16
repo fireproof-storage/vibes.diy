@@ -116,6 +116,7 @@ function SearchResults({ searches }) {
       'easy-message2.txt': ['markdown', 'code', 'markdown'],
       'easy-message3.txt': ['markdown', 'code', 'markdown'],
       'easy-message4.txt': ['markdown', 'code', 'markdown'],
+      'easy-message5.txt': ['markdown', 'code', 'markdown'],
       'hard-message.txt': ['markdown', 'code', 'markdown'],
       'long-message.txt': ['markdown', 'code', 'markdown'],
       'long-message2.txt': ['markdown', 'code', 'markdown'],

@@ -1,0 +1,259 @@
+{"dependencies": {"react-modal": "^3.16.1"}}
+
+# Synthwave Photo Gallery
+
+A responsive photo gallery application with a synthwave vibe, allowing users to upload, view, and delete images with captions.
+
+```jsx
+import React, { useState, useEffect } from "react";
+import { useFireproof, ImgFile } from "use-fireproof";
+import Modal from "react-modal";
+
+Modal.setAppElement("#root");
+
+export default function PhotoGallery() {
+  const { database, useDocument, useLiveQuery } = useFireproof("synthwave-gallery");
+  const { doc, merge, submit, reset } = useDocument({ 
+    title: "", 
+    description: "", 
+    _files: {}, 
+    createdAt: Date.now() 
+  });
+  const { docs } = useLiveQuery("createdAt", { descending: true });
+  
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [currentPhoto, setCurrentPhoto] = useState(null);
+  const [dragActive, setDragActive] = useState(false);
+  
+  const handleDrag = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (e.type === "dragenter" || e.type === "dragover") {
+      setDragActive(true);
+    } else if (e.type === "dragleave") {
+      setDragActive(false);
+    }
+  };
+  
+  const handleDrop = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragActive(false);
+    
+    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+      const file = e.dataTransfer.files[0];
+      if (file.type.startsWith("image/")) {
+        merge({ _files: { photo: file } });
+      }
+    }
+  };
+  
+  const handleFileChange = (e) => {
+    if (e.target.files && e.target.files[0]) {
+      merge({ _files: { photo: e.target.files[0] } });
+    }
+  };
+  
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (!doc._files.photo || !doc.title.trim()) return;
+    
+    merge({ createdAt: Date.now() });
+    submit();
+  };
+  
+  const openModal = (photo) => {
+    setCurrentPhoto(photo);
+    setIsModalOpen(true);
+  };
+  
+  const closeModal = () => {
+    setIsModalOpen(false);
+    setCurrentPhoto(null);
+  };
+  
+  const deletePhoto = async (id) => {
+    await database.del(id);
+    closeModal();
+  };
+  
+  return (
+    <div className="min-h-screen bg-gray-900 text-white p-6">
+      <div className="max-w-6xl mx-auto">
+        <h1 className="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-orange-500 via-pink-500 to-purple-500 mb-8">Synthwave Photo Gallery</h1>
+        
+        <div className="mb-10">
+          <p className="text-orange-300 italic mb-4">
+            *Your personal neon-soaked photo collection. Upload images by dragging and dropping or selecting files, add titles and descriptions, then view them in a vivid synthwave-themed gallery. Click any image to see it in full detail.*
+          </p>
+        </div>
+        
+        <form onSubmit={handleSubmit} className="mb-10 bg-gray-800 rounded-lg p-6 border border-pink-500 shadow-lg shadow-pink-500/20">
+          <div 
+            className={`mb-4 border-2 border-dashed rounded-lg p-8 text-center cursor-pointer ${dragActive ? "border-orange-400 bg-gray-700/50" : "border-gray-600"}`}
+            onDragEnter={handleDrag}
+            onDragLeave={handleDrag}
+            onDragOver={handleDrag}
+            onDrop={handleDrop}
+            onClick={() => document.getElementById("file-input").click()}
+          >
+            {doc._files.photo ? (
+              <div className="flex items-center justify-center">
+                <ImgFile file={doc._files.photo} alt="Preview" className="max-h-40 rounded" />
+              </div>
+            ) : (
+              <div>
+                <p className="text-orange-300">Drag and drop an image here, or click to select</p>
+                <p className="text-gray-400 text-sm mt-2">PNG, JPG, GIF files accepted</p>
+              </div>
+            )}
+            <input id="file-input" type="file" accept="image/*" onChange={handleFileChange} className="hidden" />
+          </div>
+          
+          <div className="mb-4">
+            <input 
+              type="text" 
+              placeholder="Title (required)"
+              value={doc.title}
+              onChange={(e) => merge({ title: e.target.value })}
+              className="w-full bg-gray-700 border border-gray-600 rounded p-2 focus:border-orange-400 focus:outline-none"
+            />
+          </div>
+          
+          <div className="mb-4">
+            <textarea 
+              placeholder="Description (optional)"
+              value={doc.description || ""}
+              onChange={(e) => merge({ description: e.target.value })}
+              className="w-full bg-gray-700 border border-gray-600 rounded p-2 focus:border-orange-400 focus:outline-none h-24"
+            />
+          </div>
+          
+          <button 
+            type="submit"
+            disabled={!doc._files.photo || !doc.title.trim()}
+            className="w-full bg-gradient-to-r from-orange-500 to-pink-500 text-white py-2 px-4 rounded font-medium hover:from-orange-600 hover:to-pink-600 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            Upload Photo
+          </button>
+        </form>
+        
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+          {docs.map((photo) => (
+            <div 
+              key={photo._id}
+              onClick={() => openModal(photo)}
+              className="bg-gray-800 rounded-lg overflow-hidden cursor-pointer transform transition-transform hover:scale-105 hover:shadow-lg hover:shadow-pink-500/30 border border-transparent hover:border-pink-500"
+            >
+              {photo._files.photo && (
+                <div className="aspect-square overflow-hidden bg-gray-900">
+                  <ImgFile file={photo._files.photo} alt={photo.title} className="w-full h-full object-cover" />
+                </div>
+              )}
+              <div className="p-3">
+                <h3 className="font-bold text-lg text-orange-300 truncate">{photo.title}</h3>
+                {photo.description && <p className="text-gray-300 text-sm line-clamp-2">{photo.description}</p>}
+              </div>
+            </div>
+          ))}
+        </div>
+        
+        {docs.length === 0 && (
+          <div className="text-center py-12 bg-gray-800 rounded-lg border border-gray-700">
+            <p className="text-gray-400">No photos yet. Upload your first one!</p>
+          </div>
+        )}
+      </div>
+      
+      <Modal
+        isOpen={isModalOpen}
+        onRequestClose={closeModal}
+        className="max-w-4xl mx-auto mt-20 bg-gray-800 rounded-lg p-6 border border-pink-500 outline-none shadow-2xl shadow-pink-500/30"
+        overlayClassName="fixed inset-0 bg-black/80 z-50 flex"
+      >
+        {currentPhoto && (
+          <div>
+            <div className="flex justify-between items-start mb-4">
+              <h2 className="text-2xl font-bold text-orange-300">{currentPhoto.title}</h2>
+              <button onClick={closeModal} className="text-gray-400 hover:text-white">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            
+            <div className="bg-gray-900 rounded-lg overflow-hidden mb-4">
+              {currentPhoto._files.photo && (
+                <ImgFile file={currentPhoto._files.photo} alt={currentPhoto.title} className="w-full h-auto max-h-[70vh] object-contain mx-auto" />
+              )}
+            </div>
+            
+            {currentPhoto.description && (
+              <div className="mb-4">
+                <p className="text-gray-300">{currentPhoto.description}</p>
+              </div>
+            )}
+            
+            <div className="flex justify-between items-center">
+              <div className="text-sm text-gray-400">
+                {new Date(currentPhoto.createdAt).toLocaleDateString()}
+              </div>
+              <button
+                onClick={() => deletePhoto(currentPhoto._id)}
+                className="bg-red-600 hover:bg-red-700 text-white py-1 px-3 rounded-md text-sm"
+              >
+                Delete Photo
+              </button>
+            </div>
+          </div>
+        )}
+      </Modal>
+    </div>
+  );
+}
+```
+
+## About Synthwave Photo Gallery
+
+Synthwave Photo Gallery is a vibrant, retro-futuristic application for managing and showcasing your photo collection. The app embraces a neon-soaked synthwave aesthetic with orange and pink gradient accents against a dark background.
+
+### Features
+
+- **Drag and Drop Uploads**: Simply drag any image file onto the upload area or click to select files from your device
+- **Caption Your Memories**: Add titles and descriptions to provide context for your photos
+- **Responsive Grid Layout**: Photos automatically arrange in a responsive grid that adapts to different screen sizes
+- **Full-Size View**: Click on any photo to see it in a larger modal view with all details
+- **Persistent Storage**: All photos are stored locally in your browser using Fireproof, so they'll still be there when you return
+- **Real-Time Updates**: As you add or delete photos, the gallery updates instantly
+- **Delete Management**: Easily remove unwanted photos from the detailed view
+
+### How to Use
+
+1. **Upload a Photo**:
+   - *Drag and drop* an image file onto the upload area, or
+   - *Click* the upload area to open a file selector
+   - Once an image is selected, it will show a preview
+
+2. **Add Details**:
+   - Enter a **title** (required) for your photo
+   - Add an optional **description** to provide more context
+
+3. **Save to Gallery**:
+   - Click the **Upload Photo** button to add the image to your gallery
+   - The form will reset, ready for your next upload
+
+4. **View Your Collection**:
+   - Scroll through the grid to see all your photos
+   - Photos are sorted with newest first
+   - *Hover* over images to see a subtle animation effect
+
+5. **Examine Photos**:
+   - *Click* on any photo in the grid to open it in detail view
+   - The modal shows the full image along with its title and description
+   - View the date the photo was added
+
+6. **Delete Photos**:
+   - While in the detailed view, click the **Delete Photo** button to remove it
+   - Confirmation is immediate, so be certain before clicking
+
+*Enjoy your personal synthwave-themed photo gallery, where your memories are stored with retro-futuristic style!*

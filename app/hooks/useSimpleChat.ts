@@ -46,6 +46,12 @@ export function useSimpleChat(sessionId: string | undefined): ChatState {
     : docs.find((doc: any) => doc.type === 'ai' && doc._id === selectedResponseId) ||
       docs.filter((doc: any) => doc.type === 'ai').reverse()[0]) as unknown as ChatMessageDocument;
 
+  // Log selectedResponseDoc when it changes
+  useEffect(() => {
+    console.log('selectedResponseDoc changed:', selectedResponseDoc);
+  }, [selectedResponseId]);
+
+      
   const setInput = useCallback(
     (input: string) => {
       mergeUserMessage({ text: input });

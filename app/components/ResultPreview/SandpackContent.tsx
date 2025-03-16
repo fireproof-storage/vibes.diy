@@ -43,6 +43,13 @@ const SandpackContent: React.FC<SandpackContentProps> = ({
     return () => mediaQuery.removeEventListener('change', handleChange);
   }, []);
 
+  // Log dependencies when they change
+  useEffect(() => {
+    console.log('Dependencies changed:', dependencies);
+  }, [dependencies]);
+
+  
+
   return (
     <div data-testid="sandpack-provider">
       <SandpackProvider
