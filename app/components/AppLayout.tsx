@@ -24,25 +24,29 @@ export default function AppLayout({
   return (
     <div className="flex h-dvh flex-col md:flex-row md:overflow-hidden">
       <div
-        className={`flex h-full w-full flex-col md:w-1/3 ${mobilePreviewShown ? 'hidden md:flex' : 'flex'}`}
+        className={`flex w-full flex-col md:w-1/3 ${
+          mobilePreviewShown ? 'hidden md:flex md:h-full' : 'h-full'
+        }`}
       >
         <div className="flex h-[4rem] items-center p-2">{headerLeft}</div>
 
-        <div className="flex-1 overflow-auto">{chatPanel}</div>
-
+        <div className="flex-grow overflow-auto">{chatPanel}</div>
+          
         {suggestionsComponent && <div className="w-full">{suggestionsComponent}</div>}
 
-        <div className="sticky bottom-0 w-full">{chatInput}</div>
+        <div className="w-full">{chatInput}</div>
       </div>
 
       <div
-        className={`flex h-full w-full flex-col md:w-2/3 ${mobilePreviewShown ? 'flex' : 'opacity-0 h-0 overflow-hidden md:opacity-100 md:h-full md:overflow-visible'}`}
+        className={`flex w-full flex-col md:w-2/3 ${
+          mobilePreviewShown ? 'h-full' : 'h-0 opacity-0 overflow-hidden md:h-full md:opacity-100 md:overflow-visible'
+        }`}
       >
         <div className="flex h-[4rem] items-center p-2">{headerRight}</div>
 
-        <div className="flex-1 overflow-auto">{previewPanel}</div>
+        <div className="flex-grow overflow-auto">{previewPanel}</div>
 
-        <div className="">{appInfo}</div>
+        <div className="w-full">{appInfo}</div>
       </div>
     </div>
   );
