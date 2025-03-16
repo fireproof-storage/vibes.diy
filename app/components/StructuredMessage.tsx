@@ -57,25 +57,6 @@ const StructuredMessage = memo(
       }
     };
 
-    // Add scroll event listener as an alternative to Intersection Observer
-    useEffect(() => {
-      const handleScroll = () => {
-        document.querySelectorAll('[data-code-segment]').forEach((el, i) => {
-          const rect = el.getBoundingClientRect();
-          const isSticky = rect.top <= 20; // 20px threshold
-          
-          if (isSticky) {
-            el.classList.add('is-sticky-scroll');
-          } else {
-            el.classList.remove('is-sticky-scroll');
-          }
-        });
-      };
-      
-      window.addEventListener('scroll', handleScroll);
-      return () => window.removeEventListener('scroll', handleScroll);
-    }, []);
-
     // Function to render code segments with sticky behavior
     const renderCodeSegment = (segment: Segment, index: number) => {
       const content = segment.content || '';
@@ -119,6 +100,7 @@ const StructuredMessage = memo(
         sentinel.style.left = '0';
         sentinel.style.zIndex = '1000'; // Ensure it's on top
         
+        
         if (codeSegmentRef.current.parentElement) {
           codeSegmentRef.current.parentElement.insertBefore(sentinel, codeSegmentRef.current);
         }
@@ -154,7 +136,7 @@ const StructuredMessage = memo(
           data-code-segment={index}
           style={{
             position: 'sticky',
-            top: '16px',
+            top: '8px',
             zIndex: 10,
           }}
           className={`relative my-4 cursor-pointer rounded-lg border border-gray-200 bg-gray-50 p-4 shadow-sm transition-all hover:bg-gray-100 dark:border-gray-700 dark:bg-gray-700 dark:hover:bg-gray-600 ${
