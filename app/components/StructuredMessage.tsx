@@ -70,7 +70,8 @@ const CodeSegment = memo(({
     sentinel.style.height = '1px';
     sentinel.style.width = '100%';
     sentinel.style.position = 'absolute';
-    sentinel.style.top = '0';
+    // Position the sentinel element at an extremely far distance for testing
+    sentinel.style.top = '200px';
     sentinel.style.left = '0';
     sentinel.style.zIndex = '1000'; // Ensure it's on top
     
@@ -84,7 +85,8 @@ const CodeSegment = memo(({
       const handleScroll = () => {
         if (codeSegmentRef.current) {
           const rect = codeSegmentRef.current.getBoundingClientRect();
-          setIsSticky(rect.top <= 20); // 20px threshold
+          // Extremely large threshold for dramatic testing
+          setIsSticky(rect.top <= 200); // 200px threshold for testing
         }
       };
       
@@ -102,7 +104,10 @@ const CodeSegment = memo(({
         const isNowSticky = !entry.isIntersecting;
         setIsSticky(isNowSticky);
       },
-      { threshold: 0 }
+      { 
+        threshold: 0,
+        rootMargin: '0px 0px -200px 0px' // Extremely large margin for dramatic testing
+      }
     );
     
     observer.observe(sentinel);
