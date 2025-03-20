@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { copyToClipboard, encodeStateToUrl } from '../../utils/sharing';
 
 interface ResultPreviewHeaderContentProps {
@@ -10,6 +10,7 @@ interface ResultPreviewHeaderContentProps {
   code: string;
   setMobilePreviewShown: (shown: boolean) => void;
   dependencies?: Record<string, string>;
+  isCodeModified?: boolean;
 }
 
 const ResultPreviewHeaderContent: React.FC<ResultPreviewHeaderContentProps> = ({
@@ -21,8 +22,28 @@ const ResultPreviewHeaderContent: React.FC<ResultPreviewHeaderContentProps> = ({
   code,
   dependencies = {},
   setMobilePreviewShown,
+  isCodeModified = false,
 }) => {
   const [shareStatus, setShareStatus] = useState<string>('');
+  const [localIsModified, setLocalIsModified] = useState(false);
+
+  // For testing purposes, toggle isModified state every 5 seconds
+  // You would replace this with actual code modification tracking
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setLocalIsModified(prev => !prev);
+    }, 5000);
+    return () => clearInterval(interval);
+  }, []);
+
+  // Use either prop or local state for modification status
+  const isModified = isCodeModified || localIsModified;
+
+  function handleSave() {
+    console.log('Saving code:', code);
+    // Here you would handle the actual save process
+    // For now, we just log to the console
+  }
 
   function handleShare() {
     if (!code) {
@@ -162,6 +183,34 @@ const ResultPreviewHeaderContent: React.FC<ResultPreviewHeaderContentProps> = ({
             <span className="text-sm text-green-600 dark:text-green-400">{shareStatus}</span>
           )}
           <div className="bg-light-decorative-00 dark:bg-dark-decorative-00 flex space-x-1 rounded-lg p-1 shadow-sm">
+            <button
+              type="button"
+              onClick={handleSave}
+              disabled={!isModified}
+              className={`flex items-center space-x-1.5 rounded-md px-4 py-1.5 text-sm font-medium transition-colors ${
+                isModified
+                  ? 'text-light-primary dark:text-dark-primary hover:bg-light-decorative-01 dark:hover:bg-dark-decorative-01'
+                  : 'cursor-not-allowed opacity-50 text-light-secondary dark:text-dark-secondary'
+              }`}
+              aria-label="Save changes"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-4 w-4"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <title>Save</title>
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"
+                />
+              </svg>
+              <span>Save</span>
+            </button>
             <button
               type="button"
               onClick={handleCaptureScreenshot}
