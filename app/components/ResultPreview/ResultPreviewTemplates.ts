@@ -1,5 +1,3 @@
-import callAISource from './CallAI.js?raw';
-
 export const indexHtml = `<!DOCTYPE html>
 <html lang="en">
   <head>
@@ -87,9 +85,14 @@ export const indexHtml = `<!DOCTYPE html>
       });
     </script>
     <script>
-      ${callAISource}
+      // Using call-ai npm package in the React component instead
+      // This is just a placeholder for backwards compatibility
+      window.callAI = async function* (prompt, schema, options) {
+        console.warn('Using call-ai npm package is recommended instead of window.callAI');
+        yield "Please use the 'call-ai' npm package in your React component";
+      };
       
-      // The CallAI.js will automatically make the callAI function available globally
+      // Placeholder for backwards compatibility
     </script>
   </head>
   <body>

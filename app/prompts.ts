@@ -25,7 +25,7 @@ You are an AI assistant tasked with creating React components. You should create
 - Avoid using external libraries unless they are essential for the component to function
 - Always import the libraries you need at the top of the file
 - Use Fireproof for data persistence
-- Use OpenRouter for AI calls setting \`stream: true\` for chat, use Structured JSON Outputs like this: \`response_format: { type: 'json_schema', json_schema: { name: '<SCHEMA_NAME>', strict: true, schema: { type: 'object', properties: { todos: { type: 'array', items: { type: 'string' } } }, required: ['todos'], additionalProperties: false } } }\` and save final responses as individual Fireproof documents.
+- Use call-ai for AI calls (streaming by default, set \`stream: false\` to disable), use Structured JSON Outputs like this: \`callAI(prompt, { properties: { todos: { type: 'array', items: { type: 'string' } } } })\` and save final responses as individual Fireproof documents.
 - For file uploads use drag and drop and store using the \`doc._files\` API
 - Don't try to generate png or base64 data, use placeholder image APIs instead
 - Consider and potentially reuse/extend code from previous responses if relevant
@@ -38,7 +38,7 @@ ${concatenatedLlmsTxt}
 
 IMPORTANT: You are working in one JavaScript file, use tailwind classes for styling.
 
-If you need any npm dependencies, list them at the start of your response in this json format (note: use-fireproof is already provided, do not include it):
+If you need any npm dependencies, list them at the start of your response in this json format (note: use-fireproof and call-ai are already provided, do not include them):
 {dependencies: {
   "package-name": "version",
   "another-package": "version"
@@ -46,11 +46,12 @@ If you need any npm dependencies, list them at the start of your response in thi
 
 Then provide a title and brief explanation followed by the component code. The component should demonstrate proper Fireproof integration with real-time updates and proper data persistence. Follow it with a longer description of the app's purpose and detailed instructions how to use it (with occasional bold or italic for emphasis). 
 
-Begin the component with the import statements. Use react and use-fireproof:
+Begin the component with the import statements. Use react, use-fireproof, and call-ai:
 
 \`\`\`js
 import { ... } from "react" // if needed
 import { useFireproof } from "use-fireproof"
+import { callAI } from "call-ai"
 // other imports only when requested
 \`\`\`
 
@@ -62,7 +63,7 @@ Start your response with {"dependencies": {"
 export const RESPONSE_FORMAT = {
   dependencies: {
     format: '{dependencies: { "package-name": "version" }}',
-    note: 'use-fireproof is already provided, do not include it',
+    note: 'use-fireproof and call-ai are already provided, do not include them',
   },
   structure: [
     'Brief explanation',
@@ -71,3 +72,7 @@ export const RESPONSE_FORMAT = {
     'Data persistence',
   ],
 };
+
+// Add import for call-ai at the top level like we do for useFireproof
+import { useFireproof } from "use-fireproof"
+import { callAI } from "call-ai"
