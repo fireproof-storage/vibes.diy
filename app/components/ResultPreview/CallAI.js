@@ -1,7 +1,12 @@
 // Helper function for making AI calls
-async function* callAI(prompt, schema = null, model = 'anthropic/claude-3-haiku') {
+async function* callAI(prompt, schema = null, model = 'openrouter/auto', options = {}) {
   try {
-    const options = {
+    // Handle both string prompts and message arrays for backward compatibility
+    const messages = Array.isArray(prompt) 
+      ? prompt 
+      : [{ role: 'user', content: prompt }];
+    
+    const requestOptions = {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${window.OPENROUTER_API_KEY}`,
@@ -9,8 +14,11 @@ async function* callAI(prompt, schema = null, model = 'anthropic/claude-3-haiku'
       },
       body: JSON.stringify({
         model: model,
-        stream: true,
-        messages: [{ role: 'user', content: prompt }],
+        stream: options.stream !== false, // Default to streaming
+        messages: messages,
+        // Pass through any additional options like temperature
+        ...options,
+        // Handle schema if provided
         ...(schema && { response_format: { 
           type: 'json_schema', 
           json_schema: {
@@ -29,7 +37,16 @@ async function* callAI(prompt, schema = null, model = 'anthropic/claude-3-haiku'
       })
     };
 
-    const response = await fetch('https://openrouter.ai/api/v1/chat/completions', options);
+    const response = await fetch('https://openrouter.ai/api/v1/chat/completions', requestOptions);
+    
+    // For non-streaming responses, return the full result
+    if (options.stream === false) {
+      const result = await response.json();
+      const content = result.choices[0]?.message?.content || '';
+      return content;
+    }
+    
+    // Handle streaming response
     const reader = response.body.getReader();
     const decoder = new TextDecoder();
     let text = '';
