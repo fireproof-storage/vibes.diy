@@ -1,7 +1,0 @@
-{
-  "name": "openrouter",
-  "label": "OpenRouter",
-  "llmsTxtUrl": "https://use-fireproof.com/openrouter-llms.txt",
-  "module": "fetch",
-  "description": "OpenRouter is an API for calling LLMs."
-}
