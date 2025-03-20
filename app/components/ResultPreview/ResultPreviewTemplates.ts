@@ -1,3 +1,5 @@
+import callAISource from './CallAI.js?raw';
+
 export const indexHtml = `<!DOCTYPE html>
 <html lang="en">
   <head>
@@ -83,6 +85,12 @@ export const indexHtml = `<!DOCTYPE html>
           pageIsLoaded();
         }
       });
+    </script>
+    <script>
+      ${callAISource}
+      
+      // Make the function available globally
+      window.callAI = callAI;
     </script>
   </head>
   <body>
