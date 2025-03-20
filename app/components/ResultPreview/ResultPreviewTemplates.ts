@@ -89,8 +89,7 @@ export const indexHtml = `<!DOCTYPE html>
     <script>
       ${callAISource}
       
-      // Make the function available globally
-      window.callAI = callAI;
+      // The CallAI.js will automatically make the callAI function available globally
     </script>
   </head>
   <body>

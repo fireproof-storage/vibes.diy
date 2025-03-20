@@ -1,6 +1,14 @@
 // Helper function for making AI calls
-async function* callAI(prompt, schema = null, model = 'openrouter/auto', options = {}) {
+async function* callAI(prompt, schema = null, options = {}) {
   try {
+    const apiKey = options.apiKey || (typeof window !== 'undefined' ? window.OPENROUTER_API_KEY : null);
+    const model = options.model || 'openrouter/auto';
+    const endpoint = options.endpoint || 'https://openrouter.ai/api/v1/chat/completions';
+    
+    if (!apiKey) {
+      throw new Error('API key is required. Provide it via options.apiKey or set window.OPENROUTER_API_KEY');
+    }
+    
     // Handle both string prompts and message arrays for backward compatibility
     const messages = Array.isArray(prompt) 
       ? prompt 
@@ -9,15 +17,17 @@ async function* callAI(prompt, schema = null, model = 'openrouter/auto', options
     const requestOptions = {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${window.OPENROUTER_API_KEY}`,
+        'Authorization': `Bearer ${apiKey}`,
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
         model: model,
         stream: options.stream !== false, // Default to streaming
         messages: messages,
-        // Pass through any additional options like temperature
-        ...options,
+        // Pass through any additional options like temperature, but exclude internal keys
+        ...Object.fromEntries(
+          Object.entries(options).filter(([key]) => !['apiKey', 'model', 'endpoint'].includes(key))
+        ),
         // Handle schema if provided
         ...(schema && { response_format: { 
           type: 'json_schema', 
@@ -37,7 +47,7 @@ async function* callAI(prompt, schema = null, model = 'openrouter/auto', options
       })
     };
 
-    const response = await fetch('https://openrouter.ai/api/v1/chat/completions', requestOptions);
+    const response = await fetch(endpoint, requestOptions);
     
     // For non-streaming responses, return the full result
     if (options.stream === false) {
@@ -79,4 +89,13 @@ async function* callAI(prompt, schema = null, model = 'openrouter/auto', options
     console.error("AI call failed:", error);
     return "Sorry, I couldn't process that request.";
   }
+}
+
+// Export for use as a module
+if (typeof module !== 'undefined') {
+  module.exports = { callAI };
+}
+// Also make it available globally if in a browser
+if (typeof window !== 'undefined') {
+  window.callAI = callAI;
 } 

@@ -1,0 +1,226 @@
+# CallAI Helper Function
+
+The `callAI` helper function provides an easy way to make AI requests to OpenRouter and OpenAI-compatible model providers with streaming support.
+
+## Basic Usage
+
+```javascript
+// Simple text generation
+const generator = callAI("What are three cool project ideas for React?");
+
+// Process the streaming response
+for await (const partialResponse of generator) {
+  console.log(partialResponse); // Incrementally builds up the complete response
+}
+```
+
+## JSON Schema Responses
+
+To get structured JSON responses:
+
+```javascript
+// Define your schema
+const todoSchema = {
+  properties: {
+    todos: {
+      type: "array",
+      items: { type: "string" }
+    }
+  }
+};
+
+// Simple usage with await (no streaming updates)
+const todoResponse = await callAI("Give me a todo list for learning React", todoSchema);
+const todoData = JSON.parse(todoResponse);
+console.log(todoData.todos); // Array of todo items
+```
+
+## JSON with Streaming (Best Practice)
+
+In this example, we're using the `callAI` helper function to get weather data in a structured format with streaming preview.
+
+```javascript
+const weatherSchema = {
+  properties: {
+    location: {
+      type: "string",
+      description: "City or location name"
+    },
+    temperature: {
+      type: "number",
+      description: "Temperature in Celsius"
+    },
+    conditions: {
+      type: "string",
+      description: "Weather conditions description"
+    }
+  }
+};
+
+// Get weather data with streaming updates
+const generator = callAI("What's the weather like in Paris today?", weatherSchema);
+
+// Display streaming updates as they arrive
+const resultElement = document.getElementById('result');
+let finalResponse;
+
+for await (const partialResponse of generator) {
+  resultElement.textContent = partialResponse;
+  finalResponse = partialResponse;
+}
+
+// Process final result
+try {
+  const weatherData = JSON.parse(finalResponse);
+  
+  // Access individual fields
+  const { location, temperature, conditions } = weatherData;
+  
+  // Update UI with formatted data
+  document.getElementById('location').textContent = location;
+  document.getElementById('temperature').textContent = `${temperature}°C`;
+  document.getElementById('conditions').textContent = conditions;
+} catch (error) {
+  console.error("Failed to parse response:", error);
+}
+```
+
+## Specifying a Model
+
+By default, the function uses `openrouter/auto` (automatic model selection). You can specify a different model:
+
+```javascript
+// Use a specific model via options
+const generator = callAI(
+  "Explain quantum computing in simple terms", 
+  null, 
+  { model: "openai/gpt-4o" }
+);
+```
+
+## Using with OpenAI API
+
+You can also use callAI with OpenAI's API directly by providing the appropriate endpoint and API key:
+
+```javascript
+// Use with OpenAI's API
+const generator = callAI(
+  "Explain the theory of relativity", 
+  null,
+  {
+    model: "gpt-4",
+    apiKey: "sk-...", // Your OpenAI API key
+    endpoint: "https://api.openai.com/v1/chat/completions"
+  }
+);
+
+// Process the response as usual
+for await (const partialResponse of generator) {
+  console.log(partialResponse);
+}
+```
+
+## Non-Streaming Mode
+
+If you prefer to get the complete response at once:
+
+```javascript
+// Use non-streaming mode
+const response = await callAI(
+  "Summarize this article", 
+  null,
+  { 
+    model: "openrouter/auto",
+    stream: false 
+  }
+);
+
+// Response is the complete text, not a generator
+console.log(response);
+```
+
+## Additional Options
+
+You can pass extra parameters to customize the request:
+
+```javascript
+const generator = callAI(
+  "Write a creative story",
+  null,
+  {
+    model: "anthropic/claude-3-opus",
+    temperature: 0.8,     // Higher for more creativity (0-1)
+    max_tokens: 1000,     // Limit response length
+    top_p: 0.95           // Control randomness
+  }
+);
+```
+
+## Message History
+
+For multi-turn conversations, you can pass an array of messages:
+
+```javascript
+// Create a conversation
+const messages = [
+  { role: "system", content: "You are a helpful coding assistant." },
+  { role: "user", content: "How do I use React hooks?" },
+  { role: "assistant", content: "React hooks are functions that let you use state and other React features in functional components..." },
+  { role: "user", content: "Can you show me an example of useState?" }
+];
+
+// Pass the entire conversation history
+const generator = callAI(messages);
+
+// Process response as usual
+for await (const partialResponse of generator) {
+  console.log(partialResponse);
+}
+
+// To continue the conversation, add the new response and send again
+messages.push({ role: "assistant", content: "final response from above" });
+messages.push({ role: "user", content: "What about useEffect?" });
+
+// Call again with updated history
+const nextGenerator = callAI(messages);
+```
+
+## Recommended Models
+
+| Model | Best For | Speed vs Quality |
+|-------|----------|------------------|
+| `openrouter/auto` | Default, automatically selects | Adaptive |
+| `anthropic/claude-3-haiku` | Cost-effective | Fast, good quality |
+| `openai/gpt-4o` | Best overall quality | Medium speed, highest quality |
+| `anthropic/claude-3-opus` | Complex reasoning | Slower, highest quality |
+| `mistralai/mistral-large` | Open weights alternative | Good balance |
+
+## Custom Endpoints
+
+You can specify a custom endpoint for any OpenAI-compatible API:
+
+```javascript
+// Use with any OpenAI-compatible API
+const generator = callAI(
+  "Generate ideas for a mobile app",
+  null,
+  {
+    model: "your-model-name",
+    apiKey: "your-api-key",
+    endpoint: "https://your-custom-endpoint.com/v1/chat/completions"
+  }
+);
+```
+
+## Error Handling
+
+The function handles errors gracefully and returns a friendly message if something goes wrong.
+
+```javascript
+try {
+  const generator = callAI("Your prompt here");
+  // Process response...
+} catch (error) {
+  console.error("Error:", error);
+}
+``` 
