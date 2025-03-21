@@ -1,6 +1,6 @@
 # Template Issue (Enhancement)
 
-This is an example of how to format an enhancement issue. 
+This is an example of how to format an enhancement issue.
 
 The issue should have a clear title as an H1 header, followed by a description of what needs to be implemented. The description should explain the feature in enough detail that a developer can understand what needs to be built.
 

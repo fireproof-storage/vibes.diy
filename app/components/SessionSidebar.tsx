@@ -135,10 +135,10 @@ function SessionSidebar({ isVisible, onClose }: SessionSidebarProps) {
             App History
           </h2>
           <div className="flex items-center space-x-2">
-            <label 
-              htmlFor="favorites-toggle" 
-              className="relative inline-block w-10 align-middle select-none cursor-pointer group"
-              title={justFavorites ? "Show all sessions" : "Show favorites only"}
+            <label
+              htmlFor="favorites-toggle"
+              className="group relative inline-block w-10 cursor-pointer align-middle select-none"
+              title={justFavorites ? 'Show all sessions' : 'Show favorites only'}
             >
               <input
                 type="checkbox"
@@ -149,16 +149,16 @@ function SessionSidebar({ isVisible, onClose }: SessionSidebarProps) {
               />
               <div className="block h-6 w-10 rounded-full bg-gray-300 dark:bg-gray-700"></div>
               <div
-                className={`absolute left-0.5 top-0.5 h-5 w-5 transform rounded-full transition-transform ${
-                  justFavorites 
-                    ? 'translate-x-4 bg-gray-500 dark:bg-gray-300' 
+                className={`absolute top-0.5 left-0.5 h-5 w-5 transform rounded-full transition-transform ${
+                  justFavorites
+                    ? 'translate-x-4 bg-gray-500 dark:bg-gray-300'
                     : 'bg-white dark:bg-gray-400'
                 }`}
               ></div>
-              
+
               {/* Visually hidden text for screen readers */}
               <span className="sr-only">
-                {justFavorites ? "Show all sessions" : "Show favorites only"}
+                {justFavorites ? 'Show all sessions' : 'Show favorites only'}
               </span>
             </label>
             <button

@@ -57,10 +57,7 @@ function ResultPreview({
         if (data.type === 'preview-loaded') {
           // respond with the API key
           const iframe = document.querySelector('.sp-preview-iframe') as HTMLIFrameElement;
-          iframe?.contentWindow?.postMessage(
-            { type: 'callai-api-key', key: CALLAI_API_KEY },
-            '*'
-          );
+          iframe?.contentWindow?.postMessage({ type: 'callai-api-key', key: CALLAI_API_KEY }, '*');
 
           setMobilePreviewShown(true);
           setPreviewReady(true);
