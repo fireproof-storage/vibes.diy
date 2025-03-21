@@ -7,7 +7,7 @@ export const indexHtml = `<!DOCTYPE html>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script>
       // Global variable to store the API key
-      window.API_KEY = null;
+      window.CALLAI_API_KEY = null;
       
       tailwind.config = {
         darkMode: 'class',
@@ -63,9 +63,9 @@ export const indexHtml = `<!DOCTYPE html>
             captureScreenshot();
           }
         }
-        // Handle API key message
-        if (event.data && event.data.type === 'openrouter-api-key' && event.data.key) {
-          window.OPENROUTER_API_KEY = event.data.key;
+        // Handle call-ai API key message
+        if (event.data && event.data.type === 'callai-api-key' && event.data.key) {
+          window.CALLAI_API_KEY = event.data.key;
         }
       });
 
@@ -83,16 +83,6 @@ export const indexHtml = `<!DOCTYPE html>
           pageIsLoaded();
         }
       });
-    </script>
-    <script>
-      // Using call-ai npm package in the React component instead
-      // This is just a placeholder for backwards compatibility
-      window.callAI = async function* (prompt, schema, options) {
-        console.warn('Using call-ai npm package is recommended instead of window.callAI');
-        yield "Please use the 'call-ai' npm package in your React component";
-      };
-      
-      // Placeholder for backwards compatibility
     </script>
   </head>
   <body>

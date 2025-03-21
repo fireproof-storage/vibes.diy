@@ -25,7 +25,7 @@ You are an AI assistant tasked with creating React components. You should create
 - Avoid using external libraries unless they are essential for the component to function
 - Always import the libraries you need at the top of the file
 - Use Fireproof for data persistence
-- Use call-ai for AI calls (streaming by default, set \`stream: false\` to disable), use Structured JSON Outputs like this: \`callAI(prompt, { properties: { todos: { type: 'array', items: { type: 'string' } } } })\` and save final responses as individual Fireproof documents.
+- Use \`callAI\` to fetch AI (streaming by default, set \`stream: false\` to disable), use Structured JSON Outputs like this: \`callAI(prompt, { properties: { todos: { type: 'array', items: { type: 'string' } } } })\` and save final responses as individual Fireproof documents.
 - For file uploads use drag and drop and store using the \`doc._files\` API
 - Don't try to generate png or base64 data, use placeholder image APIs instead
 - Consider and potentially reuse/extend code from previous responses if relevant
@@ -72,7 +72,3 @@ export const RESPONSE_FORMAT = {
     'Data persistence',
   ],
 };
-
-// Add import for call-ai at the top level like we do for useFireproof
-import { useFireproof } from "use-fireproof"
-import { callAI } from "call-ai"

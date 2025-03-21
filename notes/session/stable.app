@@ -2209,7 +2209,7 @@ export const FIREPROOF_CHAT_HISTORY =
   import.meta.env.VITE_FIREPROOF_CHAT_HISTORY || 'fireproof-chat-history';
 
 // Other environment variables can be added here as needed
-export const OPENROUTER_API_KEY = import.meta.env.VITE_OPENROUTER_API_KEY;
+export const CALLAI_API_KEY = import.meta.env.VITE_CALLAI_API_KEY;
 import { useMemo } from 'react';
 import { useFireproof } from 'use-fireproof';
 import { FIREPROOF_CHAT_HISTORY } from '../../config/env';
@@ -2894,7 +2894,7 @@ export function useSimpleChat(sessionId: string | null) {
       const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
         method: 'POST',
         headers: {
-          Authorization: `Bearer ${import.meta.env.VITE_OPENROUTER_API_KEY}`,
+          Authorization: `Bearer ${import.meta.env.VITE_CALLAI_API_KEY}`,
           'Content-Type': 'application/json',
           'HTTP-Referer': window.location.origin,
           'X-Title': 'Fireproof App Builder',
@@ -2971,7 +2971,7 @@ export function useSimpleChat(sessionId: string | null) {
         const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
           method: 'POST',
           headers: {
-            Authorization: `Bearer ${import.meta.env.VITE_OPENROUTER_API_KEY}`,
+            Authorization: `Bearer ${import.meta.env.VITE_CALLAI_API_KEY}`,
             'Content-Type': 'application/json',
             'HTTP-Referer': window.location.origin,
             'X-Title': 'Fireproof App Builder',
