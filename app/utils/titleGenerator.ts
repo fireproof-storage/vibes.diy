@@ -1,4 +1,5 @@
 import type { Segment } from '../types/chat';
+import { CALLAI_API_KEY } from '../config/env';
 
 /**
  * Generate a title based on the first two segments (markdown and code)
@@ -27,7 +28,7 @@ export async function generateTitle(segments: Segment[], model: string): Promise
   const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
     method: 'POST',
     headers: {
-      Authorization: `Bearer ${import.meta.env.VITE_CALLAI_API_KEY}`,
+      Authorization: `Bearer ${CALLAI_API_KEY}`,
       'Content-Type': 'application/json',
       'HTTP-Referer': window.location.origin,
       'X-Title': 'Fireproof App Builder',

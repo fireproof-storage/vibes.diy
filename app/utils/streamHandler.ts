@@ -2,6 +2,8 @@
  * Utility functions for working with the OpenRouter API
  */
 
+import { CALLAI_API_KEY } from '../config/env';
+
 /**
  * Call OpenRouter API with streaming enabled
  *
@@ -20,7 +22,7 @@ export async function callOpenRouterAPI(
   const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
     method: 'POST',
     headers: {
-      Authorization: `Bearer ${import.meta.env.VITE_CALLAI_API_KEY}`,
+      Authorization: `Bearer ${CALLAI_API_KEY}`,
       'Content-Type': 'application/json',
       'HTTP-Referer': window.location.origin,
       'X-Title': 'Fireproof App Builder',
