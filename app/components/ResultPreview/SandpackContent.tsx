@@ -86,6 +86,9 @@ const SandpackContent: React.FC<SandpackContentProps> = ({
           </head>
           <body>
             <div id="container"></div>
+            <script>
+              window.CALLAI_API_KEY = parent.CALLAI_API_KEY;
+            </script>
             <script type="importmap">
               {
                 "imports": {

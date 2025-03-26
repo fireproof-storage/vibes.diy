@@ -1,12 +1,13 @@
 import { reactRouter } from '@react-router/dev/vite';
 import tailwindcss from '@tailwindcss/vite';
 import type { ConfigEnv, UserConfig } from 'vite';
-import { defineConfig } from 'vite';
+import { defineConfig, loadEnv } from 'vite';
 import tsconfigPaths from 'vite-tsconfig-paths';
 
 export default defineConfig(({ command, mode }: ConfigEnv): UserConfig => {
   // Disable React Router plugin for tests or when explicitly disabled
   const disableReactRouter = mode === 'test' || process.env.DISABLE_REACT_ROUTER === 'true';
+  const env = loadEnv(mode, process.cwd(), '');
 
   return {
     plugins: [
@@ -15,6 +16,10 @@ export default defineConfig(({ command, mode }: ConfigEnv): UserConfig => {
       ...(!disableReactRouter ? [reactRouter()] : []),
       tsconfigPaths(),
     ],
+    // Define global constants
+    define: {
+      CALLAI_API_KEY: JSON.stringify(env.VITE_OPENROUTER_API_KEY),
+    },
     // Server configuration for local development
     server: {
       host: '0.0.0.0', // Listen on all local IPs

@@ -168,13 +168,13 @@ function ResultPreview({
     <div className="h-full" style={{ overflow: 'hidden' }}>
       <style>{animationStyles}</style>
       {previewArea}
-      {/* Pass previewReady and bundlingComplete to the header */}
+      {/* Pass previewReady and bundlingComplete to the header
       {React.Children.map(children, (child) => {
         if (React.isValidElement(child) && child.type === ResultPreviewHeaderContent) {
           return React.cloneElement(child, { previewReady, bundlingComplete });
         }
         return child;
-      })}
+      })} */}
     </div>
   );
 }
