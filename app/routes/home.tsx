@@ -1,16 +1,16 @@
-import { useEffect, useState, useCallback } from 'react';
-import { useParams, useNavigate, useLocation } from 'react-router';
-import ChatInterface from '../components/ChatInterface';
+import { useCallback, useEffect, useState } from 'react';
+import { useLocation, useNavigate, useParams } from 'react-router';
+import { encodeTitle } from '~/components/SessionSidebar/utils';
+import AppLayout from '../components/AppLayout';
+import ChatHeaderContent from '../components/ChatHeaderContent';
 import ChatInput from '../components/ChatInput';
+import ChatInterface from '../components/ChatInterface';
 import QuickSuggestions from '../components/QuickSuggestions';
 import ResultPreview from '../components/ResultPreview/ResultPreview';
-import ChatHeaderContent from '../components/ChatHeaderContent';
 import ResultPreviewHeaderContent from '../components/ResultPreview/ResultPreviewHeaderContent';
-import { useSimpleChat } from '../hooks/useSimpleChat';
-import AppLayout from '../components/AppLayout';
-import { decodeStateFromUrl } from '../utils/sharing';
-import { encodeTitle } from '~/components/SessionSidebar/utils';
 import SessionSidebar from '../components/SessionSidebar';
+import { useSimpleChat } from '../hooks/useSimpleChat';
+import { decodeStateFromUrl } from '../utils/sharing';
 
 export function meta() {
   return [
@@ -46,6 +46,7 @@ export default function UnifiedSession() {
   // Handle preview loaded event
   const handlePreviewLoaded = useCallback(() => {
     setPreviewReady(true);
+    setMobilePreviewShown(true);
   }, []);
 
   useEffect(() => {
@@ -104,6 +105,13 @@ export default function UnifiedSession() {
     },
     [chatState.setInput, chatState.inputRef]
   );
+
+  // Update mobilePreviewShown when selectedCode changes
+  useEffect(() => {
+    if (chatState.selectedCode?.content) {
+      setMobilePreviewShown(true);
+    }
+  }, [chatState.selectedCode]);
 
   // useEffect(() => {
   //   console.log('chatState.sessionId', chatState.sessionId);

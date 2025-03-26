@@ -1,10 +1,10 @@
-import { useState, useEffect, useRef, useMemo } from 'react';
-import type { ResultPreviewProps } from './ResultPreviewTypes';
-import type { SandpackFiles } from './ResultPreviewTypes';
-import { indexHtml, animationStyles } from './ResultPreviewTemplates';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { CALLAI_API_KEY } from '../../config/env';
+import ResultPreviewHeaderContent from './ResultPreviewHeaderContent';
+import { animationStyles, indexHtml } from './ResultPreviewTemplates';
+import type { ResultPreviewProps, SandpackFiles } from './ResultPreviewTypes';
 import { processCodeForDisplay } from './ResultPreviewUtils';
 import SandpackContent from './SandpackContent';
-import { CALLAI_API_KEY } from '../../config/env';
 
 function ResultPreview({
   code,
@@ -17,9 +17,10 @@ function ResultPreview({
   setActiveView,
   onPreviewLoaded,
   setMobilePreviewShown,
-}: ResultPreviewProps) {
-  const [, setBundlingComplete] = useState(true);
-  const [, setPreviewReady] = useState(false);
+  children,
+}: ResultPreviewProps & { children?: React.ReactNode }) {
+  const [bundlingComplete, setBundlingComplete] = useState(true);
+  const [previewReady, setPreviewReady] = useState(false);
   const isStreamingRef = useRef(isStreaming);
   const hasGeneratedStreamingKeyRef = useRef(false);
 
@@ -48,15 +49,18 @@ function ResultPreview({
     if (isStreaming) {
       // Reset to code view when streaming starts
       setActiveView('code');
+    } else if (codeReady) {
+      // Switch to preview when streaming ends and code is ready
+      setActiveView('preview');
     }
-  }, [isStreaming, setActiveView]);
+  }, [isStreaming, setActiveView, codeReady]);
 
   useEffect(() => {
     const handleMessage = ({ data }: MessageEvent) => {
       if (data) {
-        if (data.type === 'preview-loaded') {
+        if (data.type === 'preview-ready' || data.type === 'preview-loaded') {
           // respond with the API key
-          const iframe = document.querySelector('.sp-preview-iframe') as HTMLIFrameElement;
+          const iframe = document.querySelector('iframe') as HTMLIFrameElement;
           iframe?.contentWindow?.postMessage({ type: 'callai-api-key', key: CALLAI_API_KEY }, '*');
 
           setMobilePreviewShown(true);
@@ -164,6 +168,13 @@ function ResultPreview({
     <div className="h-full" style={{ overflow: 'hidden' }}>
       <style>{animationStyles}</style>
       {previewArea}
+      {/* Pass previewReady and bundlingComplete to the header */}
+      {React.Children.map(children, (child) => {
+        if (React.isValidElement(child) && child.type === ResultPreviewHeaderContent) {
+          return React.cloneElement(child, { previewReady, bundlingComplete });
+        }
+        return child;
+      })}
     </div>
   );
 }

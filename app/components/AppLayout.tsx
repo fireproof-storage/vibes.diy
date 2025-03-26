@@ -46,9 +46,7 @@ export default function AppLayout({
 
       <div
         className={`flex w-full flex-col md:w-2/3 ${
-          mobilePreviewShown
-            ? 'h-full'
-            : 'h-0 overflow-hidden opacity-0 md:h-full md:overflow-visible md:opacity-100'
+          mobilePreviewShown ? 'h-full' : 'h-auto overflow-visible opacity-100 md:h-full'
         } relative z-10`}
       >
         <div className="flex h-[4rem] items-center p-2">{headerRight}</div>

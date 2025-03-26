@@ -23,6 +23,7 @@ const ResultPreviewHeaderContent: React.FC<ResultPreviewHeaderContentProps> = ({
   setMobilePreviewShown,
 }) => {
   const [shareStatus, setShareStatus] = useState<string>('');
+  const [codeReady, setCodeReady] = useState<boolean>(true); // Add codeReady state
 
   function handleShare() {
     if (!code) {
@@ -87,7 +88,6 @@ const ResultPreviewHeaderContent: React.FC<ResultPreviewHeaderContentProps> = ({
           <div className="bg-light-decorative-00 dark:bg-dark-decorative-00 flex space-x-1 rounded-lg p-1 shadow-sm">
             <button
               type="button"
-              disabled={!previewReady}
               onClick={() => setActiveView('preview')}
               className={`flex items-center space-x-1.5 rounded-md px-4 py-1.5 text-sm font-medium transition-colors ${
                 activeView === 'preview'
@@ -125,7 +125,10 @@ const ResultPreviewHeaderContent: React.FC<ResultPreviewHeaderContentProps> = ({
             <button
               type="button"
               onClick={() => {
-                setActiveView('code');
+                if (activeView !== 'code') {
+                  setActiveView('code');
+                  setCodeReady(false); // Set codeReady to false
+                }
               }}
               className={`flex items-center space-x-1.5 rounded-md px-4 py-1.5 text-sm font-medium transition-colors ${
                 activeView === 'code'
@@ -211,7 +214,7 @@ const ResultPreviewHeaderContent: React.FC<ResultPreviewHeaderContentProps> = ({
                   d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"
                 />
               </svg>
-              <span>Share</span>
+              <span className="hidden sm:inline">Share</span>
             </button>
           </div>
         </div>
