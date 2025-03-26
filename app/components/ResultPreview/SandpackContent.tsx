@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import type { SandpackFiles } from './ResultPreviewTypes';
+import { CALLAI_API_KEY } from '~/config/env';
 
 interface SandpackContentProps {
   activeView: 'preview' | 'code';
@@ -87,7 +88,7 @@ const SandpackContent: React.FC<SandpackContentProps> = ({
           <body>
             <div id="container"></div>
             <script>
-              window.CALLAI_API_KEY = parent.CALLAI_API_KEY;
+              window.CALLAI_API_KEY = '${CALLAI_API_KEY}';
             </script>
             <script type="importmap">
               {

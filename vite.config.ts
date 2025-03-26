@@ -17,9 +17,9 @@ export default defineConfig(({ command, mode }: ConfigEnv): UserConfig => {
       tsconfigPaths(),
     ],
     // Define global constants
-    define: {
-      CALLAI_API_KEY: JSON.stringify(env.VITE_OPENROUTER_API_KEY),
-    },
+    // define: {
+    //   IFRAME__CALLAI_API_KEY: JSON.stringify(env.VITE_OPENROUTER_API_KEY),
+    // },
     // Server configuration for local development
     server: {
       host: '0.0.0.0', // Listen on all local IPs
