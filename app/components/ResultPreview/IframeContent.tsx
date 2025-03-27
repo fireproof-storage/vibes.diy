@@ -99,10 +99,30 @@ const IframeContent: React.FC<IframeContentProps> = ({
         'export default function App'
       );
 
+      // Transform bare import statements to use esm.sh URLs
+      const transformImports = (code: string): string => {
+        // This regex matches import statements with bare module specifiers
+        // It specifically looks for import statements that don't start with /, ./, or ../
+        return code.replace(
+          /import\s+(?:(?:\{[^}]*\}|\*\s+as\s+\w+|\w+)\s+from\s+)?['"]([^'"\/][^'"]*)['"];?/g,
+          (match, importPath) => {
+            // Skip transforming imports that are already handled in the importmap
+            // Only skip the core libraries we have in our importmap
+            if (['react', 'react-dom', 'react-dom/client', 'use-fireproof', 'call-ai'].includes(importPath)) {
+              return match;
+            }
+            // Transform the import to use basic esm.sh URL
+            return match.replace(`"${importPath}"`, `"https://esm.sh/${importPath}"`);
+          }
+        );
+      };
+
+      const transformedCode = transformImports(normalizedCode);
+
       // Use the template and replace placeholders
       const htmlContent = iframeTemplateRaw
         .replace('{{API_KEY}}', CALLAI_API_KEY)
-        .replace('{{APP_CODE}}', normalizedCode);
+        .replace('{{APP_CODE}}', transformedCode);
 
       const blob = new Blob([htmlContent], { type: 'text/html' });
       const url = URL.createObjectURL(blob);
