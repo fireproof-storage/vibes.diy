@@ -189,6 +189,54 @@ describe('ResultPreview', () => {
     expect(true).toBe(true);
   });
 
+  it('receives preview-ready message from iframe when content loads', async () => {
+    // Setup message event listener before rendering
+    const previewReadyHandler = vi.fn();
+    window.addEventListener('message', (event) => {
+      if (event.data?.type === 'preview-ready') {
+        previewReadyHandler(event.data);
+      }
+    });
+
+    // Sample code that would be rendered in the iframe
+    const code = `
+      function App() {
+        return <div>Test App Content</div>;
+      }
+    `;
+    
+    const mockSetPreviewLoaded = vi.fn();
+    
+    // Create props with our mock onPreviewLoaded, ensuring it overrides the one in mockResultPreviewProps
+    const testProps = {
+      ...mockResultPreviewProps,
+      code,
+      isStreaming: false,
+      codeReady: true,
+      onPreviewLoaded: mockSetPreviewLoaded
+    };
+    
+    render(<ResultPreview {...testProps} />);
+
+    // Manually trigger the message that would come from the iframe
+    const previewReadyEvent = new MessageEvent('message', {
+      data: { type: 'preview-ready' }
+    });
+    
+    // Wrap in act() to handle React state updates properly
+    act(() => {
+      window.dispatchEvent(previewReadyEvent);
+    });
+    
+    // Wait for the event to be processed
+    await waitFor(() => {
+      expect(previewReadyHandler).toHaveBeenCalledWith({ type: 'preview-ready' });
+    });
+
+    // The onPreviewLoaded callback should have been called
+    expect(mockSetPreviewLoaded).toHaveBeenCalled();
+  });
+
   it('handles edge case with empty code', () => {
     const { container } = render(<ResultPreview code="" {...mockResultPreviewProps} />);
 
