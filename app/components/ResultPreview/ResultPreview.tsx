@@ -62,10 +62,6 @@ function ResultPreview({
     const timeoutId = setTimeout(() => {
       // Check if document has the dark class
       const hasDarkClass = document.documentElement.classList.contains('dark');
-      console.log(
-        'ResultPreview: Initial theme detection - Document has dark class:',
-        hasDarkClass
-      );
 
       // Set the theme state
       setIsDarkMode(hasDarkClass);
@@ -76,7 +72,7 @@ function ResultPreview({
           if (mutation.attributeName === 'class') {
             // Directly check for dark class
             const hasDarkClass = document.documentElement.classList.contains('dark');
-            console.log('ResultPreview: Theme changed - Document has dark class:', hasDarkClass);
+
             setIsDarkMode(hasDarkClass);
           }
         });

@@ -50,9 +50,6 @@ const IframeContent: React.FC<IframeContentProps> = ({
   const lastViewportHeightRef = useRef<number>(0);
 
   // Theme detection is now handled in the parent component
-  useEffect(() => {
-    console.log('IframeContent received isDarkMode:', isDarkMode);
-  }, [isDarkMode]);
 
   // Cleanup for disposables
   useEffect(() => {
@@ -69,7 +66,6 @@ const IframeContent: React.FC<IframeContentProps> = ({
       // Update the Shiki theme in Monaco when dark mode changes from parent
       const currentTheme = isDarkMode ? 'github-dark' : 'github-light';
       monacoEditorRef.current.setTheme(currentTheme);
-      console.log('Editor theme updated to:', currentTheme);
     }
   }, [isDarkMode]);
 
@@ -230,7 +226,6 @@ const IframeContent: React.FC<IframeContentProps> = ({
                 const scrollDelta = Math.abs(currentScrollTop - lastScrollTopRef.current);
                 if (timeSinceAutoScroll > 200 && scrollDelta > 20) {
                   userScrolledRef.current = true;
-                  console.log('User manually scrolled, auto-scroll disabled for this session');
                 }
 
                 // Update last scroll position for next comparison
@@ -299,7 +294,6 @@ const IframeContent: React.FC<IframeContentProps> = ({
               // Set theme based on current dark mode state from parent
               const currentTheme = isDarkMode ? 'github-dark' : 'github-light';
               monacoInstance.editor.setTheme(currentTheme);
-              console.log('Document has dark class:', isDarkMode, '=> Using theme:', currentTheme);
 
               // Make sure the model uses JSX highlighting
               const model = editor.getModel();
