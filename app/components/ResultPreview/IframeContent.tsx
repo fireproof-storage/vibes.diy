@@ -40,11 +40,28 @@ const IframeContent: React.FC<IframeContentProps> = ({
   const monacoEditorRef = useRef<any>(null);
   // Reference to store the current Shiki highlighter
   const highlighterRef = useRef<any>(null);
+  // Reference to store disposables for cleanup
+  const disposablesRef = useRef<{ dispose: () => void }[]>([]);
+  // Flag to track if user has manually scrolled during streaming
+  const userScrolledRef = useRef<boolean>(false);
+  // Store the last scroll top position to detect user-initiated scrolls
+  const lastScrollTopRef = useRef<number>(0);
+  // Store the last viewport height
+  const lastViewportHeightRef = useRef<number>(0);
 
   // Theme detection is now handled in the parent component
   useEffect(() => {
     console.log('IframeContent received isDarkMode:', isDarkMode);
   }, [isDarkMode]);
+
+  // Cleanup for disposables
+  useEffect(() => {
+    return () => {
+      // Clean up all disposables when component unmounts
+      disposablesRef.current.forEach((disposable) => disposable.dispose());
+      disposablesRef.current = [];
+    };
+  }, []);
 
   // Update theme when dark mode changes
   useEffect(() => {
@@ -55,6 +72,14 @@ const IframeContent: React.FC<IframeContentProps> = ({
       console.log('Editor theme updated to:', currentTheme);
     }
   }, [isDarkMode]);
+
+  // Reset manual scroll flag when streaming state changes
+  useEffect(() => {
+    if (isStreaming) {
+      // Reset the flag when streaming starts
+      userScrolledRef.current = false;
+    }
+  }, [isStreaming]);
 
   // This effect is now managed at the ResultPreview component level
 
@@ -156,6 +181,86 @@ const IframeContent: React.FC<IframeContentProps> = ({
           onMount={async (editor, monacoInstance: any) => {
             // Store references for theme updates
             monacoEditorRef.current = monacoInstance.editor;
+
+            // Set up throttled scrolling to bottom when streaming code
+            if (isStreaming && !codeReady) {
+              let lastScrollTime = 0;
+              const scrollThrottleMs = 30; // Fixed throttle time of 30ms
+
+              // Initialize with current time and positions
+              lastScrollTime = Date.now();
+              const initialScrollTop = editor.getScrollTop();
+              lastScrollTopRef.current = initialScrollTop;
+              lastViewportHeightRef.current = editor.getLayoutInfo().height;
+
+              // Track if editor is fully initialized
+              let editorInitialized = false;
+              // Longer delay to ensure full initialization
+              setTimeout(() => {
+                editorInitialized = true;
+                // Update the baseline scroll position after initialization
+                lastScrollTopRef.current = editor.getScrollTop();
+              }, 1000);
+
+              // Detect only genuine user-initiated scrolling
+              const scrollDisposable = editor.onDidScrollChange((e) => {
+                if (!editorInitialized || userScrolledRef.current) {
+                  // Skip if not initialized or already detected user scroll
+                  return;
+                }
+
+                const currentTime = Date.now();
+                const timeSinceAutoScroll = currentTime - lastScrollTime;
+                const currentScrollTop = e.scrollTop;
+                const currentViewportHeight = editor.getLayoutInfo().height;
+
+                // Check for significant viewport height changes (e.g., window resize)
+                const viewportChanged =
+                  Math.abs(currentViewportHeight - lastViewportHeightRef.current) > 5;
+                if (viewportChanged) {
+                  // If viewport changed, update reference and skip this event
+                  lastViewportHeightRef.current = currentViewportHeight;
+                  return;
+                }
+
+                // Only detect as manual scroll if:
+                // 1. Not too close to our auto-scroll action (at least 200ms after)
+                // 2. Not close to initialization
+                // 3. Scrolled a significant amount from last position
+                const scrollDelta = Math.abs(currentScrollTop - lastScrollTopRef.current);
+                if (timeSinceAutoScroll > 200 && scrollDelta > 20) {
+                  userScrolledRef.current = true;
+                  console.log('User manually scrolled, auto-scroll disabled for this session');
+                }
+
+                // Update last scroll position for next comparison
+                lastScrollTopRef.current = currentScrollTop;
+              });
+
+              // Auto-scroll on content change, but only if user hasn't manually scrolled
+              const contentDisposable = editor.onDidChangeModelContent(() => {
+                const now = Date.now();
+                if (now - lastScrollTime > scrollThrottleMs && !userScrolledRef.current) {
+                  lastScrollTime = now;
+
+                  // Get the model and scroll to the last line
+                  const model = editor.getModel();
+                  if (model) {
+                    const lineCount = model.getLineCount();
+                    editor.revealLineNearTop(lineCount);
+                  }
+                }
+              });
+
+              // Create a cleanup event listener
+              const editorDisposable = editor.onDidDispose(() => {
+                scrollDisposable.dispose();
+                contentDisposable.dispose();
+              });
+
+              // Store disposables in the ref for cleanup
+              disposablesRef.current.push(scrollDisposable, contentDisposable, editorDisposable);
+            }
 
             // Configure JavaScript language to support JSX
             monacoInstance.languages.typescript.javascriptDefaults.setCompilerOptions({
