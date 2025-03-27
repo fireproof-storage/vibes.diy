@@ -345,6 +345,50 @@ describe('ResultPreview', () => {
     // Dependencies should be configured in Sandpack
     expect(screen.queryByText(/Welcome to the preview/i)).not.toBeInTheDocument();
   });
+  
+  it('passes API key to iframe when preview-ready message is received', async () => {
+    // Mock document.querySelector to return a mock iframe
+    const mockIframe = {
+      contentWindow: {
+        postMessage: vi.fn(),
+      },
+    };
+    const originalQuerySelector = document.querySelector;
+    document.querySelector = vi.fn().mockImplementation((selector) => {
+      if (selector === 'iframe') {
+        return mockIframe;
+      }
+      return originalQuerySelector(selector);
+    });
+    
+    // We need to spoof the API key that would come from config
+    vi.mock('../app/config/env', () => ({
+      CALLAI_API_KEY: 'test-api-key-12345',
+    }));
+    
+    const code = `function App() { return <div>API Key Test</div>; }`;
+    render(<ResultPreview code={code} codeReady={true} {...mockResultPreviewProps} />);
+    
+    // Simulate preview-ready message from iframe
+    act(() => {
+      window.dispatchEvent(
+        new MessageEvent('message', {
+          data: { type: 'preview-ready' },
+        })
+      );
+    });
+    
+    // Verify that the API key was sent to the iframe
+    await waitFor(() => {
+      expect(mockIframe.contentWindow.postMessage).toHaveBeenCalledWith(
+        { type: 'callai-api-key', key: expect.any(String) },
+        '*'
+      );
+    });
+    
+    // Clean up mocks
+    document.querySelector = originalQuerySelector;
+  });
 
   it('displays the code editor initially', () => {
     const code = `function App() { return <div>Hello World</div>; }`;
