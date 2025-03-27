@@ -62,23 +62,27 @@ export function useSession(routedSessionId: string | undefined) {
 
   // Add a screenshot to the session
   const addScreenshot = useCallback(
-    async (screenshotData: string) => {
-      if (!session._id) return;
+    async (screenshotData: string | null) => {
+      if (!session._id || !screenshotData) return;
 
-      const response = await fetch(screenshotData);
-      const blob = await response.blob();
-      const file = new File([blob], 'screenshot.png', {
-        type: 'image/png',
-        lastModified: Date.now(),
-      });
-      const screenshot = {
-        type: 'screenshot',
-        session_id: session._id,
-        _files: {
-          screenshot: file,
-        },
-      };
-      await database.put(screenshot);
+      try {
+        const response = await fetch(screenshotData);
+        const blob = await response.blob();
+        const file = new File([blob], 'screenshot.png', {
+          type: 'image/png',
+          lastModified: Date.now(),
+        });
+        const screenshot = {
+          type: 'screenshot',
+          session_id: session._id,
+          _files: {
+            screenshot: file,
+          },
+        };
+        await database.put(screenshot);
+      } catch (error) {
+        console.error('Failed to process screenshot:', error);
+      }
     },
     [session._id, database]
   );

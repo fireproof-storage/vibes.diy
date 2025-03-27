@@ -6,7 +6,8 @@
     <title>AI Generated App</title>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://unpkg.com/html2canvas-pro@1.5.8/dist/html2canvas-pro.js"></script>
+    <!-- html2canvas-pro handles modern CSS color formats like OKLCH natively -->
     <style>
       body {
         margin: 0;
@@ -22,10 +23,63 @@
     <script>
       // Screenshot functionality
       function captureScreenshot() {
-        html2canvas(document.body).then((canvas) => {
-          const dataURI = canvas.toDataURL();
-          window.parent.postMessage({ type: 'screenshot', data: dataURI }, '*');
-        });
+        // Check if html2canvas is loaded
+        if (typeof html2canvas === 'undefined') {
+          console.warn('html2canvas-pro is not loaded, trying to load it dynamically');
+          // Try to load html2canvas-pro dynamically
+          const script = document.createElement('script');
+          script.src = 'https://unpkg.com/html2canvas-pro@1.5.8/dist/html2canvas-pro.js';
+          script.onload = () => {
+            console.log('html2canvas-pro loaded dynamically');
+            captureScreenshotWithFallback();
+          };
+          script.onerror = (e) => {
+            console.error('Failed to load html2canvas-pro:', e);
+            window.parent.postMessage(
+              { type: 'screenshot-error', error: 'Failed to load html2canvas' },
+              '*'
+            );
+          };
+          document.head.appendChild(script);
+          return;
+        }
+
+        captureScreenshotWithFallback();
+      }
+
+      function captureScreenshotWithFallback() {
+        try {
+          // Let html2canvas-pro do its job with modern CSS
+          html2canvas(document.body, {
+            allowTaint: true,
+            useCORS: true,
+            scale: 1,
+            logging: false,
+          })
+            .then((canvas) => {
+              const dataURI = canvas.toDataURL();
+              window.parent.postMessage({ type: 'screenshot', data: dataURI }, '*');
+            })
+            .catch((err) => {
+              console.error('html2canvas-pro error:', err);
+              window.parent.postMessage(
+                {
+                  type: 'screenshot-error',
+                  error: 'Screenshot capture failed: ' + (err.message || 'Unknown error'),
+                },
+                '*'
+              );
+            });
+        } catch (err) {
+          console.error('Unexpected html2canvas-pro error:', err);
+          window.parent.postMessage(
+            {
+              type: 'screenshot-error',
+              error: 'Unexpected error during screenshot capture',
+            },
+            '*'
+          );
+        }
       }
 
       function pageIsLoaded() {
@@ -90,10 +144,12 @@
     </script>
     <script type="text/babel" data-type="module">
       import ReactDOMClient from 'react-dom/client';
-      
+
       // APP_CODE placeholder will be replaced with actual code
+      // prettier-ignore
       {{APP_CODE}}
-      
+      // prettier-ignore-end
+
       const rootElement = document.getElementById('container');
       ReactDOMClient.createRoot(rootElement).render(<App />);
     </script>

@@ -94,7 +94,7 @@ export interface ChatState {
   inputRef: React.RefObject<HTMLTextAreaElement | null>;
   sendMessage: () => Promise<void>;
   title: string;
-  addScreenshot: (screenshot: string) => Promise<void>;
+  addScreenshot: (screenshot: string | null) => Promise<void>;
   sessionId?: string | null;
   setSelectedResponseId: (id: string) => void;
   selectedResponseDoc?: ChatMessageDocument;
