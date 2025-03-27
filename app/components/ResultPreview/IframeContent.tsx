@@ -128,7 +128,7 @@ const IframeContent: React.FC<IframeContentProps> = ({
         <Editor
           height="100%"
           width="100%"
-          language="jsx"
+          language="javascript"
           theme={isDarkMode ? 'vs-dark' : 'light'}
           value={filesContent['/App.jsx']?.code || ''}
           options={{
@@ -140,6 +140,24 @@ const IframeContent: React.FC<IframeContentProps> = ({
             lineNumbers: 'on',
             wordWrap: 'on',
             padding: { top: 16 },
+          }}
+          onMount={(editor, monaco: any) => {
+            // Configure JavaScript language to support JSX
+            monaco.languages.typescript.javascriptDefaults.setCompilerOptions({
+              jsx: monaco.languages.typescript.JsxEmit.React,
+              jsxFactory: 'React.createElement',
+              reactNamespace: 'React',
+              allowNonTsExtensions: true,
+              allowJs: true,
+              target: monaco.languages.typescript.ScriptTarget.Latest
+            });
+            
+            // Set editor options for better JSX visualization
+            editor.updateOptions({
+              tabSize: 2,
+              bracketPairColorization: { enabled: true },
+              guides: { bracketPairs: true }
+            });
           }}
         />
       </div>
