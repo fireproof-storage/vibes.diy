@@ -10,6 +10,11 @@ Object.assign(navigator, {
   },
 });
 
+// Mock URL methods that aren't available in test environment
+const mockObjectUrl = 'mock-blob-url';
+URL.createObjectURL = vi.fn().mockReturnValue(mockObjectUrl);
+URL.revokeObjectURL = vi.fn();
+
 // Mock SandpackProvider and related components
 vi.mock('@codesandbox/sandpack-react', () => ({
   SandpackProvider: ({ children }: { children: React.ReactNode }) => (
@@ -32,6 +37,33 @@ vi.mock('../app/components/ResultPreview/WelcomeScreen', () => ({
 // Mock the Sandpack scroll controller
 vi.mock('../app/components/ResultPreview/SandpackScrollController', () => ({
   default: () => null,
+}));
+
+// Mock iframe behavior
+
+// Mock the SandpackContent component to avoid iframe issues in tests
+vi.mock('../app/components/ResultPreview/SandpackContent', () => ({
+  default: ({ activeView }: { activeView: string }) => (
+    <div data-testid="sandpack-provider" className="h-full">
+      <div
+        style={{
+          visibility: activeView === 'preview' ? 'visible' : 'hidden',
+          position: activeView === 'preview' ? 'static' : 'absolute',
+        }}
+      >
+        <iframe data-testid="preview-iframe" title="Preview" />
+      </div>
+      <div
+        data-testid="sandpack-editor"
+        style={{
+          visibility: activeView === 'code' ? 'visible' : 'hidden',
+          position: activeView === 'code' ? 'static' : 'absolute',
+        }}
+      >
+        Code Editor Content
+      </div>
+    </div>
+  ),
 }));
 
 // Mock ResizeObserver
@@ -62,7 +94,7 @@ describe('ResultPreview', () => {
     render(<ResultPreview code="const test = 'Hello';" {...mockResultPreviewProps} />);
 
     // Now the sandpack editor should be visible
-    expect(screen.getByTestId('sandpack-editor')).toBeDefined();
+    expect(screen.getByTestId('sandpack-editor')).toBeInTheDocument();
     // Don't check for preview since it might not be available in the test environment
     // expect(screen.getByTestId('sandpack-preview')).toBeDefined();
   });
@@ -128,7 +160,7 @@ describe('ResultPreview', () => {
     render(<ResultPreview code={code} {...mockResultPreviewProps} />);
 
     // Skip button checks since toolbar has been removed
-    expect(screen.getByTestId('sandpack-editor')).toBeDefined();
+    expect(screen.getByTestId('sandpack-editor')).toBeInTheDocument();
   });
 
   it('handles copy to clipboard', async () => {
@@ -146,10 +178,10 @@ describe('ResultPreview', () => {
     render(<ResultPreview code={code} dependencies={dependencies} {...mockResultPreviewProps} />);
 
     // Use getAllByTestId to handle multiple elements
-    expect(screen.getAllByTestId('sandpack-provider')[0]).toBeDefined();
+    expect(screen.getAllByTestId('sandpack-provider')[0]).toBeInTheDocument();
 
     // Skip button check since toolbar has been removed
-    expect(screen.getByTestId('sandpack-editor')).toBeDefined();
+    expect(screen.getByTestId('sandpack-editor')).toBeInTheDocument();
   });
 
   it('handles share functionality', () => {
