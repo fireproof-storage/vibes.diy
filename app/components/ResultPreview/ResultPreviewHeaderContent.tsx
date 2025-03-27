@@ -46,7 +46,7 @@ const ResultPreviewHeaderContent: React.FC<ResultPreviewHeaderContentProps> = ({
       return;
     }
 
-    const iframe = document.querySelector('.sp-preview-iframe') as HTMLIFrameElement;
+    const iframe = document.querySelector('iframe') as HTMLIFrameElement;
     iframe?.contentWindow?.postMessage(
       {
         type: 'command',

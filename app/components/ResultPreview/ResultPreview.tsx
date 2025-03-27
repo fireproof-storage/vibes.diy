@@ -108,7 +108,7 @@ function ResultPreview({
 
         timeoutIdRef.current = setTimeout(() => {
           if (needsReloadRef.current) {
-            const iframe = document.querySelector('.sp-preview-iframe') as HTMLIFrameElement;
+            const iframe = document.querySelector('iframe') as HTMLIFrameElement;
             iframe?.contentWindow?.postMessage(
               {
                 type: 'command',
