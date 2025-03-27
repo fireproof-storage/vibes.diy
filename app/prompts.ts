@@ -38,13 +38,7 @@ ${concatenatedLlmsTxt}
 
 IMPORTANT: You are working in one JavaScript file, use tailwind classes for styling.
 
-If you need any npm dependencies, list them at the start of your response in this json format (note: use-fireproof and call-ai are already provided, do not include them):
-{dependencies: {
-  "package-name": "version",
-  "another-package": "version"
-}}
-
-Then provide a title and brief explanation followed by the component code. The component should demonstrate proper Fireproof integration with real-time updates and proper data persistence. Follow it with a longer description of the app's purpose and detailed instructions how to use it (with occasional bold or italic for emphasis). 
+Provide a title and brief explanation followed by the component code. The component should demonstrate proper Fireproof integration with real-time updates and proper data persistence. Follow it with a longer description of the app's purpose and detailed instructions how to use it (with occasional bold or italic for emphasis). 
 
 Begin the component with the import statements. Use react, use-fireproof, and call-ai:
 
@@ -55,16 +49,11 @@ import { callAI } from "call-ai"
 // other imports only when requested
 \`\`\`
 
-Start your response with {"dependencies": {"
 `;
 }
 
 // Response format requirements
 export const RESPONSE_FORMAT = {
-  dependencies: {
-    format: '{dependencies: { "package-name": "version" }}',
-    note: 'use-fireproof and call-ai are already provided, do not include them',
-  },
   structure: [
     'Brief explanation',
     'Component code with proper Fireproof integration',
