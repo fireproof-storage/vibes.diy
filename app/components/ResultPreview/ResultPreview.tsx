@@ -1,10 +1,9 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { CALLAI_API_KEY } from '../../config/env';
-import ResultPreviewHeaderContent from './ResultPreviewHeaderContent';
 import { animationStyles, indexHtml } from './ResultPreviewTemplates';
-import type { ResultPreviewProps, SandpackFiles } from './ResultPreviewTypes';
+import type { ResultPreviewProps, IframeFiles } from './ResultPreviewTypes';
 import { processCodeForDisplay } from './ResultPreviewUtils';
-import SandpackContent from './SandpackContent';
+import IframeContent from './IframeContent';
 
 function ResultPreview({
   code,
@@ -19,12 +18,12 @@ function ResultPreview({
   setMobilePreviewShown,
   children,
 }: ResultPreviewProps & { children?: React.ReactNode }) {
-  const [bundlingComplete, setBundlingComplete] = useState(true);
-  const [previewReady, setPreviewReady] = useState(false);
+  // Note: setBundlingComplete is used by IframeContent, but bundlingComplete isn't used here
+  const [, setBundlingComplete] = useState(true);
   const isStreamingRef = useRef(isStreaming);
   const hasGeneratedStreamingKeyRef = useRef(false);
 
-  const filesRef = useRef<SandpackFiles>({});
+  const filesRef = useRef<IframeFiles>({});
   const showWelcome = !isStreaming && (!code || code.length === 0);
 
   // Track streaming state changes to reset key generation only when streaming starts/stops
@@ -64,7 +63,6 @@ function ResultPreview({
           iframe?.contentWindow?.postMessage({ type: 'callai-api-key', key: CALLAI_API_KEY }, '*');
 
           setMobilePreviewShown(true);
-          setPreviewReady(true);
           // Automatically switch to preview view when it's ready
           setActiveView('preview');
 
@@ -150,7 +148,7 @@ function ResultPreview({
       };
 
       return (
-        <SandpackContent
+        <IframeContent
           activeView={activeView}
           filesContent={filesRef.current}
           isStreaming={!codeReady}

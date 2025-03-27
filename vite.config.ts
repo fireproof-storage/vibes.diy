@@ -1,13 +1,12 @@
 import { reactRouter } from '@react-router/dev/vite';
 import tailwindcss from '@tailwindcss/vite';
 import type { ConfigEnv, UserConfig } from 'vite';
-import { defineConfig, loadEnv } from 'vite';
+import { defineConfig } from 'vite';
 import tsconfigPaths from 'vite-tsconfig-paths';
 
 export default defineConfig(({ command, mode }: ConfigEnv): UserConfig => {
   // Disable React Router plugin for tests or when explicitly disabled
   const disableReactRouter = mode === 'test' || process.env.DISABLE_REACT_ROUTER === 'true';
-  const env = loadEnv(mode, process.cwd(), '');
 
   return {
     plugins: [

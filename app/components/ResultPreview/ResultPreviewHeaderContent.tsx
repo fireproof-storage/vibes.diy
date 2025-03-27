@@ -23,7 +23,6 @@ const ResultPreviewHeaderContent: React.FC<ResultPreviewHeaderContentProps> = ({
   setMobilePreviewShown,
 }) => {
   const [shareStatus, setShareStatus] = useState<string>('');
-  const [codeReady, setCodeReady] = useState<boolean>(true); // Add codeReady state
 
   function handleShare() {
     if (!code) {
@@ -127,7 +126,7 @@ const ResultPreviewHeaderContent: React.FC<ResultPreviewHeaderContentProps> = ({
               onClick={() => {
                 if (activeView !== 'code') {
                   setActiveView('code');
-                  setCodeReady(false); // Set codeReady to false
+                  // codeReady state has been removed as it's no longer needed
                 }
               }}
               className={`flex items-center space-x-1.5 rounded-md px-4 py-1.5 text-sm font-medium transition-colors ${
