@@ -41,8 +41,8 @@ vi.mock('../app/components/ResultPreview/SandpackScrollController', () => ({
 
 // Mock iframe behavior
 
-// Mock the SandpackContent component to avoid iframe issues in tests
-vi.mock('../app/components/ResultPreview/SandpackContent', () => ({
+// Mock the IframeContent component to avoid iframe issues in tests
+vi.mock('../app/components/ResultPreview/IframeContent', () => ({
   default: ({ activeView }: { activeView: string }) => (
     <div data-testid="sandpack-provider" className="h-full">
       <div
@@ -204,30 +204,30 @@ describe('ResultPreview', () => {
         return <div>Test App Content</div>;
       }
     `;
-    
+
     const mockSetPreviewLoaded = vi.fn();
-    
+
     // Create props with our mock onPreviewLoaded, ensuring it overrides the one in mockResultPreviewProps
     const testProps = {
       ...mockResultPreviewProps,
       code,
       isStreaming: false,
       codeReady: true,
-      onPreviewLoaded: mockSetPreviewLoaded
+      onPreviewLoaded: mockSetPreviewLoaded,
     };
-    
+
     render(<ResultPreview {...testProps} />);
 
     // Manually trigger the message that would come from the iframe
     const previewReadyEvent = new MessageEvent('message', {
-      data: { type: 'preview-ready' }
+      data: { type: 'preview-ready' },
     });
-    
+
     // Wrap in act() to handle React state updates properly
     act(() => {
       window.dispatchEvent(previewReadyEvent);
     });
-    
+
     // Wait for the event to be processed
     await waitFor(() => {
       expect(previewReadyHandler).toHaveBeenCalledWith({ type: 'preview-ready' });
@@ -345,7 +345,7 @@ describe('ResultPreview', () => {
     // Dependencies should be configured in Sandpack
     expect(screen.queryByText(/Welcome to the preview/i)).not.toBeInTheDocument();
   });
-  
+
   it('passes API key to iframe when preview-ready message is received', async () => {
     // Mock document.querySelector to return a mock iframe
     const mockIframe = {
@@ -360,15 +360,15 @@ describe('ResultPreview', () => {
       }
       return originalQuerySelector(selector);
     });
-    
+
     // We need to spoof the API key that would come from config
     vi.mock('../app/config/env', () => ({
       CALLAI_API_KEY: 'test-api-key-12345',
     }));
-    
+
     const code = `function App() { return <div>API Key Test</div>; }`;
     render(<ResultPreview code={code} codeReady={true} {...mockResultPreviewProps} />);
-    
+
     // Simulate preview-ready message from iframe
     act(() => {
       window.dispatchEvent(
@@ -377,7 +377,7 @@ describe('ResultPreview', () => {
         })
       );
     });
-    
+
     // Verify that the API key was sent to the iframe
     await waitFor(() => {
       expect(mockIframe.contentWindow.postMessage).toHaveBeenCalledWith(
@@ -385,7 +385,7 @@ describe('ResultPreview', () => {
         '*'
       );
     });
-    
+
     // Clean up mocks
     document.querySelector = originalQuerySelector;
   });

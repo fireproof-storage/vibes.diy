@@ -11,7 +11,7 @@ export interface ResultPreviewProps {
   setMobilePreviewShown: (shown: boolean) => void;
 }
 
-export type SandpackFiles = {
+export type IframeFiles = {
   [path: string]: {
     code: string;
     hidden?: boolean;

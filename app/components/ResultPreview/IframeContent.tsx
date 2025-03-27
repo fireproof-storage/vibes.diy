@@ -1,13 +1,13 @@
 import React, { useEffect, useRef, useState } from 'react';
-import type { SandpackFiles } from './ResultPreviewTypes';
+import type { IframeFiles } from './ResultPreviewTypes';
 import { CALLAI_API_KEY } from '~/config/env';
 
 // Import the iframe template using Vite's ?raw import option
 import iframeTemplateRaw from './templates/iframe-template.html?raw';
 
-interface SandpackContentProps {
+interface IframeContentProps {
   activeView: 'preview' | 'code';
-  filesContent: SandpackFiles;
+  filesContent: IframeFiles;
   isStreaming: boolean;
   codeReady: boolean;
   sandpackKey: string;
@@ -16,7 +16,7 @@ interface SandpackContentProps {
   dependencies: Record<string, string>;
 }
 
-const SandpackContent: React.FC<SandpackContentProps> = ({
+const IframeContent: React.FC<IframeContentProps> = ({
   activeView,
   filesContent,
   isStreaming,
@@ -28,7 +28,6 @@ const SandpackContent: React.FC<SandpackContentProps> = ({
 }) => {
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const [isDarkMode, setIsDarkMode] = useState(false);
-  const [previewReady, setPreviewReady] = useState(false);
   const contentLoadedRef = useRef(false);
   const lastContentRef = useRef('');
 
@@ -79,7 +78,6 @@ const SandpackContent: React.FC<SandpackContentProps> = ({
       // Setup message listener for preview ready signal
       const handleMessage = (event: MessageEvent) => {
         if (event.data?.type === 'preview-ready') {
-          setPreviewReady(true);
           setBundlingComplete(true);
         }
       };
@@ -138,4 +136,4 @@ const SandpackContent: React.FC<SandpackContentProps> = ({
   );
 };
 
-export default SandpackContent;
+export default IframeContent;

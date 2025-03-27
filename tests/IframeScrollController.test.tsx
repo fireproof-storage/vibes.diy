@@ -1,6 +1,6 @@
 import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { render } from '@testing-library/react';
-import SandpackScrollController from '../app/components/ResultPreview/SandpackScrollController';
+import IframeScrollController from '../app/components/ResultPreview/IframeScrollController';
 
 // Mock ResizeObserver since it's not available in the test environment
 class MockResizeObserver {
@@ -24,7 +24,7 @@ Element.prototype.getBoundingClientRect = vi.fn().mockReturnValue({
 
 Element.prototype.scrollTo = vi.fn();
 
-describe('SandpackScrollController', () => {
+describe('IframeScrollController', () => {
   beforeEach(() => {
     // Setup DOM structure that SandpackScrollController would expect
     const rootDiv = document.createElement('div');
@@ -49,7 +49,7 @@ describe('SandpackScrollController', () => {
   });
 
   it('renders without crashing', () => {
-    render(<SandpackScrollController isStreaming={false} />);
+    render(<IframeScrollController isStreaming={false} />);
 
     // Check that the highlight style is added
     const styleElement = document.getElementById('highlight-style');
@@ -57,7 +57,7 @@ describe('SandpackScrollController', () => {
   });
 
   it('renders with streaming enabled', () => {
-    render(<SandpackScrollController isStreaming={true} />);
+    render(<IframeScrollController isStreaming={true} />);
 
     // Component renders without errors
     const styleElement = document.getElementById('highlight-style');
@@ -65,7 +65,7 @@ describe('SandpackScrollController', () => {
   });
 
   it('adds highlight style to the document', () => {
-    render(<SandpackScrollController isStreaming={false} />);
+    render(<IframeScrollController isStreaming={false} />);
 
     const styleElement = document.getElementById('highlight-style');
     expect(styleElement).not.toBeNull();
