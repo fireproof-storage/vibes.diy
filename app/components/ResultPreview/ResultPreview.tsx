@@ -72,6 +72,12 @@ function ResultPreview({
           if (onScreenshotCaptured) {
             onScreenshotCaptured(data.data);
           }
+        } else if (data.type === 'screenshot-error' && data.error) {
+          console.warn('Screenshot capture error:', data.error);
+          // Still call onScreenshotCaptured with null to signal that the screenshot failed
+          if (onScreenshotCaptured) {
+            onScreenshotCaptured(null);
+          }
         }
       }
     };

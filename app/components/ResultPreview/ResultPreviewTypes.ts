@@ -1,7 +1,7 @@
 export interface ResultPreviewProps {
   code: string;
   dependencies?: Record<string, string>;
-  onScreenshotCaptured?: (screenshotData: string) => void;
+  onScreenshotCaptured?: (screenshotData: string | null) => void;
   sessionId?: string;
   isStreaming?: boolean;
   codeReady?: boolean;
