@@ -90,12 +90,10 @@
     </script>
     <script type="text/babel" data-type="module">
       import ReactDOMClient from 'react-dom/client';
-      {
-        {
-          APP_CODE;
-        }
-      }
-
+      
+      // APP_CODE placeholder will be replaced with actual code
+      {{APP_CODE}}
+      
       const rootElement = document.getElementById('container');
       ReactDOMClient.createRoot(rootElement).render(<App />);
     </script>
