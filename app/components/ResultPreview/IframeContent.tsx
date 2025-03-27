@@ -2,6 +2,8 @@ import React, { useEffect, useRef, useState } from 'react';
 import type { IframeFiles } from './ResultPreviewTypes';
 import { CALLAI_API_KEY } from '~/config/env';
 import Editor from '@monaco-editor/react';
+import { shikiToMonaco } from '@shikijs/monaco';
+import { createHighlighter } from 'shiki';
 
 // Import the iframe template using Vite's ?raw import option
 import iframeTemplateRaw from './templates/iframe-template.html?raw';
@@ -32,6 +34,11 @@ const IframeContent: React.FC<IframeContentProps> = ({
   const contentLoadedRef = useRef(false);
   const lastContentRef = useRef('');
 
+  // Reference to store the current Monaco editor instance
+  const monacoEditorRef = useRef<any>(null);
+  // Reference to store the current Shiki highlighter
+  const highlighterRef = useRef<any>(null);
+  
   useEffect(() => {
     const prefersDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches;
     setIsDarkMode(prefersDarkMode);
@@ -44,6 +51,14 @@ const IframeContent: React.FC<IframeContentProps> = ({
     mediaQuery.addEventListener('change', handleChange);
     return () => mediaQuery.removeEventListener('change', handleChange);
   }, []);
+  
+  // Update theme when dark mode changes
+  useEffect(() => {
+    if (monacoEditorRef.current) {
+      // Force theme update when dark mode changes
+      monacoEditorRef.current.setTheme(isDarkMode ? 'vs-dark' : 'vs');
+    }
+  }, [isDarkMode]);
 
   // This effect is now managed at the ResultPreview component level
 
@@ -128,8 +143,9 @@ const IframeContent: React.FC<IframeContentProps> = ({
         <Editor
           height="100%"
           width="100%"
-          language="javascript"
-          theme={isDarkMode ? 'vs-dark' : 'light'}
+          path="file.jsx"
+          defaultLanguage="jsx"
+          theme="vs-dark"
           value={filesContent['/App.jsx']?.code || ''}
           options={{
             readOnly: true,
@@ -141,23 +157,52 @@ const IframeContent: React.FC<IframeContentProps> = ({
             wordWrap: 'on',
             padding: { top: 16 },
           }}
-          onMount={(editor, monaco: any) => {
+          onMount={async (editor, monacoInstance: any) => {
+            // Store references for theme updates
+            monacoEditorRef.current = monacoInstance.editor;
+            
             // Configure JavaScript language to support JSX
-            monaco.languages.typescript.javascriptDefaults.setCompilerOptions({
-              jsx: monaco.languages.typescript.JsxEmit.React,
+            monacoInstance.languages.typescript.javascriptDefaults.setCompilerOptions({
+              jsx: monacoInstance.languages.typescript.JsxEmit.React,
               jsxFactory: 'React.createElement',
               reactNamespace: 'React',
               allowNonTsExtensions: true,
               allowJs: true,
-              target: monaco.languages.typescript.ScriptTarget.Latest
+              target: monacoInstance.languages.typescript.ScriptTarget.Latest
             });
             
-            // Set editor options for better JSX visualization
+            // Set editor options for better visualization
             editor.updateOptions({
               tabSize: 2,
               bracketPairColorization: { enabled: true },
               guides: { bracketPairs: true }
             });
+            
+            try {
+              // Register the language IDs first
+              monacoInstance.languages.register({ id: 'jsx' });
+              monacoInstance.languages.register({ id: 'javascript' });
+              
+              // Create the Shiki highlighter with dark mode theme
+              const highlighter = await createHighlighter({
+                themes: ['github-dark'],
+                langs: ['javascript', 'jsx'],
+              });
+              
+              // Apply Shiki to Monaco
+              shikiToMonaco(highlighter, monacoInstance);
+              
+              // Force dark theme
+              monacoInstance.editor.setTheme('github-dark');
+              
+              // Make sure the model uses JSX highlighting
+              const model = editor.getModel();
+              if (model) {
+                monacoInstance.editor.setModelLanguage(model, 'jsx');
+              }
+            } catch (error) {
+              console.warn('Shiki highlighter setup failed:', error);
+            }
           }}
         />
       </div>
