@@ -63,15 +63,24 @@ function MessageList({
           </div>
           <div className="max-w-[85%] rounded-2xl bg-white px-5 py-3 text-gray-900 shadow-md dark:bg-gray-800 dark:text-gray-100">
             <div className="flex items-center space-x-1">
-              <div className="h-2 w-2 rounded-full bg-gray-400 opacity-75 animate-pulse" style={{ animationDelay: '0ms' }}></div>
-              <div className="h-2 w-2 rounded-full bg-gray-400 opacity-75 animate-pulse" style={{ animationDelay: '300ms' }}></div>
-              <div className="h-2 w-2 rounded-full bg-gray-400 opacity-75 animate-pulse" style={{ animationDelay: '600ms' }}></div>
+              <div
+                className="h-2 w-2 animate-pulse rounded-full bg-gray-400 opacity-75"
+                style={{ animationDelay: '0ms' }}
+              ></div>
+              <div
+                className="h-2 w-2 animate-pulse rounded-full bg-gray-400 opacity-75"
+                style={{ animationDelay: '300ms' }}
+              ></div>
+              <div
+                className="h-2 w-2 animate-pulse rounded-full bg-gray-400 opacity-75"
+                style={{ animationDelay: '600ms' }}
+              ></div>
             </div>
           </div>
-        </div>
+        </div>,
       ];
     }
-    
+
     // Otherwise, just render normal messages
     return messages.map((msg, i) => {
       return (
@@ -85,14 +94,19 @@ function MessageList({
         />
       );
     });
-  }, [messages, isStreaming, setSelectedResponseId, selectedResponseId, setMobilePreviewShown, shouldShowWaitingIndicator]);
+  }, [
+    messages,
+    isStreaming,
+    setSelectedResponseId,
+    selectedResponseId,
+    setMobilePreviewShown,
+    shouldShowWaitingIndicator,
+  ]);
 
   return (
     <div className="flex-1">
       <div className="mx-auto flex min-h-full max-w-5xl flex-col py-4">
-        <div className="flex flex-col space-y-4">
-          {messageElements}
-        </div>
+        <div className="flex flex-col space-y-4">{messageElements}</div>
       </div>
     </div>
   );

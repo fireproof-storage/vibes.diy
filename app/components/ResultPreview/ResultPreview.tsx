@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { CALLAI_API_KEY } from '../../config/env';
 import { animationStyles, indexHtml } from './ResultPreviewTemplates';
 import type { ResultPreviewProps, IframeFiles } from './ResultPreviewTypes';
-import { processCodeForDisplay } from './ResultPreviewUtils';
+// ResultPreview component
 import IframeContent from './IframeContent';
 
 function ResultPreview({
@@ -94,7 +94,7 @@ function ResultPreview({
 
   useEffect(() => {
     if (!showWelcome) {
-      const processedCode = processCodeForDisplay(code);
+      const processedCode = code;
       filesRef.current = {
         ...filesRef.current,
         '/App.jsx': {
@@ -148,7 +148,7 @@ function ResultPreview({
           hidden: true,
         },
         '/App.jsx': {
-          code: processCodeForDisplay(code),
+          code: code,
           active: true,
         },
       };

@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import type { IframeFiles } from './ResultPreviewTypes';
 import { CALLAI_API_KEY } from '~/config/env';
+import Editor from '@monaco-editor/react';
 
 // Import the iframe template using Vite's ?raw import option
 import iframeTemplateRaw from './templates/iframe-template.html?raw';
@@ -120,17 +121,27 @@ const IframeContent: React.FC<IframeContentProps> = ({
           zIndex: activeView === 'code' ? 1 : 0,
           height: '100%',
           width: '100%',
-          padding: '1rem',
-          backgroundColor: isDarkMode ? '#1a1a1a' : '#ffffff',
-          color: isDarkMode ? '#ffffff' : '#000000',
-          fontFamily: 'monospace',
-          whiteSpace: 'pre-wrap',
-          overflow: 'auto',
           top: 0,
           left: 0,
         }}
       >
-        {filesContent['/App.jsx']?.code || ''}
+        <Editor
+          height="100%"
+          width="100%"
+          language="jsx"
+          theme={isDarkMode ? 'vs-dark' : 'light'}
+          value={filesContent['/App.jsx']?.code || ''}
+          options={{
+            readOnly: true,
+            minimap: { enabled: false },
+            scrollBeyondLastLine: false,
+            automaticLayout: true,
+            fontSize: 14,
+            lineNumbers: 'on',
+            wordWrap: 'on',
+            padding: { top: 16 },
+          }}
+        />
       </div>
     </div>
   );

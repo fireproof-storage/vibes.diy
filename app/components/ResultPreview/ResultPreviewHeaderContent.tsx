@@ -21,8 +21,6 @@ const ResultPreviewHeaderContent: React.FC<ResultPreviewHeaderContentProps> = ({
   dependencies = {},
   setMobilePreviewShown,
 }) => {
-
-
   function handleCaptureScreenshot() {
     if (!code || !previewReady) {
       alert('Generate an app and wait for the preview to be ready before capturing a screenshot!');
@@ -143,7 +141,6 @@ const ResultPreviewHeaderContent: React.FC<ResultPreviewHeaderContentProps> = ({
       </div>
       {code ? (
         <div className="flex items-center gap-2">
-
           <div className="bg-light-decorative-00 dark:bg-dark-decorative-00 flex space-x-1 rounded-lg p-1 shadow-sm">
             <button
               type="button"
