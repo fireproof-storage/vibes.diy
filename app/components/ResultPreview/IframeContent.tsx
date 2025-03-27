@@ -30,7 +30,7 @@ const IframeContent: React.FC<IframeContentProps> = ({
   setBundlingComplete,
 }) => {
   const iframeRef = useRef<HTMLIFrameElement>(null);
-  const [isDarkMode, setIsDarkMode] = useState(false);
+  const [isDarkMode, setIsDarkMode] = useState(true); // Default to dark mode
   const contentLoadedRef = useRef(false);
   const lastContentRef = useRef('');
 
@@ -40,23 +40,39 @@ const IframeContent: React.FC<IframeContentProps> = ({
   const highlighterRef = useRef<any>(null);
   
   useEffect(() => {
-    const prefersDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches;
-    setIsDarkMode(prefersDarkMode);
+    // Only switch to light mode if explicitly detected on the document
+    const isLightMode = !document.documentElement.classList.contains('dark');
+    console.log('Light mode explicitly detected:', isLightMode);
+    
+    // Only update if we need to switch to light mode
+    if (isLightMode) {
+      setIsDarkMode(false);
+    }
 
-    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-    const handleChange = (e: MediaQueryListEvent) => {
-      setIsDarkMode(e.matches);
-    };
+    // Set up observer to watch for class changes on document.documentElement
+    const observer = new MutationObserver((mutations) => {
+      mutations.forEach((mutation) => {
+        if (mutation.attributeName === 'class') {
+          // Only switch to light mode if dark class is explicitly removed
+          const isLightModeNow = !document.documentElement.classList.contains('dark');
+          console.log('Light mode detected:', isLightModeNow);
+          setIsDarkMode(!isLightModeNow);
+        }
+      });
+    });
 
-    mediaQuery.addEventListener('change', handleChange);
-    return () => mediaQuery.removeEventListener('change', handleChange);
+    // Start observing
+    observer.observe(document.documentElement, { attributes: true });
+    
+    return () => observer.disconnect();
   }, []);
   
   // Update theme when dark mode changes
   useEffect(() => {
     if (monacoEditorRef.current) {
-      // Force theme update when dark mode changes
-      monacoEditorRef.current.setTheme(isDarkMode ? 'vs-dark' : 'vs');
+      // Update the Shiki theme in Monaco when dark mode changes
+      const currentTheme = isDarkMode ? 'github-dark' : 'github-light';
+      monacoEditorRef.current.setTheme(currentTheme);
     }
   }, [isDarkMode]);
 
@@ -145,7 +161,7 @@ const IframeContent: React.FC<IframeContentProps> = ({
           width="100%"
           path="file.jsx"
           defaultLanguage="jsx"
-          theme="vs-dark"
+          theme="github-dark" // Always use dark theme in initial render
           value={filesContent['/App.jsx']?.code || ''}
           options={{
             readOnly: true,
@@ -183,16 +199,19 @@ const IframeContent: React.FC<IframeContentProps> = ({
               monacoInstance.languages.register({ id: 'jsx' });
               monacoInstance.languages.register({ id: 'javascript' });
               
-              // Create the Shiki highlighter with dark mode theme
+              // Create the Shiki highlighter with both light and dark themes, prioritize dark
               const highlighter = await createHighlighter({
-                themes: ['github-dark'],
-                langs: ['javascript', 'jsx'],
+                themes: ['github-dark', 'github-light'],
+                langs: ['javascript', 'jsx']
               });
+              
+              // Store highlighter reference for theme switching
+              highlighterRef.current = highlighter;
               
               // Apply Shiki to Monaco
               shikiToMonaco(highlighter, monacoInstance);
               
-              // Force dark theme
+              // Start with dark theme, even before state is fully processed
               monacoInstance.editor.setTheme('github-dark');
               
               // Make sure the model uses JSX highlighting
