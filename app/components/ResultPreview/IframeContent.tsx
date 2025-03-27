@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef } from 'react';
 import type { IframeFiles } from './ResultPreviewTypes';
 import { CALLAI_API_KEY } from '~/config/env';
 import Editor from '@monaco-editor/react';
@@ -17,6 +17,7 @@ interface IframeContentProps {
   setActiveView: (view: 'preview' | 'code') => void;
   setBundlingComplete: (complete: boolean) => void;
   dependencies: Record<string, string>;
+  isDarkMode: boolean; // Add isDarkMode prop
 }
 
 const IframeContent: React.FC<IframeContentProps> = ({
@@ -28,9 +29,10 @@ const IframeContent: React.FC<IframeContentProps> = ({
   dependencies,
   setActiveView,
   setBundlingComplete,
+  isDarkMode, // Receive the isDarkMode prop
 }) => {
   const iframeRef = useRef<HTMLIFrameElement>(null);
-  const [isDarkMode, setIsDarkMode] = useState(true); // Default to dark mode
+  // Theme state is now received from parent via props
   const contentLoadedRef = useRef(false);
   const lastContentRef = useRef('');
 
@@ -38,41 +40,19 @@ const IframeContent: React.FC<IframeContentProps> = ({
   const monacoEditorRef = useRef<any>(null);
   // Reference to store the current Shiki highlighter
   const highlighterRef = useRef<any>(null);
-  
+
+  // Theme detection is now handled in the parent component
   useEffect(() => {
-    // Only switch to light mode if explicitly detected on the document
-    const isLightMode = !document.documentElement.classList.contains('dark');
-    console.log('Light mode explicitly detected:', isLightMode);
-    
-    // Only update if we need to switch to light mode
-    if (isLightMode) {
-      setIsDarkMode(false);
-    }
+    console.log('IframeContent received isDarkMode:', isDarkMode);
+  }, [isDarkMode]);
 
-    // Set up observer to watch for class changes on document.documentElement
-    const observer = new MutationObserver((mutations) => {
-      mutations.forEach((mutation) => {
-        if (mutation.attributeName === 'class') {
-          // Only switch to light mode if dark class is explicitly removed
-          const isLightModeNow = !document.documentElement.classList.contains('dark');
-          console.log('Light mode detected:', isLightModeNow);
-          setIsDarkMode(!isLightModeNow);
-        }
-      });
-    });
-
-    // Start observing
-    observer.observe(document.documentElement, { attributes: true });
-    
-    return () => observer.disconnect();
-  }, []);
-  
   // Update theme when dark mode changes
   useEffect(() => {
     if (monacoEditorRef.current) {
-      // Update the Shiki theme in Monaco when dark mode changes
+      // Update the Shiki theme in Monaco when dark mode changes from parent
       const currentTheme = isDarkMode ? 'github-dark' : 'github-light';
       monacoEditorRef.current.setTheme(currentTheme);
+      console.log('Editor theme updated to:', currentTheme);
     }
   }, [isDarkMode]);
 
@@ -161,7 +141,7 @@ const IframeContent: React.FC<IframeContentProps> = ({
           width="100%"
           path="file.jsx"
           defaultLanguage="jsx"
-          theme="github-dark" // Always use dark theme in initial render
+          theme={isDarkMode ? 'github-dark' : 'github-light'}
           value={filesContent['/App.jsx']?.code || ''}
           options={{
             readOnly: true,
@@ -176,7 +156,7 @@ const IframeContent: React.FC<IframeContentProps> = ({
           onMount={async (editor, monacoInstance: any) => {
             // Store references for theme updates
             monacoEditorRef.current = monacoInstance.editor;
-            
+
             // Configure JavaScript language to support JSX
             monacoInstance.languages.typescript.javascriptDefaults.setCompilerOptions({
               jsx: monacoInstance.languages.typescript.JsxEmit.React,
@@ -184,36 +164,38 @@ const IframeContent: React.FC<IframeContentProps> = ({
               reactNamespace: 'React',
               allowNonTsExtensions: true,
               allowJs: true,
-              target: monacoInstance.languages.typescript.ScriptTarget.Latest
+              target: monacoInstance.languages.typescript.ScriptTarget.Latest,
             });
-            
+
             // Set editor options for better visualization
             editor.updateOptions({
               tabSize: 2,
               bracketPairColorization: { enabled: true },
-              guides: { bracketPairs: true }
+              guides: { bracketPairs: true },
             });
-            
+
             try {
               // Register the language IDs first
               monacoInstance.languages.register({ id: 'jsx' });
               monacoInstance.languages.register({ id: 'javascript' });
-              
+
               // Create the Shiki highlighter with both light and dark themes, prioritize dark
               const highlighter = await createHighlighter({
                 themes: ['github-dark', 'github-light'],
-                langs: ['javascript', 'jsx']
+                langs: ['javascript', 'jsx'],
               });
-              
+
               // Store highlighter reference for theme switching
               highlighterRef.current = highlighter;
-              
+
               // Apply Shiki to Monaco
               shikiToMonaco(highlighter, monacoInstance);
-              
-              // Start with dark theme, even before state is fully processed
-              monacoInstance.editor.setTheme('github-dark');
-              
+
+              // Set theme based on current dark mode state from parent
+              const currentTheme = isDarkMode ? 'github-dark' : 'github-light';
+              monacoInstance.editor.setTheme(currentTheme);
+              console.log('Document has dark class:', isDarkMode, '=> Using theme:', currentTheme);
+
               // Make sure the model uses JSX highlighting
               const model = editor.getModel();
               if (model) {

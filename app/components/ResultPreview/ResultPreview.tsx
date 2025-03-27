@@ -18,6 +18,8 @@ function ResultPreview({
   setMobilePreviewShown,
   children,
 }: ResultPreviewProps & { children?: React.ReactNode }) {
+  // Add theme detection at the parent level
+  const [isDarkMode, setIsDarkMode] = useState<boolean>(true); // Default to dark mode
   // Note: setBundlingComplete is used by IframeContent, but bundlingComplete isn't used here
   const [, setBundlingComplete] = useState(true);
   const isStreamingRef = useRef(isStreaming);
@@ -53,6 +55,41 @@ function ResultPreview({
       setActiveView('preview');
     }
   }, [isStreaming, setActiveView, codeReady]);
+
+  // Theme detection effect
+  useEffect(() => {
+    // Add a small delay to ensure the app's theme detection in root.tsx has run first
+    const timeoutId = setTimeout(() => {
+      // Check if document has the dark class
+      const hasDarkClass = document.documentElement.classList.contains('dark');
+      console.log(
+        'ResultPreview: Initial theme detection - Document has dark class:',
+        hasDarkClass
+      );
+
+      // Set the theme state
+      setIsDarkMode(hasDarkClass);
+
+      // Set up observer to watch for class changes on document.documentElement
+      const observer = new MutationObserver((mutations) => {
+        mutations.forEach((mutation) => {
+          if (mutation.attributeName === 'class') {
+            // Directly check for dark class
+            const hasDarkClass = document.documentElement.classList.contains('dark');
+            console.log('ResultPreview: Theme changed - Document has dark class:', hasDarkClass);
+            setIsDarkMode(hasDarkClass);
+          }
+        });
+      });
+
+      // Start observing
+      observer.observe(document.documentElement, { attributes: true });
+
+      return () => observer.disconnect();
+    }, 100); // Slightly shorter delay than before
+
+    return () => clearTimeout(timeoutId);
+  }, []);
 
   useEffect(() => {
     const handleMessage = ({ data }: MessageEvent) => {
@@ -163,6 +200,7 @@ function ResultPreview({
           setActiveView={setActiveView}
           setBundlingComplete={setBundlingComplete}
           dependencies={dependencies}
+          isDarkMode={isDarkMode} // Pass down the theme state
         />
       );
     })()
