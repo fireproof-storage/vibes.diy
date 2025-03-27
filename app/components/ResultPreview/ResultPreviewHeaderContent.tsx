@@ -1,5 +1,4 @@
-import React, { useState } from 'react';
-import { copyToClipboard, encodeStateToUrl } from '../../utils/sharing';
+import React from 'react';
 
 interface ResultPreviewHeaderContentProps {
   previewReady: boolean;
@@ -22,23 +21,7 @@ const ResultPreviewHeaderContent: React.FC<ResultPreviewHeaderContentProps> = ({
   dependencies = {},
   setMobilePreviewShown,
 }) => {
-  const [shareStatus, setShareStatus] = useState<string>('');
 
-  function handleShare() {
-    if (!code) {
-      alert('Generate an app first before sharing!');
-      return;
-    }
-
-    const encoded = encodeStateToUrl(code, dependencies);
-    if (encoded) {
-      copyToClipboard(`${window.location.origin}/shared?state=${encoded}`);
-      setShareStatus('Share URL copied to clipboard!');
-      setTimeout(() => {
-        setShareStatus('');
-      }, 3000);
-    }
-  }
 
   function handleCaptureScreenshot() {
     if (!code || !previewReady) {
@@ -160,9 +143,7 @@ const ResultPreviewHeaderContent: React.FC<ResultPreviewHeaderContentProps> = ({
       </div>
       {code ? (
         <div className="flex items-center gap-2">
-          {shareStatus && (
-            <span className="text-sm text-green-600 dark:text-green-400">{shareStatus}</span>
-          )}
+
           <div className="bg-light-decorative-00 dark:bg-dark-decorative-00 flex space-x-1 rounded-lg p-1 shadow-sm">
             <button
               type="button"
@@ -192,11 +173,12 @@ const ResultPreviewHeaderContent: React.FC<ResultPreviewHeaderContentProps> = ({
                 />
               </svg>
             </button>
-            <button
-              type="button"
-              onClick={handleShare}
+            <a
+              href="https://connect.fireproof.storage/login"
+              target="_blank"
+              rel="noopener noreferrer"
               className="text-light-primary dark:text-dark-primary hover:bg-light-decorative-01 dark:hover:bg-dark-decorative-01 flex items-center space-x-1.5 rounded-md px-4 py-1.5 text-sm font-medium transition-colors"
-              aria-label="Share app"
+              aria-label="Connect"
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -205,7 +187,7 @@ const ResultPreviewHeaderContent: React.FC<ResultPreviewHeaderContentProps> = ({
                 viewBox="0 0 24 24"
                 stroke="currentColor"
               >
-                <title>Share icon</title>
+                <title>Connect icon</title>
                 <path
                   strokeLinecap="round"
                   strokeLinejoin="round"
@@ -214,7 +196,7 @@ const ResultPreviewHeaderContent: React.FC<ResultPreviewHeaderContentProps> = ({
                 />
               </svg>
               <span className="hidden sm:inline">Share</span>
-            </button>
+            </a>
           </div>
         </div>
       ) : (
