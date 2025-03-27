@@ -2,6 +2,9 @@ import React, { useEffect, useRef, useState } from 'react';
 import type { SandpackFiles } from './ResultPreviewTypes';
 import { CALLAI_API_KEY } from '~/config/env';
 
+// Import the iframe template using Vite's ?raw import option
+import iframeTemplateRaw from './templates/iframe-template.html?raw';
+
 interface SandpackContentProps {
   activeView: 'preview' | 'code';
   filesContent: SandpackFiles;
@@ -64,55 +67,10 @@ const SandpackContent: React.FC<SandpackContentProps> = ({
         'export default function App'
       );
 
-      const htmlContent = `
-        <!DOCTYPE html>
-        <html>
-          <head>
-            <meta charset="utf-8">
-            <meta name="viewport" content="width=device-width, initial-scale=1">
-            <title>AI Generated App</title>
-            <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-            <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
-            <style>
-              body {
-                margin: 0;
-                padding: 0;
-                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-              }
-              #container {
-                width: 100%;
-                height: 100vh;
-              }
-            </style>
-          </head>
-          <body>
-            <div id="container"></div>
-            <script>
-              window.CALLAI_API_KEY = '${CALLAI_API_KEY}';
-            </script>
-            <script type="importmap">
-              {
-                "imports": {
-                  "react": "https://esm.sh/react@19.0.0",
-                  "react-dom/client": "https://esm.sh/react-dom@19.0.0/client",
-                  "use-fireproof": "https://esm.sh/use-fireproof@0.20.0-dev-preview-57",
-                  "call-ai": "https://esm.sh/call-ai@0.5.0"
-                }
-              }
-            </script>
-            <script type="text/babel" data-type="module">
-              import ReactDOMClient from 'react-dom/client';
-              ${normalizedCode}
-
-              const rootElement = document.getElementById('container');
-              ReactDOMClient.createRoot(rootElement).render(<App />);
-              
-              // Signal that the preview is ready
-              // window.parent.postMessage({ type: 'preview-ready' }, '*');
-            </script>
-          </body>
-        </html>
-      `;
+      // Use the template and replace placeholders
+      const htmlContent = iframeTemplateRaw
+        .replace('{{API_KEY}}', CALLAI_API_KEY)
+        .replace('{{APP_CODE}}', normalizedCode);
 
       const blob = new Blob([htmlContent], { type: 'text/html' });
       const url = URL.createObjectURL(blob);
