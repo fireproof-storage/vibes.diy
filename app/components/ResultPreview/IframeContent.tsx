@@ -357,6 +357,8 @@ const IframeContent: React.FC<IframeContentProps> = ({
   );
 };
 
+import { useFireproof } from 'use-fireproof';
+
 // Component to find and display database names from app code
 const DatabaseListView: React.FC<{ appCode: string; isDarkMode: boolean }> = ({ appCode, isDarkMode }) => {
   const [databaseNames, setDatabaseNames] = useState<string[]>([]);
@@ -365,7 +367,6 @@ const DatabaseListView: React.FC<{ appCode: string; isDarkMode: boolean }> = ({ 
   const [selectedDb, setSelectedDb] = useState<string | null>(null);
   const [dataLoading, setDataLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const iframeRef = useRef<HTMLIFrameElement | null>(null);
 
   // Extract database names from app code
   useEffect(() => {
@@ -436,17 +437,9 @@ const DatabaseListView: React.FC<{ appCode: string; isDarkMode: boolean }> = ({ 
     setLoading(false);
   }, [appCode, selectedDb]);
 
-  // Get iframe reference by querying the DOM
-  useEffect(() => {
-    const iframe = document.querySelector('iframe');
-    if (iframe) {
-      iframeRef.current = iframe;
-    }
-  }, []);
-
   // Fetch real data from the database using allDocs
   useEffect(() => {
-    if (!selectedDb || !iframeRef.current || selectedDb.includes(' (template)')) {
+    if (!selectedDb || selectedDb.includes(' (template)')) {
       setDbData([]);
       return;
     }
@@ -455,52 +448,27 @@ const DatabaseListView: React.FC<{ appCode: string; isDarkMode: boolean }> = ({ 
       try {
         setDataLoading(true);
         setError(null);
-
-        // Use postMessage to query the database in the iframe
-        const fetchId = `fetch-${Date.now()}`;
-        const dbName = selectedDb;
-
-        const handleMessage = (event: MessageEvent) => {
-          if (event.data && event.data.type === 'db-data-response' && event.data.fetchId === fetchId) {
-            if (event.data.error) {
-              setError(`Error loading database: ${event.data.error}`);
-              setDbData([]);
-            } else if (event.data.data) {
-              // Process the returned rows
-              const docs = event.data.data.rows.map((row: any) => row.doc);
-              setDbData(docs);
-            }
-            setDataLoading(false);
-            // Remove the event listener once we get the response
-            window.removeEventListener('message', handleMessage);
-          }
-        };
-
-        // Add event listener for the response
-        window.addEventListener('message', handleMessage);
-
-        // Request the data via postMessage
-        if (iframeRef.current?.contentWindow) {
-          iframeRef.current.contentWindow.postMessage({
-          type: 'db-query',
-          command: 'allDocs',
-          dbName: dbName,
-          fetchId: fetchId,
-          options: { include_docs: true }
-          }, '*');
+        
+        // Use the useFireproof hook to get database instance
+        const dbName = selectedDb.replace(' (template)', '');
+        const { database } = useFireproof(dbName);
+        
+        // Query the database using allDocs
+        const result = await database.allDocs({ includeDocs: true });
+        
+        if (result && result.rows) {
+          // Process the returned rows
+          const docs = result.rows.map((row: any) => row.doc).filter(Boolean);
+          setDbData(docs);
+        } else {
+          setDbData([]);
         }
-
-        // Set a timeout to clean up if we don't get a response
-        setTimeout(() => {
-          window.removeEventListener('message', handleMessage);
-          setDataLoading(false);
-          // Only set error if we're still loading
-          if (dataLoading) {
-            setError('Database query timed out. The database might not exist in this app.');
-          }
-        }, 5000);
+        
+        setDataLoading(false);
       } catch (err) {
+        console.error('Database query error:', err);
         setError(`Error: ${err instanceof Error ? err.message : String(err)}`);
+        setDbData([]);
         setDataLoading(false);
       }
     };
