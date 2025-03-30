@@ -508,6 +508,10 @@ const DatabaseListView: React.FC<{ appCode: string; isDarkMode: boolean }> = ({ 
               rows={sampleData}
               dbName={selectedDb.replace(' (template)', '')}
               hrefFn={() => '#'}
+              onRowClick={(docId: string, dbName: string) => {
+                console.log(`View document ${docId} from database ${dbName}`);
+                // In Phase 2, this would open document details
+              }}
             />
           </div>
           <p className="mt-2 text-sm text-light-decorative-04 dark:text-dark-decorative-04">
