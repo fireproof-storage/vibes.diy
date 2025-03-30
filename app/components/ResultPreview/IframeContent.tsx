@@ -376,26 +376,61 @@ const DatabaseData: React.FC<{ dbName: string }> = ({ dbName }) => {
         setLoading(true);
         setError(null);
         
-        // Import dynamically to avoid hooks issues in iframe
-        const { useFireproof } = await import('use-fireproof');
-        const { database } = useFireproof(dbName);
-        const result = await database.allDocs({ includeDocs: true });
+        // Direct IndexedDB access
+        const request = indexedDB.open(dbName);
         
-        if (result?.rows) {
-          const docs = result.rows.map((row: any) => row.doc).filter(Boolean);
-          setData(docs);
-        } else {
-          setData([]);
-        }
+        request.onerror = (event) => {
+          const error = `Error opening database: ${(event.target as any).error}`;
+          console.error(error);
+          setError(error);
+          setLoading(false);
+        };
+        
+        request.onsuccess = (event) => {
+          const db = (event.target as IDBOpenDBRequest).result;
+          
+          // Get all object stores
+          const objectStoreNames = Array.from(db.objectStoreNames);
+          
+          if (objectStoreNames.length === 0) {
+            setData([]);
+            setLoading(false);
+            return;
+          }
+          
+          // We'll focus on the 'docs' store which Fireproof uses
+          const storeName = objectStoreNames.includes('docs') ? 'docs' : objectStoreNames[0];
+          const transaction = db.transaction(storeName, 'readonly');
+          const store = transaction.objectStore(storeName);
+          
+          const request = store.getAll();
+          
+          request.onsuccess = () => {
+            const docs = request.result;
+            setData(docs);
+            setLoading(false);
+          };
+          
+          request.onerror = (err) => {
+            const errorMsg = `Error reading from database: ${err}`;
+            console.error(errorMsg);
+            setError(errorMsg);
+            setLoading(false);
+          };
+        };
       } catch (err) {
         console.error('Database query error:', err);
         setError(`Error: ${err instanceof Error ? err.message : String(err)}`);
-      } finally {
         setLoading(false);
       }
     };
     
     fetchData();
+    
+    // Cleanup function
+    return () => {
+      // No cleanup needed for IndexedDB
+    };
   }, [dbName]);
   
   // Calculate headers for the current data
