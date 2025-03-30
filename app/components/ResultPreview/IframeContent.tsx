@@ -363,9 +363,17 @@ import { useFireproof } from 'use-fireproof';
 const DatabaseListView: React.FC<{ appCode: string; isDarkMode: boolean }> = ({ appCode, isDarkMode }) => {
   const [databaseNames, setDatabaseNames] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
-  const [dbData, setDbData] = useState<any[]>([]);
   const [selectedDb, setSelectedDb] = useState<string | null>(null);
-  const [dataLoading, setDataLoading] = useState(false);
+  
+  // Only create a database instance when a valid database name is selected
+  const cleanDbName = selectedDb && !selectedDb.includes(' (template)') ? 
+    selectedDb.replace(' (template)', '') : null;
+  
+  // This is at the component level, so it's valid to use hooks here
+  const { database } = useFireproof(cleanDbName || '');
+  const [isLoading, setIsLoading] = useState(false);
+  
+  const [dbData, setDbData] = useState<any[]>([]);
   const [error, setError] = useState<string | null>(null);
 
   // Extract database names from app code
@@ -424,7 +432,7 @@ const DatabaseListView: React.FC<{ appCode: string; isDarkMode: boolean }> = ({ 
       const names = extractDatabaseNames(appCode);
       setDatabaseNames(names.length > 0 ? names : []);
       
-      // Set the first database as selected if there's at least one
+      // Set the first database as selected if there's at least one and none is currently selected
       if (names.length > 0 && !selectedDb) {
         // Find first non-template database
         const nonTemplateDb = names.find(name => !name.includes(' (template)'));
@@ -437,44 +445,36 @@ const DatabaseListView: React.FC<{ appCode: string; isDarkMode: boolean }> = ({ 
     setLoading(false);
   }, [appCode, selectedDb]);
 
-  // Fetch real data from the database using allDocs
+  // When the database or selectedDb changes, load the data
   useEffect(() => {
-    if (!selectedDb || selectedDb.includes(' (template)')) {
+    const loadData = async () => {
+      // Reset any previous data and errors
       setDbData([]);
-      return;
-    }
-
-    const fetchDatabaseData = async () => {
+      setError(null);
+      
+      // Skip if no valid database is selected
+      if (!cleanDbName || !database) return;
+      
       try {
-        setDataLoading(true);
-        setError(null);
-        
-        // Use the useFireproof hook to get database instance
-        const dbName = selectedDb.replace(' (template)', '');
-        const { database } = useFireproof(dbName);
-        
-        // Query the database using allDocs
+        setIsLoading(true);
+        // Simply query the database - the database instance is from the hook at component level
         const result = await database.allDocs({ includeDocs: true });
         
         if (result && result.rows) {
           // Process the returned rows
           const docs = result.rows.map((row: any) => row.doc).filter(Boolean);
           setDbData(docs);
-        } else {
-          setDbData([]);
         }
-        
-        setDataLoading(false);
+        setIsLoading(false);
       } catch (err) {
         console.error('Database query error:', err);
         setError(`Error: ${err instanceof Error ? err.message : String(err)}`);
-        setDbData([]);
-        setDataLoading(false);
+        setIsLoading(false);
       }
     };
-
-    fetchDatabaseData();
-  }, [selectedDb]);
+    
+    loadData();
+  }, [database, cleanDbName]);
 
   // Calculate headers for the current data
   const headers = dbData.length > 0 ? headersForDocs(dbData) : [];
@@ -530,7 +530,7 @@ const DatabaseListView: React.FC<{ appCode: string; isDarkMode: boolean }> = ({ 
             <div className="p-4 bg-light-decorative-00 dark:bg-dark-decorative-00 rounded-lg text-red-500">
               {error}
             </div>
-          ) : dataLoading ? (
+          ) : isLoading ? (
             <div className="p-4 bg-light-decorative-00 dark:bg-dark-decorative-00 rounded-lg">
               <p>Loading data from {selectedDb}...</p>
             </div>
