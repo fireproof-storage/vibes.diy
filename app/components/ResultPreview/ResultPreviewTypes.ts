@@ -5,8 +5,8 @@ export interface ResultPreviewProps {
   sessionId?: string;
   isStreaming?: boolean;
   codeReady?: boolean;
-  activeView: 'code' | 'preview';
-  setActiveView: (view: 'code' | 'preview') => void;
+  activeView: 'code' | 'preview' | 'data';
+  setActiveView: (view: 'code' | 'preview' | 'data') => void;
   onPreviewLoaded: () => void;
   setMobilePreviewShown: (shown: boolean) => void;
 }

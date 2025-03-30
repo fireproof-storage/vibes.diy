@@ -26,7 +26,7 @@ export default function UnifiedSession() {
   const chatState = useSimpleChat(urlSessionId);
 
   // State for view management
-  const [activeView, setActiveView] = useState<'code' | 'preview'>('code');
+  const [activeView, setActiveView] = useState<'code' | 'preview' | 'data'>('code');
   const [previewReady, setPreviewReady] = useState(false);
   const [bundlingComplete] = useState(true);
   const [mobilePreviewShown, setMobilePreviewShown] = useState(false);

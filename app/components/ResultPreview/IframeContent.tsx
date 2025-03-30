@@ -9,12 +9,12 @@ import { createHighlighter } from 'shiki';
 import iframeTemplateRaw from './templates/iframe-template.html?raw';
 
 interface IframeContentProps {
-  activeView: 'preview' | 'code';
+  activeView: 'preview' | 'code' | 'data';
   filesContent: IframeFiles;
   isStreaming: boolean;
   codeReady: boolean;
   sandpackKey: string;
-  setActiveView: (view: 'preview' | 'code') => void;
+  setActiveView: (view: 'preview' | 'code' | 'data') => void;
   setBundlingComplete: (complete: boolean) => void;
   dependencies: Record<string, string>;
   isDarkMode: boolean; // Add isDarkMode prop
@@ -329,6 +329,35 @@ const IframeContent: React.FC<IframeContentProps> = ({
             }
           }}
         />
+      </div>
+      <div
+        style={{
+          visibility: activeView === 'data' ? 'visible' : 'hidden',
+          position: activeView === 'data' ? 'static' : 'absolute',
+          zIndex: activeView === 'data' ? 1 : 0,
+          height: '100%',
+          width: '100%',
+          top: 0,
+          left: 0,
+          padding: '16px',
+          overflow: 'auto',
+          backgroundColor: isDarkMode ? '#0d1117' : '#ffffff'
+        }}
+      >
+        {!isStreaming && iframeRef.current && (
+          <div className="data-container">
+            <h3 className="text-xl font-medium mb-4">Database Content</h3>
+            <div className="p-4 bg-light-decorative-00 dark:bg-dark-decorative-00 rounded-lg">
+              <pre className="whitespace-pre-wrap">
+                {/*
+                  For Phase 1, we're just displaying a placeholder.
+                  In Phase 2, we'll implement actual database discovery and content display.
+                */}
+                {JSON.stringify({ message: "Database content will be displayed here in Phase 2" }, null, 2)}
+              </pre>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

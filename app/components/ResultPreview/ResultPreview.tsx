@@ -52,7 +52,10 @@ function ResultPreview({
       setActiveView('code');
     } else if (codeReady) {
       // Switch to preview when streaming ends and code is ready
-      setActiveView('preview');
+      // Maintain the previous active view if it was 'data', otherwise switch to preview
+      if (activeView !== 'data') {
+        setActiveView('preview');
+      }
     }
   }, [isStreaming, setActiveView, codeReady]);
 

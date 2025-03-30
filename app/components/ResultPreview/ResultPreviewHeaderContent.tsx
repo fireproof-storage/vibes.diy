@@ -2,8 +2,8 @@ import React from 'react';
 
 interface ResultPreviewHeaderContentProps {
   previewReady: boolean;
-  activeView: 'preview' | 'code';
-  setActiveView: (view: 'preview' | 'code') => void;
+  activeView: 'preview' | 'code' | 'data';
+  setActiveView: (view: 'preview' | 'code' | 'data') => void;
   bundlingComplete: boolean;
   isStreaming: boolean;
   code: string;
@@ -133,6 +133,43 @@ const ResultPreviewHeaderContent: React.FC<ResultPreviewHeaderContentProps> = ({
                 />
               </svg>
               <span>Code</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                if (activeView !== 'data') {
+                  setActiveView('data');
+                }
+              }}
+              className={`flex items-center space-x-1.5 rounded-md px-4 py-1.5 text-sm font-medium transition-colors ${
+                activeView === 'data'
+                  ? 'bg-light-background-00 dark:bg-dark-background-00 text-light-primary dark:text-dark-primary shadow-sm'
+                  : 'text-light-primary dark:text-dark-primary hover:bg-light-decorative-01 dark:hover:bg-dark-decorative-01'
+              }`}
+              aria-label="Switch to data viewer"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-4 w-4"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <title>Data icon</title>
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M4 7v10c0 2 1 3 3 3h10c2 0 3-1 3-3V7c0-2-1-3-3-3H7c-2 0-3 1-3 3z"
+                />
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M7 15h5m-5-4h10"
+                />
+              </svg>
+              <span>Data</span>
             </button>
           </div>
         ) : (
