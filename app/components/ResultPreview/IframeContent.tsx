@@ -361,8 +361,11 @@ const IframeContent: React.FC<IframeContentProps> = ({
 const DatabaseListView: React.FC<{ appCode: string; isDarkMode: boolean }> = ({ appCode, isDarkMode }) => {
   const [databaseNames, setDatabaseNames] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
-  const [sampleData, setSampleData] = useState<any[]>([]);
+  const [dbData, setDbData] = useState<any[]>([]);
   const [selectedDb, setSelectedDb] = useState<string | null>(null);
+  const [dataLoading, setDataLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const iframeRef = useRef<HTMLIFrameElement | null>(null);
 
   // Extract database names from app code
   useEffect(() => {
@@ -388,12 +391,29 @@ const DatabaseListView: React.FC<{ appCode: string; isDarkMode: boolean }> = ({ 
         }
       }
 
-      // Add session-based naming format
+      // Add session-based naming format - only add if it's a simple template
+      // Don't add complex templates that can't be resolved in advance
       const sessionRegex = /useFireproof\(\s*`([^`]*\$\{[^}]*\}[^`]*)`\s*\)/g;
       while ((match = sessionRegex.exec(code)) !== null) {
         if (match[1] && !names.includes(match[1])) {
-          names.push(match[1] + ' (template)'); // Mark as template since it contains variables
+          if (match[1].includes('sessionId') || match[1].includes('session')) {
+            // Add the template form but also try a real instantiation with a sample sessionId
+            names.push(match[1] + ' (template)');
+            // Try to guess a real database name by replacing sessionId with a sample value
+            const sampleDbName = match[1].replace(/\$\{sessionId\}/g, 'current-session')
+                                        .replace(/\$\{session.*?\}/g, 'current-session');
+            if (!names.includes(sampleDbName)) {
+              names.push(sampleDbName);
+            }
+          } else {
+            names.push(match[1] + ' (template)');
+          }
         }
+      }
+
+      // Try to find fireproof-chat-history DB by default as it's commonly used
+      if (!names.includes('fireproof-chat-history')) {
+        names.push('fireproof-chat-history');
       }
 
       return names;
@@ -405,7 +425,9 @@ const DatabaseListView: React.FC<{ appCode: string; isDarkMode: boolean }> = ({ 
       
       // Set the first database as selected if there's at least one
       if (names.length > 0 && !selectedDb) {
-        setSelectedDb(names[0]);
+        // Find first non-template database
+        const nonTemplateDb = names.find(name => !name.includes(' (template)'));
+        setSelectedDb(nonTemplateDb || names[0]);
       }
     } else {
       setDatabaseNames([]);
@@ -414,53 +436,80 @@ const DatabaseListView: React.FC<{ appCode: string; isDarkMode: boolean }> = ({ 
     setLoading(false);
   }, [appCode, selectedDb]);
 
-  // Generate sample data for demonstration
+  // Get iframe reference by querying the DOM
   useEffect(() => {
-    if (selectedDb) {
-      // In Phase 2, this would query the actual database
-      // For now, we'll generate sample data
-      const sampleDocs = generateSampleData(selectedDb);
-      setSampleData(sampleDocs);
-    } else {
-      setSampleData([]);
+    const iframe = document.querySelector('iframe');
+    if (iframe) {
+      iframeRef.current = iframe;
     }
+  }, []);
+
+  // Fetch real data from the database using allDocs
+  useEffect(() => {
+    if (!selectedDb || !iframeRef.current || selectedDb.includes(' (template)')) {
+      setDbData([]);
+      return;
+    }
+
+    const fetchDatabaseData = async () => {
+      try {
+        setDataLoading(true);
+        setError(null);
+
+        // Use postMessage to query the database in the iframe
+        const fetchId = `fetch-${Date.now()}`;
+        const dbName = selectedDb;
+
+        const handleMessage = (event: MessageEvent) => {
+          if (event.data && event.data.type === 'db-data-response' && event.data.fetchId === fetchId) {
+            if (event.data.error) {
+              setError(`Error loading database: ${event.data.error}`);
+              setDbData([]);
+            } else if (event.data.data) {
+              // Process the returned rows
+              const docs = event.data.data.rows.map((row: any) => row.doc);
+              setDbData(docs);
+            }
+            setDataLoading(false);
+            // Remove the event listener once we get the response
+            window.removeEventListener('message', handleMessage);
+          }
+        };
+
+        // Add event listener for the response
+        window.addEventListener('message', handleMessage);
+
+        // Request the data via postMessage
+        if (iframeRef.current?.contentWindow) {
+          iframeRef.current.contentWindow.postMessage({
+          type: 'db-query',
+          command: 'allDocs',
+          dbName: dbName,
+          fetchId: fetchId,
+          options: { include_docs: true }
+          }, '*');
+        }
+
+        // Set a timeout to clean up if we don't get a response
+        setTimeout(() => {
+          window.removeEventListener('message', handleMessage);
+          setDataLoading(false);
+          // Only set error if we're still loading
+          if (dataLoading) {
+            setError('Database query timed out. The database might not exist in this app.');
+          }
+        }, 5000);
+      } catch (err) {
+        setError(`Error: ${err instanceof Error ? err.message : String(err)}`);
+        setDataLoading(false);
+      }
+    };
+
+    fetchDatabaseData();
   }, [selectedDb]);
 
-  // Function to generate sample data based on database name
-  const generateSampleData = (dbName: string): any[] => {
-    // Remove ' (template)' suffix if it exists
-    const cleanName = dbName.replace(' (template)', '');
-    
-    // Generate different sample data based on the database name
-    if (cleanName.includes('todo')) {
-      return [
-        { _id: '1', title: 'Learn Fireproof', completed: false, priority: 'high' },
-        { _id: '2', title: 'Build an app', completed: true, priority: 'medium' },
-        { _id: '3', title: 'Share with friends', completed: false, priority: 'low' },
-      ];
-    } else if (cleanName.includes('user')) {
-      return [
-        { _id: 'user_1', name: 'Alice', email: 'alice@example.com', role: 'admin' },
-        { _id: 'user_2', name: 'Bob', email: 'bob@example.com', role: 'user' },
-      ];
-    } else if (cleanName.includes('product')) {
-      return [
-        { _id: 'prod_1', name: 'Gadget', price: 99.99, inStock: true, category: 'electronics' },
-        { _id: 'prod_2', name: 'Widget', price: 49.99, inStock: false, category: 'tools' },
-        { _id: 'prod_3', name: 'Doohickey', price: 149.99, inStock: true, category: 'electronics' },
-      ];
-    } else {
-      // Generic sample data
-      return [
-        { _id: 'doc_1', title: 'Sample Document 1', createdAt: '2025-03-30T12:30:00Z' },
-        { _id: 'doc_2', title: 'Sample Document 2', createdAt: '2025-03-30T12:45:00Z' },
-        { _id: 'doc_3', title: 'Sample Document 3', createdAt: '2025-03-30T13:00:00Z' },
-      ];
-    }
-  };
-
   // Calculate headers for the current data
-  const headers = sampleData.length > 0 ? headersForDocs(sampleData) : [];
+  const headers = dbData.length > 0 ? headersForDocs(dbData) : [];
 
   return (
     <div>
@@ -494,29 +543,47 @@ const DatabaseListView: React.FC<{ appCode: string; isDarkMode: boolean }> = ({ 
         )}
       </div>
 
-      {selectedDb && sampleData.length > 0 && (
+      {selectedDb && (
         <div className="mt-6">
           <h4 className="text-lg font-medium mb-2">
             {selectedDb.replace(' (template)', '')} Documents
-            <span className="text-sm font-normal ml-2 text-light-decorative-04 dark:text-dark-decorative-04">
-              (Sample data for Phase 1)
-            </span>
+            {selectedDb.includes(' (template)') && (
+              <span className="text-sm font-normal ml-2 text-light-decorative-04 dark:text-dark-decorative-04">
+                (Template - can't query directly)
+              </span>
+            )}
           </h4>
-          <div className="overflow-hidden rounded-lg border border-light-decorative-01 dark:border-dark-decorative-01">
-            <DynamicTable 
-              headers={headers}
-              rows={sampleData}
-              dbName={selectedDb.replace(' (template)', '')}
-              hrefFn={() => '#'}
-              onRowClick={(docId: string, dbName: string) => {
-                console.log(`View document ${docId} from database ${dbName}`);
-                // In Phase 2, this would open document details
-              }}
-            />
-          </div>
-          <p className="mt-2 text-sm text-light-decorative-04 dark:text-dark-decorative-04">
-            In Phase 2, this will display real data from the application's database.
-          </p>
+          
+          {selectedDb.includes(' (template)') ? (
+            <div className="p-4 bg-light-decorative-00 dark:bg-dark-decorative-00 rounded-lg">
+              <p>This is a template database name with variables. Select a concrete database name to view its documents.</p>
+            </div>
+          ) : error ? (
+            <div className="p-4 bg-light-decorative-00 dark:bg-dark-decorative-00 rounded-lg text-red-500">
+              {error}
+            </div>
+          ) : dataLoading ? (
+            <div className="p-4 bg-light-decorative-00 dark:bg-dark-decorative-00 rounded-lg">
+              <p>Loading data from {selectedDb}...</p>
+            </div>
+          ) : dbData.length === 0 ? (
+            <div className="p-4 bg-light-decorative-00 dark:bg-dark-decorative-00 rounded-lg">
+              <p>No documents found in the database.</p>
+            </div>
+          ) : (
+            <div className="overflow-hidden rounded-lg border border-light-decorative-01 dark:border-dark-decorative-01">
+              <DynamicTable 
+                headers={headers}
+                rows={dbData}
+                dbName={selectedDb.replace(' (template)', '')}
+                hrefFn={() => '#'}
+                onRowClick={(docId: string, dbName: string) => {
+                  console.log(`View document ${docId} from database ${dbName}`);
+                  // In a future version, this could open document details
+                }}
+              />
+            </div>
+          )}
         </div>
       )}
     </div>

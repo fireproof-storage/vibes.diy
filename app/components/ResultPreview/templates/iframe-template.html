@@ -106,6 +106,49 @@
         }
       }
 
+      // Database query handling
+      async function handleDatabaseQuery(data) {
+        try {
+          if (!data.dbName || !data.command || !data.fetchId) {
+            throw new Error('Missing required parameters: dbName, command, or fetchId');
+          }
+
+          // Dynamically import Fireproof
+          const { useFireproof } = await import('use-fireproof');
+          
+          // Get the database instance
+          const { database } = useFireproof(data.dbName);
+          if (!database) {
+            throw new Error(`Database '${data.dbName}' not found`);
+          }
+
+          let result;
+          // Execute the requested command
+          switch (data.command) {
+            case 'allDocs':
+              result = await database.allDocs(data.options || { include_docs: true });
+              break;
+            default:
+              throw new Error(`Unsupported command: ${data.command}`);
+          }
+
+          // Send the result back to the parent window
+          window.parent.postMessage({
+            type: 'db-data-response',
+            fetchId: data.fetchId,
+            data: result
+          }, '*');
+
+        } catch (error) {
+          console.error('Database query error:', error);
+          window.parent.postMessage({
+            type: 'db-data-response',
+            fetchId: data.fetchId,
+            error: error.message || 'Unknown database error'
+          }, '*');
+        }
+      }
+
       // Event listeners
       window.addEventListener('message', function (event) {
         if (event.data) {
@@ -118,6 +161,9 @@
             updateAppComponent(event.data.code);
           } else if (event.data.type === 'callai-api-key' && event.data.key) {
             window.CALLAI_API_KEY = event.data.key;
+          } else if (event.data.type === 'db-query') {
+            // Handle database query
+            handleDatabaseQuery(event.data);
           }
         }
       });
