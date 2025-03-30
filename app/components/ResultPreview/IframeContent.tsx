@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import type { IframeFiles } from './ResultPreviewTypes';
 import { CALLAI_API_KEY } from '~/config/env';
 import Editor from '@monaco-editor/react';
@@ -344,20 +344,99 @@ const IframeContent: React.FC<IframeContentProps> = ({
           backgroundColor: isDarkMode ? '#0d1117' : '#ffffff'
         }}
       >
-        {!isStreaming && iframeRef.current && (
+        {!isStreaming && (
           <div className="data-container">
-            <h3 className="text-xl font-medium mb-4">Database Content</h3>
-            <div className="p-4 bg-light-decorative-00 dark:bg-dark-decorative-00 rounded-lg">
-              <pre className="whitespace-pre-wrap">
-                {/*
-                  For Phase 1, we're just displaying a placeholder.
-                  In Phase 2, we'll implement actual database discovery and content display.
-                */}
-                {JSON.stringify({ message: "Database content will be displayed here in Phase 2" }, null, 2)}
-              </pre>
-            </div>
+            <h3 className="text-xl font-medium mb-4">Database Information</h3>
+            <DatabaseListView appCode={filesContent['/App.jsx']?.code || ''} isDarkMode={isDarkMode} />
           </div>
         )}
+      </div>
+    </div>
+  );
+};
+
+// Component to find and display database names from app code
+const DatabaseListView: React.FC<{ appCode: string; isDarkMode: boolean }> = ({ appCode, isDarkMode }) => {
+  const [databaseNames, setDatabaseNames] = useState<string[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    // Function to extract database names from app code
+    const extractDatabaseNames = (code: string): string[] => {
+      const names: string[] = [];
+      
+      // Find useFireproof calls in the code
+      // This regex looks for patterns like: useFireproof('name') or useFireproof("name") or useFireproof(`name`)
+      const regex = /useFireproof\(\s*['"`]([^'"`)]*)['"`]\s*\)/g;
+      let match;
+      
+      while ((match = regex.exec(code)) !== null) {
+        if (match[1] && !names.includes(match[1])) {
+          names.push(match[1]);
+        }
+      }
+
+      // Also look for database names defined as variables
+      // This is a simpler pattern match for common variable assignments
+      const dbNameRegex = /const\s+([a-zA-Z0-9_]+)\s*=\s*['"`]([a-zA-Z0-9_-]+)['"`].*useFireproof\(\s*\1\s*\)/g;
+      while ((match = dbNameRegex.exec(code)) !== null) {
+        if (match[2] && !names.includes(match[2])) {
+          names.push(match[2]);
+        }
+      }
+
+      // Add session-based naming format
+      const sessionRegex = /useFireproof\(\s*`([^`]*\$\{[^}]*\}[^`]*)`\s*\)/g;
+      while ((match = sessionRegex.exec(code)) !== null) {
+        if (match[1] && !names.includes(match[1])) {
+          names.push(match[1] + ' (template)'); // Mark as template since it contains variables
+        }
+      }
+
+      return names;
+    };
+
+    if (appCode) {
+      const names = extractDatabaseNames(appCode);
+      setDatabaseNames(names.length > 0 ? names : ['No database names found']);
+    } else {
+      setDatabaseNames(['No code available']);
+    }
+    
+    setLoading(false);
+  }, [appCode]);
+
+  return (
+    <div>
+      <div className="mb-4">
+        <h4 className="text-lg font-medium mb-2">Detected Databases</h4>
+        {loading ? (
+          <p>Scanning for database names...</p>
+        ) : (
+          <div className="p-4 bg-light-decorative-00 dark:bg-dark-decorative-00 rounded-lg">
+            {databaseNames.length === 0 ? (
+              <p>No database names found in the app code.</p>
+            ) : (
+              <ul className="list-disc list-inside">
+                {databaseNames.map((name, index) => (
+                  <li key={index} className="mb-1 font-mono">{name}</li>
+                ))}
+              </ul>
+            )}
+          </div>
+        )}
+      </div>
+
+      <div className="mt-6">
+        <h4 className="text-lg font-medium mb-2">Database Access</h4>
+        <div className="p-4 bg-light-decorative-00 dark:bg-dark-decorative-00 rounded-lg">
+          <p className="mb-2">Phase 2 will include:</p>
+          <ul className="list-disc list-inside">
+            <li className="mb-1">Real-time database content viewing</li>
+            <li className="mb-1">Document editing capabilities</li>
+            <li className="mb-1">Schema visualization</li>
+          </ul>
+        </div>
       </div>
     </div>
   );
