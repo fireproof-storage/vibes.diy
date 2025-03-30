@@ -4,6 +4,8 @@ import { CALLAI_API_KEY } from '~/config/env';
 import Editor from '@monaco-editor/react';
 import { shikiToMonaco } from '@shikijs/monaco';
 import { createHighlighter } from 'shiki';
+import DynamicTable from './DynamicTable';
+import { headersForDocs } from './dynamicTableHelpers';
 
 // Import the iframe template using Vite's ?raw import option
 import iframeTemplateRaw from './templates/iframe-template.html?raw';
@@ -359,9 +361,11 @@ const IframeContent: React.FC<IframeContentProps> = ({
 const DatabaseListView: React.FC<{ appCode: string; isDarkMode: boolean }> = ({ appCode, isDarkMode }) => {
   const [databaseNames, setDatabaseNames] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
+  const [sampleData, setSampleData] = useState<any[]>([]);
+  const [selectedDb, setSelectedDb] = useState<string | null>(null);
 
+  // Extract database names from app code
   useEffect(() => {
-    // Function to extract database names from app code
     const extractDatabaseNames = (code: string): string[] => {
       const names: string[] = [];
       
@@ -377,7 +381,6 @@ const DatabaseListView: React.FC<{ appCode: string; isDarkMode: boolean }> = ({ 
       }
 
       // Also look for database names defined as variables
-      // This is a simpler pattern match for common variable assignments
       const dbNameRegex = /const\s+([a-zA-Z0-9_]+)\s*=\s*['"`]([a-zA-Z0-9_-]+)['"`].*useFireproof\(\s*\1\s*\)/g;
       while ((match = dbNameRegex.exec(code)) !== null) {
         if (match[2] && !names.includes(match[2])) {
@@ -398,13 +401,66 @@ const DatabaseListView: React.FC<{ appCode: string; isDarkMode: boolean }> = ({ 
 
     if (appCode) {
       const names = extractDatabaseNames(appCode);
-      setDatabaseNames(names.length > 0 ? names : ['No database names found']);
+      setDatabaseNames(names.length > 0 ? names : []);
+      
+      // Set the first database as selected if there's at least one
+      if (names.length > 0 && !selectedDb) {
+        setSelectedDb(names[0]);
+      }
     } else {
-      setDatabaseNames(['No code available']);
+      setDatabaseNames([]);
     }
     
     setLoading(false);
-  }, [appCode]);
+  }, [appCode, selectedDb]);
+
+  // Generate sample data for demonstration
+  useEffect(() => {
+    if (selectedDb) {
+      // In Phase 2, this would query the actual database
+      // For now, we'll generate sample data
+      const sampleDocs = generateSampleData(selectedDb);
+      setSampleData(sampleDocs);
+    } else {
+      setSampleData([]);
+    }
+  }, [selectedDb]);
+
+  // Function to generate sample data based on database name
+  const generateSampleData = (dbName: string): any[] => {
+    // Remove ' (template)' suffix if it exists
+    const cleanName = dbName.replace(' (template)', '');
+    
+    // Generate different sample data based on the database name
+    if (cleanName.includes('todo')) {
+      return [
+        { _id: '1', title: 'Learn Fireproof', completed: false, priority: 'high' },
+        { _id: '2', title: 'Build an app', completed: true, priority: 'medium' },
+        { _id: '3', title: 'Share with friends', completed: false, priority: 'low' },
+      ];
+    } else if (cleanName.includes('user')) {
+      return [
+        { _id: 'user_1', name: 'Alice', email: 'alice@example.com', role: 'admin' },
+        { _id: 'user_2', name: 'Bob', email: 'bob@example.com', role: 'user' },
+      ];
+    } else if (cleanName.includes('product')) {
+      return [
+        { _id: 'prod_1', name: 'Gadget', price: 99.99, inStock: true, category: 'electronics' },
+        { _id: 'prod_2', name: 'Widget', price: 49.99, inStock: false, category: 'tools' },
+        { _id: 'prod_3', name: 'Doohickey', price: 149.99, inStock: true, category: 'electronics' },
+      ];
+    } else {
+      // Generic sample data
+      return [
+        { _id: 'doc_1', title: 'Sample Document 1', createdAt: '2025-03-30T12:30:00Z' },
+        { _id: 'doc_2', title: 'Sample Document 2', createdAt: '2025-03-30T12:45:00Z' },
+        { _id: 'doc_3', title: 'Sample Document 3', createdAt: '2025-03-30T13:00:00Z' },
+      ];
+    }
+  };
+
+  // Calculate headers for the current data
+  const headers = sampleData.length > 0 ? headersForDocs(sampleData) : [];
 
   return (
     <div>
@@ -417,27 +473,48 @@ const DatabaseListView: React.FC<{ appCode: string; isDarkMode: boolean }> = ({ 
             {databaseNames.length === 0 ? (
               <p>No database names found in the app code.</p>
             ) : (
-              <ul className="list-disc list-inside">
-                {databaseNames.map((name, index) => (
-                  <li key={index} className="mb-1 font-mono">{name}</li>
-                ))}
-              </ul>
+              <div>
+                <p className="mb-2">Select a database to view:</p>
+                <div className="flex flex-wrap gap-2">
+                  {databaseNames.map((name, index) => (
+                    <button
+                      key={index}
+                      onClick={() => setSelectedDb(name)}
+                      className={`px-3 py-1 rounded-md font-mono text-sm ${selectedDb === name 
+                        ? 'bg-blue-600 text-white' 
+                        : 'bg-light-decorative-01 dark:bg-dark-decorative-01 text-light-primary dark:text-dark-primary hover:bg-light-decorative-02 dark:hover:bg-dark-decorative-02'}`}
+                    >
+                      {name}
+                    </button>
+                  ))}
+                </div>
+              </div>
             )}
           </div>
         )}
       </div>
 
-      <div className="mt-6">
-        <h4 className="text-lg font-medium mb-2">Database Access</h4>
-        <div className="p-4 bg-light-decorative-00 dark:bg-dark-decorative-00 rounded-lg">
-          <p className="mb-2">Phase 2 will include:</p>
-          <ul className="list-disc list-inside">
-            <li className="mb-1">Real-time database content viewing</li>
-            <li className="mb-1">Document editing capabilities</li>
-            <li className="mb-1">Schema visualization</li>
-          </ul>
+      {selectedDb && sampleData.length > 0 && (
+        <div className="mt-6">
+          <h4 className="text-lg font-medium mb-2">
+            {selectedDb.replace(' (template)', '')} Documents
+            <span className="text-sm font-normal ml-2 text-light-decorative-04 dark:text-dark-decorative-04">
+              (Sample data for Phase 1)
+            </span>
+          </h4>
+          <div className="overflow-hidden rounded-lg border border-light-decorative-01 dark:border-dark-decorative-01">
+            <DynamicTable 
+              headers={headers}
+              rows={sampleData}
+              dbName={selectedDb.replace(' (template)', '')}
+              hrefFn={() => '#'}
+            />
+          </div>
+          <p className="mt-2 text-sm text-light-decorative-04 dark:text-dark-decorative-04">
+            In Phase 2, this will display real data from the application's database.
+          </p>
         </div>
-      </div>
+      )}
     </div>
   );
 };
