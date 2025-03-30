@@ -357,24 +357,94 @@ const IframeContent: React.FC<IframeContentProps> = ({
   );
 };
 
-import { useFireproof } from 'use-fireproof';
+// Component for displaying database data
+const DatabaseData: React.FC<{ dbName: string }> = ({ dbName }) => {
+  const [data, setData] = useState<any[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  
+  // Get data for a specific database
+  useEffect(() => {
+    // Skip for empty database name
+    if (!dbName) {
+      setData([]);
+      return;
+    }
+    
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        
+        // Import dynamically to avoid hooks issues in iframe
+        const { useFireproof } = await import('use-fireproof');
+        const { database } = useFireproof(dbName);
+        const result = await database.allDocs({ includeDocs: true });
+        
+        if (result?.rows) {
+          const docs = result.rows.map((row: any) => row.doc).filter(Boolean);
+          setData(docs);
+        } else {
+          setData([]);
+        }
+      } catch (err) {
+        console.error('Database query error:', err);
+        setError(`Error: ${err instanceof Error ? err.message : String(err)}`);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    fetchData();
+  }, [dbName]);
+  
+  // Calculate headers for the current data
+  const headers = data.length > 0 ? headersForDocs(data) : [];
+  
+  if (loading) {
+    return (
+      <div className="p-4 bg-light-decorative-00 dark:bg-dark-decorative-00 rounded-lg">
+        <p>Loading data from {dbName}...</p>
+      </div>
+    );
+  }
+  
+  if (error) {
+    return (
+      <div className="p-4 bg-light-decorative-00 dark:bg-dark-decorative-00 rounded-lg text-red-500">
+        {error}
+      </div>
+    );
+  }
+  
+  if (data.length === 0) {
+    return (
+      <div className="p-4 bg-light-decorative-00 dark:bg-dark-decorative-00 rounded-lg">
+        <p>No documents found in the database.</p>
+      </div>
+    );
+  }
+  
+  return (
+    <div className="overflow-hidden rounded-lg border border-light-decorative-01 dark:border-dark-decorative-01">
+      <DynamicTable 
+        headers={headers}
+        rows={data}
+        dbName={dbName}
+        hrefFn={() => '#'}
+        onRowClick={(docId: string, dbName: string) => {
+          console.log(`View document ${docId} from database ${dbName}`);
+        }}
+      />
+    </div>
+  );
+};
 
 // Component to find and display database names from app code
 const DatabaseListView: React.FC<{ appCode: string; isDarkMode: boolean }> = ({ appCode, isDarkMode }) => {
   const [databaseNames, setDatabaseNames] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedDb, setSelectedDb] = useState<string | null>(null);
-  
-  // Only create a database instance when a valid database name is selected
-  const cleanDbName = selectedDb && !selectedDb.includes(' (template)') ? 
-    selectedDb.replace(' (template)', '') : null;
-  
-  // This is at the component level, so it's valid to use hooks here
-  const { database } = useFireproof(cleanDbName || '');
-  const [isLoading, setIsLoading] = useState(false);
-  
-  const [dbData, setDbData] = useState<any[]>([]);
-  const [error, setError] = useState<string | null>(null);
 
   // Extract database names from app code
   useEffect(() => {
@@ -445,40 +515,72 @@ const DatabaseListView: React.FC<{ appCode: string; isDarkMode: boolean }> = ({ 
     setLoading(false);
   }, [appCode, selectedDb]);
 
-  // When the database or selectedDb changes, load the data
+  // Only handle extracting database names
   useEffect(() => {
-    const loadData = async () => {
-      // Reset any previous data and errors
-      setDbData([]);
-      setError(null);
+    const extractDatabaseNames = (code: string): string[] => {
+      const names: string[] = [];
       
-      // Skip if no valid database is selected
-      if (!cleanDbName || !database) return;
+      // Find useFireproof calls in the code
+      const regex = /useFireproof\(\s*['"`]([^'"`)]*)['"`]\s*\)/g;
+      let match;
       
-      try {
-        setIsLoading(true);
-        // Simply query the database - the database instance is from the hook at component level
-        const result = await database.allDocs({ includeDocs: true });
-        
-        if (result && result.rows) {
-          // Process the returned rows
-          const docs = result.rows.map((row: any) => row.doc).filter(Boolean);
-          setDbData(docs);
+      while ((match = regex.exec(code)) !== null) {
+        if (match[1] && !names.includes(match[1])) {
+          names.push(match[1]);
         }
-        setIsLoading(false);
-      } catch (err) {
-        console.error('Database query error:', err);
-        setError(`Error: ${err instanceof Error ? err.message : String(err)}`);
-        setIsLoading(false);
       }
+
+      // Also look for database names defined as variables
+      const dbNameRegex = /const\s+([a-zA-Z0-9_]+)\s*=\s*['"`]([a-zA-Z0-9_-]+)['"`].*useFireproof\(\s*\1\s*\)/g;
+      while ((match = dbNameRegex.exec(code)) !== null) {
+        if (match[2] && !names.includes(match[2])) {
+          names.push(match[2]);
+        }
+      }
+
+      // Add session-based naming format as templates
+      const sessionRegex = /useFireproof\(\s*`([^`]*\$\{[^}]*\}[^`]*)`\s*\)/g;
+      while ((match = sessionRegex.exec(code)) !== null) {
+        if (match[1] && !names.includes(match[1])) {
+          names.push(match[1] + ' (template)');
+          
+          // Try to guess a real database name for session templates
+          if (match[1].includes('sessionId') || match[1].includes('session')) {
+            const sampleDbName = match[1].replace(/\$\{sessionId\}/g, 'current-session')
+                                      .replace(/\$\{session.*?\}/g, 'current-session');
+            if (!names.includes(sampleDbName)) {
+              names.push(sampleDbName);
+            }
+          }
+        }
+      }
+
+      // Try to find fireproof-chat-history DB by default
+      if (!names.includes('fireproof-chat-history')) {
+        names.push('fireproof-chat-history');
+      }
+
+      return names;
     };
+
+    if (appCode) {
+      const names = extractDatabaseNames(appCode);
+      setDatabaseNames(names.length > 0 ? names : []);
+      
+      // Set the first database as selected if there's at least one
+      if (names.length > 0 && !selectedDb) {
+        // Find first non-template database
+        const nonTemplateDb = names.find(name => !name.includes(' (template)'));
+        setSelectedDb(nonTemplateDb || names[0]);
+      }
+    } else {
+      setDatabaseNames([]);
+    }
     
-    loadData();
-  }, [database, cleanDbName]);
+    setLoading(false);
+  }, [appCode, selectedDb]);
 
-  // Calculate headers for the current data
-  const headers = dbData.length > 0 ? headersForDocs(dbData) : [];
-
+  // Clean view with clear separation of concerns
   return (
     <div>
       <div className="mb-4">
@@ -526,31 +628,9 @@ const DatabaseListView: React.FC<{ appCode: string; isDarkMode: boolean }> = ({ 
             <div className="p-4 bg-light-decorative-00 dark:bg-dark-decorative-00 rounded-lg">
               <p>This is a template database name with variables. Select a concrete database name to view its documents.</p>
             </div>
-          ) : error ? (
-            <div className="p-4 bg-light-decorative-00 dark:bg-dark-decorative-00 rounded-lg text-red-500">
-              {error}
-            </div>
-          ) : isLoading ? (
-            <div className="p-4 bg-light-decorative-00 dark:bg-dark-decorative-00 rounded-lg">
-              <p>Loading data from {selectedDb}...</p>
-            </div>
-          ) : dbData.length === 0 ? (
-            <div className="p-4 bg-light-decorative-00 dark:bg-dark-decorative-00 rounded-lg">
-              <p>No documents found in the database.</p>
-            </div>
           ) : (
-            <div className="overflow-hidden rounded-lg border border-light-decorative-01 dark:border-dark-decorative-01">
-              <DynamicTable 
-                headers={headers}
-                rows={dbData}
-                dbName={selectedDb.replace(' (template)', '')}
-                hrefFn={() => '#'}
-                onRowClick={(docId: string, dbName: string) => {
-                  console.log(`View document ${docId} from database ${dbName}`);
-                  // In a future version, this could open document details
-                }}
-              />
-            </div>
+            // Pass the database name as a prop to a separate component
+            <DatabaseData dbName={selectedDb} />
           )}
         </div>
       )}
