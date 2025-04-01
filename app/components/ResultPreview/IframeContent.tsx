@@ -47,8 +47,8 @@ const IframeContent: React.FC<IframeContentProps> = ({
   const userScrolledRef = useRef<boolean>(false);
   // Store the last scroll top position to detect user-initiated scrolls
   const lastScrollTopRef = useRef<number>(0);
-  // Store the last viewport height (keeping for future use)
-  // const lastViewportHeightRef = useRef<number>(0);
+  // Store the last viewport height for auto-scrolling
+  const lastViewportHeightRef = useRef<number>(0);
 
   // Theme detection is now handled in the parent component
 
@@ -202,38 +202,82 @@ const IframeContent: React.FC<IframeContentProps> = ({
             wordWrap: 'on',
             padding: { top: 16 },
           }}
-          onMount={(editor, monaco) => {
+          onMount={async (editor, monaco) => {
             // Store the editor instance for later reference
             monacoEditorRef.current = editor;
 
-            // Set up Shiki highlighter for better syntax highlighting
-            createHighlighter({
-              themes: [isDarkMode ? 'github-dark' : 'github-light'],
-              langs: ['javascript', 'typescript', 'jsx', 'tsx'],
-            }).then(async (highlighter) => {
+            // Configure JavaScript language to support JSX
+            monaco.languages.typescript.javascriptDefaults.setCompilerOptions({
+              jsx: monaco.languages.typescript.JsxEmit.React,
+              jsxFactory: 'React.createElement',
+              reactNamespace: 'React',
+              allowNonTsExtensions: true,
+              allowJs: true,
+              target: monaco.languages.typescript.ScriptTarget.Latest,
+            });
+
+            // Set editor options for better visualization
+            editor.updateOptions({
+              tabSize: 2,
+              bracketPairColorization: { enabled: true },
+              guides: { bracketPairs: true },
+            });
+
+            // Register the language IDs first
+            monaco.languages.register({ id: 'jsx' });
+            monaco.languages.register({ id: 'javascript' });
+
+            // Add auto-scrolling for streaming code
+            if (isStreaming && !codeReady) {
+              let lastScrollTime = 0;
+              const scrollThrottleMs = 30;
+
+              // Initialize positions
+              lastScrollTime = Date.now();
+              lastScrollTopRef.current = editor.getScrollTop();
+              lastViewportHeightRef.current = editor.getLayoutInfo().height;
+
+              // Auto-scroll on content change, but only if user hasn't manually scrolled
+              const contentDisposable = editor.onDidChangeModelContent(() => {
+                const now = Date.now();
+                if (now - lastScrollTime > scrollThrottleMs && !userScrolledRef.current) {
+                  lastScrollTime = now;
+                  const model = editor.getModel();
+                  if (model) {
+                    const lineCount = model.getLineCount();
+                    editor.revealLineNearTop(lineCount);
+                  }
+                }
+              });
+
+              // Store disposable for cleanup
+              disposablesRef.current.push(contentDisposable);
+            }
+
+            try {
+              // Create the Shiki highlighter with both light and dark themes
+              const highlighter = await createHighlighter({
+                themes: ['github-dark', 'github-light'],
+                langs: ['javascript', 'jsx', 'typescript', 'tsx'],
+              });
+              // Store highlighter reference for theme switching
               highlighterRef.current = highlighter;
 
-              try {
-                // Apply Shiki syntax highlighting to Monaco
-                await shikiToMonaco(highlighter, monaco);
+              // Apply Shiki to Monaco
+              await shikiToMonaco(highlighter, monaco);
 
-                // Add a simple disposable for cleanup
-                disposablesRef.current.push({
-                  dispose: () => {
-                    // Basic cleanup function for the highlighter
-                    if (highlighterRef.current) {
-                      // Nothing specific needed to dispose highlighter
-                      highlighterRef.current = null;
-                    }
-                  },
-                });
-              } catch (err) {
-                console.error('Error applying Shiki to Monaco:', err);
+              // Set theme based on current dark mode state
+              const currentTheme = isDarkMode ? 'github-dark' : 'github-light';
+              monaco.editor.setTheme(currentTheme);
+
+              // Make sure the model uses JSX highlighting
+              const model = editor.getModel();
+              if (model) {
+                monaco.editor.setModelLanguage(model, 'jsx');
               }
-
-              // Apply the theme immediately after setup
-              monaco.editor.setTheme(isDarkMode ? 'github-dark' : 'github-light');
-            });
+            } catch (error) {
+              console.warn('Shiki highlighter setup failed:', error);
+            }
 
             // Handle scroll events to detect manual user scrolling
             editor.onDidScrollChange((e) => {

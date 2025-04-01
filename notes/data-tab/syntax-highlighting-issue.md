@@ -1,14 +1,17 @@
 # Syntax Highlighting Issue Analysis
 
 ## Issue Description
+
 Syntax highlighting was lost in the code preview when the new data tab implementation was added.
 
 ## Root Cause
+
 The changes to `IframeContent.tsx` significantly simplified the Monaco editor setup, but removed critical syntax highlighting configuration:
 
 ### Key Changes That Caused the Issue:
 
-1. **Language Registration Removed**: 
+1. **Language Registration Removed**:
+
    ```typescript
    // These registrations were removed
    monacoInstance.languages.register({ id: 'jsx' });
@@ -16,6 +19,7 @@ The changes to `IframeContent.tsx` significantly simplified the Monaco editor se
    ```
 
 2. **JSX Configuration Removed**:
+
    ```typescript
    // This configuration was removed
    monacoInstance.languages.typescript.javascriptDefaults.setCompilerOptions({
@@ -29,6 +33,7 @@ The changes to `IframeContent.tsx` significantly simplified the Monaco editor se
    ```
 
 3. **Model Language Setting Removed**:
+
    ```typescript
    // This critical setting was removed
    const model = editor.getModel();
@@ -48,10 +53,11 @@ The changes to `IframeContent.tsx` significantly simplified the Monaco editor se
    ```
 
 ## Fix Recommendation
+
 Restore the critical Monaco editor configuration while maintaining the new data tab functionality:
 
 1. Re-add the language registrations
-2. Re-add the JSX configuration 
+2. Re-add the JSX configuration
 3. Re-add the model language setting
 4. Re-add the editor visual enhancements
 

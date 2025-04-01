@@ -6,8 +6,6 @@ import { useFireproof } from 'use-fireproof';
 
 // Component for displaying database data
 const DatabaseData: React.FC<{ dbName: string }> = ({ dbName }) => {
-
-  
   if (!dbName) {
     throw new Error('No valid database name provided');
   }
@@ -19,8 +17,6 @@ const DatabaseData: React.FC<{ dbName: string }> = ({ dbName }) => {
   // In Fireproof, useLiveQuery returns docs and potentially other properties
   const queryResult = useLiveQuery('_id');
   const docs = queryResult?.docs || [];
-
-
 
   const headers = docs.length > 0 ? headersForDocs(docs) : [];
 

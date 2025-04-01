@@ -13,7 +13,8 @@
     "test": "DISABLE_REACT_ROUTER=true vitest run",
     "test:watch": "vitest",
     "file-issues": "scripts/create-issues.sh",
-    "test:file-issues": "scripts/test-issues.sh"
+    "test:file-issues": "scripts/test-issues.sh",
+    "check": "pnpm format:check && pnpm typecheck && pnpm test"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.36.3",
