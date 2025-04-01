@@ -100,7 +100,7 @@ const DatabaseListView: React.FC<{ appCode: string; isDarkMode: boolean }> = ({
           <h4 className="mb-2 text-lg font-medium">{selectedDb} Documents</h4>
 
           {/* Pass the database name as a prop to the DatabaseData component */}
-          <DatabaseData dbName={selectedDb} />
+          <DatabaseData dbName={selectedDb} key={selectedDb}/>
         </div>
       )}
     </div>

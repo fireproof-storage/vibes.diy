@@ -6,8 +6,8 @@ import { useFireproof } from 'use-fireproof';
 
 // Component for displaying database data
 const DatabaseData: React.FC<{ dbName: string }> = ({ dbName }) => {
-  console.log('DatabaseData props:', { dbName });
-  // Throw error if no valid database name is provided
+
+  
   if (!dbName) {
     throw new Error('No valid database name provided');
   }
@@ -20,10 +20,7 @@ const DatabaseData: React.FC<{ dbName: string }> = ({ dbName }) => {
   const queryResult = useLiveQuery('_id');
   const docs = queryResult?.docs || [];
 
-  console.log(
-    'Docs:',
-    docs.map((d) => d._id)
-  );
+
 
   const headers = docs.length > 0 ? headersForDocs(docs) : [];
 
@@ -37,9 +34,6 @@ const DatabaseData: React.FC<{ dbName: string }> = ({ dbName }) => {
 
   return (
     <div className="border-light-decorative-01 dark:border-dark-decorative-01 overflow-hidden rounded-lg border">
-      <div className="bg-light-decorative-00 dark:bg-dark-decorative-00 rounded-lg p-4">
-        {database.name}
-      </div>
       <DynamicTable
         headers={headers}
         rows={docs}
