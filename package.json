@@ -23,7 +23,7 @@
     "@react-router/serve": "^7.1.5",
     "@shikijs/monaco": "^3.2.1",
     "@tailwindcss/typography": "^0.5.16",
-    "call-ai": "0.5.0",
+    "call-ai": "0.6.0",
     "isbot": "^5.1.17",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",

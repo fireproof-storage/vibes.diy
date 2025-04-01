@@ -43,7 +43,7 @@ Provide a title and brief explanation followed by the component code. The compon
 Begin the component with the import statements. Use react, use-fireproof, and call-ai:
 
 \`\`\`js
-import { ... } from "react" // if needed
+import React, { ... } from "react"
 import { useFireproof } from "use-fireproof"
 import { callAI } from "call-ai"
 // other imports only when requested
