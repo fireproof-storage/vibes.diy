@@ -92,22 +92,11 @@ const DatabaseListView: React.FC<{ appCode: string; isDarkMode: boolean }> = ({ 
       {selectedDb && (
         <div className="mt-6">
           <h4 className="text-lg font-medium mb-2">
-            {selectedDb.replace(' (template)', '')} Documents
-            {selectedDb.includes(' (template)') && (
-              <span className="text-sm font-normal ml-2 text-light-decorative-04 dark:text-dark-decorative-04">
-                (Template - can't query directly)
-              </span>
-            )}
+            {selectedDb} Documents
           </h4>
           
-          {selectedDb.includes(' (template)') ? (
-            <div className="p-4 bg-light-decorative-00 dark:bg-dark-decorative-00 rounded-lg">
-              <p>This is a template database name with variables. Select a concrete database name to view its documents.</p>
-            </div>
-          ) : (
-            // Pass the database name as a prop to a separate component
-            <DatabaseData dbName={selectedDb} />
-          )}
+          {/* Pass the database name as a prop to the DatabaseData component */}
+          <DatabaseData dbName={selectedDb} />
         </div>
       )}
     </div>
