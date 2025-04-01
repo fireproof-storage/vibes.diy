@@ -16,7 +16,7 @@ export default function DynamicTable({
           <tr key={'header' + Math.random()}>
             {headers.map((header: string) => (
               <th key={header} scope="col" className="text-11 text-gray-500 dark:text-gray-400 px-[15px] py-[8px]">
-                {header === '_id' ? 'document id' : header}
+                {header === '_id' ? 'doc id' : header}
               </th>
             ))}
           </tr>
@@ -37,11 +37,11 @@ export default function DynamicTable({
                     scope="row"
                     className="text-14 px-[15px] py-[12px] whitespace-nowrap"
                   >
-                    {formatTableCellContent(fields[header])}
+                    {formatTableCellContent(fields[header], header)}
                   </th>
                 ) : (
                   <td key={header} className="px-[15px] py-[12px]">
-                    {formatTableCellContent(fields[header])}
+                    {formatTableCellContent(fields[header], header)}
                   </td>
                 )
               )}
@@ -53,8 +53,9 @@ export default function DynamicTable({
   );
 }
 
-function formatTableCellContent(obj: any): string {
+function formatTableCellContent(obj: any, header: string): string {
   if (obj === undefined) return '';
+  if (header === '_id') return obj.substring(0, 4) + '..' + obj.substring(obj.length - 4);
   const strOut = typeof obj === 'string' ? obj : JSON.stringify(obj, null, 2);
   return strOut.length > 100 ? `${strOut.substring(0, 100)}...` : strOut;
 }
