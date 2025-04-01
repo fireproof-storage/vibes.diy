@@ -135,19 +135,15 @@
     <script type="importmap">
       {
         "imports": {
-          "react": "https://esm.sh/react@19.0.0/es2022/react.mjs",
-          "react-dom": "https://esm.sh/react-dom@19.0.0/es2022/react-dom.mjs",
-          "react-dom/client": "https://esm.sh/react-dom@19.0.0/es2022/client.mjs",
-          "use-fireproof": "https://esm.sh/use-fireproof@0.20.0-dev-preview-57",
-          "call-ai": "https://esm.sh/call-ai@0.5.0"
+          "react": "https://esm.sh/stable/react@19.0.0/es2022/react.mjs",
+          "react-dom": "https://esm.sh/stable/react-dom@19.0.0/es2022/react-dom.mjs",
+          "react-dom/client": "https://esm.sh/stable/react-dom@19.0.0/es2022/client.mjs",
+          "use-fireproof": "https://esm.sh/stable/use-fireproof@0.20.0-dev-preview-57",
+          "call-ai": "https://esm.sh/stable/call-ai@0.5.0"
         }
       }
     </script>
-    <script
-      type="text/babel"
-      data-type="module"
-      data-plugins="transform-react-jsx,proposal-nullish-coalescing-operator,proposal-class-properties,proposal-private-methods,proposal-optional-chaining,transform-react-constant-elements"
-    >
+    <script type="text/babel" data-type="module">
       import ReactDOMClient from 'react-dom/client';
 
       // APP_CODE placeholder will be replaced with actual code

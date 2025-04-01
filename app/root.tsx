@@ -55,15 +55,14 @@ function useThemeDetection() {
   useEffect(() => {
     // Console log for debugging in production
     console.log('Theme detection running');
-
+    
     // Check if user has dark mode preference
     const prefersDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches;
     console.log('Dark mode preference detected:', prefersDarkMode);
 
     // Additional iOS check - iOS might need extra detection
-    const isIOS =
-      /iPad|iPhone|iPod/.test(navigator.userAgent) ||
-      (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || 
+                  (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
     console.log('iOS device detected:', isIOS);
 
     // Apply initial theme
