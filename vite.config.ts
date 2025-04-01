@@ -24,9 +24,7 @@ export default defineConfig(({ command, mode }: ConfigEnv): UserConfig => {
       host: '0.0.0.0', // Listen on all local IPs
       allowedHosts: ['.ngrok-free.app'], // Specific ngrok hostname
       cors: true, // Enable CORS for all origins
-      hmr: {
-        clientPort: 443, // Use the HTTPS port for HMR when tunneling
-      },
+      hmr: true, // Use default HMR settings for local development
     },
     // Ensure JSON imports are properly handled
     json: {

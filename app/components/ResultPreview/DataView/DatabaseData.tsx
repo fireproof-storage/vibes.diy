@@ -29,7 +29,7 @@ const DatabaseData: React.FC<{ dbName: string }> = ({ dbName }) => {
   }
 
   return (
-    <div className="border-light-decorative-01 dark:border-dark-decorative-01 overflow-hidden rounded-lg border">
+    <div className="">
       <DynamicTable
         headers={headers}
         rows={docs}
