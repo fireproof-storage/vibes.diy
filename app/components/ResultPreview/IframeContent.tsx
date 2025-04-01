@@ -308,7 +308,7 @@ const IframeContent: React.FC<IframeContentProps> = ({
           width: '100%',
           top: 0,
           left: 0,
-          padding: '16px',
+          padding: '0px',
           overflow: 'auto',
           backgroundColor: isDarkMode ? '#0d1117' : '#ffffff',
         }}

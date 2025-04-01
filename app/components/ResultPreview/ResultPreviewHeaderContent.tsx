@@ -1,4 +1,5 @@
 import React from 'react';
+import { useNavigate, useParams } from 'react-router';
 
 interface ResultPreviewHeaderContentProps {
   previewReady: boolean;
@@ -9,6 +10,8 @@ interface ResultPreviewHeaderContentProps {
   code: string;
   setMobilePreviewShown: (shown: boolean) => void;
   dependencies?: Record<string, string>;
+  sessionId?: string;
+  title?: string;
 }
 
 const ResultPreviewHeaderContent: React.FC<ResultPreviewHeaderContentProps> = ({
@@ -19,7 +22,15 @@ const ResultPreviewHeaderContent: React.FC<ResultPreviewHeaderContentProps> = ({
   isStreaming,
   code,
   setMobilePreviewShown,
+  sessionId: propSessionId,
+  title: propTitle,
 }) => {
+  const navigate = useNavigate();
+  const { sessionId: paramSessionId, title: paramTitle } = useParams<{ sessionId: string; title: string }>();
+  
+  // Use props if provided, otherwise use params from the URL
+  const sessionId = propSessionId || paramSessionId;
+  const title = propTitle || paramTitle;
   const showSwitcher = code.length > 0;
 
   return (
@@ -56,7 +67,12 @@ const ResultPreviewHeaderContent: React.FC<ResultPreviewHeaderContentProps> = ({
           <div className="bg-light-decorative-00 dark:bg-dark-decorative-00 flex justify-center gap-1 rounded-lg p-1 shadow-sm">
             <button
               type="button"
-              onClick={() => setActiveView('preview')}
+              onClick={() => {
+                setActiveView('preview');
+                if (sessionId && title) {
+                  navigate(`/chat/${sessionId}/${title}/app`);
+                }
+              }}
               className={`flex items-center justify-center space-x-1 sm:space-x-1.5 rounded-md px-3 sm:px-4 py-1.5 text-xs sm:text-sm font-medium transition-colors ${
                 activeView === 'preview'
                   ? 'bg-light-background-00 dark:bg-dark-background-00 text-light-primary dark:text-dark-primary shadow-sm'
@@ -95,7 +111,9 @@ const ResultPreviewHeaderContent: React.FC<ResultPreviewHeaderContentProps> = ({
               onClick={() => {
                 if (activeView !== 'code') {
                   setActiveView('code');
-                  // codeReady state has been removed as it's no longer needed
+                  if (sessionId && title) {
+                    navigate(`/chat/${sessionId}/${title}/code`);
+                  }
                 }
               }}
               className={`flex items-center justify-center space-x-1 sm:space-x-1.5 rounded-md px-3 sm:px-4 py-1.5 text-xs sm:text-sm font-medium transition-colors ${
@@ -127,6 +145,9 @@ const ResultPreviewHeaderContent: React.FC<ResultPreviewHeaderContentProps> = ({
               onClick={() => {
                 if (!isStreaming && activeView !== 'data') {
                   setActiveView('data');
+                  if (sessionId && title) {
+                    navigate(`/chat/${sessionId}/${title}/data`);
+                  }
                 }
               }}
               disabled={isStreaming}
@@ -134,7 +155,7 @@ const ResultPreviewHeaderContent: React.FC<ResultPreviewHeaderContentProps> = ({
                 activeView === 'data'
                   ? 'bg-light-background-00 dark:bg-dark-background-00 text-light-primary dark:text-dark-primary shadow-sm'
                   : isStreaming
-                    ? 'text-light-primary/50 dark:text-dark-primary/50 cursor-not-allowed'
+                    ? 'text-light-primary/50 dark:text-dark-primary/50 cursor-not-allowed opacity-50'
                     : 'text-light-primary dark:text-dark-primary hover:bg-light-decorative-01 dark:hover:bg-dark-decorative-01'
               }`}
               aria-label={isStreaming ? "Data tab unavailable during streaming" : "Switch to data viewer"}

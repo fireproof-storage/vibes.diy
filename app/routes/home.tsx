@@ -47,7 +47,11 @@ export default function UnifiedSession() {
   const handlePreviewLoaded = useCallback(() => {
     setPreviewReady(true);
     setMobilePreviewShown(true);
-  }, []);
+    setActiveView('preview');
+    if (chatState.sessionId && chatState.title) {
+      navigate(`/chat/${chatState.sessionId}/${encodeTitle(chatState.title)}/app`, { replace: true });
+    }
+  }, [chatState.sessionId, chatState.title, navigate]);
 
   useEffect(() => {
     if (chatState.title) {
@@ -110,8 +114,12 @@ export default function UnifiedSession() {
   useEffect(() => {
     if (chatState.selectedCode?.content) {
       setMobilePreviewShown(true);
+      setActiveView('preview');
+      if (chatState.sessionId && chatState.title) {
+        navigate(`/chat/${chatState.sessionId}/${encodeTitle(chatState.title)}/app`, { replace: true });
+      }
     }
-  }, [chatState.selectedCode]);
+  }, [chatState.selectedCode, chatState.sessionId, chatState.title, navigate]);
 
   // useEffect(() => {
   //   console.log('chatState.sessionId', chatState.sessionId);
@@ -132,6 +140,8 @@ export default function UnifiedSession() {
               isStreaming={chatState.isStreaming}
               code={chatState.selectedCode?.content}
               dependencies={chatState.selectedDependencies || {}}
+              sessionId={chatState.sessionId || undefined}
+              title={chatState.title || undefined}
             />
           ) : null
         }
