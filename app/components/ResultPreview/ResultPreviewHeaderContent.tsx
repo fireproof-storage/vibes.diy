@@ -16,14 +16,15 @@ const ResultPreviewHeaderContent: React.FC<ResultPreviewHeaderContentProps> = ({
   activeView,
   setActiveView,
   bundlingComplete,
+  isStreaming,
   code,
   setMobilePreviewShown,
 }) => {
   const showSwitcher = code.length > 0;
 
   return (
-    <div className="flex h-full w-full items-center justify-between px-2 py-4">
-      <div className="flex items-center space-x-2">
+    <div className="flex h-full w-full items-center px-2 py-4">
+      <div className="w-1/4 flex items-center justify-start">
         <button
           type="button"
           onClick={() => setMobilePreviewShown(false)}
@@ -46,12 +47,17 @@ const ResultPreviewHeaderContent: React.FC<ResultPreviewHeaderContentProps> = ({
           </svg>
         </button>
 
+        {showSwitcher ? null : <div className="h-10"></div>}
+      </div>
+      
+      {/* Center buttons */}
+      <div className="w-2/4 flex justify-center items-center">
         {showSwitcher ? (
-          <div className="bg-light-decorative-00 dark:bg-dark-decorative-00 flex space-x-1 rounded-lg p-1 shadow-sm">
+          <div className="bg-light-decorative-00 dark:bg-dark-decorative-00 flex justify-center gap-1 rounded-lg p-1 shadow-sm">
             <button
               type="button"
               onClick={() => setActiveView('preview')}
-              className={`flex items-center space-x-1.5 rounded-md px-4 py-1.5 text-sm font-medium transition-colors ${
+              className={`flex items-center justify-center space-x-1 sm:space-x-1.5 rounded-md px-3 sm:px-4 py-1.5 text-xs sm:text-sm font-medium transition-colors ${
                 activeView === 'preview'
                   ? 'bg-light-background-00 dark:bg-dark-background-00 text-light-primary dark:text-dark-primary shadow-sm'
                   : 'text-light-primary dark:text-dark-primary' +
@@ -82,7 +88,7 @@ const ResultPreviewHeaderContent: React.FC<ResultPreviewHeaderContentProps> = ({
                   d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
                 />
               </svg>
-              <span>App</span>
+              <span className="hidden min-[480px]:inline">App</span>
             </button>
             <button
               type="button"
@@ -92,7 +98,7 @@ const ResultPreviewHeaderContent: React.FC<ResultPreviewHeaderContentProps> = ({
                   // codeReady state has been removed as it's no longer needed
                 }
               }}
-              className={`flex items-center space-x-1.5 rounded-md px-4 py-1.5 text-sm font-medium transition-colors ${
+              className={`flex items-center justify-center space-x-1 sm:space-x-1.5 rounded-md px-3 sm:px-4 py-1.5 text-xs sm:text-sm font-medium transition-colors ${
                 activeView === 'code'
                   ? 'bg-light-background-00 dark:bg-dark-background-00 text-light-primary dark:text-dark-primary shadow-sm'
                   : 'text-light-primary dark:text-dark-primary hover:bg-light-decorative-01 dark:hover:bg-dark-decorative-01'
@@ -101,7 +107,7 @@ const ResultPreviewHeaderContent: React.FC<ResultPreviewHeaderContentProps> = ({
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
-                className="h-4 w-4"
+                className="h-3.5 w-3.5 sm:h-4 sm:w-4"
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
@@ -114,25 +120,29 @@ const ResultPreviewHeaderContent: React.FC<ResultPreviewHeaderContentProps> = ({
                   d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"
                 />
               </svg>
-              <span>Code</span>
+              <span className="hidden min-[480px]:inline">Code</span>
             </button>
             <button
               type="button"
               onClick={() => {
-                if (activeView !== 'data') {
+                if (!isStreaming && activeView !== 'data') {
                   setActiveView('data');
                 }
               }}
-              className={`flex items-center space-x-1.5 rounded-md px-4 py-1.5 text-sm font-medium transition-colors ${
+              disabled={isStreaming}
+              className={`flex items-center justify-center space-x-1 sm:space-x-1.5 rounded-md px-3 sm:px-4 py-1.5 text-xs sm:text-sm font-medium transition-colors ${
                 activeView === 'data'
                   ? 'bg-light-background-00 dark:bg-dark-background-00 text-light-primary dark:text-dark-primary shadow-sm'
-                  : 'text-light-primary dark:text-dark-primary hover:bg-light-decorative-01 dark:hover:bg-dark-decorative-01'
+                  : isStreaming
+                    ? 'text-light-primary/50 dark:text-dark-primary/50 cursor-not-allowed'
+                    : 'text-light-primary dark:text-dark-primary hover:bg-light-decorative-01 dark:hover:bg-dark-decorative-01'
               }`}
-              aria-label="Switch to data viewer"
+              aria-label={isStreaming ? "Data tab unavailable during streaming" : "Switch to data viewer"}
+              title={isStreaming ? "Data tab available after streaming completes" : "View database data"}
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
-                className="h-4 w-4"
+                className={`h-3.5 w-3.5 sm:h-4 sm:w-4 ${isStreaming ? 'opacity-50' : ''}`}
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
@@ -151,26 +161,27 @@ const ResultPreviewHeaderContent: React.FC<ResultPreviewHeaderContentProps> = ({
                   d="M7 15h5m-5-4h10"
                 />
               </svg>
-              <span>Data</span>
+              <span className="hidden min-[480px]:inline">Data</span>
             </button>
           </div>
-        ) : (
-          <div className="h-10"></div>
-        )}
+        ) : null}
       </div>
-      {code ? (
-        <div className="flex items-center gap-2">
-          <div className="bg-light-decorative-00 dark:bg-dark-decorative-00 flex space-x-1 rounded-lg p-1 shadow-sm">
+      
+      {/* Right side */}
+      <div className="w-1/4 flex justify-end">
+        {code ? (
+          <div className="flex items-center gap-2">
+          <div className="bg-light-decorative-00 dark:bg-dark-decorative-00 flex justify-center gap-1 rounded-lg p-1 shadow-sm">
             <a
               href="https://connect.fireproof.storage/login"
               target="_blank"
               rel="noopener noreferrer"
-              className="text-light-primary dark:text-dark-primary hover:bg-light-decorative-01 dark:hover:bg-dark-decorative-01 flex items-center space-x-1.5 rounded-md px-4 py-1.5 text-sm font-medium transition-colors"
+              className="text-light-primary dark:text-dark-primary hover:bg-light-decorative-01 dark:hover:bg-dark-decorative-01 flex items-center justify-center space-x-1 sm:space-x-1.5 rounded-md px-3 sm:px-4 py-1.5 text-xs sm:text-sm font-medium transition-colors"
               aria-label="Connect"
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
-                className="h-4 w-4"
+                className="h-3.5 w-3.5 sm:h-4 sm:w-4"
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
@@ -183,13 +194,14 @@ const ResultPreviewHeaderContent: React.FC<ResultPreviewHeaderContentProps> = ({
                   d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"
                 />
               </svg>
-              <span className="hidden sm:inline">Share</span>
+              <span className="hidden min-[480px]:inline">Share</span>
             </a>
           </div>
         </div>
       ) : (
-        <div className="h-10 w-10"></div>
-      )}
+          <div className="h-10 w-10"></div>
+        )}
+      </div>
     </div>
   );
 };

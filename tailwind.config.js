@@ -5,6 +5,12 @@ export default {
   theme: {
     extend: {
       // Colors are now defined in app.css using @theme
+      screens: {
+        'xs': '480px',
+      },
+      animation: {
+        'spin-slow': 'spin 3s linear infinite',
+      },
     },
   },
   plugins: [require('@tailwindcss/typography')],
