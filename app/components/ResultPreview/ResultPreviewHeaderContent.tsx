@@ -16,27 +16,9 @@ const ResultPreviewHeaderContent: React.FC<ResultPreviewHeaderContentProps> = ({
   activeView,
   setActiveView,
   bundlingComplete,
-  isStreaming,
   code,
-  dependencies = {},
   setMobilePreviewShown,
 }) => {
-  function handleCaptureScreenshot() {
-    if (!code || !previewReady) {
-      alert('Generate an app and wait for the preview to be ready before capturing a screenshot!');
-      return;
-    }
-
-    const iframe = document.querySelector('iframe') as HTMLIFrameElement;
-    iframe?.contentWindow?.postMessage(
-      {
-        type: 'command',
-        command: 'capture-screenshot',
-      },
-      '*'
-    );
-  }
-
   const showSwitcher = code.length > 0;
 
   return (
@@ -100,7 +82,7 @@ const ResultPreviewHeaderContent: React.FC<ResultPreviewHeaderContentProps> = ({
                   d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
                 />
               </svg>
-              <span>Preview</span>
+              <span>App</span>
             </button>
             <button
               type="button"
@@ -179,34 +161,6 @@ const ResultPreviewHeaderContent: React.FC<ResultPreviewHeaderContentProps> = ({
       {code ? (
         <div className="flex items-center gap-2">
           <div className="bg-light-decorative-00 dark:bg-dark-decorative-00 flex space-x-1 rounded-lg p-1 shadow-sm">
-            <button
-              type="button"
-              onClick={handleCaptureScreenshot}
-              className="text-light-primary dark:text-dark-primary hover:bg-light-decorative-01 dark:hover:bg-dark-decorative-01 flex items-center space-x-1.5 rounded-md px-4 py-1.5 text-sm font-medium transition-colors"
-              aria-label="Capture screenshot"
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="h-4 w-4"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <title>Screenshot</title>
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"
-                />
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"
-                />
-              </svg>
-            </button>
             <a
               href="https://connect.fireproof.storage/login"
               target="_blank"
