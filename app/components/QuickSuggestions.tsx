@@ -22,7 +22,7 @@ function QuickSuggestions({ onSelectSuggestion }: QuickSuggestionsProps) {
     },
     {
       label: 'Photos',
-      text: 'Create a photo gallery app with a grid of images and a modal for each image.',
+      text: 'Image auto-tagger app that automatically saves, analyzes, tags, and describes images, displaying them in a list view as soon as they\'re dropped on the page, adding tags and descriptions as they come back.',
     },
     {
       label: 'Quiz',
