@@ -14,7 +14,7 @@
     "test:watch": "vitest",
     "file-issues": "scripts/create-issues.sh",
     "test:file-issues": "scripts/test-issues.sh",
-    "check": "pnpm format:check && pnpm typecheck && pnpm test"
+    "check": "pnpm format && pnpm typecheck && pnpm test"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.36.3",
