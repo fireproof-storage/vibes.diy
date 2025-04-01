@@ -47,11 +47,11 @@ export default function UnifiedSession() {
   const handlePreviewLoaded = useCallback(() => {
     setPreviewReady(true);
     setMobilePreviewShown(true);
+    
+    // Update the active view locally, but don't force navigation
+    // Let the user stay on their current tab
     setActiveView('preview');
-    if (chatState.sessionId && chatState.title) {
-      navigate(`/chat/${chatState.sessionId}/${encodeTitle(chatState.title)}/app`, { replace: true });
-    }
-  }, [chatState.sessionId, chatState.title, navigate]);
+  }, []);
 
   useEffect(() => {
     if (chatState.title) {
@@ -114,12 +114,24 @@ export default function UnifiedSession() {
   useEffect(() => {
     if (chatState.selectedCode?.content) {
       setMobilePreviewShown(true);
-      setActiveView('preview');
-      if (chatState.sessionId && chatState.title) {
+      
+      // Only navigate to /app if we're not already on a specific tab route
+      // This prevents overriding user's manual tab selection
+      const path = location.pathname;
+      const hasTabSuffix = path.endsWith('/app') || path.endsWith('/code') || path.endsWith('/data');
+      
+      if (!hasTabSuffix && chatState.sessionId && chatState.title) {
+        setActiveView('preview');
         navigate(`/chat/${chatState.sessionId}/${encodeTitle(chatState.title)}/app`, { replace: true });
+      } else if (path.endsWith('/app')) {
+        setActiveView('preview');
+      } else if (path.endsWith('/code')) {
+        setActiveView('code');
+      } else if (path.endsWith('/data')) {
+        setActiveView('data');
       }
     }
-  }, [chatState.selectedCode, chatState.sessionId, chatState.title, navigate]);
+  }, [chatState.selectedCode, chatState.sessionId, chatState.title, navigate, location.pathname, setActiveView]);
 
   // useEffect(() => {
   //   console.log('chatState.sessionId', chatState.sessionId);

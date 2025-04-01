@@ -1,5 +1,6 @@
 import React from 'react';
 import { useNavigate, useParams } from 'react-router';
+import { encodeTitle } from '../SessionSidebar/utils';
 
 interface ResultPreviewHeaderContentProps {
   previewReady: boolean;
@@ -31,6 +32,9 @@ const ResultPreviewHeaderContent: React.FC<ResultPreviewHeaderContentProps> = ({
   // Use props if provided, otherwise use params from the URL
   const sessionId = propSessionId || paramSessionId;
   const title = propTitle || paramTitle;
+  
+  // Ensure we have a properly encoded title for URL paths
+  const encodedTitle = title ? encodeTitle(title) : '';
   const showSwitcher = code.length > 0;
 
   return (
@@ -69,8 +73,8 @@ const ResultPreviewHeaderContent: React.FC<ResultPreviewHeaderContentProps> = ({
               type="button"
               onClick={() => {
                 setActiveView('preview');
-                if (sessionId && title) {
-                  navigate(`/chat/${sessionId}/${title}/app`);
+                if (sessionId && encodedTitle) {
+                  navigate(`/chat/${sessionId}/${encodedTitle}/app`);
                 }
               }}
               className={`flex items-center justify-center space-x-1 sm:space-x-1.5 rounded-md px-3 sm:px-4 py-1.5 text-xs sm:text-sm font-medium transition-colors ${
@@ -111,8 +115,8 @@ const ResultPreviewHeaderContent: React.FC<ResultPreviewHeaderContentProps> = ({
               onClick={() => {
                 if (activeView !== 'code') {
                   setActiveView('code');
-                  if (sessionId && title) {
-                    navigate(`/chat/${sessionId}/${title}/code`);
+                  if (sessionId && encodedTitle) {
+                    navigate(`/chat/${sessionId}/${encodedTitle}/code`);
                   }
                 }
               }}
@@ -145,8 +149,8 @@ const ResultPreviewHeaderContent: React.FC<ResultPreviewHeaderContentProps> = ({
               onClick={() => {
                 if (!isStreaming && activeView !== 'data') {
                   setActiveView('data');
-                  if (sessionId && title) {
-                    navigate(`/chat/${sessionId}/${title}/data`);
+                  if (sessionId && encodedTitle) {
+                    navigate(`/chat/${sessionId}/${encodedTitle}/data`);
                   }
                 }
               }}
