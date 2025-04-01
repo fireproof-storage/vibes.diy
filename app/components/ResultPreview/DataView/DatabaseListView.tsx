@@ -31,22 +31,7 @@ const DatabaseListView: React.FC<{ appCode: string; isDarkMode: boolean }> = ({ 
         }
       }
 
-      // Add session-based naming format as templates
-      const sessionRegex = /useFireproof\(\s*`([^`]*\$\{[^}]*\}[^`]*)`\s*\)/g;
-      while ((match = sessionRegex.exec(code)) !== null) {
-        if (match[1] && !names.includes(match[1])) {
-          names.push(match[1] + ' (template)');
-          
-          // Try to guess a real database name for session templates
-          if (match[1].includes('sessionId') || match[1].includes('session')) {
-            const sampleDbName = match[1].replace(/\$\{sessionId\}/g, 'current-session')
-                                      .replace(/\$\{session.*?\}/g, 'current-session');
-            if (!names.includes(sampleDbName)) {
-              names.push(sampleDbName);
-            }
-          }
-        }
-      }
+      // We've removed the template database functionality
 
       // Try to find fireproof-chat-history DB by default
       if (!names.includes('fireproof-chat-history')) {
@@ -62,9 +47,7 @@ const DatabaseListView: React.FC<{ appCode: string; isDarkMode: boolean }> = ({ 
       
       // Set the first database as selected if there's at least one and none is currently selected
       if (names.length > 0 && !selectedDb) {
-        // Find first non-template database
-        const nonTemplateDb = names.find(name => !name.includes(' (template)'));
-        setSelectedDb(nonTemplateDb || names[0]);
+        setSelectedDb(names[0]);
       }
     } else {
       setDatabaseNames([]);

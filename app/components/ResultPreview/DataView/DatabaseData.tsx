@@ -7,7 +7,7 @@ import { useFireproof } from 'use-fireproof';
 // Component for displaying database data
 const DatabaseData: React.FC<{ dbName: string }> = ({ dbName }) => {
   // Throw error if no valid database name is provided
-  if (!dbName || dbName.includes('(template)')) {
+  if (!dbName) {
     throw new Error('No valid database name provided');
   }
   
@@ -18,34 +18,15 @@ const DatabaseData: React.FC<{ dbName: string }> = ({ dbName }) => {
   // In Fireproof, useLiveQuery returns docs and potentially other properties
   const queryResult = useLiveQuery('_id');
   const docs = queryResult?.docs || [];
-  
-  // Show loading when we have no docs yet
-  const isLoading = docs.length === 0;
-  const errorMessage = null; // We'll rely on Fireproof's internal error handling
-  
-  // Calculate headers for the current data
+
+  console.log('Docs:', docs);
+
   const headers = docs.length > 0 ? headersForDocs(docs) : [];
-  
-  if (isLoading) {
-    return (
-      <div className="p-4 bg-light-decorative-00 dark:bg-dark-decorative-00 rounded-lg">
-        <p>Loading data from {dbName}...</p>
-      </div>
-    );
-  }
-  
-  if (errorMessage) {
-    return (
-      <div className="p-4 bg-light-decorative-00 dark:bg-dark-decorative-00 rounded-lg text-red-500">
-        {errorMessage}
-      </div>
-    );
-  }
   
   if (docs.length === 0) {
     return (
       <div className="p-4 bg-light-decorative-00 dark:bg-dark-decorative-00 rounded-lg">
-        <p>No documents found in the database.</p>
+        <p>Loading data from {dbName}...</p>
       </div>
     );
   }
