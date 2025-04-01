@@ -113,9 +113,6 @@
             if (event.data.command === 'capture-screenshot') {
               captureScreenshot();
             }
-          } else if (event.data.type === 'update-component') {
-            // For rapid updates (optional)
-            updateAppComponent(event.data.code);
           } else if (event.data.type === 'callai-api-key' && event.data.key) {
             window.CALLAI_API_KEY = event.data.key;
           }

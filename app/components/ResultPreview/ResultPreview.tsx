@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { CALLAI_API_KEY } from '../../config/env';
-import { animationStyles, indexHtml } from './ResultPreviewTemplates';
+import { animationStyles } from './ResultPreviewTemplates';
 import type { ResultPreviewProps, IframeFiles } from './ResultPreviewTypes';
 // ResultPreview component
 import IframeContent from './IframeContent';
@@ -126,7 +126,6 @@ function ResultPreview({
 
   // Create refs outside useEffect to track timeout state
   const timeoutIdRef = useRef<NodeJS.Timeout | null>(null);
-  const needsReloadRef = useRef(false);
 
   useEffect(() => {
     if (!showWelcome) {
@@ -138,31 +137,6 @@ function ResultPreview({
           active: true,
         },
       };
-
-      if (codeReady) {
-        // Set the flag that we need to reload
-        needsReloadRef.current = true;
-
-        // Clear any existing timeout to avoid stacking
-        if (timeoutIdRef.current) {
-          clearTimeout(timeoutIdRef.current);
-        }
-
-        timeoutIdRef.current = setTimeout(() => {
-          if (needsReloadRef.current) {
-            const iframe = document.querySelector('iframe') as HTMLIFrameElement;
-            iframe?.contentWindow?.postMessage(
-              {
-                type: 'command',
-                command: 'reload-preview',
-              },
-              '*'
-            );
-            needsReloadRef.current = false;
-            timeoutIdRef.current = null;
-          }
-        }, 200);
-      }
     }
 
     // Clean up timeout on unmount
@@ -179,10 +153,6 @@ function ResultPreview({
     (() => {
       // Initialize files content here, right before SandpackContent is rendered
       filesRef.current = {
-        '/index.html': {
-          code: indexHtml,
-          hidden: true,
-        },
         '/App.jsx': {
           code: code,
           active: true,
