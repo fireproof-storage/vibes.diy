@@ -39,6 +39,8 @@ const IframeContent: React.FC<IframeContentProps> = ({
 
   // Reference to store the current Monaco editor instance
   const monacoEditorRef = useRef<any>(null);
+  // Reference to store the Monaco API instance
+  const monacoApiRef = useRef<any>(null);
   // Reference to store the current Shiki highlighter
   const highlighterRef = useRef<any>(null);
   // Reference to store disposables for cleanup
@@ -63,10 +65,11 @@ const IframeContent: React.FC<IframeContentProps> = ({
 
   // Update theme when dark mode changes
   useEffect(() => {
-    if (monacoEditorRef.current) {
+    if (monacoApiRef.current) {
       // Update the Shiki theme in Monaco when dark mode changes from parent
       const currentTheme = isDarkMode ? 'github-dark' : 'github-light';
-      monacoEditorRef.current.setTheme(currentTheme);
+      // Use monaco editor namespace to set theme
+      monacoApiRef.current.editor.setTheme(currentTheme);
     }
   }, [isDarkMode]);
 
@@ -205,6 +208,8 @@ const IframeContent: React.FC<IframeContentProps> = ({
           onMount={async (editor, monaco) => {
             // Store the editor instance for later reference
             monacoEditorRef.current = editor;
+            // Store the Monaco API instance for theme changes
+            monacoApiRef.current = monaco;
 
             // Configure JavaScript language to support JSX
             monaco.languages.typescript.javascriptDefaults.setCompilerOptions({
