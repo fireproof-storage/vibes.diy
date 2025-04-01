@@ -1,6 +1,6 @@
 # ✨ Build Mini Apps with AI Magic
 
-Turn your **ideas** into **interactive apps** instantly. [Try it now](https://vibe-coding.use-fireproof.com/) or [fork on GitHub](https://github.com/vibe-coding/vibe-coding) to customize with your own AI account.
+Turn your **ideas** into **interactive apps** instantly. [Try it now](https://vibes.diy/) or [fork on GitHub](https://github.com/fireproof-storage/ai-app-builder) to customize with your own AI account.
 
 Create beautiful, interactive mini apps with zero setup. Your creations are automatically saved and can be shared instantly.
 
@@ -36,7 +36,7 @@ Create beautiful, interactive mini apps with zero setup. Your creations are auto
 
 ## Quick Start
 
-1. [Try the demo](https://vibe-coding.use-fireproof.com/) - No setup required!
+1. [Try the demo](https://vibes.diy/) - No setup required!
 2. Or set up your own:
    - Clone the repository
    - Install with `pnpm i`
