@@ -36,6 +36,17 @@ const ResultPreviewHeaderContent: React.FC<ResultPreviewHeaderContentProps> = ({
   // Ensure we have a properly encoded title for URL paths
   const encodedTitle = title ? encodeTitle(title) : '';
   const showSwitcher = code.length > 0;
+  
+  // Determine active tab directly from URL path to prevent flashing
+  const getPathView = () => {
+    const path = window.location.pathname;
+    if (path.endsWith('/app')) return 'preview';
+    if (path.endsWith('/code')) return 'code';
+    if (path.endsWith('/data')) return 'data';
+    return activeView; // Fall back to state if no match
+  };
+  
+  const pathView = getPathView();
 
   return (
     <div className="flex h-full w-full items-center px-2 py-4">
@@ -78,7 +89,7 @@ const ResultPreviewHeaderContent: React.FC<ResultPreviewHeaderContentProps> = ({
                 }
               }}
               className={`flex items-center justify-center space-x-1 sm:space-x-1.5 rounded-md px-3 sm:px-4 py-1.5 text-xs sm:text-sm font-medium transition-colors ${
-                activeView === 'preview'
+                pathView === 'preview'
                   ? 'bg-light-background-00 dark:bg-dark-background-00 text-light-primary dark:text-dark-primary shadow-sm'
                   : 'text-light-primary dark:text-dark-primary' +
                     (previewReady
@@ -121,7 +132,7 @@ const ResultPreviewHeaderContent: React.FC<ResultPreviewHeaderContentProps> = ({
                 }
               }}
               className={`flex items-center justify-center space-x-1 sm:space-x-1.5 rounded-md px-3 sm:px-4 py-1.5 text-xs sm:text-sm font-medium transition-colors ${
-                activeView === 'code'
+                pathView === 'code'
                   ? 'bg-light-background-00 dark:bg-dark-background-00 text-light-primary dark:text-dark-primary shadow-sm'
                   : 'text-light-primary dark:text-dark-primary hover:bg-light-decorative-01 dark:hover:bg-dark-decorative-01'
               }`}
@@ -179,7 +190,7 @@ const ResultPreviewHeaderContent: React.FC<ResultPreviewHeaderContentProps> = ({
               <a
                 href={sessionId && encodedTitle ? `/chat/${sessionId}/${encodedTitle}/data` : '#'}
                 className={`flex items-center justify-center space-x-1 sm:space-x-1.5 rounded-md px-3 sm:px-4 py-1.5 text-xs sm:text-sm font-medium transition-colors ${
-                  activeView === 'data'
+                  pathView === 'data'
                     ? 'bg-light-background-00 dark:bg-dark-background-00 text-light-primary dark:text-dark-primary shadow-sm'
                     : 'text-light-primary dark:text-dark-primary hover:bg-light-decorative-01 dark:hover:bg-dark-decorative-01'
                 }`}

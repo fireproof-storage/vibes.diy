@@ -152,13 +152,25 @@ const IframeContent: React.FC<IframeContentProps> = ({
     }
   }, [isStreaming, codeReady, filesContent, setBundlingComplete]);
 
+  // Determine which view to show based on URL path - gives more stable behavior on refresh
+  const getViewFromPath = () => {
+    const path = window.location.pathname;
+    if (path.endsWith('/code')) return 'code';
+    if (path.endsWith('/data')) return 'data';
+    if (path.endsWith('/app')) return 'preview';
+    return activeView; // Fall back to state if path doesn't have a suffix
+  };
+  
+  // Get view from URL path
+  const currentView = getViewFromPath();
+  
   return (
     <div data-testid="sandpack-provider" className="h-full">
       <div
         style={{
-          visibility: activeView === 'preview' ? 'visible' : 'hidden',
-          position: activeView === 'preview' ? 'static' : 'absolute',
-          zIndex: activeView === 'preview' ? 1 : 0,
+          visibility: currentView === 'preview' ? 'visible' : 'hidden',
+          position: currentView === 'preview' ? 'static' : 'absolute',
+          zIndex: currentView === 'preview' ? 1 : 0,
           height: '100%',
           width: '100%',
           top: 0,
@@ -179,9 +191,9 @@ const IframeContent: React.FC<IframeContentProps> = ({
       </div>
       <div
         style={{
-          visibility: activeView === 'code' ? 'visible' : 'hidden',
-          position: activeView === 'code' ? 'static' : 'absolute',
-          zIndex: activeView === 'code' ? 1 : 0,
+          visibility: currentView === 'code' ? 'visible' : 'hidden',
+          position: currentView === 'code' ? 'static' : 'absolute',
+          zIndex: currentView === 'code' ? 1 : 0,
           height: '100%',
           width: '100%',
           top: 0,
@@ -301,9 +313,9 @@ const IframeContent: React.FC<IframeContentProps> = ({
       </div>
       <div
         style={{
-          visibility: activeView === 'data' ? 'visible' : 'hidden',
-          position: activeView === 'data' ? 'static' : 'absolute',
-          zIndex: activeView === 'data' ? 1 : 0,
+          visibility: currentView === 'data' ? 'visible' : 'hidden',
+          position: currentView === 'data' ? 'static' : 'absolute',
+          zIndex: currentView === 'data' ? 1 : 0,
           height: '100%',
           width: '100%',
           top: 0,

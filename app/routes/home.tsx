@@ -25,8 +25,20 @@ export default function UnifiedSession() {
   const location = useLocation();
   const chatState = useSimpleChat(urlSessionId);
 
-  // State for view management
-  const [activeView, setActiveView] = useState<'code' | 'preview' | 'data'>('code');
+  // State for view management - set initial view based on URL path
+  const [activeView, setActiveView] = useState<'code' | 'preview' | 'data'>(() => {
+    // Directly check the pathname on initial render
+    const path = location.pathname;
+    if (path.endsWith('/app')) {
+      return 'preview';
+    } else if (path.endsWith('/code')) {
+      return 'code';
+    } else if (path.endsWith('/data')) {
+      return 'data';
+    }
+    // Default to code view if no suffix is found
+    return 'code';
+  });
   const [previewReady, setPreviewReady] = useState(false);
   const [bundlingComplete] = useState(true);
   const [mobilePreviewShown, setMobilePreviewShown] = useState(false);

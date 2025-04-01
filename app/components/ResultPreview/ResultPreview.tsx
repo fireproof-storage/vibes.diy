@@ -45,9 +45,11 @@ function ResultPreview({
       // Reset to code view when streaming starts
       setActiveView('code');
     } else if (codeReady) {
-      // Switch to preview when streaming ends and code is ready
-      // Maintain the previous active view if it was 'data', otherwise switch to preview
-      if (activeView !== 'data') {
+      // Check URL path before switching to preview
+      const path = window.location.pathname;
+      
+      // Only switch to preview if we're not on a specific route
+      if (!path.endsWith('/code') && !path.endsWith('/data')) {
         setActiveView('preview');
       }
     }
@@ -93,8 +95,12 @@ function ResultPreview({
           iframe?.contentWindow?.postMessage({ type: 'callai-api-key', key: CALLAI_API_KEY }, '*');
 
           setMobilePreviewShown(true);
-          // Automatically switch to preview view when it's ready
-          setActiveView('preview');
+          
+          // Only switch to preview view if we're not on /code or /data routes
+          const path = window.location.pathname;
+          if (!path.endsWith('/code') && !path.endsWith('/data')) {
+            setActiveView('preview');
+          }
 
           // Notify parent component that preview is loaded
           onPreviewLoaded();
