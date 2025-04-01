@@ -14,7 +14,7 @@ interface IframeContentProps {
   filesContent: IframeFiles;
   isStreaming: boolean;
   codeReady: boolean;
-  sandpackKey: string;
+
   setActiveView: (view: 'preview' | 'code' | 'data') => void;
   setBundlingComplete: (complete: boolean) => void;
   dependencies: Record<string, string>;
@@ -25,7 +25,7 @@ const IframeContent: React.FC<IframeContentProps> = ({
   activeView,
   filesContent,
   isStreaming,
-  sandpackKey,
+
   codeReady,
   dependencies,
   setActiveView,
@@ -310,7 +310,6 @@ const IframeContent: React.FC<IframeContentProps> = ({
       >
         {!isStreaming && (
           <div className="data-container">
-            <h3 className="mb-4 text-xl font-medium">Database Information</h3>
             <DatabaseListView
               appCode={filesContent['/App.jsx']?.code || ''}
               isDarkMode={isDarkMode}

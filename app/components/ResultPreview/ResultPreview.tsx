@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { CALLAI_API_KEY } from '../../config/env';
 import { animationStyles } from './ResultPreviewTemplates';
 import type { ResultPreviewProps, IframeFiles } from './ResultPreviewTypes';
@@ -39,12 +39,6 @@ function ResultPreview({
       }
     }
   }, [isStreaming]);
-
-  const sandpackKey = useMemo(() => {
-    // if (showWelcome) return 'welcome';
-    if (!codeReady) return 'streaming';
-    return 'static';
-  }, [codeReady]);
 
   useEffect(() => {
     if (isStreaming) {
@@ -165,7 +159,6 @@ function ResultPreview({
           filesContent={filesRef.current}
           isStreaming={!codeReady}
           codeReady={codeReady}
-          sandpackKey={sandpackKey}
           setActiveView={setActiveView}
           setBundlingComplete={setBundlingComplete}
           dependencies={dependencies}

@@ -31,25 +31,9 @@ const DatabaseListView: React.FC<{ appCode: string; isDarkMode: boolean }> = ({
   // Clean view with clear separation of concerns
   return (
     <div>
-      <div className="mb-4">
-        <h4 className="mb-2 text-lg font-medium">Detected Database</h4>
-        <div className="bg-light-decorative-00 dark:bg-dark-decorative-00 rounded-lg p-4">
-          {!databaseName ? (
-            <p>No database name found in the first 50 lines of code.</p>
-          ) : (
-            <div>
-              <p className="mb-2">Database:</p>
-              <div className="bg-light-decorative-01 dark:bg-dark-decorative-01 text-light-primary dark:text-dark-primary inline-block rounded-md px-3 py-1 font-mono text-sm">
-                {databaseName}
-              </div>
-            </div>
-          )}
-        </div>
-      </div>
-
       {databaseName && (
         <div className="mt-6">
-          <h4 className="mb-2 text-lg font-medium">{databaseName} Documents</h4>
+          <h2 className="mb-2 text-lg font-medium">{databaseName} Documents</h2>
           <DatabaseData dbName={databaseName} key={databaseName} />
         </div>
       )}
