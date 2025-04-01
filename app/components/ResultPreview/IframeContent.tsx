@@ -166,7 +166,11 @@ const IframeContent: React.FC<IframeContentProps> = ({
             ref={iframeRef}
             className="h-full w-full border-0"
             title="Preview"
-            allow="cross-origin-isolated"
+            sandbox="allow-downloads allow-forms allow-modals allow-pointer-lock allow-popups-to-escape-sandbox allow-popups allow-presentation allow-same-origin allow-scripts allow-top-navigation-by-user-activation"
+            allow="accelerometer *; bluetooth *; camera *; encrypted-media *; display-capture *; geolocation *; gyroscope *; microphone *; midi *; clipboard-read *; clipboard-write *; web-share *; serial *; xr-spatial-tracking *"
+            scrolling="auto"
+            allowTransparency={true}
+            allowFullScreen={true}
           />
         )}
       </div>
