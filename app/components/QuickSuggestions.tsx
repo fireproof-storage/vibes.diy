@@ -9,8 +9,8 @@ function QuickSuggestions({ onSelectSuggestion }: QuickSuggestionsProps) {
       text: 'Create a todo app with freeform textarea entry, that sends the text to AI to create todo list items using json, and tag them into the selected list.',
     },
     {
-      label: 'Sports',
-      text: 'Chat with sports legends.',
+      label: 'Legends',
+      text: 'Chat with legends, results are streamed and then saved as a document with legend_id.',
     },
     {
       label: 'Drawing',

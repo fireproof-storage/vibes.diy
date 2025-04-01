@@ -55,12 +55,29 @@ export default function UnifiedSession() {
 
   useEffect(() => {
     if (chatState.title) {
-      const newUrl = `/chat/${chatState.sessionId}/${encodeTitle(chatState.title)}`;
+      // Check if the current path has a tab suffix
+      const currentPath = location.pathname;
+      let suffix = '';
+      
+      // Preserve the tab suffix when updating the URL
+      if (currentPath.endsWith('/app')) {
+        suffix = '/app';
+      } else if (currentPath.endsWith('/code')) {
+        suffix = '/code';
+      } else if (currentPath.endsWith('/data')) {
+        suffix = '/data';
+      } else if (currentPath.includes(`/chat/${chatState.sessionId}`)) {
+        // If it's the base chat URL without suffix, default to /app
+        suffix = '/app';
+      }
+      
+      const newUrl = `/chat/${chatState.sessionId}/${encodeTitle(chatState.title)}${suffix}`;
+      
       if (newUrl !== location.pathname) {
         navigate(newUrl, { replace: true });
       }
     }
-  }, [chatState.title]);
+  }, [chatState.title, location.pathname, chatState.sessionId, navigate]);
 
   // Check if there's a state parameter in the URL (for shared apps)
   useEffect(() => {

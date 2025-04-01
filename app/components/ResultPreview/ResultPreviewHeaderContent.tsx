@@ -144,27 +144,54 @@ const ResultPreviewHeaderContent: React.FC<ResultPreviewHeaderContentProps> = ({
               </svg>
               <span className="hidden min-[480px]:inline">Code</span>
             </button>
-            <button
-              type="button"
-              onClick={() => {
-                if (!isStreaming && activeView !== 'data') {
-                  setActiveView('data');
-                  if (sessionId && encodedTitle) {
-                    navigate(`/chat/${sessionId}/${encodedTitle}/data`);
-                  }
-                }
-              }}
-              disabled={isStreaming}
-              className={`flex items-center justify-center space-x-1 sm:space-x-1.5 rounded-md px-3 sm:px-4 py-1.5 text-xs sm:text-sm font-medium transition-colors ${
-                activeView === 'data'
-                  ? 'bg-light-background-00 dark:bg-dark-background-00 text-light-primary dark:text-dark-primary shadow-sm'
-                  : isStreaming
-                    ? 'text-light-primary/50 dark:text-dark-primary/50 cursor-not-allowed opacity-50'
+            {isStreaming ? (
+              <button
+                type="button"
+                disabled={true}
+                className="flex items-center justify-center space-x-1 sm:space-x-1.5 rounded-md px-3 sm:px-4 py-1.5 text-xs sm:text-sm font-medium transition-colors text-light-primary/50 dark:text-dark-primary/50 cursor-not-allowed opacity-50"
+                aria-label="Data tab unavailable during streaming"
+                title="Data tab available after streaming completes"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-3.5 w-3.5 sm:h-4 sm:w-4 opacity-50"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <title>Data icon</title>
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M4 7v10c0 2 1 3 3 3h10c2 0 3-1 3-3V7c0-2-1-3-3-3H7c-2 0-3 1-3 3z"
+                  />
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M7 15h5m-5-4h10"
+                  />
+                </svg>
+                <span className="hidden min-[480px]:inline">Data</span>
+              </button>
+            ) : (
+              <a
+                href={sessionId && encodedTitle ? `/chat/${sessionId}/${encodedTitle}/data` : '#'}
+                className={`flex items-center justify-center space-x-1 sm:space-x-1.5 rounded-md px-3 sm:px-4 py-1.5 text-xs sm:text-sm font-medium transition-colors ${
+                  activeView === 'data'
+                    ? 'bg-light-background-00 dark:bg-dark-background-00 text-light-primary dark:text-dark-primary shadow-sm'
                     : 'text-light-primary dark:text-dark-primary hover:bg-light-decorative-01 dark:hover:bg-dark-decorative-01'
-              }`}
-              aria-label={isStreaming ? "Data tab unavailable during streaming" : "Switch to data viewer"}
-              title={isStreaming ? "Data tab available after streaming completes" : "View database data"}
-            >
+                }`}
+                aria-label="Switch to data viewer"
+                title="View database data"
+                onClick={() => {
+                  // Just set the active view locally - navigation will happen via browser
+                  if (activeView !== 'data') {
+                    setActiveView('data');
+                  }
+                }}
+              >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 className={`h-3.5 w-3.5 sm:h-4 sm:w-4 ${isStreaming ? 'opacity-50' : ''}`}
@@ -187,7 +214,8 @@ const ResultPreviewHeaderContent: React.FC<ResultPreviewHeaderContentProps> = ({
                 />
               </svg>
               <span className="hidden min-[480px]:inline">Data</span>
-            </button>
+            </a>
+            )}
           </div>
         ) : null}
       </div>
