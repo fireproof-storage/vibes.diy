@@ -1,8 +1,8 @@
-# ✨ Vibe coding just got easier
+# ✨ Build Mini Apps with AI Magic
 
-Your **ideas** become **apps** instantly. [Try the hosted version](https://vibe-coding.use-fireproof.com/) or fork it on [GitHub](https://github.com/vibe-coding/vibe-coding) and bring your own API keys.
+Turn your **ideas** into **interactive apps** instantly. [Try it now](https://vibe-coding.use-fireproof.com/) or [fork on GitHub](https://github.com/vibe-coding/vibe-coding) to customize with your own AI account.
 
-This tool lets you build React components with zero setup. With built-in Fireproof data persistence and OpenRouter API access, your creations are powerful and easy to share.
+Create beautiful, interactive mini apps with zero setup. Your creations are automatically saved and can be shared instantly.
 
 ## Example Projects
 
@@ -29,43 +29,26 @@ This tool lets you build React components with zero setup. With built-in Firepro
 
 ## Features
 
-- Build React components using AI
-- Save and browse previous chat sessions
-- Integrated with Fireproof for data persistence
-- Real-time UI preview
-
-## Getting Started
-
-1. Clone the repository
-2. Install dependencies with `pnpm i` or `pnpm install`
-3. Set up your environment variables by copying `env-template.txt` to `.env` and adding your OpenRouter API key.
-4. Run the development server with `pnpm dev`
+- Create interactive mini apps using AI
+- Browse and return to your previous creations
+- Auto-save your work securely
+- See your app changes in real-time
 
 ## Quick Start
 
-```bash
-# Install dependencies
-pnpm i
+1. [Try the demo](https://vibe-coding.use-fireproof.com/) - No setup required!
+2. Or set up your own:
+   - Clone the repository
+   - Install with `pnpm i`
+   - Copy `env-template.txt` to `.env`
+   - Add your AI account key from [OpenRouter](https://openrouter.ai/settings/keys)
+   - Run `pnpm dev`
 
-# Set up your environment variables
-cp env-template.txt .env
+## Your Work is Always Safe
 
-# Add your OpenRouter API key, available here
-open https://openrouter.ai/settings/keys
+Every app you create is automatically saved, so you can:
+- Browse your creations in the sidebar
+- Return to previous work anytime
+- Keep track of your building history
+- Save screenshots of your apps
 
-# Start development server
-pnpm dev
-```
-
-## Chat Session History
-
-The application saves each chat session to Fireproof, allowing you to:
-
-- Browse previous chat sessions in the collapsible sidebar
-- Return to previous sessions to continue your work
-- Keep track of all your component building history
-- Track screenshots of your component previews
-
-## Example Prompts
-
-Write a simple app that allows me to chat about gardening, use stream: true for the chat and save response as individual Fireproof documents.
