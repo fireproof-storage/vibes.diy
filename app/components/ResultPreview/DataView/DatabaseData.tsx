@@ -6,37 +6,44 @@ import { useFireproof } from 'use-fireproof';
 
 // Component for displaying database data
 const DatabaseData: React.FC<{ dbName: string }> = ({ dbName }) => {
+  console.log('DatabaseData props:', { dbName });
   // Throw error if no valid database name is provided
   if (!dbName) {
     throw new Error('No valid database name provided');
   }
-  
+
   // Always use Fireproof with useLiveQuery for reactive data access
-  const { useLiveQuery } = useFireproof(dbName);
-  
+  const { useLiveQuery, database } = useFireproof(dbName);
+
   // Always call hooks at the top level regardless of conditions
   // In Fireproof, useLiveQuery returns docs and potentially other properties
   const queryResult = useLiveQuery('_id');
   const docs = queryResult?.docs || [];
 
-  console.log('Docs:', docs);
+  console.log(
+    'Docs:',
+    docs.map((d) => d._id)
+  );
 
   const headers = docs.length > 0 ? headersForDocs(docs) : [];
-  
+
   if (docs.length === 0) {
     return (
-      <div className="p-4 bg-light-decorative-00 dark:bg-dark-decorative-00 rounded-lg">
+      <div className="bg-light-decorative-00 dark:bg-dark-decorative-00 rounded-lg p-4">
         <p>Loading data from {dbName}...</p>
       </div>
     );
   }
-  
+
   return (
-    <div className="overflow-hidden rounded-lg border border-light-decorative-01 dark:border-dark-decorative-01">
-      <DynamicTable 
+    <div className="border-light-decorative-01 dark:border-dark-decorative-01 overflow-hidden rounded-lg border">
+      <div className="bg-light-decorative-00 dark:bg-dark-decorative-00 rounded-lg p-4">
+        {database.name}
+      </div>
+      <DynamicTable
         headers={headers}
         rows={docs}
-        dbName={dbName}
+        dbName={database.name}
         hrefFn={() => '#'}
         onRowClick={(docId: string, dbName: string) => {
           console.log(`View document ${docId} from database ${dbName}`);

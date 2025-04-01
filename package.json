@@ -29,7 +29,7 @@
     "react-dom": "^19.0.0",
     "react-markdown": "^10.1.0",
     "react-router": "^7.1.5",
-    "use-fireproof": "0.20.0-dev-preview-52"
+    "use-fireproof": "0.20.0-dev-preview-60"
   },
   "devDependencies": {
     "@react-router/dev": "^7.1.5",

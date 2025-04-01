@@ -10,9 +10,9 @@ export function headersForDocs(docs: object[]) {
       }
     }
   }
-  headers.delete("_id");
+  headers.delete('_id');
   return [
-    "_id",
+    '_id',
     ...Array.from(headers.entries())
       .sort((a, b) => b[1] - a[1])
       .map(([key]) => key),

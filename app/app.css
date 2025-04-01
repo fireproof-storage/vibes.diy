@@ -76,17 +76,18 @@ body {
   :root {
     color-scheme: dark;
   }
-  
-  html, body {
+
+  html,
+  body {
     background-color: var(--color-dark-background-00);
     color: var(--color-dark-primary);
   }
-  
+
   /* This adds all the standard dark mode styles that would normally require the 'dark' class */
   .text-accent-02 {
     color: var(--color-dark-secondary);
   }
-  
+
   .text-accent-00 {
     color: var(--color-dark-accent-01);
   }
@@ -95,7 +96,8 @@ body {
 /* iOS-specific fix for dark mode */
 @supports (-webkit-touch-callout: none) {
   @media (prefers-color-scheme: dark) {
-    html, body {
+    html,
+    body {
       /* Force background color on iOS Safari */
       background-color: var(--color-dark-background-00);
       color: var(--color-dark-primary);

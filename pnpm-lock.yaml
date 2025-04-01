@@ -47,8 +47,8 @@ importers:
         specifier: ^7.1.5
         version: 7.1.5(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
       use-fireproof:
-        specifier: 0.20.0-dev-preview-52
-        version: 0.20.0-dev-preview-52(@fireproof/core@0.20.0-dev-preview-41(@adviser/cement@0.3.20(typescript@5.7.3))(react@19.0.0))(react@19.0.0)
+        specifier: 0.20.0-dev-preview-60
+        version: 0.20.0-dev-preview-60(@fireproof/core@0.20.0-dev-preview-41(@adviser/cement@0.3.20(typescript@5.7.3))(react@19.0.0))(react@19.0.0)
     devDependencies:
       '@react-router/dev':
         specifier: ^7.1.5
@@ -5814,13 +5814,13 @@ packages:
       '@types/react':
         optional: true
 
-  use-fireproof@0.20.0-dev-preview-52:
+  use-fireproof@0.20.0-dev-preview-60:
     resolution:
       {
-        integrity: sha512-h2eU7YSkWzyYLSLPgq4r3y1ABFZsPFkWOB4rxKrWbtb1o/jzdv+ISdn1NJEeywkINOioQjqUe/MPUACKpLhoiA==,
+        integrity: sha512-EEalAZvxM8iA9g91yPnrHBKoH1jhWovexxcwRRMW/Su3ZL2YjeQZh8KKziqoH5ZuHh4MPilRfGMbXsb2f49RUQ==,
       }
     peerDependencies:
-      '@fireproof/core': ^0.20.0-dev-preview-52
+      '@fireproof/core': ^0.20.0-dev-preview-60
       react: '>=18.0.0'
 
   use-sidecar@1.1.3:
@@ -9860,7 +9860,7 @@ snapshots:
     optionalDependencies:
       '@types/react': 19.0.10
 
-  use-fireproof@0.20.0-dev-preview-52(@fireproof/core@0.20.0-dev-preview-41(@adviser/cement@0.3.20(typescript@5.7.3))(react@19.0.0))(react@19.0.0):
+  use-fireproof@0.20.0-dev-preview-60(@fireproof/core@0.20.0-dev-preview-41(@adviser/cement@0.3.20(typescript@5.7.3))(react@19.0.0))(react@19.0.0):
     dependencies:
       '@fireproof/core': 0.20.0-dev-preview-41(@adviser/cement@0.3.20(typescript@5.7.3))(react@19.0.0)
       react: 19.0.0

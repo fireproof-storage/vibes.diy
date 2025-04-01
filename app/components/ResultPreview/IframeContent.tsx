@@ -213,7 +213,7 @@ const IframeContent: React.FC<IframeContentProps> = ({
               try {
                 // Apply Shiki syntax highlighting to Monaco
                 await shikiToMonaco(highlighter, monaco);
-                
+
                 // Add a simple disposable for cleanup
                 disposablesRef.current.push({
                   dispose: () => {
@@ -222,7 +222,7 @@ const IframeContent: React.FC<IframeContentProps> = ({
                       // Nothing specific needed to dispose highlighter
                       highlighterRef.current = null;
                     }
-                  }
+                  },
                 });
               } catch (err) {
                 console.error('Error applying Shiki to Monaco:', err);
@@ -258,13 +258,16 @@ const IframeContent: React.FC<IframeContentProps> = ({
           left: 0,
           padding: '16px',
           overflow: 'auto',
-          backgroundColor: isDarkMode ? '#0d1117' : '#ffffff'
+          backgroundColor: isDarkMode ? '#0d1117' : '#ffffff',
         }}
       >
         {!isStreaming && (
           <div className="data-container">
-            <h3 className="text-xl font-medium mb-4">Database Information</h3>
-            <DatabaseListView appCode={filesContent['/App.jsx']?.code || ''} isDarkMode={isDarkMode} />
+            <h3 className="mb-4 text-xl font-medium">Database Information</h3>
+            <DatabaseListView
+              appCode={filesContent['/App.jsx']?.code || ''}
+              isDarkMode={isDarkMode}
+            />
           </div>
         )}
       </div>
