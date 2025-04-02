@@ -25,21 +25,15 @@ export const links: Route.LinksFunction = () => [
   },
 ];
 
-// Define metadata for the app including Open Graph and Twitter cards
 export const meta: MetaFunction = () => {
   return [
-    // Basic metadata
     { title: 'Vibe Coding' },
     { name: 'description', content: 'The easiest AI App Builder' },
-
-    // Open Graph tags
     { property: 'og:title', content: 'Vibe Coding' },
     { property: 'og:description', content: 'The easiest AI App Builder' },
     { property: 'og:image', content: 'https://vibe-coding.use-fireproof.com/card2.png' },
     { property: 'og:url', content: 'https://vibe-coding.use-fireproof.com' },
     { property: 'og:type', content: 'website' },
-
-    // Twitter Card tags
     { name: 'twitter:card', content: 'summary_large_image' },
     { name: 'twitter:title', content: 'Vibe Coding' },
     { name: 'twitter:description', content: 'The easiest AI App Builder' },
@@ -48,38 +42,23 @@ export const meta: MetaFunction = () => {
   ];
 };
 
-/**
- * Sets up theme detection based on system preferences
- */
 function useThemeDetection() {
   useEffect(() => {
-    // Console log for debugging in production
-    console.log('Theme detection running');
-
-    // Check if user has dark mode preference
     const prefersDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches;
-    console.log('Dark mode preference detected:', prefersDarkMode);
-
-    // Additional iOS check - iOS might need extra detection
     const isIOS =
       /iPad|iPhone|iPod/.test(navigator.userAgent) ||
       (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
-    console.log('iOS device detected:', isIOS);
 
-    // Apply initial theme
     if (prefersDarkMode) {
       document.documentElement.classList.add('dark');
-      // Add a data attribute as an alternative hook for dark mode
       document.documentElement.dataset.theme = 'dark';
     } else {
       document.documentElement.classList.remove('dark');
       document.documentElement.dataset.theme = 'light';
     }
 
-    // Set up listener for changes
     const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
     const handleChange = (e: MediaQueryListEvent) => {
-      console.log('Dark mode preference changed:', e.matches);
       if (e.matches) {
         document.documentElement.classList.add('dark');
         document.documentElement.dataset.theme = 'dark';
