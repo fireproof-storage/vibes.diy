@@ -2,6 +2,19 @@ import { vi, describe, it, expect, beforeEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { Layout, ErrorBoundary } from '../app/root';
 
+// Mock React Router components to avoid HTML validation errors
+vi.mock('react-router', () => ({
+  Meta: ({ 'data-testid': testId }: { 'data-testid'?: string }) => <meta data-testid={testId} />,
+  Links: () => <link data-testid="links" />,
+  Scripts: ({ 'data-testid': testId }: { 'data-testid'?: string }) => (
+    <script data-testid={testId} />
+  ),
+  ScrollRestoration: ({ 'data-testid': testId }: { 'data-testid'?: string }) => (
+    <div data-testid={testId} />
+  ),
+  isRouteErrorResponse: vi.fn(),
+}));
+
 describe('Root Component', () => {
   beforeEach(() => {
     vi.clearAllMocks();

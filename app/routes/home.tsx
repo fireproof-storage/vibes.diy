@@ -28,7 +28,8 @@ export default function UnifiedSession() {
   // State for view management - set initial view based on URL path
   const [activeView, setActiveView] = useState<'code' | 'preview' | 'data'>(() => {
     // Directly check the pathname on initial render
-    const path = location.pathname;
+    // Add null check for location to prevent errors in tests
+    const path = location?.pathname || '';
     if (path.endsWith('/app')) {
       return 'preview';
     } else if (path.endsWith('/code')) {
@@ -68,7 +69,8 @@ export default function UnifiedSession() {
   useEffect(() => {
     if (chatState.title) {
       // Check if the current path has a tab suffix
-      const currentPath = location.pathname;
+      // Add null check for location to prevent errors in tests
+      const currentPath = location?.pathname || '';
       let suffix = '';
 
       // Preserve the tab suffix when updating the URL
@@ -85,7 +87,7 @@ export default function UnifiedSession() {
 
       const newUrl = `/chat/${chatState.sessionId}/${encodeTitle(chatState.title)}${suffix}`;
 
-      if (newUrl !== location.pathname) {
+      if (location && newUrl !== location.pathname) {
         navigate(newUrl, { replace: true });
       }
     }
@@ -146,7 +148,8 @@ export default function UnifiedSession() {
 
       // Only navigate to /app if we're not already on a specific tab route
       // This prevents overriding user's manual tab selection
-      const path = location.pathname;
+      // Add null check for location to prevent errors in tests
+      const path = location?.pathname || '';
       const hasTabSuffix =
         path.endsWith('/app') || path.endsWith('/code') || path.endsWith('/data');
 
