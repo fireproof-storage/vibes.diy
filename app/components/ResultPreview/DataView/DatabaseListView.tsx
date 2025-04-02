@@ -32,7 +32,7 @@ const DatabaseListView: React.FC<{ appCode: string; isDarkMode: boolean }> = ({
   return (
     <div>
       {databaseName && (
-        <div>
+        <div className="p-2">
           <h2 className="mb-2 text-lg font-medium">
             Data stored in <span className="font-mono">{databaseName}</span>
           </h2>

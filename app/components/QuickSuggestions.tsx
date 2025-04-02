@@ -26,7 +26,7 @@ function QuickSuggestions({ onSelectSuggestion }: QuickSuggestionsProps) {
     },
     {
       label: 'Quiz',
-      text: "Trivia app that lets me pick a topic, and uses AI to make the next question. It should maintain extra unasked questions, so I can play fast. AI should also judge the answer. It can either be right or wrong and funny.",
+      text: "Trivia show that lets me pick a topic, and uses AI to make questions and judge answers.",
     },
     {
       label: 'Pomodoro',
