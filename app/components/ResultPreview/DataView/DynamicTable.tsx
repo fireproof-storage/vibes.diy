@@ -44,7 +44,7 @@ export default function DynamicTable({
                     {formatTableCellContent(fields[header], header)}
                   </th>
                 ) : (
-                  <td key={header} className="px-[15px] py-[12px]">
+                  <td key={header} className="px-[15px] py-[12px] text-xs">
                     {formatTableCellContent(fields[header], header)}
                   </td>
                 )
@@ -61,5 +61,5 @@ function formatTableCellContent(obj: any, header: string): string {
   if (obj === undefined) return '';
   if (header === '_id') return obj.substring(0, 4) + '..' + obj.substring(obj.length - 4);
   const strOut = typeof obj === 'string' ? obj : JSON.stringify(obj, null, 2);
-  return strOut.length > 100 ? `${strOut.substring(0, 100)}...` : strOut;
+  return strOut.length > 30 ? `${strOut.substring(0, 25).trim()}...` : strOut;
 }
