@@ -21,12 +21,16 @@ function QuickSuggestions({ onSelectSuggestion }: QuickSuggestionsProps) {
       text: 'I send messages and AI responds with a playlist for me, with YouTube search links for each song.',
     },
     {
+      label: 'Calculator',
+      text: 'Create a calculator app with basic arithmetic operations.',
+    },
+    {
       label: 'Texture',
       text: 'Create a texture design app users can sketch, blur, effect, save and load textures.',
     },
     {
-      label: 'Calculator',
-      text: 'Create a calculator app with basic arithmetic operations.',
+      label: 'Autodraw',
+      text: 'Text to SVG, sketch with a rich color palette.',
     },
     {
       label: 'Schedule',
@@ -35,10 +39,6 @@ function QuickSuggestions({ onSelectSuggestion }: QuickSuggestionsProps) {
     {
       label: 'Timer',
       text: 'Create a pomodoro timer app with multiple timers work/break intervals and session tracking.',
-    },
-    {
-      label: 'Autodraw',
-      text: 'Text to SVG, sketch with a rich color palette.',
     },
     {
       label: 'Quiz',

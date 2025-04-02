@@ -11,11 +11,11 @@ const DatabaseData: React.FC<{ dbName: string }> = ({ dbName }) => {
   }
 
   // Always use Fireproof with useLiveQuery for reactive data access
-  const { useLiveQuery, database } = useFireproof(dbName);
+  const { useAllDocs, database } = useFireproof(dbName);
 
   // Always call hooks at the top level regardless of conditions
   // In Fireproof, useLiveQuery returns docs and potentially other properties
-  const queryResult = useLiveQuery('_id');
+  const queryResult = useAllDocs();
   const docs = queryResult?.docs || [];
 
   const headers = docs.length > 0 ? headersForDocs(docs) : [];
