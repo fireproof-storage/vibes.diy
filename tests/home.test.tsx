@@ -40,19 +40,7 @@ vi.mock('../app/hooks/useSession', () => ({
   }),
 }));
 
-vi.mock('use-fireproof', () => ({
-  useFireproof: () => ({
-    database: {
-      put: vi.fn().mockResolvedValue({ ok: true }),
-    },
-    useDocument: () => ({
-      doc: {},
-      merge: vi.fn(),
-      save: vi.fn().mockResolvedValue({ id: 'test-id' }),
-    }),
-    useLiveQuery: () => ({ docs: [] }),
-  }),
-}));
+// Using centralized mock from __mocks__/use-fireproof.ts
 
 // Mock React Router hooks
 vi.mock('react-router', () => ({
