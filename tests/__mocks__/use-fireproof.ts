@@ -5,9 +5,7 @@ const mockDb = {
   put: vi.fn().mockResolvedValue({ id: 'test-id' }),
   get: vi.fn().mockResolvedValue({ _id: 'test-id', title: 'Test Document' }),
   query: vi.fn().mockResolvedValue({
-    rows: [
-      { id: 'session1', key: 'session1', value: { title: 'Test Session' } },
-    ],
+    rows: [{ id: 'session1', key: 'session1', value: { title: 'Test Session' } }],
   }),
   delete: vi.fn().mockResolvedValue({ ok: true }),
 };
@@ -26,7 +24,7 @@ const mockSessions = [
   },
 ];
 
-// Mock screenshots for queries
+// Mock screenshots can be used in useLiveQuery with screenshot query filters
 const mockScreenshots = [
   {
     _id: 'screenshot1',
@@ -36,15 +34,23 @@ const mockScreenshots = [
   },
 ];
 
+// Ensure the mock uses the mockScreenshots array
+const getQueryResult = (queryType: string) => {
+  if (queryType.includes('screenshot')) {
+    return { docs: mockScreenshots, status: 'success' };
+  }
+  return { docs: mockSessions, status: 'success' };
+};
+
 // Mock the fireproof function - this is imported directly in databaseManager.ts
 const fireproof = vi.fn().mockImplementation(() => mockDb);
 
 // Mock the useFireproof hook - this is used in components
 const useFireproof = vi.fn().mockImplementation(() => ({
   database: mockDb,
-  useLiveQuery: vi.fn().mockReturnValue({ 
-    docs: mockSessions, 
-    status: 'success' 
+  useLiveQuery: vi.fn().mockImplementation((query) => {
+    const queryStr = typeof query === 'string' ? query : '';
+    return getQueryResult(queryStr);
   }),
   useDocument: vi.fn().mockReturnValue({
     doc: mockSessions[0],
@@ -61,8 +67,4 @@ export default {
 };
 
 // Named exports for ESM compatibility
-export {
-  fireproof,
-  useFireproof,
-};
-
+export { fireproof, useFireproof };

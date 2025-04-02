@@ -15,12 +15,7 @@ vi.mock('react-markdown', () => ({
   default: ({ children }: { children: string }) => <div data-testid="markdown">{children}</div>,
 }));
 
-vi.mock('use-fireproof', () => ({
-  useFireproof: () => ({
-    database: {},
-    useLiveQuery: () => ({ docs: [] }),
-  }),
-}));
+// Using the centralized mock from __mocks__/use-fireproof.ts
 
 // Now import components after mocks
 import ChatHeader from '../app/components/ChatHeader';

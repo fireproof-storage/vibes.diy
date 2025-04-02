@@ -126,19 +126,8 @@ vi.mock('../app/components/AppLayout', () => ({
   ),
 }));
 
-// Mock useFireproof hook
-vi.mock('use-fireproof', () => ({
-  useFireproof: () => ({
-    db: {
-      put: vi.fn().mockResolvedValue({ id: 'mock-doc-id' }),
-      get: vi.fn().mockResolvedValue({ _id: 'mock-doc-id', messages: [] }),
-      findOne: vi.fn().mockResolvedValue(null),
-      query: vi.fn(),
-    },
-    useDocument: () => ({ doc: null, isLoading: false }),
-    useLiveQuery: () => ({ docs: [], isLoading: false }),
-  }),
-}));
+// Using the centralized mock from the __mocks__/use-fireproof.ts file
+// This ensures consistency across all tests
 
 describe('Home Route in completed state', () => {
   let mockCode: string;

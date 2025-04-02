@@ -81,18 +81,7 @@ vi.mock('../app/components/AppLayout', () => ({
   ),
 }));
 
-// Mock the Fireproof hook
-vi.mock('use-fireproof', () => ({
-  useFireproof: () => ({
-    database: {},
-    useLiveQuery: () => ({ docs: [] }),
-    useDocument: () => ({
-      doc: {},
-      merge: vi.fn(),
-      save: vi.fn().mockResolvedValue({ id: 'test-id' }),
-    }),
-  }),
-}));
+// Using the centralized mock from __mocks__/use-fireproof.ts
 
 // Mock the useSession hook
 vi.mock('../app/hooks/useSession', () => ({
