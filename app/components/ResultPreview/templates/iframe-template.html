@@ -30,11 +30,9 @@
           const script = document.createElement('script');
           script.src = 'https://unpkg.com/html2canvas-pro@1.5.8/dist/html2canvas-pro.js';
           script.onload = () => {
-            console.log('html2canvas-pro loaded dynamically');
             captureScreenshotWithFallback();
           };
           script.onerror = (e) => {
-            console.error('Failed to load html2canvas-pro:', e);
             window.parent.postMessage(
               { type: 'screenshot-error', error: 'Failed to load html2canvas' },
               '*'

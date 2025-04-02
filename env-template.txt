@@ -4,4 +4,4 @@
 VITE_CALLAI_API_KEY=your_openai_or_openrouter_key_here
 
 # Fireproof database name
-VITE_FIREPROOF_CHAT_HISTORY=fireproof-chat-history
+VITE_VIBES_CHAT_HISTORY=fireproof-chat-history

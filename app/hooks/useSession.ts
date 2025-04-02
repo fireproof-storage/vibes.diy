@@ -1,4 +1,4 @@
-import { useCallback } from 'react';
+import { useCallback, useState } from 'react';
 import { useFireproof } from 'use-fireproof';
 import { FIREPROOF_CHAT_HISTORY } from '../config/env';
 import type {
@@ -11,9 +11,13 @@ import { getSessionDatabaseName } from '../utils/databaseManager';
 export function useSession(routedSessionId: string | undefined) {
   const { useDocument: useMainDocument, database: mainDatabase } =
     useFireproof(FIREPROOF_CHAT_HISTORY);
-  const sessionId =
-    routedSessionId ||
-    `${Date.now().toString(36).padStart(9, 'f')}${Math.random().toString(36).slice(2, 11).padEnd(9, '0')}`;
+
+  const [generatedSessionId] = useState(
+    () =>
+      `${Date.now().toString(36).padStart(9, 'f')}${Math.random().toString(36).slice(2, 11).padEnd(9, '0')}`
+  );
+
+  const sessionId = routedSessionId || generatedSessionId;
   const sessionDbName = getSessionDatabaseName(sessionId);
   const {
     database: sessionDatabase,

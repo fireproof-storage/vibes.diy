@@ -193,6 +193,8 @@ export function useSimpleChat(sessionId: string | undefined): ChatState {
           // Then persist to session database
           if (sessionDatabase) {
             await sessionDatabase.put(aiMessage);
+          } else {
+            console.error('Session db missing');
           }
 
           // Finally, generate title if needed

@@ -30,7 +30,7 @@ const getVersionSuffix = (): string => {
 
 // Fireproof database name
 export const FIREPROOF_CHAT_HISTORY =
-  (import.meta.env.VITE_FIREPROOF_CHAT_HISTORY || 'fireproof-chat-history') + getVersionSuffix();
+  (import.meta.env.VITE_VIBES_CHAT_HISTORY || 'vibes-chats') + getVersionSuffix();
 
 // Other environment variables can be added here as needed
 // Using CALLAI_API_KEY as the primary API key for all AI services

@@ -2206,7 +2206,7 @@ export default StructuredMessage;
 
 // Fireproof database name
 export const FIREPROOF_CHAT_HISTORY =
-  import.meta.env.VITE_FIREPROOF_CHAT_HISTORY || 'fireproof-chat-history';
+  import.meta.env.VITE_VIBES_CHAT_HISTORY || 'fireproof-chat-history';
 
 // Other environment variables can be added here as needed
 export const CALLAI_API_KEY = import.meta.env.VITE_CALLAI_API_KEY;

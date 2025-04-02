@@ -175,10 +175,6 @@ export default function UnifiedSession() {
     setActiveView,
   ]);
 
-  // useEffect(() => {
-  //   console.log('chatState.sessionId', chatState.sessionId);
-  // }, [chatState.sessionId]);
-
   return (
     <>
       <AppLayout
