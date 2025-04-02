@@ -27,21 +27,19 @@ function QuickSuggestions({ onSelectSuggestion }: QuickSuggestionsProps) {
     {
       label: 'Calculator',
       text: 'Create a calculator app with basic arithmetic operations.',
+    }, {
+      label: 'Schedule',
+      text: 'Two text areas, paste the availability for each person, and AI finds the best time to meet.',
     },
     {
       label: 'Timer',
       text: 'Create a pomodoro timer app with multiple timers work/break intervals and session tracking.',
     },
-
     {
       label: 'Quiz',
       text: 'Trivia show that lets me pick a topic, and uses AI to make questions and judge answers.',
     },
 
-    {
-      label: 'Schedule',
-      text: 'Two text areas, paste the availability for each person, and AI finds the best time to meet.',
-    },
     {
       label: 'Wildcard',
       text: "Generate a wildcard app, something I wouldn't expect.",
