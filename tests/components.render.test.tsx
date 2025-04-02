@@ -1,3 +1,4 @@
+// Vitest will automatically use mocks from __mocks__ directory
 import { render, screen, fireEvent } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import ChatHeader from '../app/components/ChatHeader';
@@ -7,16 +8,15 @@ import type { UserChatMessage, AiChatMessage, ChatMessageDocument } from '../app
 import { mockSessionSidebarProps } from './mockData';
 
 // Mock dependencies
-vi.mock('react-markdown', () => ({
-  default: ({ children }: { children: string }) => <div data-testid="markdown">{children}</div>,
-}));
-
-vi.mock('use-fireproof', () => ({
-  useFireproof: () => ({
-    database: {},
-    useLiveQuery: () => ({ docs: [] }),
-  }),
-}));
+vi.mock('react-markdown', () => {
+  const React = require('react');
+  return {
+    default: vi.fn(({ children }: { children: string }) => {
+      // Use React.createElement instead of JSX
+      return React.createElement('div', { 'data-testid': 'markdown' }, children);
+    }),
+  };
+});
 
 // Mock the scrollIntoView method
 window.HTMLElement.prototype.scrollIntoView = vi.fn();

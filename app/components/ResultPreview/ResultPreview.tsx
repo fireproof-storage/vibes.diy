@@ -165,6 +165,7 @@ function ResultPreview({
           filesContent={filesRef.current}
           isStreaming={!codeReady}
           codeReady={codeReady}
+          sessionId={sessionId}
           setActiveView={setActiveView}
           setBundlingComplete={setBundlingComplete}
           dependencies={dependencies}

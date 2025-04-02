@@ -1,7 +1,8 @@
-import { useMemo } from 'react';
+import { useEffect, useState } from 'react';
 import { useFireproof } from 'use-fireproof';
 import { FIREPROOF_CHAT_HISTORY } from '../../config/env';
-import type { SessionDocument } from '../../types/chat';
+import type { SessionDocument, ScreenshotDocument } from '../../types/chat';
+import { getSessionsDatabase, getSessionDatabase } from '../../utils/databaseManager';
 
 /**
  * Type to represent either a session document or a screenshot document
@@ -25,83 +26,90 @@ export type GroupedSession = {
 
 /**
  * Custom hook for retrieving all sessions with their associated screenshots
- * Uses a single efficient query that gets both data types together
+ * Now uses a sharded database approach: session metadata in main database,
+ * screenshots and other content in session-specific databases
  * @returns An object containing the grouped sessions and loading state
  */
 export function useSessionList(justFavorites = false) {
-  const { database, useLiveQuery } = useFireproof(FIREPROOF_CHAT_HISTORY);
+  const mainDatabase = getSessionsDatabase();
+  const { useLiveQuery } = useFireproof(FIREPROOF_CHAT_HISTORY);
+  const [groupedSessions, setGroupedSessions] = useState<GroupedSession[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
-  // Use a single query to fetch both sessions and screenshots with a custom index function
-  // For session docs: returns doc._id
-  // For screenshot docs: returns doc.session_id
-  // This creates a virtual index where sessions and screenshots share the same key value
-  const { docs: sessionAndScreenshots } = useLiveQuery<SessionOrScreenshot>((doc) =>
-    doc.type && doc.type === 'session' ? doc._id : (doc as any).session_id
-  );
+  // Query only session metadata from the main database
+  const { docs: sessionDocs } = useLiveQuery<SessionDocument>('type', {
+    key: 'session',
+    includeDocs: true,
+  });
 
-  // Group sessions and their associated screenshots together
-  const groupedSessions = useMemo(() => {
-    if (!sessionAndScreenshots || sessionAndScreenshots.length === 0) {
-      return [];
+  // Fetch screenshots for each session from their respective databases
+  useEffect(() => {
+    if (!sessionDocs || sessionDocs.length === 0) {
+      setGroupedSessions([]);
+      setIsLoading(false);
+      return;
     }
 
-    const groups = new Map<string, GroupedSession>();
+    // Filter sessions by favorites if requested
+    const filteredSessions = justFavorites
+      ? sessionDocs.filter((session) => session.favorite)
+      : sessionDocs;
 
-    // Process all documents to group screenshots with their sessions
-    sessionAndScreenshots.forEach((doc) => {
-      if (doc.type === 'screenshot' && doc.session_id) {
-        // Handle screenshot document
-        const sessionId = doc.session_id;
-        let group = groups.get(sessionId);
+    // Process all sessions and fetch their screenshots
+    const fetchSessionScreenshots = async () => {
+      const sessionsWithScreenshots = await Promise.all(
+        filteredSessions.map(async (session) => {
+          try {
+            if (!session._id) {
+              console.error('Session without ID encountered');
+              return { session, screenshots: [] };
+            }
 
-        if (!group) {
-          // Create a placeholder for this session if it doesn't exist yet
-          group = {
-            session: { _id: sessionId } as SessionDocument,
-            screenshots: [],
-          };
-          groups.set(sessionId, group);
-        }
+            // Get the session-specific database
+            const sessionDb = getSessionDatabase(session._id);
 
-        // Add screenshot to this session's group
-        group.screenshots.push(doc);
-      } else if (doc.type === 'session') {
-        // Handle session document
-        let group = groups.get(doc._id);
+            // Query screenshots from the session database
+            const result = await sessionDb.query('type', {
+              key: 'screenshot',
+              includeDocs: true,
+            });
 
-        if (!group) {
-          // Create a new group if this session hasn't been seen yet
-          group = {
-            session: doc as SessionDocument,
-            screenshots: [],
-          };
-          groups.set(doc._id, group);
-        } else {
-          // Update the session data if we already have a group with screenshots
-          group.session = doc as SessionDocument;
-        }
-      }
-    });
+            const screenshots = (result.rows || [])
+              .map((row) => row.doc)
+              .filter(Boolean) as ScreenshotDocument[];
 
-    // remove the groups that are not favorites
-    if (justFavorites) {
-      groups.forEach((group) => {
-        if (!group.session.favorite) {
-          groups.delete(group.session._id!);
-        }
+            return {
+              session,
+              screenshots,
+            };
+          } catch (error) {
+            console.error(`Error fetching screenshots for session ${session._id}:`, error);
+            return {
+              session,
+              screenshots: [],
+            };
+          }
+        })
+      );
+
+      // Sort by creation date (newest first)
+      const sortedSessions = sessionsWithScreenshots.sort((a, b) => {
+        const timeA = a.session.created_at || 0;
+        const timeB = b.session.created_at || 0;
+        return timeB - timeA;
       });
-    }
-    // Convert map to array and sort by created_at (newest first)
-    return Array.from(groups.values()).sort((a, b) => {
-      const timeA = a.session.created_at || 0;
-      const timeB = b.session.created_at || 0;
-      return timeB - timeA;
-    });
-  }, [sessionAndScreenshots, justFavorites]);
+
+      setGroupedSessions(sortedSessions);
+      setIsLoading(false);
+    };
+
+    fetchSessionScreenshots();
+  }, [sessionDocs, justFavorites]);
 
   return {
-    database,
+    database: mainDatabase,
     groupedSessions,
     count: groupedSessions.length,
+    isLoading,
   };
 }

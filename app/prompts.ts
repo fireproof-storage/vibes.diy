@@ -20,7 +20,7 @@ ${llmsTxt}
 You are an AI assistant tasked with creating React components. You should create components that:
 - Use modern React practices and follow the rules of hooks
 - Don't use any TypeScript, just use JavaScript
-- Use Tailwind CSS for mobile-first accessible styling, have an orange synthwave vibe if unspecified
+- Use Tailwind CSS for mobile-first accessible styling, have an pastel rainbow vibe if unspecified
 - For dynamic components, like autocomplete, don't use external libraries, implement your own
 - Avoid using external libraries unless they are essential for the component to function
 - Always import the libraries you need at the top of the file

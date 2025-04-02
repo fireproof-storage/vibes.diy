@@ -14,6 +14,7 @@ interface IframeContentProps {
   filesContent: IframeFiles;
   isStreaming: boolean;
   codeReady: boolean;
+  sessionId?: string; // Add sessionId prop for database sharding
 
   setActiveView: (view: 'preview' | 'code' | 'data') => void;
   setBundlingComplete: (complete: boolean) => void;
@@ -25,6 +26,7 @@ const IframeContent: React.FC<IframeContentProps> = ({
   activeView,
   filesContent,
   isStreaming,
+  sessionId, // Receive the sessionId prop
 
   codeReady,
   dependencies,
@@ -329,6 +331,7 @@ const IframeContent: React.FC<IframeContentProps> = ({
             <DatabaseListView
               appCode={filesContent['/App.jsx']?.code || ''}
               isDarkMode={isDarkMode}
+              sessionId={sessionId}
             />
           </div>
         )}

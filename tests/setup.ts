@@ -2,6 +2,9 @@ import { vi, afterAll } from 'vitest';
 import '@testing-library/jest-dom';
 import React from 'react';
 
+// Import our module setup which configures the use-fireproof mock
+import './moduleSetup';
+
 // Mock the makeBaseSystemPrompt function
 vi.mock('../app/prompts', () => ({
   makeBaseSystemPrompt: vi.fn().mockReturnValue('mocked system prompt'),
@@ -18,6 +21,8 @@ vi.mock('../app/prompts', () => ({
     ],
   },
 }));
+
+// Note: Mock for use-fireproof is in tests/__mocks__/use-fireproof.ts
 
 // Mock React Router modules globally
 vi.mock('@react-router/dev/vite', () => ({
