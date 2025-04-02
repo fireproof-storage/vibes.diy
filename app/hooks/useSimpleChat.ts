@@ -192,7 +192,9 @@ export function useSimpleChat(sessionId: string | undefined): ChatState {
           }
 
           // Then persist to session database
-          await sessionDatabase.put(aiMessage);
+          if (sessionDatabase) {
+            await sessionDatabase.put(aiMessage);
+          }
 
           // Finally, generate title if needed
           const { segments } = parseContent(aiMessage.text);
