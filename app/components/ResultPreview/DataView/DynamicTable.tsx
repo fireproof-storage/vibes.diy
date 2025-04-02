@@ -39,7 +39,7 @@ export default function DynamicTable({
                   <th
                     key={header}
                     scope="row"
-                    className="text-14 px-[15px] py-[12px] whitespace-nowrap"
+                    className="text-xs px-[15px] py-[12px] whitespace-nowrap"
                   >
                     {formatTableCellContent(fields[header], header)}
                   </th>
