@@ -18,6 +18,9 @@ We will implement a sharded database approach where:
 2. Each session will have its own dedicated database named based on the session ID
 3. All session-specific content (messages, screenshots, app code, etc.) will be stored in the session-specific database
 
+Session metadata is stored in the FIREPROOF_CHAT_HISTORY database, while all session-specific content is stored in individual `vibe-${sessionId}` databases.
+
+
 ## Required Changes
 
 ### 1. Database Configuration
@@ -37,7 +40,7 @@ export const getSessionsDatabase = () => {
 // Get a session-specific database
 export const getSessionDatabase = (sessionId: string) => {
   if (!sessionId) throw new Error('Session ID is required');
-  return fireproof(`session-${sessionId}`);
+  return fireproof(`vibe-${sessionId}`);
 };
 ```
 
@@ -150,7 +153,7 @@ export function useSessionMessages(sessionId: string | null) {
   // Only create the session database if we have a sessionId
   const { useFireproof } = require('use-fireproof');
   const { useLiveQuery } = sessionId 
-    ? useFireproof(`session-${sessionId}`) 
+    ? useFireproof(`vibe-${sessionId}`) 
     : { useLiveQuery: () => ({ docs: [] }) };
   
   // Query messages directly from session database
@@ -229,7 +232,7 @@ Components that operate within a single database context can use the standard ho
 ```typescript
 function SessionMessagesComponent({ sessionId }) {
   // This works because we're only accessing a single session database
-  const { useLiveQuery } = useFireproof(`session-${sessionId}`);
+  const { useLiveQuery } = useFireproof(`vibe-${sessionId}`);
   const { docs } = useLiveQuery('type', { keys: ['user-message', 'ai-message'] });
   
   return <MessageList messages={docs} />;
