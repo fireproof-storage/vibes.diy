@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
-import { useFireproof } from 'use-fireproof';
+import { useFireproof, fireproof } from 'use-fireproof';
 import { FIREPROOF_CHAT_HISTORY } from '../../config/env';
 import type { SessionDocument, ScreenshotDocument } from '../../types/chat';
-import { getSessionsDatabase, getSessionDatabase } from '../../utils/databaseManager';
+import { getSessionDatabaseName } from '../../utils/databaseManager';
 
 /**
  * Type to represent either a session document or a screenshot document
@@ -31,22 +31,18 @@ export type GroupedSession = {
  * @returns An object containing the grouped sessions and loading state
  */
 export function useSessionList(justFavorites = false) {
-  const mainDatabase = getSessionsDatabase();
-  const { useLiveQuery } = useFireproof(FIREPROOF_CHAT_HISTORY);
+  const { database, useLiveQuery } = useFireproof(FIREPROOF_CHAT_HISTORY);
   const [groupedSessions, setGroupedSessions] = useState<GroupedSession[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
 
   // Query only session metadata from the main database
   const { docs: sessionDocs } = useLiveQuery<SessionDocument>('type', {
     key: 'session',
-    includeDocs: true,
   });
 
   // Fetch screenshots for each session from their respective databases
   useEffect(() => {
     if (!sessionDocs || sessionDocs.length === 0) {
       setGroupedSessions([]);
-      setIsLoading(false);
       return;
     }
 
@@ -59,36 +55,27 @@ export function useSessionList(justFavorites = false) {
     const fetchSessionScreenshots = async () => {
       const sessionsWithScreenshots = await Promise.all(
         filteredSessions.map(async (session) => {
-          try {
-            if (!session._id) {
-              console.error('Session without ID encountered');
-              return { session, screenshots: [] };
-            }
-
-            // Get the session-specific database
-            const sessionDb = getSessionDatabase(session._id);
-
-            // Query screenshots from the session database
-            const result = await sessionDb.query('type', {
-              key: 'screenshot',
-              includeDocs: true,
-            });
-
-            const screenshots = (result.rows || [])
-              .map((row) => row.doc)
-              .filter(Boolean) as ScreenshotDocument[];
-
-            return {
-              session,
-              screenshots,
-            };
-          } catch (error) {
-            console.error(`Error fetching screenshots for session ${session._id}:`, error);
-            return {
-              session,
-              screenshots: [],
-            };
+          if (!session._id) {
+            throw new Error('Session without ID encountered');
           }
+
+          // Get the session-specific database
+          const sessionDb = fireproof(getSessionDatabaseName(session._id));
+
+          // Query screenshots from the session database
+          const result = await sessionDb.query('type', {
+            key: 'screenshot',
+            includeDocs: true,
+          });
+
+          const screenshots = (result.rows || [])
+            .map((row) => row.doc)
+            .filter(Boolean) as ScreenshotDocument[];
+
+          return {
+            session,
+            screenshots,
+          };
         })
       );
 
@@ -100,16 +87,13 @@ export function useSessionList(justFavorites = false) {
       });
 
       setGroupedSessions(sortedSessions);
-      setIsLoading(false);
     };
 
     fetchSessionScreenshots();
   }, [sessionDocs, justFavorites]);
 
   return {
-    database: mainDatabase,
+    database,
     groupedSessions,
-    count: groupedSessions.length,
-    isLoading,
   };
 }

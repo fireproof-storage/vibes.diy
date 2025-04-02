@@ -24,7 +24,6 @@ export function useSimpleChat(sessionId: string | undefined): ChatState {
     submitUserMessage,
     mergeAiMessage,
     addScreenshot,
-    // screenshots,
     sessionDatabase,
     aiMessage,
   } = useSession(sessionId);

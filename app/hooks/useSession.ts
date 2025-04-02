@@ -6,25 +6,20 @@ import type {
   AiChatMessageDocument,
   SessionDocument,
 } from '../types/chat';
-import {
-  getSessionsDatabase,
-  getSessionDatabase,
-  getSessionDatabaseName,
-} from '../utils/databaseManager';
+import { getSessionDatabaseName } from '../utils/databaseManager';
 
 export function useSession(routedSessionId: string | undefined) {
-  // Main database for session metadata
-  const mainDatabase = getSessionsDatabase();
-  const { useDocument: useMainDocument } = useFireproof(FIREPROOF_CHAT_HISTORY);
-
-  // Session-specific database (only created if we have a sessionId)
+  const { useDocument: useMainDocument, database: mainDatabase } =
+    useFireproof(FIREPROOF_CHAT_HISTORY);
   const sessionId =
     routedSessionId ||
     `${Date.now().toString(36).padStart(9, 'f')}${Math.random().toString(36).slice(2, 11).padEnd(9, '0')}`;
   const sessionDbName = getSessionDatabaseName(sessionId);
-  const sessionDatabase = getSessionDatabase(sessionId);
-  const { useDocument: useSessionDocument, useLiveQuery: useSessionLiveQuery } =
-    useFireproof(sessionDbName);
+  const {
+    database: sessionDatabase,
+    useDocument: useSessionDocument,
+    useLiveQuery: useSessionLiveQuery,
+  } = useFireproof(sessionDbName);
 
   // Session document is stored in the main database
   const { doc: session, merge: mergeSession } = useMainDocument<SessionDocument>(
@@ -45,7 +40,7 @@ export function useSession(routedSessionId: string | undefined) {
     submit: submitUserMessage,
   } = useSessionDocument<UserChatMessageDocument>({
     type: 'user',
-    session_id: session._id,
+    session_id: sessionId,
     text: '',
     created_at: Date.now(),
   });
@@ -58,7 +53,7 @@ export function useSession(routedSessionId: string | undefined) {
     submit: submitAiMessage,
   } = useSessionDocument<AiChatMessageDocument>({
     type: 'ai',
-    session_id: session._id,
+    session_id: sessionId,
     text: '',
     created_at: Date.now(),
   });
@@ -79,7 +74,7 @@ export function useSession(routedSessionId: string | undefined) {
   // Add a screenshot to the session (in session-specific database)
   const addScreenshot = useCallback(
     async (screenshotData: string | null) => {
-      if (!session._id || !screenshotData) return;
+      if (!sessionId || !screenshotData) return;
 
       try {
         const response = await fetch(screenshotData);
@@ -90,7 +85,7 @@ export function useSession(routedSessionId: string | undefined) {
         });
         const screenshot = {
           type: 'screenshot',
-          session_id: session._id,
+          session_id: sessionId,
           _files: {
             screenshot: file,
           },
@@ -100,7 +95,7 @@ export function useSession(routedSessionId: string | undefined) {
         console.error('Failed to process screenshot:', error);
       }
     },
-    [session._id, sessionDatabase]
+    [sessionId, sessionDatabase]
   );
 
   return {
