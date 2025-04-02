@@ -49,7 +49,7 @@ export default function AppLayout({
           mobilePreviewShown ? 'h-full' : 'h-auto overflow-visible opacity-100 md:h-full'
         } relative z-10`}
       >
-        <div className="flex h-[4rem] items-center p-2 overflow-hidden">{headerRight}</div>
+        <div className="flex h-[4rem] items-center overflow-hidden p-2">{headerRight}</div>
 
         <div className="flex-grow overflow-auto">{previewPanel}</div>
 

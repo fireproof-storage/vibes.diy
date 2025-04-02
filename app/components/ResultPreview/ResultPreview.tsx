@@ -47,7 +47,7 @@ function ResultPreview({
     } else if (codeReady) {
       // Check URL path before switching to preview
       const path = window.location.pathname;
-      
+
       // Only switch to preview if we're not on a specific route
       if (!path.endsWith('/code') && !path.endsWith('/data')) {
         setActiveView('preview');
@@ -95,7 +95,7 @@ function ResultPreview({
           iframe?.contentWindow?.postMessage({ type: 'callai-api-key', key: CALLAI_API_KEY }, '*');
 
           setMobilePreviewShown(true);
-          
+
           // Only switch to preview view if we're not on /code or /data routes
           const path = window.location.pathname;
           if (!path.endsWith('/code') && !path.endsWith('/data')) {

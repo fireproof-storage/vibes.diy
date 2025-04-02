@@ -6,7 +6,7 @@ export default {
     extend: {
       // Colors are now defined in app.css using @theme
       screens: {
-        'xs': '480px',
+        xs: '480px',
       },
       animation: {
         'spin-slow': 'spin 3s linear infinite',

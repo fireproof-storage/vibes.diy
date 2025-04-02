@@ -47,8 +47,8 @@ Create beautiful, interactive mini apps with zero setup. Your creations are auto
 ## Your Work is Always Safe
 
 Every app you create is automatically saved, so you can:
+
 - Browse your creations in the sidebar
 - Return to previous work anytime
 - Keep track of your building history
 - Save screenshots of your apps
-

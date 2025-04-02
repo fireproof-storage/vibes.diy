@@ -160,10 +160,10 @@ const IframeContent: React.FC<IframeContentProps> = ({
     if (path.endsWith('/app')) return 'preview';
     return activeView; // Fall back to state if path doesn't have a suffix
   };
-  
+
   // Get view from URL path
   const currentView = getViewFromPath();
-  
+
   return (
     <div data-testid="sandpack-provider" className="h-full">
       <div

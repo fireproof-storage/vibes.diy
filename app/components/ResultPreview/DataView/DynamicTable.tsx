@@ -11,21 +11,25 @@ export default function DynamicTable({
 }: any) {
   return (
     <div className="relative mt-[40px] overflow-x-scroll">
-      <table className="text-gray-900 dark:text-gray-100 w-full border-collapse text-left">
+      <table className="w-full border-collapse text-left text-gray-900 dark:text-gray-100">
         <thead className="relative z-10">
           <tr key={'header' + Math.random()}>
             {headers.map((header: string) => (
-              <th key={header} scope="col" className="text-11 text-gray-500 dark:text-gray-400 px-[15px] py-[8px]">
+              <th
+                key={header}
+                scope="col"
+                className="text-11 px-[15px] py-[8px] text-gray-500 dark:text-gray-400"
+              >
                 {header === '_id' ? 'doc id' : header}
               </th>
             ))}
           </tr>
         </thead>
-        <tbody className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 text-14 border">
+        <tbody className="text-14 border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800">
           {rows.map((fields: any) => (
             <tr
               key={fields._id}
-              className="hover:bg-gray-50 dark:hover:bg-gray-700 border-gray-200 dark:border-gray-700 cursor-pointer border-b"
+              className="cursor-pointer border-b border-gray-200 hover:bg-gray-50 dark:border-gray-700 dark:hover:bg-gray-700"
               onClick={() => {
                 onRowClick(fields._id, dbName);
               }}
