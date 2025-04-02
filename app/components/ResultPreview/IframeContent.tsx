@@ -322,7 +322,6 @@ const IframeContent: React.FC<IframeContentProps> = ({
           left: 0,
           padding: '0px',
           overflow: 'auto',
-          backgroundColor: isDarkMode ? '#0d1117' : '#ffffff',
         }}
       >
         {!isStreaming && (
