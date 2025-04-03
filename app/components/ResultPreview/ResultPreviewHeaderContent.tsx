@@ -190,8 +190,8 @@ const ResultPreviewHeaderContent: React.FC<ResultPreviewHeaderContentProps> = ({
                 <span className="hidden min-[480px]:inline">Data</span>
               </button>
             ) : (
-              <a
-                href={sessionId && encodedTitle ? `/chat/${sessionId}/${encodedTitle}/data` : '#'}
+              <button
+                type="button"
                 className={`flex items-center justify-center space-x-1 rounded-md px-3 py-1.5 text-xs font-medium transition-colors sm:space-x-1.5 sm:px-4 sm:text-sm ${
                   pathView === 'data'
                     ? 'bg-light-background-00 dark:bg-dark-background-00 text-light-primary dark:text-dark-primary shadow-sm'
@@ -200,9 +200,9 @@ const ResultPreviewHeaderContent: React.FC<ResultPreviewHeaderContentProps> = ({
                 aria-label="Switch to data viewer"
                 title="View database data"
                 onClick={() => {
-                  // Just set the active view locally - navigation will happen via browser
-                  if (activeView !== 'data') {
-                    setActiveView('data');
+                  setActiveView('data');
+                  if (sessionId && encodedTitle) {
+                    navigate(`/chat/${sessionId}/${encodedTitle}/data`);
                   }
                 }}
               >
@@ -228,7 +228,7 @@ const ResultPreviewHeaderContent: React.FC<ResultPreviewHeaderContentProps> = ({
                   />
                 </svg>
                 <span className="hidden min-[480px]:inline">Data</span>
-              </a>
+              </button>
             )}
           </div>
         ) : null}

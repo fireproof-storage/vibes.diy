@@ -3,15 +3,17 @@ import DynamicTable from './DynamicTable';
 import { headersForDocs } from './dynamicTableHelpers';
 // Import Fireproof for database access
 import { useFireproof } from 'use-fireproof';
+import type { Database } from 'use-fireproof';
 
 // Component for displaying database data
-const DatabaseData: React.FC<{ dbName: string }> = ({ dbName }) => {
+const DatabaseData: React.FC<{ dbName: Database }> = ({ dbName }) => {
   if (!dbName) {
-    throw new Error('No valid database name provided');
+    throw new Error('No valid database instance provided');
   }
 
-  // Always use Fireproof with useLiveQuery for reactive data access
-  const { useAllDocs, database } = useFireproof(dbName);
+  // Use useFireproof with the database instance
+  // This is a type assertion to work with the current implementation
+  const { useAllDocs, database } = useFireproof(dbName.name);
 
   // Always call hooks at the top level regardless of conditions
   // In Fireproof, useLiveQuery returns docs and potentially other properties
@@ -23,7 +25,7 @@ const DatabaseData: React.FC<{ dbName: string }> = ({ dbName }) => {
   if (docs.length === 0) {
     return (
       <div className="bg-light-decorative-00 dark:bg-dark-decorative-00 rounded-lg p-4">
-        <p>Loading data from {dbName}...</p>
+        <p>Loading data from {dbName.name}...</p>
       </div>
     );
   }
