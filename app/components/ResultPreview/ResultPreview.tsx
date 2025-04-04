@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { CALLAI_API_KEY } from '../../config/env';
 import { animationStyles } from './ResultPreviewTemplates';
 import type { ResultPreviewProps, IframeFiles } from './ResultPreviewTypes';
+import { encodeTitle } from '../SessionSidebar/utils';
 // ResultPreview component
 import IframeContent from './IframeContent';
 
@@ -96,10 +97,17 @@ function ResultPreview({
 
           setMobilePreviewShown(true);
 
-          // Only switch to preview view if we're not on /code or /data routes
+          // Always switch to preview view when the iframe signals it's ready.
+          setActiveView('preview');
+
+          // Also navigate to the /app URL suffix if not already there.
           const path = window.location.pathname;
-          if (!path.endsWith('/code') && !path.endsWith('/data')) {
-            setActiveView('preview');
+          // Add null check for title and encode it
+          const encodedTitle = title ? encodeTitle(title) : '';
+          if (!path.endsWith('/app') && sessionId && encodedTitle) {
+            // Navigation is handled by the parent component (home.tsx) based on activeView state
+            // We only set the state here.
+            // navigate(`/chat/${sessionId}/${encodedTitle}/app`, { replace: true });
           }
 
           // Notify parent component that preview is loaded
@@ -128,7 +136,7 @@ function ResultPreview({
     return () => {
       window.removeEventListener('message', handleMessage);
     };
-  }, [onScreenshotCaptured, setActiveView, onPreviewLoaded, setIsIframeFetching]);
+  }, [onScreenshotCaptured, setActiveView, onPreviewLoaded, setIsIframeFetching, setMobilePreviewShown, sessionId, title]);
 
   // Create refs outside useEffect to track timeout state
   const timeoutIdRef = useRef<NodeJS.Timeout | null>(null);

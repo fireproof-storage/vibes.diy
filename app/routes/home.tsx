@@ -57,6 +57,13 @@ export default function UnifiedSession() {
     setIsSidebarVisible(false);
   }, []);
 
+  // Reset previewReady state when streaming starts
+  useEffect(() => {
+    if (chatState.isStreaming) {
+      setPreviewReady(false);
+    }
+  }, [chatState.isStreaming]);
+
   // Handle preview loaded event
   const handlePreviewLoaded = useCallback(() => {
     setPreviewReady(true);
@@ -190,7 +197,6 @@ export default function UnifiedSession() {
               activeView={activeView}
               setActiveView={setActiveView}
               setMobilePreviewShown={setMobilePreviewShown}
-              bundlingComplete={bundlingComplete}
               isStreaming={chatState.isStreaming}
               code={chatState.selectedCode?.content}
               dependencies={chatState.selectedDependencies || {}}

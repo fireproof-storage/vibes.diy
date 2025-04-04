@@ -175,17 +175,15 @@ const IframeContent: React.FC<IframeContentProps> = ({
           left: 0,
         }}
       >
-        {!isStreaming && (
-          <iframe
-            ref={iframeRef}
-            className="h-full w-full border-0"
-            title="Preview"
-            sandbox="allow-downloads allow-forms allow-modals allow-pointer-lock allow-popups-to-escape-sandbox allow-popups allow-presentation allow-same-origin allow-scripts allow-top-navigation-by-user-activation"
-            allow="accelerometer *; bluetooth *; camera *; encrypted-media *; display-capture *; geolocation *; gyroscope *; microphone *; midi *; clipboard-read *; clipboard-write *; web-share *; serial *; xr-spatial-tracking *"
-            scrolling="auto"
-            allowFullScreen={true}
-          />
-        )}
+        <iframe
+          ref={iframeRef}
+          className="h-full w-full border-0"
+          title="Preview"
+          sandbox="allow-downloads allow-forms allow-modals allow-pointer-lock allow-popups-to-escape-sandbox allow-popups allow-presentation allow-same-origin allow-scripts allow-top-navigation-by-user-activation"
+          allow="accelerometer *; bluetooth *; camera *; encrypted-media *; display-capture *; geolocation *; gyroscope *; microphone *; midi *; clipboard-read *; clipboard-write *; web-share *; serial *; xr-spatial-tracking *"
+          scrolling="auto"
+          allowFullScreen={true}
+        />
       </div>
       <div
         style={{
@@ -322,14 +320,12 @@ const IframeContent: React.FC<IframeContentProps> = ({
           overflow: 'auto',
         }}
       >
-        {!isStreaming && (
-          <div className="data-container">
-            <DatabaseListView
-              appCode={filesContent['/App.jsx']?.code || ''}
-              isDarkMode={isDarkMode}
-            />
-          </div>
-        )}
+        <div className="data-container">
+          <DatabaseListView
+            appCode={filesContent['/App.jsx']?.code || ''}
+            isDarkMode={isDarkMode}
+          />
+        </div>
       </div>
     </div>
   );
