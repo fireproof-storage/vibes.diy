@@ -125,8 +125,6 @@ function ResultPreview({
           // Notify parent component that preview is loaded
           onPreviewLoaded();
         } else if (data.type === 'streaming' && data.state !== undefined) {
-          // Handle the iframe fetching state from the iframe
-          console.log('Iframe fetching state:', data.state);
           if (setIsIframeFetching) {
             setIsIframeFetching(data.state);
           }

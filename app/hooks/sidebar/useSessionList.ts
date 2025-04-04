@@ -32,6 +32,9 @@ export type GroupedSession = {
  */
 export function useSessionList(justFavorites = false) {
   const { database, useLiveQuery } = useFireproof(FIREPROOF_CHAT_HISTORY);
+  const [allSessionsWithScreenshots, setAllSessionsWithScreenshots] = useState<GroupedSession[]>(
+    []
+  );
   const [groupedSessions, setGroupedSessions] = useState<GroupedSession[]>([]);
 
   // Query only session metadata from the main database
@@ -40,21 +43,17 @@ export function useSessionList(justFavorites = false) {
   });
 
   // Fetch screenshots for each session from their respective databases
+  // This effect only runs when sessionDocs changes, not when justFavorites changes
   useEffect(() => {
     if (!sessionDocs || sessionDocs.length === 0) {
-      setGroupedSessions([]);
+      setAllSessionsWithScreenshots([]);
       return;
     }
-
-    // Filter sessions by favorites if requested
-    const filteredSessions = justFavorites
-      ? sessionDocs.filter((session) => session.favorite)
-      : sessionDocs;
 
     // Process all sessions and fetch their screenshots
     const fetchSessionScreenshots = async () => {
       const sessionsWithScreenshots = await Promise.all(
-        filteredSessions.map(async (session) => {
+        sessionDocs.map(async (session) => {
           if (!session._id) {
             throw new Error('Session without ID encountered');
           }
@@ -85,11 +84,27 @@ export function useSessionList(justFavorites = false) {
         return timeB - timeA;
       });
 
-      setGroupedSessions(sortedSessions);
+      setAllSessionsWithScreenshots(sortedSessions);
     };
 
     fetchSessionScreenshots();
-  }, [sessionDocs, justFavorites]);
+  }, [sessionDocs]); // Only depends on sessionDocs, not justFavorites
+
+  // This effect runs when justFavorites or allSessionsWithScreenshots changes
+  // It filters the already loaded sessions without any async operations
+  useEffect(() => {
+    if (allSessionsWithScreenshots.length === 0) {
+      setGroupedSessions([]);
+      return;
+    }
+
+    // Apply the favorites filter without any async operations
+    const filteredSessions = justFavorites
+      ? allSessionsWithScreenshots.filter((item) => item.session.favorite)
+      : allSessionsWithScreenshots;
+
+    setGroupedSessions(filteredSessions);
+  }, [allSessionsWithScreenshots, justFavorites]);
 
   return {
     database,

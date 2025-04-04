@@ -52,8 +52,8 @@ describe('SessionSidebar', () => {
       <SessionSidebar isVisible={true} onClose={onClose} {...mockSessionSidebarProps} />
     );
 
-    // Check that the sidebar title is rendered
-    expect(screen.getByText('My Vibes')).toBeDefined();
+    // Check that the sidebar title is rendered with the correct vibe count
+    expect(screen.getByText('No Vibes Yet')).toBeDefined();
 
     // The sidebar is the first div within the container that has position fixed
     const sidebarContainer = container.querySelector('div > div'); // First div inside the container div
@@ -131,10 +131,25 @@ describe('SessionSidebar', () => {
     });
 
     // Verify that the sidebar is rendered
-    const sidebarElement = screen.getByText('My Vibes').closest('div');
+    const sidebarElement = screen.getByText('No Vibes Yet').closest('div');
     expect(sidebarElement).toBeInTheDocument();
 
     // Since createObjectURL would be called in a real implementation, verify our mock is in place
     expect(global.URL.createObjectURL).toBeDefined();
+  });
+
+  it('shows Faves instead of Vibes when filtering favorites', () => {
+    const onClose = vi.fn();
+    render(<SessionSidebar isVisible={true} onClose={onClose} {...mockSessionSidebarProps} />);
+
+    // First check that it shows Vibes initially
+    expect(screen.getByText('No Vibes Yet')).toBeInTheDocument();
+
+    // Find and click the favorites filter button
+    const favoritesButton = screen.getByTitle('Show favorites only');
+    fireEvent.click(favoritesButton);
+
+    // Now check that it shows Faves
+    expect(screen.getByText('No Faves Yet')).toBeInTheDocument();
   });
 });

@@ -139,7 +139,17 @@ function SessionSidebar({ isVisible, onClose }: SessionSidebarProps) {
               lastTapRef.current = now;
             }}
           >
-            My Vibes
+            {justFavorites
+              ? groupedSessions.length === 0
+                ? 'No Faves Yet'
+                : groupedSessions.length === 1
+                  ? '1 Fave'
+                  : `${groupedSessions.length} Faves`
+              : groupedSessions.length === 0
+                ? 'No Vibes Yet'
+                : groupedSessions.length === 1
+                  ? '1 Vibe'
+                  : `${groupedSessions.length} Vibes`}
           </h2>
           <div className="flex items-center space-x-2">
             <button
