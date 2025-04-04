@@ -41,12 +41,16 @@ function QuickSuggestions({ onSelectSuggestion }: QuickSuggestionsProps) {
       text: 'Create a pomodoro timer app with multiple timers work/break intervals and session tracking.',
     },
     {
+      label: 'Music',
+      text: 'A music loop composition tool that uses createOscillator to make an 8-step sequencer with distinct tones for each instrument.',
+    },
+    {
       label: 'Quiz',
       text: 'Trivia show that lets me pick a topic, and uses AI to make questions and judge answers.',
     },
     {
       label: 'Blocks',
-      text: 'Make an Arkanoid block buster with sounds and bonus items.',
+      text: 'A full screen paddle-and-ball game where a horizontal paddle at the bottom of the screen follows the mouse or jumps to touch locations, and the goal is to bounce a ball upward. Use createOscillator for sound effects. The ball breaks a wall of bricks at the top, and the goal is to clear all bricks without letting the ball fall. Start slow and speed up each level.Power-ups drop from some bricks, adding effects like multiple balls, lasers, or a wider paddle.',
     },
     {
       label: 'Wildcard',
