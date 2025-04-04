@@ -1,4 +1,4 @@
-import { useCallback, useRef } from 'react';
+import { useCallback, useRef, useEffect } from 'react';
 import type { ChangeEvent } from 'react';
 import AppLayout from '../components/AppLayout';
 import { HomeIcon } from '../components/SessionSidebar/HomeIcon';
@@ -15,6 +15,26 @@ export function meta() {
 export default function Settings() {
   const { mainDatabase } = useSession();
   const { useDocument } = useFireproof(mainDatabase.name);
+  
+  // Add effect to modify parent container overflow
+  useEffect(() => {
+    // Find the parent overflow-auto container and modify its overflow property
+    const parentContainer = document.querySelector('.flex-grow.overflow-auto') as HTMLElement;
+    if (parentContainer) {
+      // Save original style to restore later
+      const originalOverflow = parentContainer.style.overflow;
+      
+      // Set overflow to visible
+      parentContainer.style.overflow = 'visible';
+      
+      // Cleanup function to restore original style
+      return () => {
+        if (parentContainer) {
+          parentContainer.style.overflow = originalOverflow;
+        }
+      };
+    }
+  }, []);
 
   const {
     doc: settings,
@@ -97,7 +117,8 @@ export default function Settings() {
         </div>
       }
       chatPanel={
-        <div className="flex h-full flex-col items-center justify-center p-6">
+        <div className="flex flex-col items-center justify-start p-6 min-h-full" style={{height: 'auto', minHeight: '100%', paddingBottom: '150px'}}>
+          {/* Add extra padding at the bottom to ensure content is visible */}
           <div className="w-full max-w-2xl rounded-lg border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-700 dark:bg-gray-800">
             <h2 className="mb-4 text-xl font-semibold">Application Settings</h2>
             <p className="mb-4 text-gray-600 dark:text-gray-300">
