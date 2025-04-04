@@ -89,7 +89,7 @@ const IframeContent: React.FC<IframeContentProps> = ({
     if (codeReady && iframeRef.current) {
       // Compare with the ref holding the last rendered code
       if (contentLoadedRef.current && appCode === lastContentRef.current) {
-        return; 
+        return;
       }
 
       contentLoadedRef.current = true;

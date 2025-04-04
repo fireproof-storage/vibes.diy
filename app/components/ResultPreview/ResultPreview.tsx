@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useMemo } from 'react';
 import { CALLAI_API_KEY } from '../../config/env';
 import { animationStyles } from './ResultPreviewTemplates';
 import type { ResultPreviewProps, IframeFiles } from './ResultPreviewTypes';
@@ -26,8 +26,18 @@ function ResultPreview({
   const isStreamingRef = useRef(isStreaming);
   const hasGeneratedStreamingKeyRef = useRef(false);
 
-  const filesRef = useRef<IframeFiles>({});
   const showWelcome = !isStreaming && (!code || code.length === 0);
+
+  // Calculate filesContent directly based on code prop
+  const filesContent = useMemo<IframeFiles>(() => {
+    // Always return the expected structure, defaulting code to empty string
+    return {
+      '/App.jsx': {
+        code: code && !showWelcome ? code : '', // Use code if available, else empty string
+        active: true,
+      },
+    };
+  }, [code, showWelcome]);
 
   // Track streaming state changes to reset key generation only when streaming starts/stops
   useEffect(() => {
@@ -138,38 +148,22 @@ function ResultPreview({
     return () => {
       window.removeEventListener('message', handleMessage);
     };
-  }, [onScreenshotCaptured, setActiveView, onPreviewLoaded, setIsIframeFetching, setMobilePreviewShown, sessionId, title]);
-
-  // Create refs outside useEffect to track timeout state
-  const timeoutIdRef = useRef<NodeJS.Timeout | null>(null);
-
-  useEffect(() => {
-    // Update filesRef ONLY when code becomes ready
-    // Use the code prop available at the moment codeReady becomes true.
-    if (codeReady && !showWelcome) {
-      filesRef.current = {
-        // ...filesRef.current, // Preserve other files if needed in future
-        '/App.jsx': {
-          code: code, // Use code directly
-          active: true,
-        },
-      };
-    }
-
-    // Clean up timeout on unmount
-    return () => {
-      if (timeoutIdRef.current) {
-        clearTimeout(timeoutIdRef.current);
-      }
-    };
-  }, [codeReady, showWelcome, code]); // Depend primarily on codeReady, but include code to capture its value.
+  }, [
+    onScreenshotCaptured,
+    setActiveView,
+    onPreviewLoaded,
+    setIsIframeFetching,
+    setMobilePreviewShown,
+    sessionId,
+    title,
+  ]);
 
   const previewArea = showWelcome ? (
     <div className="h-full">{/* empty div to prevent layout shift */}</div>
   ) : (
     <IframeContent
       activeView={activeView}
-      filesContent={filesRef.current} // Pass the ref's current value
+      filesContent={filesContent} // Pass the derived filesContent
       isStreaming={!codeReady} // Pass the derived prop
       codeReady={codeReady}
       setActiveView={setActiveView}

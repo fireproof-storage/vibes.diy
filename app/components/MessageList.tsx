@@ -111,35 +111,5 @@ function MessageList({
     </div>
   );
 }
-export default memo(MessageList, (prevProps, nextProps) => {
-  // Reference equality check for isStreaming flag
-  const streamingStateEqual = prevProps.isStreaming === nextProps.isStreaming;
-
-  // Check if setSelectedResponseId changed
-  const setSelectedResponseIdEqual =
-    prevProps.setSelectedResponseId === nextProps.setSelectedResponseId;
-
-  // Check if selectedResponseId changed
-  const selectedResponseIdEqual = prevProps.selectedResponseId === nextProps.selectedResponseId;
-
-  // Check if setMobilePreviewShown changed
-  const setMobilePreviewShownEqual =
-    prevProps.setMobilePreviewShown === nextProps.setMobilePreviewShown;
-
-  // Content equality check for messages - must compare text content
-  const messagesEqual =
-    prevProps.messages.length === nextProps.messages.length &&
-    prevProps.messages.every((msg, i) => {
-      const nextMsg = nextProps.messages[i];
-      // Check message ID and text content
-      return msg._id === nextMsg._id && msg.text === nextMsg.text;
-    });
-
-  return (
-    streamingStateEqual &&
-    messagesEqual &&
-    setSelectedResponseIdEqual &&
-    selectedResponseIdEqual &&
-    setMobilePreviewShownEqual
-  );
-});
+// Remove the custom comparison function, revert to default shallow comparison
+export default memo(MessageList);

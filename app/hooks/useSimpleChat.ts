@@ -39,11 +39,43 @@ export function useSimpleChat(sessionId: string | undefined): ChatState {
   const [systemPrompt, setSystemPrompt] = useState('');
   const [isStreaming, setIsStreaming] = useState<boolean>(false);
   const [selectedResponseId, setSelectedResponseId] = useState<string>(''); // default most recent
+  const [pendingAiMessage, setPendingAiMessage] = useState<ChatMessageDocument | null>(null);
 
-  const selectedResponseDoc = (isStreaming
-    ? aiMessage
-    : docs.find((doc: any) => doc.type === 'ai' && doc._id === selectedResponseId) ||
-      docs.filter((doc: any) => doc.type === 'ai').reverse()[0]) as unknown as ChatMessageDocument;
+  // The list of messages for the UI: docs + streaming message if active
+  const messages = useMemo(() => {
+    const baseDocs = docs.filter(
+      (doc: any) => doc.type === 'ai' || doc.type === 'user'
+    ) as unknown as ChatMessageDocument[];
+    return isStreaming && aiMessage.text.length > 0 ? [...baseDocs, aiMessage] : baseDocs;
+  }, [docs, isStreaming, aiMessage.text]);
+
+  const selectedResponseDoc = useMemo(() => {
+    // Priority 1: Explicit user selection (from confirmed docs)
+    if (selectedResponseId) {
+      const foundInDocs = docs.find(
+        (doc: any) => doc.type === 'ai' && doc._id === selectedResponseId
+      );
+      if (foundInDocs) return foundInDocs;
+      // If user selected an ID not (yet?) in docs, ignore it for now and proceed to defaults
+      // This prevents showing inconsistent state if docs haven't updated
+    }
+
+    // Priority 2: Pending message (if no valid user selection)
+    if (pendingAiMessage) {
+      return pendingAiMessage;
+    }
+
+    // Priority 3: Streaming message (if no valid user selection and not pending)
+    if (isStreaming) {
+      return aiMessage;
+    }
+
+    // Priority 4: Default to latest AI message from docs (if no valid selection, not pending, not streaming)
+    const latestAiDoc = docs.filter((doc: any) => doc.type === 'ai').reverse()[0];
+    return latestAiDoc;
+  }, [selectedResponseId, docs, pendingAiMessage, isStreaming, aiMessage]) as
+    | ChatMessageDocument
+    | undefined;
 
   const setInput = useCallback(
     (input: string) => {
@@ -54,13 +86,6 @@ export function useSimpleChat(sessionId: string | undefined): ChatState {
 
   // Process docs into messages for the UI
   const filteredDocs = docs.filter((doc: any) => doc.type === 'ai' || doc.type === 'user');
-
-  const messages = useMemo(() => {
-    return (isStreaming && aiMessage.text.length > 0
-      ? [...filteredDocs, aiMessage]
-      : filteredDocs) as unknown as ChatMessageDocument[];
-  }, [filteredDocs, isStreaming, aiMessage.text]);
-
   const buildMessageHistory = useCallback(() => {
     return filteredDocs.map((msg: any) => ({
       role: msg.type === 'user' ? ('user' as const) : ('assistant' as const),
@@ -193,6 +218,8 @@ export function useSimpleChat(sessionId: string | undefined): ChatState {
           // Then persist to session database
           if (sessionDatabase) {
             await sessionDatabase.put(aiMessage);
+            // Capture the completed message *after* persistence
+            setPendingAiMessage({ ...aiMessage });
           } else {
             console.error('Session db missing');
           }
@@ -210,6 +237,9 @@ export function useSimpleChat(sessionId: string | undefined): ChatState {
       .catch((error) => {
         console.error('Error processing stream:', error);
         isProcessingRef.current = false;
+        // Clear pending message and selection on error
+        setPendingAiMessage(null);
+        setSelectedResponseId('');
       })
       .finally(() => {
         setIsStreaming(false);
@@ -227,6 +257,7 @@ export function useSimpleChat(sessionId: string | undefined): ChatState {
     sessionDatabase,
     session?.title,
     updateTitle,
+    setSelectedResponseId,
   ]);
 
   // TODO: make a version of this that only saves the first
@@ -256,6 +287,13 @@ export function useSimpleChat(sessionId: string | undefined): ChatState {
       }
     };
   }, []);
+
+  // Effect to clear pending message once it appears in the main docs list
+  useEffect(() => {
+    if (pendingAiMessage && docs.some((doc: any) => doc._id === pendingAiMessage._id)) {
+      setPendingAiMessage(null);
+    }
+  }, [docs, pendingAiMessage]);
 
   return {
     sessionId: session._id,

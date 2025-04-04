@@ -11,6 +11,7 @@ import ResultPreviewHeaderContent from '../components/ResultPreview/ResultPrevie
 import SessionSidebar from '../components/SessionSidebar';
 import { useSimpleChat } from '../hooks/useSimpleChat';
 import { decodeStateFromUrl } from '../utils/sharing';
+// import { useSession } from '../hooks/useSession';
 
 export function meta() {
   return [
@@ -41,7 +42,7 @@ export default function UnifiedSession() {
     return 'code';
   });
   const [previewReady, setPreviewReady] = useState(false);
-  const [bundlingComplete] = useState(true);
+  // const [bundlingComplete] = useState(true);
   const [mobilePreviewShown, setMobilePreviewShown] = useState(false);
   const [isIframeFetching, setIsIframeFetching] = useState(false);
 
