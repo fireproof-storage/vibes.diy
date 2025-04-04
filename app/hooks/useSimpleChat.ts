@@ -217,9 +217,11 @@ export function useSimpleChat(sessionId: string | undefined): ChatState {
 
           // Then persist to session database
           if (sessionDatabase) {
-            await sessionDatabase.put(aiMessage);
+            const { id } = await sessionDatabase.put(aiMessage);
             // Capture the completed message *after* persistence
-            setPendingAiMessage({ ...aiMessage });
+            setPendingAiMessage({ ...aiMessage, _id: id });
+            // HACK: Always select the message that just finished streaming
+            setSelectedResponseId(id);
           } else {
             console.error('Session db missing');
           }
@@ -296,17 +298,6 @@ export function useSimpleChat(sessionId: string | undefined): ChatState {
       setPendingAiMessage(null);
     }
   }, [docs, pendingAiMessage]);
-
-  // Effect to auto-select the streaming message once code appears
-  useEffect(() => {
-    if (isStreaming && aiMessage.text && aiMessage._id !== selectedResponseId) {
-      const { segments } = parseContent(aiMessage.text);
-      const hasCode = segments.some(segment => segment.type === 'code');
-      if (hasCode) {
-        setSelectedResponseId(aiMessage._id);
-      }
-    }
-  }, [isStreaming, aiMessage.text, aiMessage._id, selectedResponseId, setSelectedResponseId]);
 
   return {
     sessionId: session._id,
