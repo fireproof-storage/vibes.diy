@@ -3,6 +3,7 @@ import type { Segment, ChatMessageDocument, ChatState } from '../types/chat';
 import { makeBaseSystemPrompt } from '../prompts';
 import { parseContent, parseDependencies } from '../utils/segmentParser';
 import { useSession } from './useSession';
+import { useFireproof } from 'use-fireproof';
 import { generateTitle } from '../utils/titleGenerator';
 import { processStream, callOpenRouterAPI } from '../utils/streamHandler';
 
@@ -25,6 +26,7 @@ export function useSimpleChat(sessionId: string | undefined): ChatState {
     mergeAiMessage,
     addScreenshot,
     sessionDatabase,
+    mainDatabase,
     aiMessage,
   } = useSession(sessionId);
 
@@ -34,6 +36,14 @@ export function useSimpleChat(sessionId: string | undefined): ChatState {
   const isProcessingRef = useRef<boolean>(false);
   const lastUpdateTimeRef = useRef<number>(0);
   const updateTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Get settings document with proper type definition
+  const { useDocument } = useFireproof(mainDatabase);
+  const { doc: settingsDoc } = useDocument<{
+    _id: string;
+    stylePrompt?: string;
+    userPrompt?: string;
+  }>({ _id: 'user_settings' });
 
   // Then declare state hooks
   const [systemPrompt, setSystemPrompt] = useState('');
@@ -111,6 +121,18 @@ export function useSimpleChat(sessionId: string | undefined): ChatState {
   }, [selectedResponseDoc]);
 
   // Throttled update function with fixed delay and debouncing
+  // Reset system prompt when settings change
+  useEffect(() => {
+    if (settingsDoc && systemPrompt) {
+      // Only reset if we already have a system prompt (don't trigger on initial load)
+      const loadNewPrompt = async () => {
+        const newPrompt = await makeBaseSystemPrompt(CODING_MODEL, settingsDoc);
+        setSystemPrompt(newPrompt);
+      };
+      loadNewPrompt();
+    }
+  }, [settingsDoc, systemPrompt, CODING_MODEL]);
+
   const throttledMergeAiMessage = useCallback(
     (content: string) => {
       // Store content in ref to ensure latest content is always available
@@ -176,7 +198,8 @@ export function useSimpleChat(sessionId: string | undefined): ChatState {
         currentSystemPrompt = 'Test system prompt';
         setSystemPrompt(currentSystemPrompt);
       } else {
-        currentSystemPrompt = await makeBaseSystemPrompt(CODING_MODEL);
+        // Pass the settings document to makeBaseSystemPrompt
+        currentSystemPrompt = await makeBaseSystemPrompt(CODING_MODEL, settingsDoc);
         setSystemPrompt(currentSystemPrompt);
       }
     }
@@ -261,6 +284,7 @@ export function useSimpleChat(sessionId: string | undefined): ChatState {
     sessionDatabase,
     session?.title,
     updateTitle,
+    settingsDoc,
     setSelectedResponseId,
   ]);
 

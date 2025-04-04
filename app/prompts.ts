@@ -3,24 +3,37 @@ const llmsList = Object.values(llmsModules).map(
   (mod) => (mod as { default: { llmsTxtUrl: string; label: string } }).default
 );
 
+// Cache for LLM text documents to prevent redundant fetches
+const llmsTextCache: Record<string, string> = {};
+
 // Base system prompt for the AI
-export async function makeBaseSystemPrompt(model: string) {
+export async function makeBaseSystemPrompt(model: string, sessionDoc?: any) {
   let concatenatedLlmsTxt = '';
 
   for (const llm of llmsList) {
-    const llmsTxt = await fetch(llm.llmsTxtUrl).then((res) => res.text());
+    // Check if we already have this LLM text in cache
+    if (!llmsTextCache[llm.llmsTxtUrl]) {
+      llmsTextCache[llm.llmsTxtUrl] = await fetch(llm.llmsTxtUrl).then((res) => res.text());
+    }
+
     concatenatedLlmsTxt += `
 <${llm.label}-docs>
-${llmsTxt}
+${llmsTextCache[llm.llmsTxtUrl]}
 </${llm.label}-docs>
 `;
   }
+
+  // Get style prompt from session document if available
+  const stylePrompt = sessionDoc?.stylePrompt || 'DIY zine';
+
+  // Get user prompt from session document if available
+  const userPrompt = sessionDoc?.userPrompt || '';
 
   return `
 You are an AI assistant tasked with creating React components. You should create components that:
 - Use modern React practices and follow the rules of hooks
 - Don't use any TypeScript, just use JavaScript
-- Use Tailwind CSS for mobile-first accessible styling, have a DIY zine vibe if unspecified
+- Use Tailwind CSS for mobile-first accessible styling, have a ${stylePrompt} vibe
 - For dynamic components, like autocomplete, don't use external libraries, implement your own
 - Avoid using external libraries unless they are essential for the component to function
 - Always import the libraries you need at the top of the file
@@ -36,7 +49,13 @@ You are an AI assistant tasked with creating React components. You should create
 
 ${concatenatedLlmsTxt}
 
-IMPORTANT: You are working in one JavaScript file, use tailwind classes for styling.
+${
+  userPrompt
+    ? `${userPrompt}
+
+`
+    : ''
+}IMPORTANT: You are working in one JavaScript file, use tailwind classes for styling.
 
 Provide a title and brief explanation followed by the component code. The component should demonstrate proper Fireproof integration with real-time updates and proper data persistence. Follow it with a longer description of the app's purpose and detailed instructions how to use it (with occasional bold or italic for emphasis). 
 
