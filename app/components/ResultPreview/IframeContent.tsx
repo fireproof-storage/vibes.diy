@@ -16,7 +16,6 @@ interface IframeContentProps {
   codeReady: boolean;
 
   setActiveView: (view: 'preview' | 'code' | 'data') => void;
-  setBundlingComplete: (complete: boolean) => void;
   dependencies: Record<string, string>;
   isDarkMode: boolean; // Add isDarkMode prop
 }
@@ -29,7 +28,6 @@ const IframeContent: React.FC<IframeContentProps> = ({
   codeReady,
   dependencies,
   setActiveView,
-  setBundlingComplete,
   isDarkMode, // Receive the isDarkMode prop
 }) => {
   const iframeRef = useRef<HTMLIFrameElement>(null);
@@ -139,7 +137,7 @@ const IframeContent: React.FC<IframeContentProps> = ({
       // Setup message listener for preview ready signal
       const handleMessage = (event: MessageEvent) => {
         if (event.data?.type === 'preview-ready') {
-          setBundlingComplete(true);
+          // bundlingComplete state is removed, no action needed here
         }
       };
 
@@ -150,7 +148,7 @@ const IframeContent: React.FC<IframeContentProps> = ({
         window.removeEventListener('message', handleMessage);
       };
     }
-  }, [isStreaming, codeReady, filesContent, setBundlingComplete]);
+  }, [isStreaming, codeReady, filesContent]);
 
   // Determine which view to show based on URL path - gives more stable behavior on refresh
   const getViewFromPath = () => {

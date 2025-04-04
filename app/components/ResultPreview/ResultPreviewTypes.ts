@@ -3,6 +3,7 @@ export interface ResultPreviewProps {
   dependencies?: Record<string, string>;
   onScreenshotCaptured?: (screenshotData: string | null) => void;
   sessionId?: string;
+  title?: string;
   isStreaming?: boolean;
   codeReady?: boolean;
   activeView: 'code' | 'preview' | 'data';

@@ -18,11 +18,10 @@ function ResultPreview({
   setMobilePreviewShown,
   setIsIframeFetching,
   children,
+  title,
 }: ResultPreviewProps & { children?: React.ReactNode }) {
   // Add theme detection at the parent level
   const [isDarkMode, setIsDarkMode] = useState<boolean>(true); // Default to dark mode
-  // Note: setBundlingComplete is used by IframeContent, but bundlingComplete isn't used here
-  const [, setBundlingComplete] = useState(true);
   const isStreamingRef = useRef(isStreaming);
   const hasGeneratedStreamingKeyRef = useRef(false);
 
@@ -173,7 +172,6 @@ function ResultPreview({
           isStreaming={!codeReady}
           codeReady={codeReady}
           setActiveView={setActiveView}
-          setBundlingComplete={setBundlingComplete}
           dependencies={dependencies}
           isDarkMode={isDarkMode} // Pass down the theme state
         />

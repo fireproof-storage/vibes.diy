@@ -186,3 +186,15 @@ After investigating the code flow:
    - Test with both short and long-running streaming sessions
    - Test across all tabs to ensure consistent behavior
    - Verify that the iframe content only updates once per code generation (not multiple times)
+
+## Appendix: Understanding `bundlingComplete` State
+
+During the investigation, the purpose of the `bundlingComplete` state was clarified:
+
+- **Initialization**: It's initialized to `true` in `ResultPreview.tsx` using `useState(true)`.
+- **Setter (`setBundlingComplete`)**: The setter function is passed down to `IframeContent.tsx`.
+- **Trigger**: `setBundlingComplete(true)` is called within `IframeContent.tsx` inside the `message` event handler specifically when the iframe posts a message with `type: 'preview-ready'`.
+- **Usage**: The actual `bundlingComplete` state variable is *only* used as a prop passed to `ResultPreviewHeaderContent.tsx`.
+- **Effect**: In `ResultPreviewHeaderContent.tsx`, it's used in the condition for the code icon's spinning animation: ``className={`... ${bundlingComplete && !previewReady ? 'animate-spin-slow' : ''}`}``.
+
+**Conclusion**: `bundlingComplete` is essentially a mirror of `previewReady` after the *first* preview load, as it starts `true` and is set back to `true` when `previewReady` would become true. Its current use in the animation condition (`bundlingComplete && !previewReady`) seems redundant or potentially incorrect logic, as the animation should likely depend directly on the streaming and preview readiness states (`isStreaming` and `previewReady`).

@@ -6,7 +6,6 @@ interface ResultPreviewHeaderContentProps {
   previewReady: boolean;
   activeView: 'preview' | 'code' | 'data';
   setActiveView: (view: 'preview' | 'code' | 'data') => void;
-  bundlingComplete: boolean;
   isStreaming: boolean;
   code: string;
   setMobilePreviewShown: (shown: boolean) => void;
@@ -20,7 +19,6 @@ const ResultPreviewHeaderContent: React.FC<ResultPreviewHeaderContentProps> = ({
   previewReady,
   activeView,
   setActiveView,
-  bundlingComplete,
   isStreaming,
   code,
   setMobilePreviewShown,
@@ -145,7 +143,7 @@ const ResultPreviewHeaderContent: React.FC<ResultPreviewHeaderContentProps> = ({
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
-                className={`h-3.5 w-3.5 sm:h-4 sm:w-4 ${bundlingComplete && !previewReady ? 'animate-spin-slow' : ''}`}
+                className={`h-3.5 w-3.5 sm:h-4 sm:w-4 ${isStreaming && !previewReady ? 'animate-spin-slow' : ''}`}
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
