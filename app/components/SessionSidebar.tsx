@@ -156,7 +156,7 @@ function SessionSidebar({ isVisible, onClose }: SessionSidebarProps) {
             <a
               href="/settings"
               onClick={() => onClose()}
-              className="focus:outline-none text-gray-400 hover:text-gray-500"
+              className="text-gray-400 hover:text-gray-500 focus:outline-none"
               title="Settings"
               aria-label="Settings"
             >

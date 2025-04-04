@@ -65,7 +65,6 @@ export function useSessionList(justFavorites = false) {
           // Query screenshots from the session database
           const result = await sessionDb.query('type', {
             key: 'screenshot',
-            includeDocs: true,
           });
 
           const screenshots = (result.rows || [])

@@ -1,5 +1,6 @@
 import AppLayout from '../components/AppLayout';
 import { HomeIcon } from '../components/SessionSidebar/HomeIcon';
+import { useSession } from '../hooks/useSession';
 
 export function meta() {
   return [
@@ -9,6 +10,24 @@ export function meta() {
 }
 
 export default function Settings() {
+  // Use the session hook with null to access just the main database
+  const { mainDatabase } = useSession();
+
+  // Simple example function to demonstrate using the mainDatabase
+  const countSessions = async () => {
+    if (!mainDatabase) return 0;
+
+    try {
+      // Query sessions from the main database
+      const result = await mainDatabase.query('type', {
+        key: 'session',
+      });
+      return result.rows.length;
+    } catch (error) {
+      console.error('Error counting sessions:', error);
+      return 0;
+    }
+  };
   return (
     <AppLayout
       fullWidthChat={true}
@@ -30,8 +49,19 @@ export default function Settings() {
             <div className="space-y-4">
               <div className="rounded-md bg-gray-50 p-4 dark:bg-gray-700">
                 <p className="text-sm text-gray-500 dark:text-gray-400">
-                  More settings options will be available soon.
+                  Main database is now accessible for settings.
                 </p>
+                <div className="mt-2 text-sm text-gray-600 dark:text-gray-300">
+                  <button
+                    onClick={async () => {
+                      const count = await countSessions();
+                      alert(`You have ${count} sessions in your database`);
+                    }}
+                    className="mt-2 rounded-md bg-blue-500 px-3 py-1 text-white hover:bg-blue-600 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-none"
+                  >
+                    Count Sessions
+                  </button>
+                </div>
               </div>
             </div>
           </div>
@@ -40,4 +70,4 @@ export default function Settings() {
       previewPanel={<div />} // Empty div for preview panel
     />
   );
-} 
+}

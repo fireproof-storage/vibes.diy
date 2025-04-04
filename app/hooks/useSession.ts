@@ -8,7 +8,7 @@ import type {
 } from '../types/chat';
 import { getSessionDatabaseName } from '../utils/databaseManager';
 
-export function useSession(routedSessionId: string | undefined) {
+export function useSession(routedSessionId?: string) {
   const { useDocument: useMainDocument, database: mainDatabase } =
     useFireproof(FIREPROOF_CHAT_HISTORY);
 
@@ -72,10 +72,10 @@ export function useSession(routedSessionId: string | undefined) {
       session.title = title;
       await mainDatabase.put(session);
       mergeSession({ title });
-      
+
       // Also write a document with {_id: "vibe", title} to the session database
       await sessionDatabase.put({
-        _id: "vibe",
+        _id: 'vibe',
         title,
       });
     },
