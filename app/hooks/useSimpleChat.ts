@@ -217,8 +217,9 @@ export function useSimpleChat(sessionId: string | undefined): ChatState {
 
           // Then persist to session database
           if (sessionDatabase) {
-            const { id } = await sessionDatabase.put(aiMessage);
-            // Capture the completed message *after* persistence
+            // Assert the return type to include the document id
+            const { id } = (await sessionDatabase.put(aiMessage)) as { id: string };
+            // Capture the completed message *after* persistence, using the returned id
             setPendingAiMessage({ ...aiMessage, _id: id });
             // HACK: Always select the message that just finished streaming
             setSelectedResponseId(id);
@@ -228,7 +229,6 @@ export function useSimpleChat(sessionId: string | undefined): ChatState {
 
           // Finally, generate title if needed and handle auto-selection
           const { segments } = parseContent(aiMessage.text);
-          const hasCode = segments.some(segment => segment.type === 'code');
 
           if (!session?.title) {
             await generateTitle(segments, TITLE_MODEL).then(updateTitle);
