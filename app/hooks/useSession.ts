@@ -65,14 +65,21 @@ export function useSession(routedSessionId: string | undefined) {
   // Query messages from the session-specific database
   const { docs } = useSessionLiveQuery('session_id', { key: session._id });
 
-  // Update session title (in main database)
+  // Update session title (in main database and session database)
   const updateTitle = useCallback(
     async (title: string) => {
+      // Update title in main database
       session.title = title;
       await mainDatabase.put(session);
       mergeSession({ title });
+      
+      // Also write a document with {_id: "vibe", title} to the session database
+      await sessionDatabase.put({
+        _id: "vibe",
+        title,
+      });
     },
-    [mainDatabase, mergeSession, session]
+    [mainDatabase, mergeSession, session, sessionDatabase]
   );
 
   // Add a screenshot to the session (in session-specific database)

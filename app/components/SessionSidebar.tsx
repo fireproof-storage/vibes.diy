@@ -2,6 +2,7 @@ import { useEffect, useRef, memo, useState } from 'react';
 import { useSessionList } from '../hooks/sidebar/useSessionList';
 import { ImgFile } from './SessionSidebar/ImgFile';
 import { StarIcon } from './SessionSidebar/StarIcon';
+import { GearIcon } from './SessionSidebar/GearIcon';
 import { encodeTitle } from './SessionSidebar/utils';
 import type { SessionSidebarProps } from '../types/chat';
 import { incrementDatabaseVersion } from '../config/env';
@@ -152,6 +153,15 @@ function SessionSidebar({ isVisible, onClose }: SessionSidebarProps) {
                 className={`h-5 w-5 transition-colors duration-300 ${justFavorites ? 'text-yellow-500' : 'text-gray-400'} hover:text-yellow-400`}
               />
             </button>
+            <a
+              href="/settings"
+              onClick={() => onClose()}
+              className="focus:outline-none text-gray-400 hover:text-gray-500"
+              title="Settings"
+              aria-label="Settings"
+            >
+              <GearIcon className="h-5 w-5" />
+            </a>
             <button
               type="button"
               onClick={onClose}
