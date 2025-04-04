@@ -224,8 +224,10 @@ export function useSimpleChat(sessionId: string | undefined): ChatState {
             console.error('Session db missing');
           }
 
-          // Finally, generate title if needed
+          // Finally, generate title if needed and handle auto-selection
           const { segments } = parseContent(aiMessage.text);
+          const hasCode = segments.some(segment => segment.type === 'code');
+
           if (!session?.title) {
             await generateTitle(segments, TITLE_MODEL).then(updateTitle);
           }
@@ -294,6 +296,17 @@ export function useSimpleChat(sessionId: string | undefined): ChatState {
       setPendingAiMessage(null);
     }
   }, [docs, pendingAiMessage]);
+
+  // Effect to auto-select the streaming message once code appears
+  useEffect(() => {
+    if (isStreaming && aiMessage.text && aiMessage._id !== selectedResponseId) {
+      const { segments } = parseContent(aiMessage.text);
+      const hasCode = segments.some(segment => segment.type === 'code');
+      if (hasCode) {
+        setSelectedResponseId(aiMessage._id);
+      }
+    }
+  }, [isStreaming, aiMessage.text, aiMessage._id, selectedResponseId, setSelectedResponseId]);
 
   return {
     sessionId: session._id,
