@@ -45,6 +45,10 @@ function QuickSuggestions({ onSelectSuggestion }: QuickSuggestionsProps) {
       text: 'Trivia show that lets me pick a topic, and uses AI to make questions and judge answers.',
     },
     {
+      label: 'Blocks',
+      text: 'Make an Arkanoid block buster with sounds and bonus items.',
+    },
+    {
       label: 'Wildcard',
       text: "Generate a wildcard app, something I wouldn't expect.",
     },
