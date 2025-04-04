@@ -42,19 +42,21 @@ function ResultPreview({
   }, [isStreaming]);
 
   useEffect(() => {
-    if (isStreaming) {
-      // Reset to code view when streaming starts
-      setActiveView('code');
-    } else if (codeReady) {
-      // Check URL path before switching to preview
+    // Effect to set initial view to 'code' only if there's no code yet.
+    // Switches based on streaming/codeReady are handled by the 'preview-ready' message handler.
+    if (!code || code.length === 0) {
       const path = window.location.pathname;
 
-      // Only switch to preview if we're not on a specific route
-      if (!path.endsWith('/code') && !path.endsWith('/data')) {
-        setActiveView('preview');
+      // Only switch if we're not already on a specific route or the base chat route
+      // Get base path without suffix
+      const basePath = path.replace(/\/(app|code|data)$/, '');
+
+      // Check if current path is just the base path (no suffix)
+      if (path === basePath && !path.endsWith('/code') && !path.endsWith('/data')) {
+        setActiveView('code');
       }
     }
-  }, [isStreaming, setActiveView, codeReady]);
+  }, [code, setActiveView]); // Depend only on `code` for initial check.
 
   // Theme detection effect
   useEffect(() => {
@@ -142,12 +144,13 @@ function ResultPreview({
   const timeoutIdRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
-    if (!showWelcome) {
-      const processedCode = code;
+    // Update filesRef ONLY when code becomes ready
+    // Use the code prop available at the moment codeReady becomes true.
+    if (codeReady && !showWelcome) {
       filesRef.current = {
-        ...filesRef.current,
+        // ...filesRef.current, // Preserve other files if needed in future
         '/App.jsx': {
-          code: processedCode,
+          code: code, // Use code directly
           active: true,
         },
       };
@@ -159,32 +162,20 @@ function ResultPreview({
         clearTimeout(timeoutIdRef.current);
       }
     };
-  }, [code, showWelcome, codeReady]);
+  }, [codeReady, showWelcome, code]); // Depend primarily on codeReady, but include code to capture its value.
 
   const previewArea = showWelcome ? (
     <div className="h-full">{/* empty div to prevent layout shift */}</div>
   ) : (
-    (() => {
-      // Initialize files content here, right before SandpackContent is rendered
-      filesRef.current = {
-        '/App.jsx': {
-          code: code,
-          active: true,
-        },
-      };
-
-      return (
-        <IframeContent
-          activeView={activeView}
-          filesContent={filesRef.current}
-          isStreaming={!codeReady}
-          codeReady={codeReady}
-          setActiveView={setActiveView}
-          dependencies={dependencies}
-          isDarkMode={isDarkMode} // Pass down the theme state
-        />
-      );
-    })()
+    <IframeContent
+      activeView={activeView}
+      filesContent={filesRef.current} // Pass the ref's current value
+      isStreaming={!codeReady} // Pass the derived prop
+      codeReady={codeReady}
+      setActiveView={setActiveView}
+      dependencies={dependencies}
+      isDarkMode={isDarkMode} // Pass down the theme state
+    />
   );
 
   return (

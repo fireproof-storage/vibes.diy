@@ -33,7 +33,7 @@ const IframeContent: React.FC<IframeContentProps> = ({
   const iframeRef = useRef<HTMLIFrameElement>(null);
   // Theme state is now received from parent via props
   const contentLoadedRef = useRef(false);
-  const lastContentRef = useRef('');
+  const lastContentRef = useRef(''); // Use ref to track last rendered code
 
   // Reference to store the current Monaco editor instance
   const monacoEditorRef = useRef<any>(null);
@@ -49,6 +49,9 @@ const IframeContent: React.FC<IframeContentProps> = ({
   const lastScrollTopRef = useRef<number>(0);
   // Store the last viewport height for auto-scrolling
   const lastViewportHeightRef = useRef<number>(0);
+
+  // Extract the current app code string
+  const appCode = filesContent['/App.jsx']?.code || '';
 
   // Theme detection is now handled in the parent component
 
@@ -82,18 +85,15 @@ const IframeContent: React.FC<IframeContentProps> = ({
   // This effect is now managed at the ResultPreview component level
 
   useEffect(() => {
-    // Only load iframe content when necessary - if code is ready and content changed
-    if (!isStreaming && codeReady && iframeRef.current) {
-      const appCode = filesContent['/App.jsx']?.code || '';
-
-      // Check if content has changed
-      if (contentLoadedRef.current && lastContentRef.current === appCode) {
-        return; // Skip if content already loaded and hasn't changed
+    // Update iframe ONLY if code is ready AND the appCode has actually changed from the last rendered version
+    if (codeReady && iframeRef.current) {
+      // Compare with the ref holding the last rendered code
+      if (contentLoadedRef.current && appCode === lastContentRef.current) {
+        return; 
       }
 
-      // Update references
       contentLoadedRef.current = true;
-      lastContentRef.current = appCode;
+      lastContentRef.current = appCode; // Update ref
 
       // Replace any default export with a consistent App name
       const normalizedCode = appCode.replace(
@@ -148,7 +148,7 @@ const IframeContent: React.FC<IframeContentProps> = ({
         window.removeEventListener('message', handleMessage);
       };
     }
-  }, [isStreaming, codeReady, filesContent]);
+  }, [appCode, codeReady]);
 
   // Determine which view to show based on URL path - gives more stable behavior on refresh
   const getViewFromPath = () => {
