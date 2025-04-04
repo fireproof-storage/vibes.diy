@@ -39,7 +39,7 @@ function ChatHeader({ onOpenSidebar, title }: ChatHeaderProps) {
           onClick={() => {
             document.location = '/';
           }}
-          className="peer bg-accent-02-light dark:bg-accent-02-dark hover:bg-accent-03-light dark:hover:bg-accent-03-dark flex cursor-pointer items-center justify-center rounded-full p-2.5 text-white transition-colors"
+          className="peer bg-accent-02-light dark:bg-accent-02-dark hover:bg-accent-03-light dark:hover:bg-accent-03-dark flex cursor-pointer items-center justify-center rounded-full px-3 py-2 text-white transition-colors"
           aria-label="New Chat"
           title="New Chat"
         >
