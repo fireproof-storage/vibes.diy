@@ -1,6 +1,7 @@
 import { useCallback, useRef, useEffect } from 'react';
 import type { ChangeEvent } from 'react';
 import AppLayout from '../components/AppLayout';
+import { HomeIcon } from '../components/SessionSidebar/HomeIcon';
 import { useSession } from '../hooks/useSession';
 import { useFireproof } from 'use-fireproof';
 
@@ -113,21 +114,7 @@ export default function Settings() {
             className="text-light-primary dark:text-dark-primary hover:text-accent-02-light dark:hover:text-accent-02-dark flex items-center px-3 py-2"
             aria-label="Go to home"
           >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="h-6 w-6"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-              aria-hidden="true"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M4 6h16M4 12h16M4 18h7"
-              />
-            </svg>
+            <HomeIcon className="h-6 w-6" />
           </button>
           <h1 className="ml-4 text-xl font-bold">Settings</h1>
         </div>
