@@ -19,36 +19,62 @@ export async function callOpenRouterAPI(
   messageHistory: Array<{ role: 'user' | 'assistant'; content: string }>,
   userMessage: string
 ): Promise<Response> {
-  const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${CALLAI_API_KEY}`,
-      'Content-Type': 'application/json',
-      'HTTP-Referer': window.location.origin,
-      'X-Title': 'Fireproof App Builder',
-    },
-    body: JSON.stringify({
-      model: model,
-      stream: true,
-      messages: [
-        {
-          role: 'system',
-          content: systemPrompt,
-        },
-        ...messageHistory,
-        {
-          role: 'user',
-          content: userMessage,
-        },
-      ],
-    }),
-  });
+  try {
+    const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${CALLAI_API_KEY}`,
+        'Content-Type': 'application/json',
+        'HTTP-Referer': window.location.origin,
+        'X-Title': 'Fireproof App Builder',
+      },
+      body: JSON.stringify({
+        model: model,
+        stream: true,
+        messages: [
+          {
+            role: 'system',
+            content: systemPrompt,
+          },
+          ...messageHistory,
+          {
+            role: 'user',
+            content: userMessage,
+          },
+        ],
+      }),
+    });
 
-  if (!response.ok) {
-    throw new Error(`HTTP error! Status: ${response.status}`);
+    if (!response.ok) {
+      // If we get a 400 status
+      if (response.status === 400) {
+        // Clone the response so we can read the body
+        const clonedResponse = response.clone();
+        try {
+          const errorData = await clonedResponse.json();
+          // Check if the error message indicates an invalid model
+          if (
+            errorData.error &&
+            errorData.error.message &&
+            errorData.error.message.toLowerCase().includes('not a valid model')
+          ) {
+            console.warn(`Model ${model} not valid, retrying with openrouter/auto`);
+            // Retry with openrouter/auto model
+            return callOpenRouterAPI('openrouter/auto', systemPrompt, messageHistory, userMessage);
+          }
+        } catch (parseError) {
+          // If we can't parse the response as JSON, throw the original error
+          console.error('Failed to parse error response:', parseError);
+        }
+      }
+      throw new Error(`HTTP error! Status: ${response.status}`);
+    }
+
+    return response;
+  } catch (error) {
+    // Rethrow any other errors that weren't handled
+    throw error;
   }
-
-  return response;
 }
 
 /**
