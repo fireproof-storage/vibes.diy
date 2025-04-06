@@ -31,18 +31,18 @@ vi.mock('use-fireproof', () => ({
   }),
 }));
 
-// Mock AppLayout component
-vi.mock('../app/components/AppLayout', () => ({
+// Mock SimpleAppLayout component
+vi.mock('../app/components/SimpleAppLayout', () => ({
   default: ({
     headerLeft,
-    chatPanel,
+    children,
   }: {
     headerLeft: React.ReactNode;
-    chatPanel: React.ReactNode;
+    children: React.ReactNode;
   }) => (
-    <div data-testid="app-layout">
+    <div data-testid="simple-app-layout">
       <div data-testid="header-left">{headerLeft}</div>
-      <div data-testid="chat-panel">{chatPanel}</div>
+      <div data-testid="content-area">{children}</div>
     </div>
   ),
 }));
