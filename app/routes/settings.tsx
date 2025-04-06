@@ -1,9 +1,10 @@
-import { useCallback, useRef, useEffect } from 'react';
+import { useCallback, useRef, useEffect, useState } from 'react';
 import type { ChangeEvent } from 'react';
 import AppLayout from '../components/AppLayout';
 import { HomeIcon } from '../components/SessionSidebar/HomeIcon';
 import { useSession } from '../hooks/useSession';
 import { useFireproof } from 'use-fireproof';
+import { CALLAI_API_KEY } from '../config/env';
 
 export function meta() {
   return [
@@ -15,6 +16,42 @@ export function meta() {
 export default function Settings() {
   const { mainDatabase } = useSession();
   const { useDocument } = useFireproof(mainDatabase.name);
+  const [credits, setCredits] = useState<{ total_credits: number; total_usage: number } | null>(null);
+  const [isLoadingCredits, setIsLoadingCredits] = useState(false);
+  const [creditsError, setCreditsError] = useState<string | null>(null);
+
+  // Fetch OpenRouter credits on component mount
+  useEffect(() => {
+    const fetchCredits = async () => {
+      if (!CALLAI_API_KEY) return;
+      
+      setIsLoadingCredits(true);
+      setCreditsError(null);
+      
+      try {
+        const response = await fetch('https://openrouter.ai/api/v1/credits', {
+          method: 'GET',
+          headers: { Authorization: `Bearer ${CALLAI_API_KEY}` },
+        });
+        
+        if (!response.ok) {
+          throw new Error(`Failed to fetch credits: ${response.status}`);
+        }
+        
+        const { data } = await response.json();
+        setCredits(data);
+      } catch (error) {
+        console.error('Error fetching credits:', error);
+        setCreditsError(typeof error === 'object' && error !== null && 'message' in error 
+          ? String(error.message) 
+          : 'Failed to load credits information');
+      } finally {
+        setIsLoadingCredits(false);
+      }
+    };
+    
+    fetchCredits();
+  }, []);
 
   // Add effect to modify parent container overflow
   useEffect(() => {
@@ -127,6 +164,31 @@ export default function Settings() {
           {/* Add extra padding at the bottom to ensure content is visible */}
           <div className="w-full max-w-2xl rounded-lg border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-700 dark:bg-gray-800">
             <h2 className="mb-4 text-xl font-semibold">Application Settings</h2>
+            
+            {/* Credits Display */}
+            <div className="mb-6 rounded-md border border-gray-200 bg-gray-50 p-4 dark:border-gray-600 dark:bg-gray-700">
+              <h3 className="text-md font-medium mb-2">OpenRouter Credits</h3>
+              {isLoadingCredits ? (
+                <p className="text-sm text-gray-500 dark:text-gray-400">Loading credits information...</p>
+              ) : creditsError ? (
+                <p className="text-sm text-red-500">{creditsError}</p>
+              ) : credits ? (
+                <div className="flex flex-col space-y-1">
+                  <p className="text-sm text-gray-600 dark:text-gray-300">
+                    <span className="font-semibold">Total Credits:</span> {credits.total_credits.toFixed(2)}
+                  </p>
+                  <p className="text-sm text-gray-600 dark:text-gray-300">
+                    <span className="font-semibold">Used Credits:</span> {credits.total_usage.toFixed(2)}
+                  </p>
+                  <p className="text-sm font-medium text-blue-600 dark:text-blue-400">
+                    <span className="font-semibold">Current Balance:</span> {(credits.total_credits - credits.total_usage).toFixed(2)}
+                  </p>
+                </div>
+              ) : (
+                <p className="text-sm text-gray-500 dark:text-gray-400">No credits information available.</p>
+              )}
+            </div>
+            
             <p className="mb-4 text-gray-600 dark:text-gray-300">
               Configure your application preferences to customize the AI experience.
             </p>
