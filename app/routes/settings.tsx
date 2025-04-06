@@ -26,7 +26,7 @@ export default function Settings() {
     _id: 'user_settings',
     stylePrompt: '',
     userPrompt: '',
-    model: modelsList[0].id,
+    model: '',
   });
 
   // State to track unsaved changes
@@ -173,7 +173,7 @@ export default function Settings() {
                 <input
                   ref={modelInputRef}
                   type="text"
-                  value={settings.model || modelsList[0].id}
+                  value={settings.model || ''}
                   onChange={handleModelChange}
                   placeholder="Enter or select model ID..."
                   className="w-full rounded-md border border-gray-300 p-2 font-mono text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100"

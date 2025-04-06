@@ -38,7 +38,7 @@ function QuickSuggestions({ onSelectSuggestion }: QuickSuggestionsProps) {
     },
     {
       label: 'Web Art',
-      text: 'Page mutator that automatically sends document.body.innerHTML to AI to make it more interesting web art and extracts the HTML result, updates the body, and then uses DOM (not ReactDOM) functions to insert a toggleable open control panel that lists the iteration history and shows the most recent 5 lines of the current mutation stream in a fixed size area. After each response, count 10 seconds and recursively send HTML to AI again. The page should start with the technicolor transition from Wizard of Oz, "we\'re not in Kansas anymore."',
+      text: 'Page mutator that automatically sends document.body.innerHTML to callAI with model "openrouter/quasar-alpha" to make it more interesting web art, then extracts the HTML result, updates the body, and uses DOM (not ReactDOM) functions to insert a toggleable open control panel that lists the iteration history and shows the most recent 5 lines of the current mutation stream in a fixed size area. After each response, count 10 seconds and recursively send HTML to AI again. The page should start with the technicolor transition from Wizard of Oz, "we\'re not in Kansas anymore."',
     },
     {
       label: 'Timer',
