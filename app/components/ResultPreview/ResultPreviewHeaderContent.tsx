@@ -9,7 +9,6 @@ interface ResultPreviewHeaderContentProps {
   isStreaming: boolean;
   code: string;
   setMobilePreviewShown: (shown: boolean) => void;
-  dependencies?: Record<string, string>;
   sessionId?: string;
   title?: string;
   isIframeFetching?: boolean;
