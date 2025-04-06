@@ -27,7 +27,9 @@
     "call-ai": "0.6.1",
     "isbot": "^5.1.17",
     "react": "^19.0.0",
+    "react-cookie-consent": "^9.0.0",
     "react-dom": "^19.0.0",
+    "react-ga4": "^2.1.0",
     "react-markdown": "^10.1.0",
     "react-router": "^7.1.5",
     "use-fireproof": "0.20.0-dev-preview-60"

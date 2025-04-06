@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router';
+import { useCookieConsent } from '../context/CookieConsentContext';
 import { encodeTitle } from '~/components/SessionSidebar/utils';
 import AppLayout from '../components/AppLayout';
 import ChatHeaderContent from '../components/ChatHeaderContent';
@@ -25,6 +26,7 @@ export default function UnifiedSession() {
   const navigate = useNavigate();
   const location = useLocation();
   const chatState = useSimpleChat(urlSessionId);
+  const { setMessageHasBeenSent } = useCookieConsent();
 
   // State for view management - set initial view based on URL path
   const [activeView, setActiveView] = useState<'code' | 'preview' | 'data'>(() => {
@@ -127,9 +129,10 @@ export default function UnifiedSession() {
       if (e.key === 'Enter' && !e.shiftKey && !chatState.isStreaming) {
         e.preventDefault();
         chatState.sendMessage();
+        setMessageHasBeenSent(true);
       }
     },
-    [chatState.isStreaming, chatState.sendMessage]
+    [chatState.isStreaming, chatState.sendMessage, setMessageHasBeenSent]
   );
 
   // Handle suggestion selection directly
@@ -228,7 +231,10 @@ export default function UnifiedSession() {
             value={chatState.input}
             onChange={handleInputChange}
             onKeyDown={handleKeyDown}
-            onSend={chatState.sendMessage}
+            onSend={() => {
+              chatState.sendMessage();
+              setMessageHasBeenSent(true);
+            }}
             disabled={chatState.isStreaming}
             inputRef={chatState.inputRef}
           />

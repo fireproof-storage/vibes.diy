@@ -13,6 +13,27 @@ vi.mock('react-router', () => ({
     <div data-testid={testId} />
   ),
   isRouteErrorResponse: vi.fn(),
+  useLocation: () => ({ pathname: '/', search: '' }),
+}));
+
+// Mock the cookie consent library
+vi.mock('react-cookie-consent', () => ({
+  default: ({ children, buttonText, onAccept }: any) => (
+    <div data-testid="cookie-consent">
+      {children}
+      <button onClick={onAccept}>{buttonText}</button>
+    </div>
+  ),
+  getCookieConsentValue: vi.fn().mockReturnValue(null),
+}));
+
+// Mock the CookieConsentContext
+vi.mock('../app/context/CookieConsentContext', () => ({
+  useCookieConsent: () => ({
+    messageHasBeenSent: false,
+    setMessageHasBeenSent: vi.fn(),
+  }),
+  CookieConsentProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>,
 }));
 
 describe('Root Component', () => {
@@ -39,10 +60,13 @@ describe('Root Component', () => {
   });
 
   it('renders the Layout component with children', () => {
+    // Use document.createElement to create a container to avoid hydration warnings
+    const container = document.createElement('div');
     render(
       <Layout>
         <div data-testid="test-child">Test Child</div>
-      </Layout>
+      </Layout>,
+      { container }
     );
 
     // Check that the layout renders the children
@@ -70,10 +94,13 @@ describe('Root Component', () => {
       })),
     });
 
+    // Use document.createElement to create a container to avoid hydration warnings
+    const container = document.createElement('div');
     render(
       <Layout>
         <div>Test</div>
-      </Layout>
+      </Layout>,
+      { container }
     );
 
     // Check that dark class is added to html element

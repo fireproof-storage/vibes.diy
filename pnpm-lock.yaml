@@ -37,9 +37,15 @@ importers:
       react:
         specifier: ^19.0.0
         version: 19.0.0
+      react-cookie-consent:
+        specifier: ^9.0.0
+        version: 9.0.0(react@19.0.0)
       react-dom:
         specifier: ^19.0.0
         version: 19.0.0(react@19.0.0)
+      react-ga4:
+        specifier: ^2.1.0
+        version: 2.1.0
       react-markdown:
         specifier: ^10.1.0
         version: 10.1.0(@types/react@19.0.10)(react@19.0.0)
@@ -3818,6 +3824,12 @@ packages:
     engines: { node: '>=14' }
     hasBin: true
 
+  js-cookie@2.2.1:
+    resolution:
+      {
+        integrity: sha512-HvdH2LzI/EAZcUwA8+0nKNtWHqS+ZmijLA30RwZA0bo7ToCckjK5MkGhjED9KoRcXO6BaGI3I9UIzSA1FKFPOQ==,
+      }
+
   js-cookie@3.0.5:
     resolution:
       {
@@ -4937,6 +4949,15 @@ packages:
       }
     engines: { node: '>= 0.8' }
 
+  react-cookie-consent@9.0.0:
+    resolution:
+      {
+        integrity: sha512-Blyj+m+Zz7SFHYqT18p16EANgnSg2sIyU6Yp3vk83AnOnSW7qnehPkUe4+8+qxztJrNmCH5GP+VHsWzAKVOoZA==,
+      }
+    engines: { node: '>=10' }
+    peerDependencies:
+      react: '>=16'
+
   react-d3-tree@3.6.5:
     resolution:
       {
@@ -4978,6 +4999,12 @@ packages:
     engines: { node: '>=10', npm: '>=6' }
     peerDependencies:
       react: '>=16.13.1'
+
+  react-ga4@2.1.0:
+    resolution:
+      {
+        integrity: sha512-ZKS7PGNFqqMd3PJ6+C2Jtz/o1iU9ggiy8Y8nUeksgVuvNISbmrQtJiZNvC/TjDsqD0QlU5Wkgs7i+w9+OjHhhQ==,
+      }
 
   react-hotkeys-hook@4.6.1:
     resolution:
@@ -8612,6 +8639,8 @@ snapshots:
       js-cookie: 3.0.5
       nopt: 8.1.0
 
+  js-cookie@2.2.1: {}
+
   js-cookie@3.0.5: {}
 
   js-tokens@4.0.0: {}
@@ -9297,6 +9326,11 @@ snapshots:
       iconv-lite: 0.4.24
       unpipe: 1.0.0
 
+  react-cookie-consent@9.0.0(react@19.0.0):
+    dependencies:
+      js-cookie: 2.2.1
+      react: 19.0.0
+
   react-d3-tree@3.6.5(react-dom@19.0.0(react@19.0.0))(react@19.0.0):
     dependencies:
       '@bkrem/react-transition-group': 1.3.5(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
@@ -9336,6 +9370,8 @@ snapshots:
     dependencies:
       '@babel/runtime': 7.26.9
       react: 19.0.0
+
+  react-ga4@2.1.0: {}
 
   react-hotkeys-hook@4.6.1(react-dom@19.0.0(react@19.0.0))(react@19.0.0):
     dependencies:

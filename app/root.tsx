@@ -11,6 +11,9 @@ import type { MetaFunction } from 'react-router';
 
 import type { Route } from './+types/root';
 import './app.css';
+import ClientOnly from './components/ClientOnly';
+import CookieBanner from './components/CookieBanner';
+import { CookieConsentProvider } from './context/CookieConsentContext';
 
 export const links: Route.LinksFunction = () => [
   { rel: 'preconnect', href: 'https://fonts.googleapis.com' },
@@ -82,7 +85,12 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <Links />
       </head>
       <body>
-        {children}
+        <CookieConsentProvider>
+          {children}
+          <ClientOnly>
+            <CookieBanner />
+          </ClientOnly>
+        </CookieConsentProvider>
         <ScrollRestoration data-testid="scroll-restoration" />
         <Scripts data-testid="scripts" />
       </body>
