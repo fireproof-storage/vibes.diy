@@ -4,6 +4,8 @@ import AppLayout from '../components/AppLayout';
 import { HomeIcon } from '../components/SessionSidebar/HomeIcon';
 import { useSession } from '../hooks/useSession';
 import { useFireproof } from 'use-fireproof';
+import type { UserSettings } from '../types/settings';
+import modelsList from '../data/models.json';
 
 export function meta() {
   return [
@@ -40,10 +42,11 @@ export default function Settings() {
     doc: settings,
     merge: mergeSettings,
     save: saveSettings,
-  } = useDocument({
+  } = useDocument<UserSettings>({
     _id: 'user_settings',
     stylePrompt: '',
     userPrompt: '',
+    model: modelsList[0].id, // Default to the first model (Claude 3.7 Sonnet)
   });
 
   const stylePromptSuggestions = [
@@ -59,6 +62,7 @@ export default function Settings() {
   ];
 
   const stylePromptInputRef = useRef<HTMLInputElement>(null);
+  const modelInputRef = useRef<HTMLInputElement>(null);
 
   const handleStylePromptChange = useCallback(
     (e: ChangeEvent<HTMLInputElement>) => {
@@ -77,6 +81,28 @@ export default function Settings() {
           stylePromptInputRef.current.focus();
           const length = stylePromptInputRef.current.value.length;
           stylePromptInputRef.current.setSelectionRange(length, length);
+        }
+      }, 50);
+    },
+    [mergeSettings]
+  );
+
+  const handleModelChange = useCallback(
+    (e: ChangeEvent<HTMLInputElement>) => {
+      mergeSettings({ model: e.target.value });
+    },
+    [mergeSettings]
+  );
+
+  const handleModelSelection = useCallback(
+    (model: { id: string; name: string; description: string }) => {
+      mergeSettings({ model: model.id });
+
+      setTimeout(() => {
+        if (modelInputRef.current) {
+          modelInputRef.current.focus();
+          const length = modelInputRef.current.value.length;
+          modelInputRef.current.setSelectionRange(length, length);
         }
       }, 50);
     },
@@ -159,7 +185,7 @@ export default function Settings() {
                         type="button"
                         onClick={() => handleStylePromptSelection(suggestion)}
                         className={`cursor-pointer rounded-lg px-3 py-1.5 text-sm font-medium transition-colors ${
-                          settings.stylePrompt.startsWith(suggestion.name)
+                          settings.stylePrompt && settings.stylePrompt.startsWith(suggestion.name)
                             ? 'bg-blue-500 text-white'
                             : 'bg-gray-100 text-gray-800 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600'
                         }`}
@@ -185,6 +211,57 @@ export default function Settings() {
                     placeholder="Enter custom instructions for the AI..."
                     className="min-h-[100px] w-full rounded-md border border-gray-300 p-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100"
                   />
+                </div>
+              </div>
+
+              <div className="rounded-md border border-gray-200 p-4 dark:border-gray-600">
+                <div className="flex items-start justify-between">
+                  <h3 className="mb-2 text-lg font-medium">AI Model</h3>
+                  <a
+                    href="https://openrouter.ai/models"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-sm text-blue-500 hover:text-blue-600"
+                  >
+                    Browse all models ↗
+                  </a>
+                </div>
+                <p className="mb-3 text-sm text-gray-600 dark:text-gray-400">
+                  Enter or select an AI model to use for code generation
+                </p>
+
+                <div className="mb-3">
+                  <input
+                    ref={modelInputRef}
+                    type="text"
+                    value={settings.model || modelsList[0].id}
+                    onChange={handleModelChange}
+                    placeholder="Enter or select model ID..."
+                    className="w-full rounded-md border border-gray-300 p-2 font-mono text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100"
+                  />
+                </div>
+
+                <div className="mb-2">
+                  <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                    Suggested Models (click to select):
+                  </label>
+                  <div className="flex flex-wrap gap-2">
+                    {modelsList.map((model, index) => (
+                      <button
+                        key={index}
+                        type="button"
+                        onClick={() => handleModelSelection(model)}
+                        className={`cursor-pointer rounded-lg px-3 py-1.5 text-sm font-medium transition-colors ${
+                          settings.model === model.id
+                            ? 'bg-blue-500 text-white'
+                            : 'bg-gray-100 text-gray-800 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600'
+                        }`}
+                        title={model.description}
+                      >
+                        {model.name}
+                      </button>
+                    ))}
+                  </div>
                 </div>
               </div>
 

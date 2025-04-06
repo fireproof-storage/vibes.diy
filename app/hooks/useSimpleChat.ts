@@ -1,5 +1,6 @@
 import { useState, useRef, useCallback, useEffect, useMemo } from 'react';
 import type { Segment, ChatMessageDocument, ChatState } from '../types/chat';
+import type { UserSettings } from '../types/settings';
 import { makeBaseSystemPrompt } from '../prompts';
 import { parseContent, parseDependencies } from '../utils/segmentParser';
 import { useSession } from './useSession';
@@ -7,9 +8,9 @@ import { useFireproof } from 'use-fireproof';
 import { generateTitle } from '../utils/titleGenerator';
 import { processStream, callOpenRouterAPI } from '../utils/streamHandler';
 
-// const CODING_MODEL = 'anthropic/claude-3.7-sonnet';
+const CODING_MODEL = 'anthropic/claude-3.7-sonnet';
 // const CODING_MODEL = 'google/gemini-2.0-flash-001';
-const CODING_MODEL = 'google/gemini-2.5-pro-preview-03-25';
+// const CODING_MODEL = 'google/gemini-2.5-pro-preview-03-25';
 const TITLE_MODEL = 'google/gemini-2.0-flash-lite-001';
 /**
  * Simplified chat hook that focuses on data-driven state management
@@ -41,11 +42,7 @@ export function useSimpleChat(sessionId: string | undefined): ChatState {
 
   // Get settings document with proper type definition
   const { useDocument } = useFireproof(mainDatabase);
-  const { doc: settingsDoc } = useDocument<{
-    _id: string;
-    stylePrompt?: string;
-    userPrompt?: string;
-  }>({ _id: 'user_settings' });
+  const { doc: settingsDoc } = useDocument<UserSettings>({ _id: 'user_settings' });
 
   // Then declare state hooks
   const [systemPrompt, setSystemPrompt] = useState('');
@@ -214,13 +211,11 @@ export function useSimpleChat(sessionId: string | undefined): ChatState {
     return submitUserMessage()
       .then(() => {
         const messageHistory = buildMessageHistory();
+        // Use the model from user settings if available, otherwise use default
+        const modelToUse =
+          settingsDoc?.model && settingsDoc.model.trim() !== '' ? settingsDoc.model : CODING_MODEL;
         // Use the locally captured system prompt value, not the state variable
-        return callOpenRouterAPI(
-          CODING_MODEL,
-          currentSystemPrompt,
-          messageHistory,
-          userMessage.text
-        );
+        return callOpenRouterAPI(modelToUse, currentSystemPrompt, messageHistory, userMessage.text);
       })
       .then((response) => {
         return processStream(response, (content) => {

@@ -1,0 +1,17 @@
+[
+  {
+    "id": "anthropic/claude-3.7-sonnet",
+    "name": "Claude 3.7 Sonnet",
+    "description": "Advanced reasoning model from Anthropic"
+  },
+  {
+    "id": "google/gemini-2.0-flash-001",
+    "name": "Gemini 2.0 Flash",
+    "description": "Fast response model from Google"
+  },
+  {
+    "id": "google/gemini-2.5-pro-preview-03-25",
+    "name": "Gemini 2.5 Pro Preview",
+    "description": "Preview version of Google's premium model"
+  }
+]
