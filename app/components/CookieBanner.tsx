@@ -93,8 +93,11 @@ export default function CookieBanner() {
     }
   }, [hasConsent]);
   
-  // Don't render anything if CookieConsent is not loaded or no message has been sent yet
-  if (!CookieConsent || !messageHasBeenSent) return null;
+  // Don't render anything if any of these conditions are met:
+  // 1. CookieConsent is not loaded
+  // 2. No message has been sent yet
+  // 3. Google Analytics ID is not set (making analytics optional)
+  if (!CookieConsent || !messageHasBeenSent || !GA_TRACKING_ID) return null;
   
   return (
     <CookieConsent
