@@ -2,6 +2,15 @@ import { describe, it, expect, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import UnifiedSession from '../app/routes/home';
 
+// Mock the CookieConsentContext
+vi.mock('../app/context/CookieConsentContext', () => ({
+  useCookieConsent: () => ({
+    messageHasBeenSent: false,
+    setMessageHasBeenSent: vi.fn(),
+  }),
+  CookieConsentProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+}));
+
 // Mock dependencies
 vi.mock('../app/hooks/useSimpleChat', () => ({
   useSimpleChat: () => ({

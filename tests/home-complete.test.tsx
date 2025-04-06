@@ -4,6 +4,15 @@ import { vi, describe, it, expect, beforeEach } from 'vitest';
 import UnifiedSession from '../app/routes/home';
 import * as segmentParser from '../app/utils/segmentParser';
 import * as useSimpleChatModule from '../app/hooks/useSimpleChat';
+
+// Mock the CookieConsentContext
+vi.mock('../app/context/CookieConsentContext', () => ({
+  useCookieConsent: () => ({
+    messageHasBeenSent: false,
+    setMessageHasBeenSent: vi.fn(),
+  }),
+  CookieConsentProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+}));
 import type { ChatMessage, UserChatMessage, AiChatMessage, Segment } from '../app/types/chat';
 import { mockChatStateProps } from './mockData';
 

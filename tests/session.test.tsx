@@ -4,6 +4,15 @@ import { vi, describe, it, expect, beforeEach } from 'vitest';
 import UnifiedSession from '../app/routes/home';
 import * as segmentParser from '../app/utils/segmentParser';
 import * as useSimpleChatModule from '../app/hooks/useSimpleChat';
+
+// Mock the CookieConsentContext
+vi.mock('../app/context/CookieConsentContext', () => ({
+  useCookieConsent: () => ({
+    messageHasBeenSent: false,
+    setMessageHasBeenSent: vi.fn(),
+  }),
+  CookieConsentProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+}));
 import type { AiChatMessage } from '../app/types/chat';
 import { mockChatStateProps } from './mockData';
 
@@ -177,7 +186,7 @@ describe('Session Route Integration', () => {
   });
 
   it('displays the correct number of code lines in the preview', async () => {
-    // Render the UnifiedSession component directly
+    // Render the UnifiedSession component
     render(<UnifiedSession />);
 
     // Wait for and verify the code line count is displayed

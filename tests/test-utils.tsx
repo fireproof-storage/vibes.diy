@@ -9,7 +9,9 @@ type CookieConsentContextType = {
 };
 
 // Create a React Context with the same name as the app's context
-export const CookieConsentContext = React.createContext<CookieConsentContextType | undefined>(undefined);
+export const CookieConsentContext = React.createContext<CookieConsentContextType | undefined>(
+  undefined
+);
 
 // Create a provider component that matches the one in the app
 export function CookieConsentProvider({ children }: { children: React.ReactNode }) {
@@ -30,6 +32,6 @@ export function renderWithProviders(
   const AllProviders = ({ children }: { children: React.ReactNode }) => {
     return <CookieConsentProvider>{children}</CookieConsentProvider>;
   };
-  
+
   return render(ui, { wrapper: AllProviders, ...options });
 }
