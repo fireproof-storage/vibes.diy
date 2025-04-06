@@ -7,7 +7,9 @@ import { useFireproof } from 'use-fireproof';
 import { generateTitle } from '../utils/titleGenerator';
 import { processStream, callOpenRouterAPI } from '../utils/streamHandler';
 
-const CODING_MODEL = 'anthropic/claude-3.7-sonnet';
+// const CODING_MODEL = 'anthropic/claude-3.7-sonnet';
+// const CODING_MODEL = 'google/gemini-2.0-flash-001';
+const CODING_MODEL = 'google/gemini-2.5-pro-preview-03-25';
 const TITLE_MODEL = 'google/gemini-2.0-flash-lite-001';
 /**
  * Simplified chat hook that focuses on data-driven state management

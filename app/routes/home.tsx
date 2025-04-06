@@ -203,7 +203,6 @@ export default function UnifiedSession() {
               setMobilePreviewShown={setMobilePreviewShown}
               isStreaming={chatState.isStreaming}
               code={chatState.selectedCode?.content}
-              dependencies={chatState.selectedDependencies || {}}
               sessionId={chatState.sessionId || undefined}
               title={chatState.title || undefined}
               isIframeFetching={isIframeFetching}

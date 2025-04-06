@@ -30,12 +30,12 @@ export function useViewState(props: {
   const { sessionId: paramSessionId, title: paramTitle } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
-  
+
   // Consolidate session and title from props or params
   const sessionId = props.sessionId || paramSessionId;
   const title = props.title || paramTitle;
   const encodedTitle = title ? encodeTitle(title) : '';
-  
+
   // Derive view from URL path
   const getViewFromPath = (): ViewType => {
     if (location.pathname.endsWith('/app')) return 'preview';
@@ -43,9 +43,9 @@ export function useViewState(props: {
     if (location.pathname.endsWith('/data')) return 'data';
     return 'preview'; // Default
   };
-  
+
   const currentView = getViewFromPath();
-  
+
   // Access control data
   const viewControls = {
     preview: {
@@ -65,13 +65,13 @@ export function useViewState(props: {
       icon: 'data-icon',
       label: 'Data',
       loading: false,
-    }
+    },
   };
 
   // Navigate to a view
   const navigateToView = (view: ViewType) => {
     if (!viewControls[view].enabled) return;
-    
+
     if (sessionId && encodedTitle) {
       const suffix = view === 'preview' ? 'app' : view;
       navigate(`/chat/${sessionId}/${encodedTitle}/${suffix}`);
@@ -80,55 +80,52 @@ export function useViewState(props: {
 
   // Whether to show view controls at all
   const showViewControls = props.code.length > 0;
-  
+
   return {
     currentView,
     navigateToView,
     viewControls,
     showViewControls,
     sessionId,
-    encodedTitle
+    encodedTitle,
   };
 }
 ```
 
 ### Implementation:
+
 ```tsx
 // ResultPreviewHeaderContent.tsx
-const { 
-  currentView,
-  navigateToView,
-  viewControls,
-  showViewControls,
-  sessionId,
-  encodedTitle
-} = useViewState({
-  sessionId: propSessionId, 
-  title: propTitle,
-  code,
-  isStreaming,
-  previewReady
-});
+const { currentView, navigateToView, viewControls, showViewControls, sessionId, encodedTitle } =
+  useViewState({
+    sessionId: propSessionId,
+    title: propTitle,
+    code,
+    isStreaming,
+    previewReady,
+  });
 
 // Then in JSX:
-{showViewControls && (
-  <div className="...">
-    {Object.entries(viewControls).map(([view, control]) => (
-      <button
-        key={view}
-        onClick={() => navigateToView(view as ViewType)}
-        disabled={!control.enabled}
-        className={classNames({
-          'active-class': currentView === view,
-          'disabled-class': !control.enabled,
-          'base-class': true
-        })}
-      >
-        {control.label}
-      </button>
-    ))}
-  </div>
-)}
+{
+  showViewControls && (
+    <div className="...">
+      {Object.entries(viewControls).map(([view, control]) => (
+        <button
+          key={view}
+          onClick={() => navigateToView(view as ViewType)}
+          disabled={!control.enabled}
+          className={classNames({
+            'active-class': currentView === view,
+            'disabled-class': !control.enabled,
+            'base-class': true,
+          })}
+        >
+          {control.label}
+        </button>
+      ))}
+    </div>
+  );
+}
 ```
 
 ## Best Practice Solution: React Router + Context API
@@ -159,7 +156,7 @@ export function ViewProvider({
   code = '',
   isStreaming = false,
   previewReady = false,
-  isIframeFetching = false
+  isIframeFetching = false,
 }: {
   children: ReactNode;
   code?: string;
@@ -170,10 +167,10 @@ export function ViewProvider({
   const { sessionId, title } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
-  
+
   const encodedTitle = title ? encodeTitle(title) : '';
   const sessionPath = sessionId && encodedTitle ? `/chat/${sessionId}/${encodedTitle}` : '';
-  
+
   // Map path to view type
   const getViewFromPath = (): ViewType => {
     if (location.pathname.endsWith('/app')) return 'preview';
@@ -181,41 +178,41 @@ export function ViewProvider({
     if (location.pathname.endsWith('/data')) return 'data';
     return 'preview'; // Default fallback
   };
-  
+
   const [currentView, setCurrentView] = useState<ViewType>(getViewFromPath());
-  
+
   // Update view when URL changes
   useEffect(() => {
     setCurrentView(getViewFromPath());
   }, [location.pathname]);
-  
+
   // Navigation logic
   const navigateToView = (view: ViewType) => {
     if (!isViewEnabled(view)) return;
-    
+
     const suffix = view === 'preview' ? 'app' : view;
     if (sessionPath) {
       navigate(`${sessionPath}/${suffix}`);
     }
   };
-  
+
   // Determine if a view is enabled
   const isViewEnabled = (view: ViewType): boolean => {
     if (view === 'preview') return previewReady;
     if (view === 'data') return !isStreaming;
     return true; // 'code' is always enabled
   };
-  
+
   // Determine if a view is in loading state
   const isViewLoading = (view: ViewType): boolean => {
     if (view === 'preview') return isIframeFetching;
     if (view === 'code') return isStreaming && !previewReady;
     return false;
   };
-  
+
   // Whether to show view controls at all
   const showViewControls = code.length > 0;
-  
+
   return (
     <ViewContext.Provider
       value={{
@@ -224,7 +221,7 @@ export function ViewProvider({
         isViewEnabled,
         isViewLoading,
         showViewControls,
-        sessionPath
+        sessionPath,
       }}
     >
       {children}
@@ -243,13 +240,14 @@ export function useView() {
 ```
 
 ### Implementation:
+
 ```tsx
 // In App.tsx or a parent component
 <Router>
   <Route
     path="/chat/:sessionId/:title/:view?"
     element={
-      <ViewProvider 
+      <ViewProvider
         code={code}
         isStreaming={isStreaming}
         previewReady={previewReady}
@@ -259,28 +257,22 @@ export function useView() {
       </ViewProvider>
     }
   />
-</Router>
+</Router>;
 
 // ResultPreviewHeaderContent.tsx - Now much simpler
 function ResultPreviewHeaderContent() {
-  const {
-    currentView,
-    navigateToView,
-    isViewEnabled,
-    isViewLoading,
-    showViewControls
-  } = useView();
-  
+  const { currentView, navigateToView, isViewEnabled, isViewLoading, showViewControls } = useView();
+
   const viewButtons = [
     { view: 'preview' as ViewType, label: 'App', icon: 'eye-icon' },
     { view: 'code' as ViewType, label: 'Code', icon: 'code-icon' },
-    { view: 'data' as ViewType, label: 'Data', icon: 'data-icon' }
+    { view: 'data' as ViewType, label: 'Data', icon: 'data-icon' },
   ];
-  
+
   return (
     <div className="header-content">
       {/* Back button and other UI... */}
-      
+
       {showViewControls && (
         <div className="view-switcher">
           {viewButtons.map(({ view, label, icon }) => (
@@ -289,9 +281,9 @@ function ResultPreviewHeaderContent() {
               onClick={() => navigateToView(view)}
               disabled={!isViewEnabled(view)}
               className={classNames({
-                'active': currentView === view,
-                'disabled': !isViewEnabled(view),
-                'loading': isViewLoading(view)
+                active: currentView === view,
+                disabled: !isViewEnabled(view),
+                loading: isViewLoading(view),
               })}
             >
               <span className={`icon ${icon} ${isViewLoading(view) ? 'animate-spin-slow' : ''}`} />
@@ -300,7 +292,7 @@ function ResultPreviewHeaderContent() {
           ))}
         </div>
       )}
-      
+
       {/* Additional UI elements... */}
     </div>
   );
@@ -310,12 +302,14 @@ function ResultPreviewHeaderContent() {
 ## Benefits of These Approaches
 
 ### Lean Solution Benefits:
+
 - Minimal additional code - just a custom hook
 - No external dependencies beyond React Router
 - Easier testing with consolidated logic
 - Derived state instead of duplicated state
 
 ### Context Solution Benefits:
+
 - Clear separation of concerns
 - Single source of truth for view state
 - Components only consume what they need
@@ -327,4 +321,4 @@ function ResultPreviewHeaderContent() {
 1. **Start with the Lean Solution** if you need a quick improvement
 2. **Adopt the Context Solution** for long-term maintainability as the app grows
 3. **Keep URL as the source of truth** for current view rather than duplicating in state
-4. **Derive disabled states** from core application state instead of passing them separately 
+4. **Derive disabled states** from core application state instead of passing them separately

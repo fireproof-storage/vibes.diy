@@ -5,6 +5,7 @@ import Editor from '@monaco-editor/react';
 import { shikiToMonaco } from '@shikijs/monaco';
 import { createHighlighter } from 'shiki';
 import { DatabaseListView } from './DataView';
+import { normalizeComponentExports } from '../../utils/normalizeComponentExports';
 
 // Import the iframe template using Vite's ?raw import option
 import iframeTemplateRaw from './templates/iframe-template.html?raw';
@@ -95,11 +96,8 @@ const IframeContent: React.FC<IframeContentProps> = ({
       contentLoadedRef.current = true;
       lastContentRef.current = appCode; // Update ref
 
-      // Replace any default export with a consistent App name
-      const normalizedCode = appCode.replace(
-        /export\s+default\s+function\s+(\w+)/,
-        'export default function App'
-      );
+      // Use the extracted function to normalize component export patterns
+      const normalizedCode = normalizeComponentExports(appCode);
 
       // Transform bare import statements to use esm.sh URLs
       const transformImports = (code: string): string => {
