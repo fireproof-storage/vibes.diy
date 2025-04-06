@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, within, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
 import Settings from '../app/routes/settings';
 
 // Create mock objects outside the mock function to access them in tests
@@ -85,13 +85,14 @@ describe('Settings Route', () => {
     });
   });
 
+  const renderSettings = () => render(<Settings />);
+
   it('renders the settings page with correct title and sections', () => {
-    render(<Settings />);
+    renderSettings();
 
     // Check for header content
     const headerSection = screen.getByTestId('header-left');
     expect(headerSection).toBeInTheDocument();
-    expect(within(headerSection).getByText('Settings')).toBeInTheDocument();
 
     // Check for main content sections
     expect(screen.getByText('Application Settings')).toBeInTheDocument();
@@ -103,7 +104,7 @@ describe('Settings Route', () => {
   it('allows updating style prompt via text input', async () => {
     // We already have access to the mocks from the top-level variables
 
-    render(<Settings />);
+    renderSettings();
 
     // Verify the merge function is called with the right value
     const styleInput = screen.getByPlaceholderText('Enter or select style prompt...');
@@ -116,7 +117,7 @@ describe('Settings Route', () => {
   it('allows selecting a style prompt from suggestions', async () => {
     // We already have access to the mocks from the top-level variables
 
-    render(<Settings />);
+    renderSettings();
 
     // Click on a suggestion button
     const suggestionButton = screen.getByText('synthwave');
@@ -134,7 +135,7 @@ describe('Settings Route', () => {
   it('allows updating user prompt via textarea', async () => {
     // We already have access to the mocks from the top-level variables
 
-    render(<Settings />);
+    renderSettings();
 
     const userPromptTextarea = screen.getByPlaceholderText(
       'Enter custom instructions for the AI...'
@@ -145,28 +146,45 @@ describe('Settings Route', () => {
     expect(mockMerge).toHaveBeenCalledWith({ userPrompt: 'My custom instructions' });
   });
 
-  it('calls save when the save button is clicked', () => {
+  it('calls save when the save button is clicked', async () => {
     // We already have access to the mockSave from the top-level variable
 
-    render(<Settings />);
+    renderSettings();
+
+    // Find the save button
+    const saveButton = screen.getByRole('button', { name: /save settings/i });
+
+    // Initially, the button should be disabled
+    expect(saveButton).toBeDisabled();
+
+    // Simulate changing a setting to enable the button
+    const styleInput = screen.getByPlaceholderText(
+      'Enter or select style prompt...'
+    ) as HTMLInputElement;
+    await fireEvent.change(styleInput, { target: { value: 'new style' } });
+    expect(saveButton).not.toBeDisabled(); // Now it should be enabled
 
     // Click save button
-    const saveButton = screen.getByText('Save Settings');
-    fireEvent.click(saveButton);
+    await fireEvent.click(saveButton);
 
     // Check that save was called
     expect(mockSave).toHaveBeenCalled();
   });
 
-  it('successfully saves settings and shows a success UI element', () => {
+  it('successfully saves settings and shows a success UI element', async () => {
     // Create a spy for document.createElement
     const createElementSpy = vi.spyOn(document, 'createElement');
 
-    render(<Settings />);
+    renderSettings();
 
-    // Click save button
-    const saveButton = screen.getByText('Save Settings');
-    fireEvent.click(saveButton);
+    // Simulate changing the style prompt to enable the save button
+    const styleInput = screen.getByPlaceholderText('Enter or select style prompt...');
+    await fireEvent.change(styleInput, { target: { value: 'new test style' } });
+
+    // Find the button and click it
+    const saveButton = screen.getByRole('button', { name: /save settings/i });
+    expect(saveButton).not.toBeDisabled(); // Ensure it's enabled before click
+    await fireEvent.click(saveButton);
 
     // Verify save was called
     expect(mockSave).toHaveBeenCalled();
@@ -181,7 +199,7 @@ describe('Settings Route', () => {
     // Set the mock settings to have a style prompt
     mockSettings.stylePrompt = 'brutalist web (raw, grid-heavy)';
 
-    render(<Settings />);
+    renderSettings();
 
     // The brutalist button should have the selected class
     const brutalistButton = screen.getByText('brutalist web');

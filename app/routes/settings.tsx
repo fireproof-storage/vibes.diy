@@ -1,4 +1,4 @@
-import { useCallback, useRef } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import type { ChangeEvent } from 'react';
 import SimpleAppLayout from '../components/SimpleAppLayout';
 import { HomeIcon } from '../components/SessionSidebar/HomeIcon';
@@ -29,6 +29,9 @@ export default function Settings() {
     model: modelsList[0].id,
   });
 
+  // State to track unsaved changes
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+
   const stylePromptSuggestions = [
     { name: 'synthwave', description: '80s digital aesthetic' },
     { name: 'brutalist web', description: 'raw, grid-heavy' },
@@ -47,6 +50,7 @@ export default function Settings() {
   const handleStylePromptChange = useCallback(
     (e: ChangeEvent<HTMLInputElement>) => {
       mergeSettings({ stylePrompt: e.target.value });
+      setHasUnsavedChanges(true); // Track change
     },
     [mergeSettings]
   );
@@ -55,6 +59,7 @@ export default function Settings() {
     (suggestion: { name: string; description: string }) => {
       const fullPrompt = `${suggestion.name} (${suggestion.description})`;
       mergeSettings({ stylePrompt: fullPrompt });
+      setHasUnsavedChanges(true); // Track change
 
       setTimeout(() => {
         if (stylePromptInputRef.current) {
@@ -70,6 +75,7 @@ export default function Settings() {
   const handleModelChange = useCallback(
     (e: ChangeEvent<HTMLInputElement>) => {
       mergeSettings({ model: e.target.value });
+      setHasUnsavedChanges(true); // Track change
     },
     [mergeSettings]
   );
@@ -77,6 +83,7 @@ export default function Settings() {
   const handleModelSelection = useCallback(
     (model: { id: string; name: string; description: string }) => {
       mergeSettings({ model: model.id });
+      setHasUnsavedChanges(true); // Track change
 
       setTimeout(() => {
         if (modelInputRef.current) {
@@ -92,12 +99,15 @@ export default function Settings() {
   const handleUserPromptChange = useCallback(
     (e: ChangeEvent<HTMLTextAreaElement>) => {
       mergeSettings({ userPrompt: e.target.value });
+      setHasUnsavedChanges(true); // Track change
     },
     [mergeSettings]
   );
 
   const handleSubmit = useCallback(async () => {
     await saveSettings(settings);
+    setHasUnsavedChanges(false); // Reset after save
+
     const savedMessage = document.createElement('div');
     savedMessage.className =
       'fixed top-4 right-4 bg-green-500 text-white px-4 py-2 rounded shadow-lg';
@@ -129,11 +139,71 @@ export default function Settings() {
         style={{ height: 'auto', minHeight: '100%', paddingBottom: '150px' }}
       >
         <div className="w-full max-w-2xl rounded-lg border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-700 dark:bg-gray-800">
-          <h2 className="mb-4 text-xl font-semibold">Application Settings</h2>
+          <div className="mb-6 flex items-center justify-between">
+            <h2 className="text-xl font-semibold">Application Settings</h2>
+            <button
+              onClick={handleSubmit}
+              disabled={!hasUnsavedChanges}
+              className={`rounded-md px-4 py-2 text-sm text-white transition-colors focus:ring-2 focus:ring-offset-2 focus:outline-none ${hasUnsavedChanges ? 'bg-blue-500 hover:bg-blue-600 focus:ring-blue-500' : 'cursor-not-allowed bg-gray-400 dark:bg-gray-600'}`}
+            >
+              Save Settings
+            </button>
+          </div>
           <p className="mb-4 text-gray-600 dark:text-gray-300">
             Configure your application preferences to customize the AI experience.
           </p>
           <div className="space-y-6">
+            <div className="rounded-md border border-gray-200 p-4 dark:border-gray-600">
+              <div className="flex items-start justify-between">
+                <h3 className="mb-2 text-lg font-medium">AI Model</h3>
+                <a
+                  href="https://openrouter.ai/models"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-sm text-blue-500 hover:text-blue-600"
+                >
+                  Browse all models ↗
+                </a>
+              </div>
+              <p className="mb-3 text-sm text-gray-600 dark:text-gray-400">
+                Enter or select an AI model to use for code generation
+              </p>
+
+              <div className="mb-3">
+                <input
+                  ref={modelInputRef}
+                  type="text"
+                  value={settings.model || modelsList[0].id}
+                  onChange={handleModelChange}
+                  placeholder="Enter or select model ID..."
+                  className="w-full rounded-md border border-gray-300 p-2 font-mono text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100"
+                />
+              </div>
+
+              <div className="mb-2">
+                <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                  Suggested Models (click to select):
+                </label>
+                <div className="flex flex-wrap gap-2">
+                  {modelsList.map((model, index) => (
+                    <button
+                      key={index}
+                      type="button"
+                      onClick={() => handleModelSelection(model)}
+                      className={`cursor-pointer rounded-lg px-3 py-1.5 text-sm font-medium transition-colors ${
+                        settings.model === model.id
+                          ? 'bg-blue-500 text-white'
+                          : 'bg-gray-100 text-gray-800 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600'
+                      }`}
+                      title={model.description}
+                    >
+                      {model.name}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+
             <div className="rounded-md border border-gray-200 p-4 dark:border-gray-600">
               <h3 className="mb-2 text-lg font-medium">Style Prompt</h3>
               <p className="mb-3 text-sm text-gray-600 dark:text-gray-400">
@@ -189,65 +259,6 @@ export default function Settings() {
                   className="min-h-[100px] w-full rounded-md border border-gray-300 p-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100"
                 />
               </div>
-            </div>
-
-            <div className="rounded-md border border-gray-200 p-4 dark:border-gray-600">
-              <div className="flex items-start justify-between">
-                <h3 className="mb-2 text-lg font-medium">AI Model</h3>
-                <a
-                  href="https://openrouter.ai/models"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-sm text-blue-500 hover:text-blue-600"
-                >
-                  Browse all models ↗
-                </a>
-              </div>
-              <p className="mb-3 text-sm text-gray-600 dark:text-gray-400">
-                Enter or select an AI model to use for code generation
-              </p>
-
-              <div className="mb-3">
-                <input
-                  ref={modelInputRef}
-                  type="text"
-                  value={settings.model || modelsList[0].id}
-                  onChange={handleModelChange}
-                  placeholder="Enter or select model ID..."
-                  className="w-full rounded-md border border-gray-300 p-2 font-mono text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100"
-                />
-              </div>
-
-              <div className="mb-2">
-                <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
-                  Suggested Models (click to select):
-                </label>
-                <div className="flex flex-wrap gap-2">
-                  {modelsList.map((model, index) => (
-                    <button
-                      key={index}
-                      type="button"
-                      onClick={() => handleModelSelection(model)}
-                      className={`cursor-pointer rounded-lg px-3 py-1.5 text-sm font-medium transition-colors ${
-                        settings.model === model.id
-                          ? 'bg-blue-500 text-white'
-                          : 'bg-gray-100 text-gray-800 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600'
-                      }`}
-                      title={model.description}
-                    >
-                      {model.name}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            </div>
-            <div className="mt-6 flex justify-end">
-              <button
-                onClick={handleSubmit}
-                className="rounded-md bg-blue-500 px-4 py-2 text-white transition-colors hover:bg-blue-600 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-none"
-              >
-                Save Settings
-              </button>
             </div>
           </div>
         </div>

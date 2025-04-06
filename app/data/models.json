@@ -10,8 +10,8 @@
     "description": "Fast response model from Google"
   },
   {
-    "id": "google/gemini-2.5-pro-preview-03-25",
-    "name": "Gemini 2.5 Pro Preview",
-    "description": "Preview version of Google's premium model"
+    "id": "openai/o1-mini",
+    "name": "O1-mini",
+    "description": "Advanced reasoning model from OpenAI"
   }
 ]
