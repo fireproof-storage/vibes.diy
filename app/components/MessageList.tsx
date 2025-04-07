@@ -8,6 +8,7 @@ interface MessageListProps {
   setSelectedResponseId: (id: string) => void;
   selectedResponseId: string;
   setMobilePreviewShown: (shown: boolean) => void;
+  setActiveView?: (view: 'preview' | 'code' | 'data') => void;
 }
 
 function MessageList({
@@ -16,6 +17,7 @@ function MessageList({
   setSelectedResponseId,
   selectedResponseId,
   setMobilePreviewShown,
+  setActiveView,
 }: MessageListProps) {
   // Create a special message list when there's only one user message
   const shouldShowWaitingIndicator = messages.length === 1 && messages[0]?.type === 'user';
@@ -33,6 +35,7 @@ function MessageList({
           setSelectedResponseId={setSelectedResponseId}
           selectedResponseId={selectedResponseId}
           setMobilePreviewShown={setMobilePreviewShown}
+          setActiveView={setActiveView}
         />,
         // Then show the waiting indicator
         <div key="waiting-indicator" className="mb-4 flex flex-row justify-start px-4">
@@ -91,6 +94,7 @@ function MessageList({
           setSelectedResponseId={setSelectedResponseId}
           selectedResponseId={selectedResponseId}
           setMobilePreviewShown={setMobilePreviewShown}
+          setActiveView={setActiveView}
         />
       );
     });
@@ -100,6 +104,7 @@ function MessageList({
     setSelectedResponseId,
     selectedResponseId,
     setMobilePreviewShown,
+    setActiveView,
     shouldShowWaitingIndicator,
   ]);
 
@@ -135,11 +140,15 @@ export default memo(MessageList, (prevProps, nextProps) => {
       return msg._id === nextMsg._id && msg.text === nextMsg.text;
     });
 
+  // Check if setActiveView changed
+  const setActiveViewEqual = prevProps.setActiveView === nextProps.setActiveView;
+
   return (
     streamingStateEqual &&
     messagesEqual &&
     setSelectedResponseIdEqual &&
     selectedResponseIdEqual &&
-    setMobilePreviewShownEqual
+    setMobilePreviewShownEqual &&
+    setActiveViewEqual
   );
 });

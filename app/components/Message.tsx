@@ -10,6 +10,7 @@ interface MessageProps {
   setSelectedResponseId: (id: string) => void;
   selectedResponseId: string;
   setMobilePreviewShown: (shown: boolean) => void;
+  setActiveView?: (view: 'preview' | 'code' | 'data') => void;
 }
 
 // AI Message component (simplified without animation handling)
@@ -28,6 +29,7 @@ const AIMessage = memo(
     setSelectedResponseId: (id: string) => void;
     selectedResponseId: string;
     setMobilePreviewShown: (shown: boolean) => void;
+    setActiveView?: (view: 'preview' | 'code' | 'data') => void;
   }) => {
     const { segments } = parseContent(message.text);
     return (
@@ -69,6 +71,7 @@ const AIMessage = memo(
             selectedResponseId={selectedResponseId}
             setMobilePreviewShown={setMobilePreviewShown}
             rawText={message.text}
+            setActiveView={setActiveView}
           />
         </div>
       </div>
@@ -82,7 +85,8 @@ const AIMessage = memo(
       prevProps.isStreaming !== nextProps.isStreaming ||
       prevProps.setSelectedResponseId !== nextProps.setSelectedResponseId ||
       prevProps.selectedResponseId !== nextProps.selectedResponseId ||
-      prevProps.setMobilePreviewShown !== nextProps.setMobilePreviewShown
+      prevProps.setMobilePreviewShown !== nextProps.setMobilePreviewShown ||
+      prevProps.setActiveView !== nextProps.setActiveView
     ) {
       return false;
     }
@@ -112,6 +116,7 @@ const Message = memo(
     setSelectedResponseId,
     selectedResponseId,
     setMobilePreviewShown,
+    setActiveView,
   }: MessageProps) => {
     return (
       <div className="transition-all duration-150 ease-in hover:opacity-95">
@@ -123,6 +128,7 @@ const Message = memo(
             setSelectedResponseId={setSelectedResponseId}
             selectedResponseId={selectedResponseId}
             setMobilePreviewShown={setMobilePreviewShown}
+            setActiveView={setActiveView}
           />
         ) : (
           <UserMessage message={message} />
@@ -154,6 +160,11 @@ const Message = memo(
     // Check if setMobilePreviewShown changed
     if (prevProps.setMobilePreviewShown !== nextProps.setMobilePreviewShown) {
       return false; // Mobile preview function changed, need to re-render
+    }
+    
+    // Check if setActiveView changed
+    if (prevProps.setActiveView !== nextProps.setActiveView) {
+      return false; // Active view function changed, need to re-render
     }
 
     // If we get here, props are equal enough to skip re-render

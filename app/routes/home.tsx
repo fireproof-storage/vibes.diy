@@ -228,7 +228,7 @@ export default function UnifiedSession() {
             />
           )
         }
-        chatPanel={<ChatInterface {...chatState} setMobilePreviewShown={setMobilePreviewShown} />}
+        chatPanel={<ChatInterface {...chatState} setMobilePreviewShown={setMobilePreviewShown} setActiveView={setActiveView} />}
         previewPanel={
           <ResultPreview
             sessionId={chatState.sessionId || ''}

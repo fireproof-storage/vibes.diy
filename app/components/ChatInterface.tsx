@@ -5,6 +5,7 @@ import WelcomeScreen from './WelcomeScreen';
 
 interface ChatInterfaceProps extends ChatState {
   setMobilePreviewShown: (shown: boolean) => void;
+  setActiveView?: (view: 'preview' | 'code' | 'data') => void;
 }
 
 function ChatInterface({
@@ -13,6 +14,7 @@ function ChatInterface({
   selectedResponseDoc,
   setSelectedResponseId,
   setMobilePreviewShown,
+  setActiveView,
 }: ChatInterfaceProps) {
   // State for UI transitions and sharing
   const messagesContainerRef = useRef<HTMLDivElement>(null);
@@ -38,9 +40,10 @@ function ChatInterface({
         setSelectedResponseId={setSelectedResponseId}
         selectedResponseId={selectedResponseDoc?._id || ''}
         setMobilePreviewShown={setMobilePreviewShown}
+        setActiveView={setActiveView}
       />
     );
-  }, [messages, isStreaming, setSelectedResponseId, selectedResponseDoc, setMobilePreviewShown]);
+  }, [messages, isStreaming, setSelectedResponseId, selectedResponseDoc, setMobilePreviewShown, setActiveView]);
 
   return (
     <div className="flex h-full flex-col overflow-scroll">
