@@ -103,6 +103,7 @@ function ResultPreview({
     const handleMessage = ({ data }: MessageEvent) => {
       if (data) {
         if (data.type === 'preview-ready' || data.type === 'preview-loaded') {
+          console.log('Preview ready or loaded');
           // respond with the API key
           const iframe = document.querySelector('iframe') as HTMLIFrameElement;
           iframe?.contentWindow?.postMessage({ type: 'callai-api-key', key: CALLAI_API_KEY }, '*');

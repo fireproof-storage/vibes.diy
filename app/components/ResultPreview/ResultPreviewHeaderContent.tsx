@@ -43,18 +43,18 @@ const ResultPreviewHeaderContent: React.FC<ResultPreviewHeaderContentProps> = ({
       isIframeFetching,
     });
 
-  // Handle special case for code view for first message
+  // Handle special case for code view during streaming
   React.useEffect(() => {
-    // If code starts streaming for the first message, we should display code
-    // without changing the URL (so later it can auto-navigate to app)
-    const shouldShowCodeView = isStreaming && (code.length === 0 || !code);
+    // During streaming, we always want to show code view
+    // The earlier condition was incorrect - it would stop showing code once content arrived
+    const shouldShowCodeView = isStreaming; // Show code whenever streaming is active
 
     // Current URL path has no view suffix, so use activeView to control display
     const path = window.location.pathname;
     const basePath = path.replace(/\/(app|code|data)$/, '');
     const hasViewSuffix = path !== basePath;
 
-    // If we're streaming first message and URL has no view suffix
+    // If we're streaming and URL has no view suffix
     if (shouldShowCodeView && !hasViewSuffix) {
       setActiveView('code');
     } else if (activeView !== currentView) {
