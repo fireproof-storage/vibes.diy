@@ -69,7 +69,6 @@ const ResultPreviewHeaderContent: React.FC<ResultPreviewHeaderContentProps> = ({
             setMobilePreviewShown(false);
           }}
           className="bg-light-decorative-00 dark:bg-dark-decorative-00 text-light-primary dark:text-dark-primary hover:bg-light-decorative-01 dark:hover:bg-dark-decorative-01 flex items-center justify-center rounded-lg p-2 transition-colors md:hidden"
-          style={{ zIndex: 9999 }}
           aria-label="Back to chat"
         >
           <BackArrowIcon />
