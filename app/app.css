@@ -71,6 +71,10 @@ body {
   }
 }
 
+hr {
+  opacity: 0.5;
+}
+
 /* Force dark mode based on system preference, regardless of class strategy */
 @media (prefers-color-scheme: dark) {
   :root {

@@ -1,7 +1,7 @@
 import React from 'react';
 import { useViewState } from '../../utils/ViewState';
 import type { ViewType } from '../../utils/ViewState';
-import { PreviewIcon, CodeIcon, DataIcon, ShareIcon } from '../HeaderContent/SvgIcons';
+import { PreviewIcon, CodeIcon, DataIcon, ShareIcon, BackArrowIcon } from '../HeaderContent/SvgIcons';
 
 interface ResultPreviewHeaderContentProps {
   previewReady: boolean;
@@ -53,20 +53,7 @@ const ResultPreviewHeaderContent: React.FC<ResultPreviewHeaderContentProps> = ({
           className="bg-light-decorative-00 dark:bg-dark-decorative-00 text-light-primary dark:text-dark-primary hover:bg-light-decorative-01 dark:hover:bg-dark-decorative-01 flex items-center justify-center rounded-lg p-2 transition-colors md:hidden"
           aria-label="Back to chat"
         >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            className="h-5 w-5"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M15 19l-7-7 7-7"
-            />
-          </svg>
+          <BackArrowIcon />
         </button>
 
         {showViewControls ? null : <div className="h-10"></div>}
@@ -153,7 +140,10 @@ const ResultPreviewHeaderContent: React.FC<ResultPreviewHeaderContentProps> = ({
                     />
                   )}
                   {viewType === 'code' && (
-                    <CodeIcon className="h-3.5 w-3.5 sm:h-4 sm:w-4" isLoading={!!control.loading} />
+                    <CodeIcon 
+                      className="h-3.5 w-3.5 sm:h-4 sm:w-4" 
+                      isLoading={currentView === 'preview' && !!control.loading} 
+                    />
                   )}
                   {viewType === 'data' && <DataIcon className="h-3.5 w-3.5 sm:h-4 sm:w-4" />}
                   <span className="hidden min-[480px]:inline">{control.label}</span>

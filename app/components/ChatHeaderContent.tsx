@@ -34,11 +34,8 @@ function ChatHeaderContent({ onOpenSidebar, title }: ChatHeaderContentProps) {
       </div>
       <div className="text-light-primary dark:text-dark-primary text-center text-sm">{title}</div>
       <div className="relative px-2">
-        <button
-          type="button"
-          onClick={() => {
-            document.location = '/';
-          }}
+        <a
+          href="/"
           className="peer bg-accent-02-light dark:bg-accent-02-dark hover:bg-accent-03-light dark:hover:bg-accent-03-dark flex cursor-pointer items-center justify-center rounded-full p-2.5 text-white transition-colors"
           aria-label="New Chat"
           title="New Chat"
@@ -59,9 +56,9 @@ function ChatHeaderContent({ onOpenSidebar, title }: ChatHeaderContentProps) {
               d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"
             />
           </svg>
-        </button>
+        </a>
         <span className="pointer-events-none absolute top-full right-0 mt-1 rounded bg-gray-800 px-2 py-1 text-sm whitespace-nowrap text-white opacity-0 transition-opacity peer-hover:opacity-100">
-          New Chat
+          New Vibe
         </span>
       </div>
     </div>

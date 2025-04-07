@@ -162,3 +162,22 @@ export const ShareIcon: React.FC<SvgIconProps> = ({ className = 'h-4 w-4', title
     </svg>
   );
 };
+
+export const BackArrowIcon: React.FC<SvgIconProps> = ({ className = 'h-5 w-5' }) => {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      className={className}
+      fill="none"
+      viewBox="0 0 24 24"
+      stroke="currentColor"
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth={2}
+        d="M15 19l-7-7 7-7"
+      />
+    </svg>
+  );
+};
