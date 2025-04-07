@@ -41,9 +41,9 @@ export const GearIcon: React.FC<SvgIconProps> = ({ className = 'h-5 w-5' }) => {
   );
 };
 
-export const StarIcon: React.FC<SvgIconProps & { filled?: boolean }> = ({ 
-  filled = false, 
-  className = 'h-5 w-5' 
+export const StarIcon: React.FC<SvgIconProps & { filled?: boolean }> = ({
+  filled = false,
+  className = 'h-5 w-5',
 }) => {
   return (
     <svg
@@ -63,10 +63,10 @@ export const StarIcon: React.FC<SvgIconProps & { filled?: boolean }> = ({
   );
 };
 
-export const PreviewIcon: React.FC<SvgIconProps & { isLoading?: boolean }> = ({ 
+export const PreviewIcon: React.FC<SvgIconProps & { isLoading?: boolean }> = ({
   className = 'h-4 w-4',
   isLoading,
-  title 
+  title,
 }) => {
   const spinClass = isLoading === true ? 'animate-spin-slow' : '';
   return (
@@ -94,10 +94,10 @@ export const PreviewIcon: React.FC<SvgIconProps & { isLoading?: boolean }> = ({
   );
 };
 
-export const CodeIcon: React.FC<SvgIconProps & { isLoading?: boolean }> = ({ 
+export const CodeIcon: React.FC<SvgIconProps & { isLoading?: boolean }> = ({
   className = 'h-3.5 w-3.5 sm:h-4 sm:w-4',
   isLoading,
-  title 
+  title,
 }) => {
   const spinClass = isLoading === true ? 'animate-spin-slow' : '';
   return (
@@ -119,9 +119,9 @@ export const CodeIcon: React.FC<SvgIconProps & { isLoading?: boolean }> = ({
   );
 };
 
-export const DataIcon: React.FC<SvgIconProps> = ({ 
+export const DataIcon: React.FC<SvgIconProps> = ({
   className = 'h-3.5 w-3.5 sm:h-4 sm:w-4',
-  title 
+  title,
 }) => {
   return (
     <svg
@@ -143,10 +143,7 @@ export const DataIcon: React.FC<SvgIconProps> = ({
   );
 };
 
-export const ShareIcon: React.FC<SvgIconProps> = ({ 
-  className = 'h-4 w-4',
-  title 
-}) => {
+export const ShareIcon: React.FC<SvgIconProps> = ({ className = 'h-4 w-4', title }) => {
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"
@@ -164,4 +161,4 @@ export const ShareIcon: React.FC<SvgIconProps> = ({
       />
     </svg>
   );
-}; 
+};
