@@ -16,6 +16,7 @@ interface ResultPreviewHeaderContentProps {
   isStreaming: boolean;
   code: string;
   setMobilePreviewShown: (shown: boolean) => void;
+  setUserClickedBack?: (clicked: boolean) => void;
   sessionId?: string;
   title?: string;
   isIframeFetching?: boolean;
@@ -28,6 +29,7 @@ const ResultPreviewHeaderContent: React.FC<ResultPreviewHeaderContentProps> = ({
   isStreaming,
   code,
   setMobilePreviewShown,
+  setUserClickedBack,
   sessionId: propSessionId,
   title: propTitle,
   isIframeFetching = false,
@@ -58,8 +60,16 @@ const ResultPreviewHeaderContent: React.FC<ResultPreviewHeaderContentProps> = ({
       <div className="flex w-1/4 items-center justify-start">
         <button
           type="button"
-          onClick={() => setMobilePreviewShown(false)}
+          onClick={() => {
+            // Tell parent component user explicitly clicked back
+            if (isStreaming && setUserClickedBack) {
+              setUserClickedBack(true);
+            }
+            // Force showing the chat panel immediately
+            setMobilePreviewShown(false);
+          }}
           className="bg-light-decorative-00 dark:bg-dark-decorative-00 text-light-primary dark:text-dark-primary hover:bg-light-decorative-01 dark:hover:bg-dark-decorative-01 flex items-center justify-center rounded-lg p-2 transition-colors md:hidden"
+          style={{ zIndex: 9999 }}
           aria-label="Back to chat"
         >
           <BackArrowIcon />

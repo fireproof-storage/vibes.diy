@@ -153,10 +153,23 @@ export default function UnifiedSession() {
     [chatState.setInput, chatState.inputRef]
   );
 
+  // Track if user manually clicked back to chat during streaming
+  const [userClickedBack, setUserClickedBack] = useState(false);
+  
+  // Reset the user preference when streaming stops
+  useEffect(() => {
+    if (!chatState.isStreaming) {
+      setUserClickedBack(false);
+    }
+  }, [chatState.isStreaming]);
+  
   // Update mobilePreviewShown when selectedCode changes
   useEffect(() => {
     if (chatState.selectedCode?.content) {
-      setMobilePreviewShown(true);
+      // Only auto-show preview if the user hasn't clicked back during this streaming session
+      if (!chatState.isStreaming || !userClickedBack) {
+        setMobilePreviewShown(true);
+      }
 
       // Only navigate to /app if we're not already on a specific tab route
       // This prevents overriding user's manual tab selection
@@ -201,6 +214,7 @@ export default function UnifiedSession() {
               activeView={activeView}
               setActiveView={setActiveView}
               setMobilePreviewShown={setMobilePreviewShown}
+              setUserClickedBack={setUserClickedBack}
               isStreaming={chatState.isStreaming}
               code={chatState.selectedCode?.content || ''}
               sessionId={chatState.sessionId || undefined}
