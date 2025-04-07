@@ -155,19 +155,19 @@ export default function UnifiedSession() {
 
   // Track if user manually clicked back to chat during streaming
   const [userClickedBack, setUserClickedBack] = useState(false);
-  
-  // When streaming ends and we have a preview ready, reset user preference and show preview 
+
+  // When streaming ends and we have a preview ready, reset user preference and show preview
   useEffect(() => {
     // Only take action when streaming has ended
     if (!chatState.isStreaming && previewReady) {
       // Reset user preference so future code content will auto-show preview
       setUserClickedBack(false);
-      
+
       // Auto-show preview when streaming ends and preview is ready
       setMobilePreviewShown(true);
     }
   }, [chatState.isStreaming, previewReady]);
-  
+
   // Update mobilePreviewShown when selectedCode changes
   useEffect(() => {
     if (chatState.selectedCode?.content) {
@@ -213,22 +213,26 @@ export default function UnifiedSession() {
         fullWidthChat={shouldUseFullWidthChat}
         headerLeft={<ChatHeaderContent onOpenSidebar={openSidebar} title={chatState.title || ''} />}
         headerRight={
-          (
-            <ResultPreviewHeaderContent
-              previewReady={previewReady}
-              activeView={activeView}
-              setActiveView={setActiveView}
-              setMobilePreviewShown={setMobilePreviewShown}
-              setUserClickedBack={setUserClickedBack}
-              isStreaming={chatState.isStreaming}
-              code={chatState.selectedCode?.content || ''}
-              sessionId={chatState.sessionId || undefined}
-              title={chatState.title || undefined}
-              isIframeFetching={isIframeFetching}
-            />
-          )
+          <ResultPreviewHeaderContent
+            previewReady={previewReady}
+            activeView={activeView}
+            setActiveView={setActiveView}
+            setMobilePreviewShown={setMobilePreviewShown}
+            setUserClickedBack={setUserClickedBack}
+            isStreaming={chatState.isStreaming}
+            code={chatState.selectedCode?.content || ''}
+            sessionId={chatState.sessionId || undefined}
+            title={chatState.title || undefined}
+            isIframeFetching={isIframeFetching}
+          />
         }
-        chatPanel={<ChatInterface {...chatState} setMobilePreviewShown={setMobilePreviewShown} setActiveView={setActiveView} />}
+        chatPanel={
+          <ChatInterface
+            {...chatState}
+            setMobilePreviewShown={setMobilePreviewShown}
+            setActiveView={setActiveView}
+          />
+        }
         previewPanel={
           <ResultPreview
             sessionId={chatState.sessionId || ''}

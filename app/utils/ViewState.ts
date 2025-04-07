@@ -77,7 +77,7 @@ export function useViewState(props: {
         navigate(`/chat/${sessionId}/${encodedTitle}/app`);
       }
     }
-    
+
     // Handle the state when streaming ENDS and preview is ready
     // This ensures we navigate to the app view after streaming completes
     if (!props.isStreaming && wasStreamingRef.current && props.previewReady) {
@@ -143,8 +143,8 @@ export function useViewState(props: {
   const displayView = props.isStreaming ? 'code' : currentView;
 
   return {
-    currentView,   // The view based on URL (for navigation)
-    displayView,   // The view that should actually be displayed
+    currentView, // The view based on URL (for navigation)
+    displayView, // The view that should actually be displayed
     navigateToView,
     viewControls,
     showViewControls,

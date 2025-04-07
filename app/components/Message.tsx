@@ -161,7 +161,7 @@ const Message = memo(
     if (prevProps.setMobilePreviewShown !== nextProps.setMobilePreviewShown) {
       return false; // Mobile preview function changed, need to re-render
     }
-    
+
     // Check if setActiveView changed
     if (prevProps.setActiveView !== nextProps.setActiveView) {
       return false; // Active view function changed, need to re-render

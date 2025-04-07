@@ -134,7 +134,7 @@ const CodeSegment = ({
     // Always show mobile preview when selected
     if (isSelected) {
       setMobilePreviewShown(true);
-      
+
       // If streaming, navigate to code view using proper navigation
       if (isStreaming && setActiveView) {
         // Properly navigate to code view using the app's navigation system

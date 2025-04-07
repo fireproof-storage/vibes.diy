@@ -10,9 +10,9 @@ export default function DynamicTable({
   onRowClick = () => {},
 }: any) {
   return (
-    <div className="relative mt-[40px] overflow-x-auto overflow-y-auto max-h-[calc(100vh-140px)]">
+    <div className="relative mt-[40px] max-h-[calc(100vh-140px)] overflow-x-auto overflow-y-auto">
       <table className="w-full border-collapse text-left text-gray-900 dark:text-gray-100">
-        <thead className="sticky top-0 bg-white dark:bg-gray-900 z-10">
+        <thead className="sticky top-0 z-10 bg-white dark:bg-gray-900">
           <tr key={'header' + Math.random()}>
             {headers.map((header: string) => (
               <th

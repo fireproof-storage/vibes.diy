@@ -43,7 +43,14 @@ function ChatInterface({
         setActiveView={setActiveView}
       />
     );
-  }, [messages, isStreaming, setSelectedResponseId, selectedResponseDoc, setMobilePreviewShown, setActiveView]);
+  }, [
+    messages,
+    isStreaming,
+    setSelectedResponseId,
+    selectedResponseDoc,
+    setMobilePreviewShown,
+    setActiveView,
+  ]);
 
   return (
     <div className="flex h-full flex-col overflow-scroll">

@@ -35,16 +35,23 @@ const ResultPreviewHeaderContent: React.FC<ResultPreviewHeaderContentProps> = ({
   isIframeFetching = false,
 }) => {
   // Use the new ViewState hook to manage all view-related state and navigation
-  const { currentView, displayView, navigateToView, viewControls, showViewControls, sessionId, encodedTitle } =
-    useViewState({
-      sessionId: propSessionId,
-      title: propTitle,
-      code,
-      isStreaming,
-      previewReady,
-      isIframeFetching,
-    });
-    
+  const {
+    currentView,
+    displayView,
+    navigateToView,
+    viewControls,
+    showViewControls,
+    sessionId,
+    encodedTitle,
+  } = useViewState({
+    sessionId: propSessionId,
+    title: propTitle,
+    code,
+    isStreaming,
+    previewReady,
+    isIframeFetching,
+  });
+
   // When displayView changes, update activeView to match
   React.useEffect(() => {
     if (activeView !== displayView) {
