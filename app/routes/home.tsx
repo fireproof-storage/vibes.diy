@@ -195,19 +195,19 @@ export default function UnifiedSession() {
         fullWidthChat={shouldUseFullWidthChat}
         headerLeft={<ChatHeaderContent onOpenSidebar={openSidebar} title={chatState.title || ''} />}
         headerRight={
-          chatState.selectedCode?.content ? (
+          (
             <ResultPreviewHeaderContent
               previewReady={previewReady}
               activeView={activeView}
               setActiveView={setActiveView}
               setMobilePreviewShown={setMobilePreviewShown}
               isStreaming={chatState.isStreaming}
-              code={chatState.selectedCode?.content}
+              code={chatState.selectedCode?.content || ''}
               sessionId={chatState.sessionId || undefined}
               title={chatState.title || undefined}
               isIframeFetching={isIframeFetching}
             />
-          ) : null
+          )
         }
         chatPanel={<ChatInterface {...chatState} setMobilePreviewShown={setMobilePreviewShown} />}
         previewPanel={

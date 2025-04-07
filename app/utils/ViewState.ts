@@ -134,8 +134,9 @@ export function useViewState(props: {
     }
   };
 
-  // Whether to show view controls at all
-  const showViewControls = props.code.length > 0;
+  // Always show view controls
+  // This simplifies the logic and ensures consistent UI visibility
+  const showViewControls = true;
 
   // Determine what view should be displayed (may differ from URL-based currentView)
   // During streaming, we always show code view regardless of the URL
