@@ -114,7 +114,7 @@ export function useViewState(props: {
       enabled: true,
       icon: 'code-icon',
       label: 'Code',
-      loading: props.isStreaming && !props.previewReady,
+      loading: props.isStreaming && !props.previewReady && props.code.length > 0,
     },
     data: {
       enabled: !props.isStreaming,
