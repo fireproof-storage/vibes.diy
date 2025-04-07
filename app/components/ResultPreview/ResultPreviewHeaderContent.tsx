@@ -1,6 +1,7 @@
 import React from 'react';
 import { useViewState } from '../../utils/ViewState';
 import type { ViewType } from '../../utils/ViewState';
+import { PreviewIcon, CodeIcon, DataIcon, ShareIcon } from '../HeaderContent/SvgIcons';
 
 interface ResultPreviewHeaderContentProps {
   previewReady: boolean;
@@ -91,7 +92,7 @@ const ResultPreviewHeaderContent: React.FC<ResultPreviewHeaderContentProps> = ({
                     aria-label="Data tab unavailable during streaming"
                     title="Data tab available after streaming completes"
                   >
-                    {renderIcon(viewType, !!control.loading)}
+                    <DataIcon className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                     <span className="hidden min-[480px]:inline">{control.label}</span>
                   </button>
                 );
@@ -118,7 +119,7 @@ const ResultPreviewHeaderContent: React.FC<ResultPreviewHeaderContentProps> = ({
                       }
                     }}
                   >
-                    {renderIcon(viewType, !!control.loading)}
+                    <DataIcon className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                     <span className="hidden min-[480px]:inline">{control.label}</span>
                   </a>
                 );
@@ -144,7 +145,17 @@ const ResultPreviewHeaderContent: React.FC<ResultPreviewHeaderContentProps> = ({
                   disabled={!control.enabled}
                   aria-label={`Switch to ${control.label}`}
                 >
-                  {renderIcon(viewType, !!control.loading)}
+                  {viewType === 'preview' && (
+                    <PreviewIcon
+                      className="h-4 w-4"
+                      isLoading={!!control.loading}
+                      title={control.loading ? 'App is fetching data' : 'Preview icon'}
+                    />
+                  )}
+                  {viewType === 'code' && (
+                    <CodeIcon className="h-3.5 w-3.5 sm:h-4 sm:w-4" isLoading={!!control.loading} />
+                  )}
+                  {viewType === 'data' && <DataIcon className="h-3.5 w-3.5 sm:h-4 sm:w-4" />}
                   <span className="hidden min-[480px]:inline">{control.label}</span>
                 </button>
               );
@@ -165,21 +176,7 @@ const ResultPreviewHeaderContent: React.FC<ResultPreviewHeaderContentProps> = ({
                 className="text-light-primary dark:text-dark-primary hover:bg-light-decorative-01 dark:hover:bg-dark-decorative-01 flex items-center justify-center space-x-1 rounded-md px-3 py-1.5 text-xs font-medium transition-colors sm:space-x-1.5 sm:px-4 sm:text-sm"
                 aria-label="Connect"
               >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="h-3.5 w-3.5 sm:h-4 sm:w-4"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <title>Connect icon</title>
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"
-                  />
-                </svg>
+                <ShareIcon className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                 <span className="hidden min-[480px]:inline">Share</span>
               </a>
             </div>
@@ -191,76 +188,5 @@ const ResultPreviewHeaderContent: React.FC<ResultPreviewHeaderContentProps> = ({
     </div>
   );
 };
-
-// Helper function to render the appropriate icon for each view type
-function renderIcon(viewType: ViewType, isLoading: boolean | undefined) {
-  const spinClass = isLoading === true ? 'animate-spin-slow' : '';
-
-  switch (viewType) {
-    case 'preview':
-      return (
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          className={`h-4 w-4 ${spinClass}`}
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-        >
-          <title>{isLoading ? 'App is fetching data' : 'Preview icon'}</title>
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-          />
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
-          />
-        </svg>
-      );
-    case 'code':
-      return (
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          className={`h-3.5 w-3.5 sm:h-4 sm:w-4 ${spinClass}`}
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-        >
-          <title>Code icon</title>
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"
-          />
-        </svg>
-      );
-    case 'data':
-      return (
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          className={`h-3.5 w-3.5 sm:h-4 sm:w-4`}
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-        >
-          <title>Data icon</title>
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M4 7v10c0 2 1 3 3 3h10c2 0 3-1 3-3V7c0-2-1-3-3-3H7c-2 0-3 1-3 3z"
-          />
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 15h5m-5-4h10" />
-        </svg>
-      );
-    default:
-      return null;
-  }
-}
 
 export default ResultPreviewHeaderContent;
