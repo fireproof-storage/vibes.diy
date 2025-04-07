@@ -130,6 +130,13 @@ const ResultPreviewHeaderContent: React.FC<ResultPreviewHeaderContentProps> = ({
                     onClick={() => {
                       if (activeView !== viewType) {
                         setActiveView(viewType);
+                        // Ensure the preview is shown on mobile when the data view is clicked
+                        setMobilePreviewShown(true);
+
+                        // Reset userClickedBack when a user manually clicks data view during streaming
+                        if (isStreaming && setUserClickedBack) {
+                          setUserClickedBack(false);
+                        }
                       }
                     }}
                   >
@@ -145,8 +152,21 @@ const ResultPreviewHeaderContent: React.FC<ResultPreviewHeaderContentProps> = ({
                   key={viewType}
                   type="button"
                   onClick={() => {
+                    // Set the active view and navigate
                     setActiveView(viewType);
+
+                    // During streaming, we should still update the route
+                    // but override the display with code view
                     navigateToView(viewType);
+
+                    // Always show the mobile preview when clicking a view button
+                    setMobilePreviewShown(true);
+
+                    // Reset userClickedBack when a user manually clicks a view button during streaming
+                    // This ensures they can get back to the preview/code even after clicking back
+                    if (isStreaming && setUserClickedBack) {
+                      setUserClickedBack(false);
+                    }
                   }}
                   className={`flex items-center justify-center space-x-1 rounded-md px-3 py-1.5 text-xs font-medium transition-colors sm:space-x-1.5 sm:px-4 sm:text-sm ${
                     isActive

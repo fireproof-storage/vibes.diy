@@ -131,15 +131,14 @@ const CodeSegment = ({
     if (messageId) {
       setSelectedResponseId(messageId);
     }
-    // Always show mobile preview when selected
-    if (isSelected) {
-      setMobilePreviewShown(true);
 
-      // If streaming, navigate to code view using proper navigation
-      if (isStreaming && setActiveView) {
-        // Properly navigate to code view using the app's navigation system
-        setActiveView('code');
-      }
+    // Always show mobile preview and set to code view regardless of selection state
+    // This ensures we can always enter code view by clicking a code segment
+    setMobilePreviewShown(true);
+
+    // Always navigate to code view when clicking on a code segment
+    if (setActiveView) {
+      setActiveView('code');
     }
   };
 
