@@ -33,7 +33,7 @@ const ResultPreviewHeaderContent: React.FC<ResultPreviewHeaderContentProps> = ({
   isIframeFetching = false,
 }) => {
   // Use the new ViewState hook to manage all view-related state and navigation
-  const { currentView, navigateToView, viewControls, showViewControls, sessionId, encodedTitle } =
+  const { currentView, displayView, navigateToView, viewControls, showViewControls, sessionId, encodedTitle } =
     useViewState({
       sessionId: propSessionId,
       title: propTitle,
@@ -42,26 +42,16 @@ const ResultPreviewHeaderContent: React.FC<ResultPreviewHeaderContentProps> = ({
       previewReady,
       isIframeFetching,
     });
-
-  // Handle special case for code view during streaming
+    
+  // When displayView changes, update activeView to match
   React.useEffect(() => {
-    // During streaming, we always want to show code view
-    // The earlier condition was incorrect - it would stop showing code once content arrived
-    const shouldShowCodeView = isStreaming; // Show code whenever streaming is active
-
-    // Current URL path has no view suffix, so use activeView to control display
-    const path = window.location.pathname;
-    const basePath = path.replace(/\/(app|code|data)$/, '');
-    const hasViewSuffix = path !== basePath;
-
-    // If we're streaming and URL has no view suffix
-    if (shouldShowCodeView && !hasViewSuffix) {
-      setActiveView('code');
-    } else if (activeView !== currentView) {
-      // Otherwise sync activeView to match URL-derived view
-      setActiveView(currentView);
+    if (activeView !== displayView) {
+      setActiveView(displayView);
     }
-  }, [currentView, activeView, setActiveView, isStreaming, code]);
+  }, [displayView, activeView, setActiveView]);
+
+  // This effect has been replaced by the displayView from useViewState hook
+  // The hook now handles the logic of showing code view during streaming
 
   return (
     <div className="flex h-full w-full items-center px-2 py-4">
@@ -85,7 +75,9 @@ const ResultPreviewHeaderContent: React.FC<ResultPreviewHeaderContentProps> = ({
             {/* Map over view controls to create buttons */}
             {Object.entries(viewControls).map(([view, control]) => {
               const viewType = view as ViewType;
-              const isActive = currentView === viewType;
+              // Use displayView instead of currentView to determine active state
+              // displayView will show code during streaming but respect URL otherwise
+              const isActive = displayView === viewType;
 
               // Handle special case for data view with streaming state
               if (viewType === 'data' && isStreaming) {
