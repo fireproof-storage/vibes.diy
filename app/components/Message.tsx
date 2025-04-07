@@ -16,12 +16,14 @@ interface MessageProps {
 const AIMessage = memo(
   ({
     message,
+    model,
     isStreaming,
     setSelectedResponseId,
     selectedResponseId,
     setMobilePreviewShown,
   }: {
     message: AiChatMessageDocument;
+    model?: string;
     isStreaming: boolean;
     setSelectedResponseId: (id: string) => void;
     selectedResponseId: string;
@@ -31,7 +33,10 @@ const AIMessage = memo(
     return (
       <div className="mb-4 flex flex-row justify-start px-4">
         <div className="mr-2 flex-shrink-0">
-          <div className="bg-accent-02-light dark:bg-accent-02-dark flex h-8 w-8 items-center justify-center rounded-full shadow-sm">
+          <div
+            className="bg-accent-02-light dark:bg-accent-02-dark flex h-8 w-8 items-center justify-center rounded-full shadow-sm"
+            title={model || undefined}
+          >
             <svg
               xmlns="http://www.w3.org/2000/svg"
               className="h-5 w-5 text-white"
@@ -113,6 +118,7 @@ const Message = memo(
         {message.type === 'ai' ? (
           <AIMessage
             message={message as AiChatMessageDocument}
+            model={message.model}
             isStreaming={isStreaming}
             setSelectedResponseId={setSelectedResponseId}
             selectedResponseId={selectedResponseId}

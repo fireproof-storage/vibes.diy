@@ -1,7 +1,7 @@
 // Vitest will automatically use mocks from __mocks__ directory
 import { render, screen, fireEvent } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import ChatHeader from '../app/components/ChatHeader';
+import ChatHeader from '../app/components/ChatHeaderContent';
 import SessionSidebar from '../app/components/SessionSidebar';
 import MessageList from '../app/components/MessageList';
 import type { UserChatMessage, AiChatMessage, ChatMessageDocument } from '../app/types/chat';
@@ -102,7 +102,7 @@ describe('Component Rendering', () => {
     it('applies tooltip classes correctly', () => {
       render(<ChatHeader onOpenSidebar={onOpenSidebar} title="Test Chat" />);
       expect(
-        screen.getByText('New Chat', { selector: 'span.pointer-events-none' })
+        screen.getByText('New Vibe', { selector: 'span.pointer-events-none' })
       ).toBeInTheDocument();
     });
 

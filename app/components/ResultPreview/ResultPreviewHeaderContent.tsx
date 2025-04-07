@@ -1,7 +1,13 @@
 import React from 'react';
 import { useViewState } from '../../utils/ViewState';
 import type { ViewType } from '../../utils/ViewState';
-import { PreviewIcon, CodeIcon, DataIcon, ShareIcon, BackArrowIcon } from '../HeaderContent/SvgIcons';
+import {
+  PreviewIcon,
+  CodeIcon,
+  DataIcon,
+  ShareIcon,
+  BackArrowIcon,
+} from '../HeaderContent/SvgIcons';
 
 interface ResultPreviewHeaderContentProps {
   previewReady: boolean;
@@ -37,12 +43,25 @@ const ResultPreviewHeaderContent: React.FC<ResultPreviewHeaderContentProps> = ({
       isIframeFetching,
     });
 
-  // Update activeView state to match currentView if needed
+  // Handle special case for code view for first message
   React.useEffect(() => {
-    if (activeView !== currentView) {
+    // If code starts streaming for the first message, we should display code
+    // without changing the URL (so later it can auto-navigate to app)
+    const shouldShowCodeView = isStreaming && (code.length === 0 || !code);
+
+    // Current URL path has no view suffix, so use activeView to control display
+    const path = window.location.pathname;
+    const basePath = path.replace(/\/(app|code|data)$/, '');
+    const hasViewSuffix = path !== basePath;
+
+    // If we're streaming first message and URL has no view suffix
+    if (shouldShowCodeView && !hasViewSuffix) {
+      setActiveView('code');
+    } else if (activeView !== currentView) {
+      // Otherwise sync activeView to match URL-derived view
       setActiveView(currentView);
     }
-  }, [currentView, activeView, setActiveView]);
+  }, [currentView, activeView, setActiveView, isStreaming, code]);
 
   return (
     <div className="flex h-full w-full items-center px-2 py-4">
@@ -140,9 +159,9 @@ const ResultPreviewHeaderContent: React.FC<ResultPreviewHeaderContentProps> = ({
                     />
                   )}
                   {viewType === 'code' && (
-                    <CodeIcon 
-                      className="h-3.5 w-3.5 sm:h-4 sm:w-4" 
-                      isLoading={currentView === 'preview' && !!control.loading} 
+                    <CodeIcon
+                      className="h-3.5 w-3.5 sm:h-4 sm:w-4"
+                      isLoading={currentView === 'preview' && !!control.loading}
                     />
                   )}
                   {viewType === 'data' && <DataIcon className="h-3.5 w-3.5 sm:h-4 sm:w-4" />}
