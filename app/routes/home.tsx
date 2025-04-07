@@ -156,17 +156,19 @@ export default function UnifiedSession() {
   // Track if user manually clicked back to chat during streaming
   const [userClickedBack, setUserClickedBack] = useState(false);
 
-  // When streaming ends and we have a preview ready, reset user preference and show preview
+  // Handle the case when preview becomes ready
   useEffect(() => {
-    // Only take action when streaming has ended
-    if (!chatState.isStreaming && previewReady) {
+    // Only switch to preview view when preview becomes ready (not when streaming just ends)
+    if (previewReady) {
       // Reset user preference so future code content will auto-show preview
       setUserClickedBack(false);
 
-      // Auto-show preview when streaming ends and preview is ready
-      setMobilePreviewShown(true);
+      // Only auto-show preview if the user hasn't explicitly clicked back to chat
+      if (!userClickedBack) {
+        setMobilePreviewShown(true);
+      }
     }
-  }, [chatState.isStreaming, previewReady]);
+  }, [previewReady, userClickedBack]);
 
   // Update mobilePreviewShown when selectedCode changes
   useEffect(() => {
