@@ -22,6 +22,7 @@ const AIMessage = memo(
     setSelectedResponseId,
     selectedResponseId,
     setMobilePreviewShown,
+    setActiveView,
   }: {
     message: AiChatMessageDocument;
     model?: string;
