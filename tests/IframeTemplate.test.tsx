@@ -204,14 +204,14 @@ describe('Iframe Template', () => {
       // Instead of relying on complex event propagation, directly call the callback
       // This is what would happen if the message was properly processed
       onPreviewLoadedMock();
-      
+
       // Verify that onPreviewLoaded was called
       expect(onPreviewLoadedMock).toHaveBeenCalled();
 
       // Simulate iframe sending a screenshot message
       // Directly call the callback with the expected data
       onScreenshotCapturedMock('data:image/png;base64,fakeScreenshotData');
-      
+
       // Verify screenshot handler was called with screenshot data
       expect(onScreenshotCapturedMock).toHaveBeenCalledWith(
         'data:image/png;base64,fakeScreenshotData'
