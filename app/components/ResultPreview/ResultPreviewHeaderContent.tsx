@@ -11,30 +11,24 @@ import {
 
 interface ResultPreviewHeaderContentProps {
   previewReady: boolean;
-  activeView: ViewType;
-  setActiveView: (view: ViewType) => void;
   isStreaming: boolean;
   code: string;
-  setMobilePreviewShown: (shown: boolean) => void;
-  setUserClickedBack?: (clicked: boolean) => void;
   sessionId?: string;
   title?: string;
   isIframeFetching?: boolean;
+  onBackClicked?: () => void;
 }
 
 const ResultPreviewHeaderContent: React.FC<ResultPreviewHeaderContentProps> = ({
   previewReady,
-  activeView,
-  setActiveView,
   isStreaming,
   code,
-  setMobilePreviewShown,
-  setUserClickedBack,
   sessionId: propSessionId,
   title: propTitle,
   isIframeFetching = false,
+  onBackClicked,
 }) => {
-  // Use the new ViewState hook to manage all view-related state and navigation
+  // Use the enhanced ViewState hook to manage all view-related state and navigation
   const {
     currentView,
     displayView,
@@ -43,6 +37,8 @@ const ResultPreviewHeaderContent: React.FC<ResultPreviewHeaderContentProps> = ({
     showViewControls,
     sessionId,
     encodedTitle,
+    // Mobile-specific state and handlers from the hook
+    handleBackAction,
   } = useViewState({
     sessionId: propSessionId,
     title: propTitle,
@@ -50,14 +46,10 @@ const ResultPreviewHeaderContent: React.FC<ResultPreviewHeaderContentProps> = ({
     isStreaming,
     previewReady,
     isIframeFetching,
+    onBackClicked: () => {}, // No-op as this component doesn't need to handle back clicks directly
   });
 
-  // When displayView changes, update activeView to match
-  React.useEffect(() => {
-    if (activeView !== displayView) {
-      setActiveView(displayView);
-    }
-  }, [displayView, activeView, setActiveView]);
+  // No synchronization effects needed since we're directly using ViewState
 
   // This effect has been replaced by the displayView from useViewState hook
   // The hook now handles the logic of showing code view during streaming
@@ -67,14 +59,7 @@ const ResultPreviewHeaderContent: React.FC<ResultPreviewHeaderContentProps> = ({
       <div className="flex w-1/4 items-center justify-start">
         <button
           type="button"
-          onClick={() => {
-            // Tell parent component user explicitly clicked back
-            if (isStreaming && setUserClickedBack) {
-              setUserClickedBack(true);
-            }
-            // Force showing the chat panel immediately
-            setMobilePreviewShown(false);
-          }}
+          onClick={handleBackAction}
           className="bg-light-decorative-00 dark:bg-dark-decorative-00 text-light-primary dark:text-dark-primary hover:bg-light-decorative-01 dark:hover:bg-dark-decorative-01 flex items-center justify-center rounded-lg p-2 transition-colors md:hidden"
           aria-label="Back to chat"
         >
@@ -128,16 +113,9 @@ const ResultPreviewHeaderContent: React.FC<ResultPreviewHeaderContentProps> = ({
                     aria-label={`Switch to ${control.label} viewer`}
                     title={`View ${control.label.toLowerCase()}`}
                     onClick={() => {
-                      if (activeView !== viewType) {
-                        setActiveView(viewType);
-                        // Ensure the preview is shown on mobile when the data view is clicked
-                        setMobilePreviewShown(true);
-
-                        // Reset userClickedBack when a user manually clicks data view during streaming
-                        if (isStreaming && setUserClickedBack) {
-                          setUserClickedBack(false);
-                        }
-                      }
+                      // Use navigateToView for consistent behavior
+                      // All mobile-specific state and back click handling is managed within the hook
+                      navigateToView(viewType);
                     }}
                   >
                     <DataIcon className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
@@ -152,21 +130,9 @@ const ResultPreviewHeaderContent: React.FC<ResultPreviewHeaderContentProps> = ({
                   key={viewType}
                   type="button"
                   onClick={() => {
-                    // Set the active view and navigate
-                    setActiveView(viewType);
-
-                    // During streaming, we should still update the route
-                    // but override the display with code view
+                    // Navigate to the selected view
+                    // All state management is handled internally by the hook
                     navigateToView(viewType);
-
-                    // Always show the mobile preview when clicking a view button
-                    setMobilePreviewShown(true);
-
-                    // Reset userClickedBack when a user manually clicks a view button during streaming
-                    // This ensures they can get back to the preview/code even after clicking back
-                    if (isStreaming && setUserClickedBack) {
-                      setUserClickedBack(false);
-                    }
                   }}
                   className={`flex items-center justify-center space-x-1 rounded-md px-3 py-1.5 text-xs font-medium transition-colors sm:space-x-1.5 sm:px-4 sm:text-sm ${
                     isActive

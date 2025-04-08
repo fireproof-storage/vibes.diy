@@ -1,5 +1,5 @@
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 import { encodeTitle } from '../components/SessionSidebar/utils';
 
 export type ViewType = 'preview' | 'code' | 'data';
@@ -12,6 +12,9 @@ export function useViewState(props: {
   previewReady: boolean;
   isIframeFetching?: boolean;
   initialLoad?: boolean;
+  // New props for mobile support
+  isMobileView?: boolean;
+  onBackClicked?: () => void;
 }) {
   const { sessionId: paramSessionId, title: paramTitle } = useParams<{
     sessionId: string;
@@ -124,15 +127,41 @@ export function useViewState(props: {
     },
   };
 
-  // Navigate to a view (explicit user action)
-  const navigateToView = (view: ViewType) => {
-    if (!viewControls[view].enabled) return;
+  // Mobile-specific state
+  const [mobilePreviewShown, setMobilePreviewShown] = useState(true);
+  const [userClickedBack, setUserClickedBack] = useState(false);
 
-    if (sessionId && encodedTitle) {
-      const suffix = view === 'preview' ? 'app' : view;
-      navigate(`/chat/${sessionId}/${encodedTitle}/${suffix}`);
+  // Handle back action
+  const handleBackAction = useCallback(() => {
+    if (props.isStreaming) {
+      setUserClickedBack(true);
     }
-  };
+    setMobilePreviewShown(false);
+    if (props.onBackClicked) {
+      props.onBackClicked();
+    }
+  }, [props.isStreaming, props.onBackClicked]);
+
+  // Navigate to a view (explicit user action)
+  const navigateToView = useCallback(
+    (view: ViewType) => {
+      if (!viewControls[view].enabled) return;
+
+      // Always show mobile preview when changing views
+      setMobilePreviewShown(true);
+
+      // Reset userClickedBack when manually selecting a view
+      if (props.isStreaming) {
+        setUserClickedBack(false);
+      }
+
+      if (sessionId && encodedTitle) {
+        const suffix = view === 'preview' ? 'app' : view;
+        navigate(`/chat/${sessionId}/${encodedTitle}/${suffix}`);
+      }
+    },
+    [viewControls, sessionId, encodedTitle, props.isStreaming]
+  );
 
   // Only show view controls when we have content or a valid session
   const showViewControls =
@@ -150,5 +179,11 @@ export function useViewState(props: {
     showViewControls,
     sessionId,
     encodedTitle,
+    // New mobile-specific state/handlers
+    mobilePreviewShown,
+    setMobilePreviewShown,
+    userClickedBack,
+    setUserClickedBack,
+    handleBackAction,
   };
 }
