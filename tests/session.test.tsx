@@ -36,13 +36,9 @@ interface ChatInterfaceProps {
 }
 
 interface ResultPreviewProps {
-  code: string;
   dependencies?: Record<string, string>;
-  onShare?: () => void;
   onScreenshotCaptured?: (screenshotData: string) => void;
-  initialView?: 'code' | 'preview';
-  sessionId?: string;
-  isStreaming?: boolean;
+  codeReady?: boolean;
 }
 
 interface AppLayoutProps {
@@ -64,21 +60,46 @@ vi.mock('../app/ChatInterface', () => ({
   }: ChatInterfaceProps) => <div data-testid="mock-chat-interface">Chat Interface Component</div>,
 }));
 
+// Also mock the ViewStateContext
+vi.mock('../app/context/ViewStateContext', () => ({
+  useSharedViewState: () => ({
+    displayView: 'preview',
+    isDarkMode: false,
+    filesContent: {
+      '/App.jsx': {
+        code: Array(210).fill('console.log("test");').join('\n'),
+        active: true,
+      },
+    },
+    showWelcome: false,
+    navigateToView: vi.fn(),
+    setMobilePreviewShown: vi.fn(),
+    setUserClickedBack: vi.fn(),
+    handleBackAction: vi.fn(),
+  }),
+  ViewStateProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+}));
+
 vi.mock('../app/components/ResultPreview/ResultPreview', () => ({
-  default: ({ code, dependencies, isStreaming, sessionId }: ResultPreviewProps) => (
-    <div data-testid="mock-result-preview">
-      <div data-testid="code-line-count">{code.split('\n').length} lines of code</div>
-      <div data-testid="code-content">{code.substring(0, 50)}...</div>
-      <button
-        data-testid="share-button"
-        onClick={() =>
-          navigator.clipboard.writeText(`${window.location.origin}/shared?state=mockState`)
-        }
-      >
-        Share
-      </button>
-    </div>
-  ),
+  default: ({ dependencies, onScreenshotCaptured, codeReady }: ResultPreviewProps) => {
+    // Get mock code from the context
+    const mockCode = Array(210).fill('console.log("test");').join('\n');
+
+    return (
+      <div data-testid="mock-result-preview">
+        <div data-testid="code-line-count">{mockCode.split('\n').length} lines of code</div>
+        <div data-testid="code-content">{mockCode.substring(0, 50)}...</div>
+        <button
+          data-testid="share-button"
+          onClick={() =>
+            navigator.clipboard.writeText(`${window.location.origin}/shared?state=mockState`)
+          }
+        >
+          Share
+        </button>
+      </div>
+    );
+  },
 }));
 
 vi.mock('../app/components/AppLayout', () => ({

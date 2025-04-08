@@ -36,17 +36,9 @@ function SessionContent() {
   const [isSidebarVisible, setIsSidebarVisible] = useState(false);
 
   // Consume the shared view state from the context
-  const { currentView, mobilePreviewShown, setMobilePreviewShown, isIframeFetching } =
-    useSharedViewState();
+  const { navigateToView, mobilePreviewShown, setMobilePreviewShown } = useSharedViewState();
 
-  // For backwards compatibility with components that expect activeView
-  const [activeView, setActiveView] = useState<'code' | 'preview' | 'data'>('code');
-
-  // For backwards compatibility, sync ViewState with local state
-  // This allows us to gradually migrate components to use ViewState directly
-  useEffect(() => {
-    setActiveView(currentView);
-  }, [currentView, setActiveView]);
+  // No longer need to track activeView separately - removed for simplicity
 
   // Directly create an openSidebar function
   const openSidebar = useCallback(() => {
@@ -196,16 +188,16 @@ function SessionContent() {
     const hasTabSuffix = path.endsWith('/app') || path.endsWith('/code') || path.endsWith('/data');
 
     if (!hasTabSuffix && chatState.sessionId && chatState.title) {
-      setActiveView('preview');
+      navigateToView('preview');
       navigate(`/chat/${chatState.sessionId}/${encodeTitle(chatState.title)}/app`, {
         replace: true,
       });
     } else if (path.endsWith('/app')) {
-      setActiveView('preview');
+      navigateToView('preview');
     } else if (path.endsWith('/code')) {
-      setActiveView('code');
+      navigateToView('code');
     } else if (path.endsWith('/data')) {
-      setActiveView('data');
+      navigateToView('data');
     }
   }, [
     chatState.selectedCode,
@@ -213,7 +205,7 @@ function SessionContent() {
     chatState.title,
     navigate,
     location.pathname,
-    setActiveView,
+    navigateToView,
     chatState.isStreaming,
     userClickedBack,
     setMobilePreviewShown,
@@ -228,39 +220,15 @@ function SessionContent() {
         headerRight={
           // Only render the header content when we have code content or a completed session
           chatState.selectedCode?.content || urlSessionId ? (
-            <ResultPreviewHeaderContent
-              previewReady={!chatState.isStreaming && chatState.codeReady}
-              activeView={activeView}
-              setActiveView={setActiveView}
-              setMobilePreviewShown={setMobilePreviewShown}
-              isStreaming={chatState.isStreaming}
-              code={chatState.selectedCode?.content || ''}
-              sessionId={chatState.sessionId || undefined}
-              title={chatState.title || undefined}
-              isIframeFetching={isIframeFetching}
-            />
+            <ResultPreviewHeaderContent isStreaming={chatState.isStreaming} />
           ) : null
         }
-        chatPanel={
-          <ChatInterface
-            {...chatState}
-            setMobilePreviewShown={setMobilePreviewShown}
-            setActiveView={setActiveView}
-          />
-        }
+        chatPanel={<ChatInterface {...chatState} />}
         previewPanel={
           <ResultPreview
-            sessionId={chatState.sessionId || ''}
-            code={chatState.selectedCode?.content || ''}
             dependencies={chatState.selectedDependencies || {}}
-            isStreaming={chatState.isStreaming}
             codeReady={chatState.codeReady}
             onScreenshotCaptured={chatState.addScreenshot}
-            activeView={activeView}
-            setActiveView={setActiveView}
-            onPreviewLoaded={() => {}}
-            setMobilePreviewShown={setMobilePreviewShown}
-            setIsIframeFetching={() => {}}
           />
         }
         chatInput={

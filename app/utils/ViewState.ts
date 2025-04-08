@@ -308,13 +308,17 @@ function useViewStateInternal(props: ViewStateProps): ViewState {
 
           setMobilePreviewShown(true);
 
-          // Navigate to the preview view when iframe is ready
-          navigateToView('preview');
+          // Add a small delay before navigation to ensure the iframe is fully ready
+          // This helps prevent race conditions that might cause button click issues
+          setTimeout(() => {
+            // Navigate to the preview view when iframe is ready
+            navigateToView('preview');
 
-          // Notify parent component that preview is loaded
-          if (props.onPreviewLoaded) {
-            props.onPreviewLoaded();
-          }
+            // Notify parent component that preview is loaded
+            if (props.onPreviewLoaded) {
+              props.onPreviewLoaded();
+            }
+          }, 50); // Small delay to ensure state updates properly
         } else if (data.type === 'streaming' && data.state !== undefined) {
           setIsIframeFetching(data.state);
         } else if (data.type === 'screenshot' && data.data) {

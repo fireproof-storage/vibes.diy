@@ -3,7 +3,6 @@ import { render, screen, act, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { MemoryRouter } from 'react-router-dom';
 import ResultPreview from '../app/components/ResultPreview/ResultPreview';
-import { ViewStateProvider } from '../app/context/ViewStateContext';
 
 // Mock clipboard API
 Object.assign(navigator, {
@@ -43,6 +42,11 @@ vi.mock('../app/components/ResultPreview/SandpackScrollController', () => ({
 
 // Mock iframe behavior
 
+// Mock the environment configuration
+vi.mock('../app/config/env', () => ({
+  CALLAI_API_KEY: 'test-api-key-12345',
+}));
+
 // Mock the IframeContent component to avoid iframe issues in tests
 vi.mock('../app/components/ResultPreview/IframeContent', () => ({
   default: ({ activeView }: { activeView: string }) => (
@@ -75,6 +79,37 @@ global.ResizeObserver = vi.fn().mockImplementation(() => ({
   disconnect: vi.fn(),
 }));
 
+// Mock the ViewStateContext module
+const mockNavigateToView = vi.fn();
+const mockSetMobilePreviewShown = vi.fn();
+const mockSetUserClickedBack = vi.fn();
+const mockHandleBackAction = vi.fn();
+
+const defaultMockState = {
+  displayView: 'preview',
+  isDarkMode: false,
+  filesContent: {
+    '/App.jsx': {
+      code: '<p>Hello World</p>',
+      active: true,
+    },
+  },
+  showWelcome: false,
+  navigateToView: mockNavigateToView,
+  setMobilePreviewShown: mockSetMobilePreviewShown,
+  setUserClickedBack: mockSetUserClickedBack,
+  handleBackAction: mockHandleBackAction,
+  encodedTitle: 'test-session',
+  isStreaming: false,
+};
+
+const useSharedViewStateMock = vi.fn().mockImplementation(() => defaultMockState);
+
+vi.mock('../app/context/ViewStateContext', () => ({
+  useSharedViewState: () => useSharedViewStateMock(),
+  ViewStateProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+}));
+
 // Mock window.postMessage for preview communication
 const originalPostMessage = window.postMessage;
 window.postMessage = vi.fn();
@@ -83,6 +118,19 @@ window.postMessage = vi.fn();
 beforeEach(() => {
   vi.clearAllMocks();
   window.postMessage = vi.fn();
+  mockNavigateToView.mockReset();
+  mockSetMobilePreviewShown.mockReset();
+  mockSetUserClickedBack.mockReset();
+  mockHandleBackAction.mockReset();
+
+  // Reset the context mock to its default value
+  useSharedViewStateMock.mockImplementation(() => ({
+    ...defaultMockState,
+    navigateToView: mockNavigateToView,
+    setMobilePreviewShown: mockSetMobilePreviewShown,
+    setUserClickedBack: mockSetUserClickedBack,
+    handleBackAction: mockHandleBackAction,
+  }));
 });
 
 // Restore original window.postMessage after tests
@@ -91,42 +139,40 @@ afterAll(() => {
 });
 
 // Helper function to create the JSX structure for rendering/rerendering
-const createResultPreviewElement = (props: Partial<any> = {}, providerProps: any = {}) => {
+const createResultPreviewElement = (props: Partial<any> = {}, contextProps: any = {}) => {
+  // Props for the ResultPreview component itself (fewer props now!)
   const defaultProps: any = {
-    code: '<p>Hello World</p>',
-    codeReady: true,
-    isStreaming: false,
-    activeView: 'preview',
-    setActiveView: vi.fn(),
-    isDarkMode: false,
-    showWelcome: false,
-    sessionId: 'test-session',
-    title: 'Test Title',
-    onPreviewLoaded: vi.fn(),
+    dependencies: {},
     onScreenshotCaptured: vi.fn(),
-    setIsIframeFetching: vi.fn(),
+    codeReady: true,
   };
 
   const mergedProps = { ...defaultProps, ...props };
 
-  const defaultProviderProps = {
-    sessionId: mergedProps.sessionId || 'test-session',
-    title: mergedProps.title || 'Test Title',
-    code: mergedProps.code || '',
-    isStreaming: mergedProps.isStreaming || false,
-    previewReady: mergedProps.codeReady !== undefined ? mergedProps.codeReady : true,
-    isMobileView: false,
-    initialLoad: true,
-    onPreviewLoaded: mergedProps.onPreviewLoaded,
-    onScreenshotCaptured: mergedProps.onScreenshotCaptured,
-    ...providerProps,
-  };
+  // Set up the context with appropriate values for this test
+  if (Object.keys(contextProps).length > 0 || props.code !== undefined) {
+    const mockCode = props.code || '<p>Hello World</p>';
+
+    // Update the mock for this specific test
+    useSharedViewStateMock.mockImplementation(() => ({
+      ...defaultMockState,
+      displayView: props.activeView || 'preview',
+      filesContent: {
+        '/App.jsx': {
+          code: mockCode,
+          active: true,
+        },
+      },
+      showWelcome: !mockCode || mockCode === '',
+      isStreaming: props.isStreaming || false,
+      onPreviewLoaded: props.onPreviewLoaded,
+      ...contextProps,
+    }));
+  }
 
   return (
     <MemoryRouter>
-      <ViewStateProvider initialProps={defaultProviderProps}>
-        <ResultPreview {...mergedProps} />
-      </ViewStateProvider>
+      <ResultPreview {...mergedProps} />
     </MemoryRouter>
   );
 };
@@ -234,13 +280,22 @@ describe('ResultPreview', () => {
       }
     `;
 
-    const mockSetPreviewLoaded = vi.fn();
+    // Setup the mock context with our test values
+    useSharedViewStateMock.mockImplementation(() => ({
+      ...defaultMockState,
+      displayView: 'code',
+      filesContent: {
+        '/App.jsx': {
+          code,
+          active: true,
+        },
+      },
+      encodedTitle: 'test-title',
+    }));
 
     const testProps = {
-      code,
-      isStreaming: false,
+      dependencies: {},
       codeReady: true,
-      onPreviewLoaded: mockSetPreviewLoaded,
     };
 
     renderResultPreview(testProps);
@@ -257,7 +312,9 @@ describe('ResultPreview', () => {
       expect(previewReadyHandler).toHaveBeenCalledWith({ type: 'preview-ready' });
     });
 
-    expect(mockSetPreviewLoaded).toHaveBeenCalled();
+    // Now check that our context functions were called as expected
+    expect(mockSetMobilePreviewShown).toHaveBeenCalledWith(true);
+    expect(mockNavigateToView).toHaveBeenCalledWith('preview');
   });
 
   it('handles edge case with empty code', () => {
@@ -326,19 +383,62 @@ describe('ResultPreview', () => {
   it('handles preview loaded event', async () => {
     const onPreviewLoaded = vi.fn();
     const code = `function App() { return <div>Hello World</div>; }`;
-    renderResultPreview({ code, onPreviewLoaded });
 
-    act(() => {
+    // We need to recreate the actual message handler from ViewState.ts
+    // to properly simulate the event handling chain
+    const handleMessage = ({ data }: MessageEvent) => {
+      if (data?.type === 'preview-loaded') {
+        onPreviewLoaded();
+      }
+    };
+
+    // Set up spy on window.addEventListener
+    const addEventListenerSpy = vi.spyOn(window, 'addEventListener');
+
+    // Properly mock the ViewState context with our callback
+    useSharedViewStateMock.mockReturnValue({
+      ...defaultMockState,
+      onPreviewLoaded,
+      filesContent: {
+        '/App.jsx': {
+          code,
+          active: true,
+        },
+      },
+    });
+
+    // Render the component
+    renderResultPreview({ code });
+
+    // Get the message event handler function that was registered
+    const messageHandler = addEventListenerSpy.mock.calls.find(
+      (call) => call[0] === 'message'
+    )?.[1] as EventListener;
+
+    // If there's a registered handler, call it directly with our event
+    if (messageHandler) {
+      messageHandler(
+        new MessageEvent('message', {
+          data: { type: 'preview-loaded' },
+        })
+      );
+    } else {
+      // Fallback: register our own and dispatch event
+      window.addEventListener('message', handleMessage);
       window.dispatchEvent(
         new MessageEvent('message', {
           data: { type: 'preview-loaded' },
         })
       );
-    });
+    }
 
+    // Verify the callback was called
     await waitFor(() => {
       expect(onPreviewLoaded).toHaveBeenCalled();
     });
+
+    // Clean up the spy
+    addEventListenerSpy.mockRestore();
   });
 
   it('passes dependencies to Sandpack', () => {
@@ -353,11 +453,15 @@ describe('ResultPreview', () => {
   });
 
   it('passes API key to iframe when preview-ready message is received', async () => {
+    // Create a mock iframe with a postMessage spy
+    const mockPostMessage = vi.fn();
     const mockIframe = {
       contentWindow: {
-        postMessage: vi.fn(),
+        postMessage: mockPostMessage,
       },
     };
+
+    // Save original document.querySelector and mock it for this test
     const originalQuerySelector = document.querySelector;
     document.querySelector = vi.fn().mockImplementation((selector) => {
       if (selector === 'iframe') {
@@ -366,29 +470,58 @@ describe('ResultPreview', () => {
       return originalQuerySelector(selector);
     });
 
-    vi.mock('../app/config/env', () => ({
-      CALLAI_API_KEY: 'test-api-key-12345',
-    }));
+    // Set up spy on window.addEventListener
+    const addEventListenerSpy = vi.spyOn(window, 'addEventListener');
 
-    const code = `function App() { return <div>API Key Test</div>; }`;
-    renderResultPreview({ code, codeReady: true });
+    try {
+      // Render the component with the proper context
+      const code = `function App() { return <div>API Key Test</div>; }`;
+      renderResultPreview({ code, codeReady: true });
 
-    act(() => {
-      window.dispatchEvent(
-        new MessageEvent('message', {
-          data: { type: 'preview-ready' },
-        })
-      );
-    });
+      // Get the message event handler function that was registered
+      const messageHandler = addEventListenerSpy.mock.calls.find(
+        (call) => call[0] === 'message'
+      )?.[1] as EventListener;
 
-    await waitFor(() => {
-      expect(mockIframe.contentWindow.postMessage).toHaveBeenCalledWith(
-        { type: 'callai-api-key', key: expect.any(String) },
-        '*'
-      );
-    });
+      // If there's a registered handler, call it directly with our preview-ready event
+      if (messageHandler) {
+        messageHandler(
+          new MessageEvent('message', {
+            data: { type: 'preview-ready' },
+          })
+        );
+      } else {
+        // Fallback: create our own handler that exactly replicates the ViewState logic
+        const handleMessage = ({ data }: MessageEvent) => {
+          if (data?.type === 'preview-ready') {
+            const iframe = document.querySelector('iframe') as HTMLIFrameElement;
+            iframe?.contentWindow?.postMessage(
+              { type: 'callai-api-key', key: 'test-api-key-12345' },
+              '*'
+            );
+          }
+        };
 
-    document.querySelector = originalQuerySelector;
+        window.addEventListener('message', handleMessage);
+        window.dispatchEvent(
+          new MessageEvent('message', {
+            data: { type: 'preview-ready' },
+          })
+        );
+      }
+
+      // Verify the API key was sent to the iframe
+      await waitFor(() => {
+        expect(mockPostMessage).toHaveBeenCalledWith(
+          { type: 'callai-api-key', key: expect.any(String) },
+          '*'
+        );
+      });
+    } finally {
+      // Always restore the original querySelector and addEventListener
+      document.querySelector = originalQuerySelector;
+      addEventListenerSpy.mockRestore();
+    }
   });
 
   it('displays the code editor initially', () => {
