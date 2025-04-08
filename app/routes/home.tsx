@@ -30,37 +30,17 @@ function SessionContent() {
   const chatState = useSimpleChat(urlSessionId);
   const { setMessageHasBeenSent } = useCookieConsent();
 
-  // State for view management - set initial view based on URL path
-  const [activeView, setActiveView] = useState<'code' | 'preview' | 'data'>(() => {
-    // Directly check the pathname on initial render
-    // Add null check for location to prevent errors in tests
-    const path = location?.pathname || '';
-    if (path.endsWith('/app')) {
-      return 'preview';
-    } else if (path.endsWith('/code')) {
-      return 'code';
-    } else if (path.endsWith('/data')) {
-      return 'data';
-    }
-    // Default to code view if no suffix is found
-    return 'code';
-  });
-  const [previewReady, setPreviewReady] = useState(false);
-  // const [bundlingComplete] = useState(true);
-  const [mobilePreviewShown, setMobilePreviewShown] = useState(false);
-  const [isIframeFetching, setIsIframeFetching] = useState(false);
-
   // Add a ref to track whether streaming was active previously
   const wasStreamingRef = useRef(false);
 
   const [isSidebarVisible, setIsSidebarVisible] = useState(false);
 
-  // For backwards compatibility with components that expect setActiveView
-  const [activeView, setActiveView] = useState<'code' | 'preview' | 'data'>('code');
-
   // Consume the shared view state from the context
   const { currentView, mobilePreviewShown, setMobilePreviewShown, isIframeFetching } =
     useSharedViewState();
+
+  // For backwards compatibility with components that expect activeView
+  const [activeView, setActiveView] = useState<'code' | 'preview' | 'data'>('code');
 
   // For backwards compatibility, sync ViewState with local state
   // This allows us to gradually migrate components to use ViewState directly
@@ -78,27 +58,12 @@ function SessionContent() {
     setIsSidebarVisible(false);
   }, []);
 
-  // Reset previewReady state when streaming starts
+  // Track streaming state changes with the ref
   useEffect(() => {
-    if (chatState.isStreaming) {
-      setPreviewReady(false);
-    }
+    wasStreamingRef.current = chatState.isStreaming;
   }, [chatState.isStreaming]);
 
-  // Handle preview loaded event
-  const handlePreviewLoaded = useCallback(() => {
-    setPreviewReady(true);
-
-    // Don't automatically show preview on mobile until streaming is complete
-    // and only do this on mobile devices
-    if (!chatState.isStreaming && isMobileViewport()) {
-      setMobilePreviewShown(true);
-    }
-
-    // Update the active view locally, but don't force navigation
-    // Let the user stay on their current tab
-    setActiveView('preview');
-  }, []);
+  // Preview loaded handling is now managed by the ViewState context
 
   useEffect(() => {
     if (chatState.title) {
@@ -188,10 +153,7 @@ function SessionContent() {
   // Track if user manually clicked back to chat during streaming
   const [userClickedBack, setUserClickedBack] = useState(false);
 
-  // Computed state for combining conditions
-  const previewReady = !chatState.isStreaming && chatState.codeReady;
-
-  // Computed state for combining conditions
+  // Computed state for combining conditions - this replaces the useState previewReady
   const previewReady = !chatState.isStreaming && chatState.codeReady;
 
   // Handle the case when preview becomes ready and streaming ends
@@ -233,18 +195,17 @@ function SessionContent() {
     const path = location?.pathname || '';
     const hasTabSuffix = path.endsWith('/app') || path.endsWith('/code') || path.endsWith('/data');
 
-      if (!hasTabSuffix && chatState.sessionId && chatState.title) {
-        setActiveView('preview');
-        navigate(`/chat/${chatState.sessionId}/${encodeTitle(chatState.title)}/app`, {
-          replace: true,
-        });
-      } else if (path.endsWith('/app')) {
-        setActiveView('preview');
-      } else if (path.endsWith('/code')) {
-        setActiveView('code');
-      } else if (path.endsWith('/data')) {
-        setActiveView('data');
-      }
+    if (!hasTabSuffix && chatState.sessionId && chatState.title) {
+      setActiveView('preview');
+      navigate(`/chat/${chatState.sessionId}/${encodeTitle(chatState.title)}/app`, {
+        replace: true,
+      });
+    } else if (path.endsWith('/app')) {
+      setActiveView('preview');
+    } else if (path.endsWith('/code')) {
+      setActiveView('code');
+    } else if (path.endsWith('/data')) {
+      setActiveView('data');
     }
   }, [
     chatState.selectedCode,

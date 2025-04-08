@@ -108,6 +108,10 @@ function useViewStateInternal(props: ViewStateProps): ViewState {
   const wasPreviewReadyRef = useRef(props.previewReady);
   const initialNavigationDoneRef = useRef(false);
 
+  // Mobile-specific state
+  const [mobilePreviewShown, setMobilePreviewShown] = useState(true);
+  const [userClickedBack, setUserClickedBack] = useState(false);
+
   // Auto-navigate based on app state changes
   useEffect(() => {
     // Don't auto-navigate if we don't have session and title info for URLs
@@ -161,25 +165,11 @@ function useViewStateInternal(props: ViewStateProps): ViewState {
       // Navigate if: not in specific view AND (not streaming OR streaming just ended)
       if (!isInSpecificView && (!props.isStreaming || streamingJustEnded)) {
         // Navigate to app view
-      if (!isInDataView && !isInCodeView && !isMobileViewport()) {
-        navigate(`/chat/${sessionId}/${encodedTitle}/app`);
-        // Also set previewShown to true on mobile
-        setMobilePreviewShown(true);
-      }
-    }
-
-    // Special case for when streaming ends and preview is ready
-    // This handles the case where preview became ready during streaming
-    if (!props.isStreaming && wasStreamingRef.current && props.previewReady) {
-      const isInDataView = location.pathname.endsWith('/data');
-      const isInCodeView = location.pathname.endsWith('/code');
-      const isInSpecificView = isInDataView || isInCodeView;
-
-      // If not in a specific view, navigate to app
-      if (!isInSpecificView) {
-        navigate(`/chat/${sessionId}/${encodedTitle}/app`);
-        // Also set previewShown to true on mobile
-        setMobilePreviewShown(true);
+        if (!isInDataView && !isInCodeView && !isMobileViewport()) {
+          navigate(`/chat/${sessionId}/${encodedTitle}/app`);
+          // Also set previewShown to true on mobile
+          setMobilePreviewShown(true);
+        }
       }
     }
 
@@ -187,7 +177,15 @@ function useViewStateInternal(props: ViewStateProps): ViewState {
     wasStreamingRef.current = props.isStreaming;
     hadCodeRef.current = props.code && props.code.length > 0;
     wasPreviewReadyRef.current = props.previewReady;
-  }, [props.isStreaming, props.previewReady, props.code, sessionId, encodedTitle, navigate]);
+  }, [
+    props.isStreaming,
+    props.previewReady,
+    props.code,
+    sessionId,
+    encodedTitle,
+    navigate,
+    setMobilePreviewShown,
+  ]);
 
   // We handle the initial view display without changing the URL
   // This allows for proper auto-navigation to app view when preview is ready
@@ -211,10 +209,6 @@ function useViewStateInternal(props: ViewStateProps): ViewState {
       loading: false,
     },
   };
-
-  // Mobile-specific state
-  const [mobilePreviewShown, setMobilePreviewShown] = useState(true);
-  const [userClickedBack, setUserClickedBack] = useState(false);
 
   // Handle back action
   const handleBackAction = useCallback(() => {
@@ -245,7 +239,7 @@ function useViewStateInternal(props: ViewStateProps): ViewState {
         navigate(`/chat/${sessionId}/${encodedTitle}/${suffix}`);
       }
     },
-    [viewControls, sessionId, encodedTitle, props.isStreaming]
+    [viewControls, sessionId, encodedTitle, props.isStreaming, navigate, setMobilePreviewShown]
   );
 
   // Only show view controls when we have content or a valid session
