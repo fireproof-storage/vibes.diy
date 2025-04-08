@@ -1,6 +1,7 @@
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
-import { useEffect, useRef, useState, useCallback } from 'react';
+import { useEffect, useRef, useState, useCallback, useMemo } from 'react';
 import { encodeTitle } from '../components/SessionSidebar/utils';
+import { CALLAI_API_KEY } from '../config/env';
 
 export type ViewType = 'preview' | 'code' | 'data';
 
@@ -12,9 +13,15 @@ export function useViewState(props: {
   previewReady: boolean;
   isIframeFetching?: boolean;
   initialLoad?: boolean;
-  // New props for mobile support
+  // Mobile support
   isMobileView?: boolean;
   onBackClicked?: () => void;
+  // Preview-related callbacks
+  onPreviewLoaded?: () => void;
+  onScreenshotCaptured?: (data: string | null) => void;
+  // Code-related props
+  codeReady?: boolean;
+  dependencies?: Record<string, string>;
 }) {
   const { sessionId: paramSessionId, title: paramTitle } = useParams<{
     sessionId: string;
@@ -171,6 +178,111 @@ export function useViewState(props: {
   // During streaming, we always show code view regardless of the URL
   const displayView = props.isStreaming ? 'code' : currentView;
 
+  // State for iframe functionality
+  const [isIframeFetching, setIsIframeFetching] = useState(!!props.isIframeFetching);
+  const [isDarkMode, setIsDarkMode] = useState(true); // Default to dark mode
+
+  // Sync with external isIframeFetching if provided
+  useEffect(() => {
+    if (props.isIframeFetching !== undefined) {
+      setIsIframeFetching(props.isIframeFetching);
+    }
+  }, [props.isIframeFetching]);
+
+  // Effect to set initial view to 'code' if there's no code yet
+  useEffect(() => {
+    if (!props.code || props.code.length === 0) {
+      const path = location.pathname;
+      // Only switch if we're not already on a specific route or the base chat route
+      const basePath = path.replace(/\/(app|code|data)$/, '');
+      // Check if current path is just the base path (no suffix)
+      if (path === basePath && !path.endsWith('/code') && !path.endsWith('/data')) {
+        navigateToView('code');
+      }
+    }
+  }, [props.code, location.pathname]); // Depend only on code for initial check
+
+  // Theme detection effect
+  useEffect(() => {
+    // Add a small delay to ensure the app's theme detection has run first
+    const timeoutId = setTimeout(() => {
+      // Check if document has the dark class
+      const hasDarkClass = document.documentElement.classList.contains('dark');
+      // Set the theme state
+      setIsDarkMode(hasDarkClass);
+
+      // Set up observer to watch for class changes on document.documentElement
+      const observer = new MutationObserver((mutations) => {
+        mutations.forEach((mutation) => {
+          if (mutation.attributeName === 'class') {
+            const hasDarkClass = document.documentElement.classList.contains('dark');
+            setIsDarkMode(hasDarkClass);
+          }
+        });
+      });
+
+      // Start observing
+      observer.observe(document.documentElement, { attributes: true });
+
+      return () => observer.disconnect();
+    }, 100);
+
+    return () => clearTimeout(timeoutId);
+  }, []);
+
+  // Iframe message handler
+  useEffect(() => {
+    const handleMessage = ({ data }: MessageEvent) => {
+      if (data) {
+        if (data.type === 'preview-ready' || data.type === 'preview-loaded') {
+          // respond with the API key
+          const iframe = document.querySelector('iframe') as HTMLIFrameElement;
+          iframe?.contentWindow?.postMessage({ type: 'callai-api-key', key: CALLAI_API_KEY }, '*');
+
+          setMobilePreviewShown(true);
+
+          // Navigate to the preview view when iframe is ready
+          navigateToView('preview');
+
+          // Notify parent component that preview is loaded
+          if (props.onPreviewLoaded) {
+            props.onPreviewLoaded();
+          }
+        } else if (data.type === 'streaming' && data.state !== undefined) {
+          setIsIframeFetching(data.state);
+        } else if (data.type === 'screenshot' && data.data) {
+          if (props.onScreenshotCaptured) {
+            props.onScreenshotCaptured(data.data);
+          }
+        } else if (data.type === 'screenshot-error' && data.error) {
+          console.warn('Screenshot capture error:', data.error);
+          // Still call onScreenshotCaptured with null to signal that the screenshot failed
+          if (props.onScreenshotCaptured) {
+            props.onScreenshotCaptured(null);
+          }
+        }
+      }
+    };
+
+    window.addEventListener('message', handleMessage);
+    return () => {
+      window.removeEventListener('message', handleMessage);
+    };
+  }, [props.onPreviewLoaded, props.onScreenshotCaptured, navigateToView]);
+
+  // Compute whether we should show welcome screen
+  const showWelcome = !props.isStreaming && (!props.code || props.code.length === 0);
+
+  // Calculate filesContent for iframe
+  const filesContent = useMemo(() => {
+    return {
+      '/App.jsx': {
+        code: props.code && !showWelcome ? props.code : '', // Use code if available, else empty string
+        active: true,
+      },
+    };
+  }, [props.code, showWelcome]);
+
   return {
     currentView, // The view based on URL (for navigation)
     displayView, // The view that should actually be displayed
@@ -179,11 +291,17 @@ export function useViewState(props: {
     showViewControls,
     sessionId,
     encodedTitle,
-    // New mobile-specific state/handlers
+    // Mobile-specific state
     mobilePreviewShown,
     setMobilePreviewShown,
     userClickedBack,
     setUserClickedBack,
     handleBackAction,
+    // Iframe-related state
+    isDarkMode,
+    isIframeFetching,
+    setIsIframeFetching,
+    filesContent,
+    showWelcome,
   };
 }

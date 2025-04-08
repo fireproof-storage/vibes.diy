@@ -12,6 +12,7 @@ import ResultPreviewHeaderContent from '../components/ResultPreview/ResultPrevie
 import SessionSidebar from '../components/SessionSidebar';
 import { useSimpleChat } from '../hooks/useSimpleChat';
 import { decodeStateFromUrl } from '../utils/sharing';
+import { useViewState } from '../utils/ViewState';
 // import { useSession } from '../hooks/useSession';
 
 export function meta() {
@@ -28,27 +29,43 @@ export default function UnifiedSession() {
   const chatState = useSimpleChat(urlSessionId);
   const { setMessageHasBeenSent } = useCookieConsent();
 
-  // State for view management - set initial view based on URL path
-  const [activeView, setActiveView] = useState<'code' | 'preview' | 'data'>(() => {
-    // Directly check the pathname on initial render
-    // Add null check for location to prevent errors in tests
-    const path = location?.pathname || '';
-    if (path.endsWith('/app')) {
-      return 'preview';
-    } else if (path.endsWith('/code')) {
-      return 'code';
-    } else if (path.endsWith('/data')) {
-      return 'data';
-    }
-    // Default to code view if no suffix is found
-    return 'code';
-  });
-  const [previewReady, setPreviewReady] = useState(false);
-  // const [bundlingComplete] = useState(true);
-  const [mobilePreviewShown, setMobilePreviewShown] = useState(false);
-  const [isIframeFetching, setIsIframeFetching] = useState(false);
-
+  // Local state for sidebar visibility only
   const [isSidebarVisible, setIsSidebarVisible] = useState(false);
+
+  // For backwards compatibility with components that expect setActiveView
+  const [activeView, setActiveView] = useState<'code' | 'preview' | 'data'>('code');
+
+  // Use the centralized ViewState hook for all view-related state management
+  const viewState = useViewState({
+    sessionId: chatState.sessionId || '',
+    title: chatState.title || '',
+    code: chatState.selectedCode?.content || '',
+    isStreaming: chatState.isStreaming,
+    previewReady: !chatState.isStreaming && chatState.codeReady,
+    initialLoad: true,
+    isMobileView: true,
+    onBackClicked: () => {
+      // Any home-specific behavior when back is clicked
+    },
+  });
+
+  // Extract only the values we need from viewState
+  const {
+    currentView,
+    mobilePreviewShown,
+    setMobilePreviewShown,
+    isIframeFetching,
+    setIsIframeFetching,
+  } = viewState;
+
+  // For backwards compatibility, sync ViewState with local state
+  // This allows us to gradually migrate components to use ViewState directly
+  useEffect(() => {
+    setActiveView(currentView);
+  }, [currentView, setActiveView]);
+
+  // Derive previewReady from chatState for backwards compatibility
+  const previewReady = !chatState.isStreaming && chatState.codeReady;
 
   // Directly create an openSidebar function
   const openSidebar = useCallback(() => {
@@ -60,21 +77,10 @@ export default function UnifiedSession() {
     setIsSidebarVisible(false);
   }, []);
 
-  // Reset previewReady state when streaming starts
-  useEffect(() => {
-    if (chatState.isStreaming) {
-      setPreviewReady(false);
-    }
-  }, [chatState.isStreaming]);
-
-  // Handle preview loaded event
+  // Handle preview loaded event - simplified since ViewState manages most of this
   const handlePreviewLoaded = useCallback(() => {
-    setPreviewReady(true);
-    setMobilePreviewShown(true);
-
-    // Update the active view locally, but don't force navigation
-    // Let the user stay on their current tab
-    setActiveView('preview');
+    // ViewState now handles setting mobilePreviewShown and navigating to preview
+    // This handler remains for any app-specific needs
   }, []);
 
   useEffect(() => {
@@ -102,110 +108,86 @@ export default function UnifiedSession() {
         navigate(newUrl, { replace: true });
       }
     }
-  }, [chatState.title, location.pathname, chatState.sessionId, navigate]);
+  }, [chatState.title, location?.pathname, chatState.sessionId, navigate]);
 
   // Check if there's a state parameter in the URL (for shared apps)
   useEffect(() => {
     const searchParams = new URLSearchParams(location.search);
-    const encodedState = searchParams.get('state');
-    if (encodedState) {
-      const decodedState = decodeStateFromUrl(encodedState);
-      if (decodedState.code) {
-        console.log('UnifiedSession: decodedState share:', decodedState);
+    const stateParam = searchParams.get('state');
+    if (stateParam) {
+      try {
+        const decodedState = decodeStateFromUrl(stateParam);
+        if (decodedState && decodedState.code) {
+          // Handle the shared app state
+          // Since we can't directly set the code, we need to create a new message
+          // that contains the shared code, which will trigger the chat state to update
+
+          // We can use the setSelectedResponseId method to select the response
+          // once it's created, but we don't have direct access to create a new message
+          // with the shared code
+
+          // For now, just log that we received shared state
+          console.log('Received shared app state:', decodedState);
+
+          // Remove the state parameter from the URL
+          const newUrl = location.pathname;
+          navigate(newUrl, { replace: true });
+        }
+      } catch (e) {
+        console.error('Error decoding state parameter:', e);
       }
     }
-  }, [location.search]);
+  }, [location.search, navigate, chatState]);
 
-  // Create chat input event handlers
   const handleInputChange = useCallback(
     (e: React.ChangeEvent<HTMLTextAreaElement>) => {
       chatState.setInput(e.target.value);
     },
-    [chatState.setInput]
+    [chatState]
   );
 
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-      if (e.key === 'Enter' && !e.shiftKey && !chatState.isStreaming) {
+      if (e.key === 'Enter' && !e.shiftKey) {
         e.preventDefault();
-        chatState.sendMessage();
-        setMessageHasBeenSent(true);
+        if (!chatState.isStreaming && chatState.input.trim()) {
+          chatState.sendMessage();
+          setMessageHasBeenSent(true);
+        }
       }
     },
-    [chatState.isStreaming, chatState.sendMessage, setMessageHasBeenSent]
+    [chatState, setMessageHasBeenSent]
   );
 
-  // Handle suggestion selection directly
   const handleSelectSuggestion = useCallback(
     (suggestion: string) => {
       chatState.setInput(suggestion);
-
-      // Focus the input and position cursor at the end
-      setTimeout(() => {
-        if (chatState.inputRef.current) {
-          chatState.inputRef.current.focus();
-          // Move cursor to end of text
-          chatState.inputRef.current.selectionStart = chatState.inputRef.current.selectionEnd =
-            suggestion.length;
-        }
-      }, 0);
+      chatState.sendMessage();
+      setMessageHasBeenSent(true);
     },
-    [chatState.setInput, chatState.inputRef]
+    [chatState, setMessageHasBeenSent]
   );
 
-  // Track if user manually clicked back to chat during streaming
-  const [userClickedBack, setUserClickedBack] = useState(false);
+  // Preview visibility is now managed by ViewState
+  // No need for a separate effect to show preview when ready
 
-  // Handle the case when preview becomes ready
-  useEffect(() => {
-    // Only switch to preview view when preview becomes ready (not when streaming just ends)
-    if (previewReady) {
-      // Reset user preference so future code content will auto-show preview
-      setUserClickedBack(false);
-
-      // Only auto-show preview if the user hasn't explicitly clicked back to chat
-      if (!userClickedBack) {
-        setMobilePreviewShown(true);
-      }
-    }
-  }, [previewReady, userClickedBack]);
-
-  // Update mobilePreviewShown when selectedCode changes
+  // Handle URL-specific navigation when code changes
   useEffect(() => {
     if (chatState.selectedCode?.content) {
-      // Only auto-show preview if the user hasn't clicked back during this streaming session
-      if (!chatState.isStreaming || !userClickedBack) {
-        setMobilePreviewShown(true);
-      }
-
       // Only navigate to /app if we're not already on a specific tab route
       // This prevents overriding user's manual tab selection
-      // Add null check for location to prevent errors in tests
       const path = location?.pathname || '';
       const hasTabSuffix =
         path.endsWith('/app') || path.endsWith('/code') || path.endsWith('/data');
 
       if (!hasTabSuffix && chatState.sessionId && chatState.title) {
-        setActiveView('preview');
+        // Navigate to preview URL - view state itself is managed by ViewState
         navigate(`/chat/${chatState.sessionId}/${encodeTitle(chatState.title)}/app`, {
           replace: true,
         });
-      } else if (path.endsWith('/app')) {
-        setActiveView('preview');
-      } else if (path.endsWith('/code')) {
-        setActiveView('code');
-      } else if (path.endsWith('/data')) {
-        setActiveView('data');
       }
     }
-  }, [
-    chatState.selectedCode,
-    chatState.sessionId,
-    chatState.title,
-    navigate,
-    location.pathname,
-    setActiveView,
-  ]);
+  }, [chatState.selectedCode, chatState.sessionId, chatState.title, navigate, location?.pathname]);
 
   const shouldUseFullWidthChat = chatState.docs.length === 0 && !urlSessionId;
 
@@ -219,10 +201,6 @@ export default function UnifiedSession() {
           chatState.selectedCode?.content || urlSessionId ? (
             <ResultPreviewHeaderContent
               previewReady={previewReady}
-              activeView={activeView}
-              setActiveView={setActiveView}
-              setMobilePreviewShown={setMobilePreviewShown}
-              setUserClickedBack={setUserClickedBack}
               isStreaming={chatState.isStreaming}
               code={chatState.selectedCode?.content || ''}
               sessionId={chatState.sessionId || undefined}

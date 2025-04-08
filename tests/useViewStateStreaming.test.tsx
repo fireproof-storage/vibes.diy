@@ -87,9 +87,9 @@ describe('useViewState during streaming', () => {
       previewReady: false,
     });
 
-    // We don't expect URL navigation for initial code display
-    // This behavior is handled by the component using the hook
-    expect(mockNavigate).not.toHaveBeenCalled();
+    // We now expect navigation to code view during initial code display
+    // This is the updated behavior in the ViewState hook
+    expect(mockNavigate).toHaveBeenCalledWith(`/chat/${mockSessionId}/${mockTitle}/code`);
   });
 
   test('should NOT navigate to /app when preview becomes ready during active streaming', () => {
