@@ -1,26 +1,12 @@
 import React, { createContext, useContext } from 'react';
 import type { ReactNode } from 'react';
-import { useViewState } from '../utils/ViewState';
-import type { ViewState } from '../utils/ViewState';
+import { useViewState } from '../hooks/viewState';
+import type { ViewState, ViewStateProps } from '../hooks/viewState';
 
 // Define the props that the Provider will need to initialize the hook
 interface ViewStateProviderProps {
   children: ReactNode;
-  initialProps: {
-    sessionId?: string;
-    title?: string;
-    code: string;
-    isStreaming: boolean;
-    previewReady: boolean;
-    isIframeFetching?: boolean;
-    initialLoad?: boolean;
-    isMobileView?: boolean;
-    onBackClicked?: () => void;
-    onPreviewLoaded?: () => void;
-    onScreenshotCaptured?: (data: string | null) => void;
-    codeReady?: boolean;
-    dependencies?: Record<string, string>;
-  };
+  initialProps: ViewStateProps;
 }
 
 // Create the context with a default value (can be null or a default state object)

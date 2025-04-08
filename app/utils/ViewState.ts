@@ -111,84 +111,12 @@ function useViewStateInternal(props: ViewStateProps): ViewState {
   // Mobile-specific state
   const [mobilePreviewShown, setMobilePreviewShown] = useState(true);
   const [userClickedBack, setUserClickedBack] = useState(false);
-
-  // Auto-navigate based on app state changes
-  useEffect(() => {
-    // Don't auto-navigate if we don't have session and title info for URLs
-    if (!sessionId || !encodedTitle) return;
-
-    // First message (no previous code), show code view when code starts streaming
-    // We don't change the URL path so it can later auto-navigate to app view
-    if (
-      props.isStreaming &&
-      !wasStreamingRef.current &&
-      (!hadCodeRef.current || props.code.length === 0) &&
-      // Don't auto-switch on mobile
-      !isMobileViewport()
-    ) {
-      // For the initial code streaming, we want to display code without changing URL
-      // This is handled by the component that uses this hook
-      initialNavigationDoneRef.current = true;
-
-      // Only if we're already at a specific view (app, code, data), should we navigate
-      const path = location.pathname;
-      const basePath = path.replace(/\/(app|code|data)$/, '');
-      if (path !== basePath) {
-        navigate(`/chat/${sessionId}/${encodedTitle}`);
-      }
-    }
-
-    // When preview becomes ready, auto jump to preview view, but respect explicit navigation
-    // AND don't redirect to app during active streaming
-    if (props.previewReady && !wasPreviewReadyRef.current) {
-      // Don't redirect to app if user is explicitly in data or code view OR if still streaming
-      // Also don't redirect on mobile devices
-      const isInDataView = location.pathname.endsWith('/data');
-      const isInCodeView = location.pathname.endsWith('/code');
-      if (!isInDataView && !isInCodeView && !props.isStreaming && !isMobileViewport()) {
-        navigate(`/chat/${sessionId}/${encodedTitle}/app`);
-      }
-    }
-
-    // Handle the state when streaming ENDS and preview is ready
-    // This ensures we navigate to the app view after streaming completes
-    if (!props.isStreaming && wasStreamingRef.current && props.previewReady) {
-      // Don't redirect to app if user is explicitly in data or code view
-      // Also don't redirect on mobile devices
-      const isInDataView = location.pathname.endsWith('/data');
-      const isInCodeView = location.pathname.endsWith('/code');
-      const isInSpecificView = isInDataView || isInCodeView;
-
-      // Check if streaming has just ended
-      const streamingJustEnded = !props.isStreaming && wasStreamingRef.current;
-
-      // Navigate if: not in specific view AND (not streaming OR streaming just ended)
-      if (!isInSpecificView && (!props.isStreaming || streamingJustEnded)) {
-        // Navigate to app view
-        if (!isInDataView && !isInCodeView && !isMobileViewport()) {
-          navigate(`/chat/${sessionId}/${encodedTitle}/app`);
-          // Also set previewShown to true on mobile
-          setMobilePreviewShown(true);
-        }
-      }
-    }
-
-    // Update refs for next comparison
-    wasStreamingRef.current = props.isStreaming;
-    hadCodeRef.current = props.code && props.code.length > 0;
-    wasPreviewReadyRef.current = props.previewReady;
-  }, [
-    props.isStreaming,
-    props.previewReady,
-    props.code,
-    sessionId,
-    encodedTitle,
-    navigate,
-    setMobilePreviewShown,
-  ]);
-
-  // We handle the initial view display without changing the URL
-  // This allows for proper auto-navigation to app view when preview is ready
+  
+  // State for iframe functionality
+  const [isIframeFetching, setIsIframeFetching] = useState(!!props.isIframeFetching);
+  const [isDarkMode, setIsDarkMode] = useState(true); // Default to dark mode
+  
+  // Define viewControls before navigateToView to avoid the "used before declaration" error
   const viewControls = {
     preview: {
       enabled: props.previewReady,
@@ -209,7 +137,7 @@ function useViewStateInternal(props: ViewStateProps): ViewState {
       loading: false,
     },
   };
-
+  
   // Handle back action
   const handleBackAction = useCallback(() => {
     if (props.isStreaming) {
@@ -220,11 +148,18 @@ function useViewStateInternal(props: ViewStateProps): ViewState {
       props.onBackClicked();
     }
   }, [props.isStreaming, props.onBackClicked]);
-
-  // Navigate to a view (explicit user action)
+  
+  // Navigate to a view (explicit user action) - define this before it's used in useEffect
   const navigateToView = useCallback(
     (view: ViewType) => {
-      if (!viewControls[view].enabled) return;
+      // Always allow navigation to code view
+      // For data view, only block during streaming
+      // For preview, ensure preview is ready
+      const shouldBlock = 
+        (view === 'preview' && !viewControls[view].enabled) || 
+        (view === 'data' && props.isStreaming);
+      
+      if (shouldBlock) return;
 
       // Always show mobile preview when changing views
       setMobilePreviewShown(true);
@@ -241,6 +176,93 @@ function useViewStateInternal(props: ViewStateProps): ViewState {
     },
     [viewControls, sessionId, encodedTitle, props.isStreaming, navigate, setMobilePreviewShown]
   );
+  
+  // Auto-navigate based on app state changes
+  useEffect(() => {
+    // Don't auto-navigate if we don't have session and title info for URLs
+    if (!sessionId || !encodedTitle) return;
+
+    // Get current path information for determining navigation behavior
+    const path = location.pathname;
+    const basePath = path.replace(/\/(app|code|data)$/, '');
+    const isInDataView = path.endsWith('/data');
+    const isInCodeView = path.endsWith('/code');
+    const isInExplicitView = isInDataView || isInCodeView;
+    const isMobile = isMobileViewport();
+
+    // RULE: First Message Behavior
+    // When code starts streaming for the first time:
+    // - Show code view (but don't change URL path)
+    // - On mobile, stay on chat (no URL change)
+    if (
+      props.isStreaming &&
+      !wasStreamingRef.current &&
+      (!hadCodeRef.current || props.code.length === 0)
+    ) {
+      // Mark that we've handled the initial navigation
+      initialNavigationDoneRef.current = true;
+
+      // If we're already at a specific view path (shouldn't happen normally),
+      // reset to base path to allow later auto-navigation to work
+      if (path !== basePath) {
+        navigate(`/chat/${sessionId}/${encodedTitle}`);
+      }
+
+      // No need to set displayView, this is handled in the computed displayView logic
+    }
+
+    // RULE: When Preview Becomes Ready
+    // - Auto-navigate to App view (/app) only if:
+    //   1. Preview is now ready (and wasn't before)
+    //   2. URL doesn't have explicit /code or /data paths
+    //   3. Not currently streaming
+    if (props.previewReady && !wasPreviewReadyRef.current && !props.isStreaming) {
+      // Only auto-navigate if not in explicit code/data view
+      if (!isInExplicitView) {
+        // For desktop: Navigate to app view
+        if (!isMobile) {
+          navigateToView('preview');
+        }
+        // For mobile: Show preview
+        setMobilePreviewShown(true);
+      }
+    }
+
+    // RULE: Streaming Ends with Preview Ready
+    // When streaming ends and preview is ready, auto-navigate to app view
+    // but only if URL doesn't have explicit /code or /data paths
+    if (!props.isStreaming && wasStreamingRef.current && props.previewReady) {
+      // We are in this branch, so streaming has just ended
+
+      // Only auto-navigate when not in explicit code/data view
+      if (!isInExplicitView) {
+        // For desktop: Navigate to app view
+        if (!isMobile) {
+          navigateToView('preview');
+        }
+        // For mobile: Show preview
+        setMobilePreviewShown(true);
+      }
+    }
+
+    // Update refs for next comparison
+    wasStreamingRef.current = props.isStreaming;
+    hadCodeRef.current = props.code && props.code.length > 0;
+    wasPreviewReadyRef.current = props.previewReady;
+  }, [
+    props.isStreaming,
+    props.previewReady,
+    props.code,
+    sessionId,
+    encodedTitle,
+    navigate,
+    navigateToView,
+    location.pathname,
+    setMobilePreviewShown,
+  ]);
+
+  // We handle the initial view display without changing the URL
+  // This allows for proper auto-navigation to app view when preview is ready
 
   // Only show view controls when we have content or a valid session
   const showViewControls: boolean = !!(
@@ -249,22 +271,53 @@ function useViewStateInternal(props: ViewStateProps): ViewState {
   );
 
   // Determine what view should be displayed (may differ from URL-based currentView)
-  // During streaming, we always show code view regardless of the URL
-  // On mobile, don't force code view during streaming
-  const displayView = props.isStreaming && !isMobileViewport() ? 'code' : currentView;
+  let displayView: ViewType;
 
-  // State for iframe functionality
-  const [isIframeFetching, setIsIframeFetching] = useState(!!props.isIframeFetching);
-  const [isDarkMode, setIsDarkMode] = useState(true); // Default to dark mode
+  if (isMobileViewport()) {
+    // MOBILE BEHAVIOR:
+    // - Default to showing chat/code view when streaming
+    // - Show app preview when mobilePreviewShown is true (after ready)
+    displayView = mobilePreviewShown ? 'preview' : 'code';
+  } else {
+    // DESKTOP BEHAVIOR:
+    // - Default to the view determined by the URL (currentView)
+    // - Override during first message streaming to show code without changing URL
+    if (props.isStreaming && !initialNavigationDoneRef.current) {
+      // First message, code is streaming - show code view
+      displayView = 'code';
+    } else if (
+      initialNavigationDoneRef.current &&
+      !props.previewReady &&
+      !location.pathname.endsWith('/app') &&
+      !location.pathname.endsWith('/code') &&
+      !location.pathname.endsWith('/data')
+    ) {
+      // Show code preview until preview is ready and URL doesn't specify a view
+      displayView = 'code';
+    } else {
+      // Otherwise use the URL-based current view
+      displayView = currentView;
+    }
+  }
 
-  // Initial code loading - show code view
+  // Compute whether we should show welcome screen
+  const showWelcome = !props.isStreaming && (!props.code || props.code.length === 0);
+
+  // Initial code loading - default to code view without changing URL
   useEffect(() => {
+    // Only execute if we have code to display and initialViewBehavior is true
     if (props.code && props.code.length > 0 && initialViewBehavior) {
       // Check if we're currently on the base path (no specific view)
       const path = location.pathname;
       const basePath = path.replace(/\/(app|code|data)$/, '');
-      if (path === basePath && !path.endsWith('/code') && !path.endsWith('/data')) {
-        navigateToView('code');
+
+      // RULE: Initial state should show code preview without altering URL path
+      // Only if we're at the base path and have not done initial navigation yet
+      if (path === basePath && !initialNavigationDoneRef.current && !isMobileViewport()) {
+        // We no longer navigate to /code here - we just set a flag
+        // This ensures the base path is preserved for later auto-navigation to /app
+        initialNavigationDoneRef.current = true;
+        // The display of code view is handled by the computed displayView logic
       }
     }
   }, [props.code, location.pathname, initialViewBehavior, navigateToView]); // Depend only on code for initial check
@@ -308,11 +361,23 @@ function useViewStateInternal(props: ViewStateProps): ViewState {
 
           setMobilePreviewShown(true);
 
+          // Get current path information
+          const path = location.pathname;
+          const isInDataView = path.endsWith('/data');
+          const isInCodeView = path.endsWith('/code');
+          const isInSpecificView = isInDataView || isInCodeView;
+          const isMobile = isMobileViewport();
+
           // Add a small delay before navigation to ensure the iframe is fully ready
           // This helps prevent race conditions that might cause button click issues
           setTimeout(() => {
-            // Navigate to the preview view when iframe is ready
-            navigateToView('preview');
+            // Only auto-navigate to preview if:
+            // 1. Not in a specific view (code or data)
+            // 2. Not on mobile device
+            // 3. Not currently streaming
+            if (!isInSpecificView && !isMobile && !props.isStreaming) {
+              navigateToView('preview');
+            }
 
             // Notify parent component that preview is loaded
             if (props.onPreviewLoaded) {
@@ -341,8 +406,7 @@ function useViewStateInternal(props: ViewStateProps): ViewState {
     };
   }, [props.onPreviewLoaded, props.onScreenshotCaptured, navigateToView]);
 
-  // Compute whether we should show welcome screen
-  const showWelcome = !props.isStreaming && (!props.code || props.code.length === 0);
+
 
   // Calculate filesContent for iframe
   const filesContent = useMemo(() => {
