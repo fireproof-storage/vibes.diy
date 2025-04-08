@@ -1,0 +1,161 @@
+import { renderHook } from '@testing-library/react';
+import { useViewState } from '../app/utils/ViewState';
+import { vi, describe, test, expect, beforeEach } from 'vitest';
+
+// Mock react-router-dom hooks
+vi.mock('react-router-dom', () => {
+  return {
+    useNavigate: vi.fn(),
+    useParams: vi.fn(),
+    useLocation: vi.fn(),
+  };
+});
+
+// Mock encodeTitle from utils
+vi.mock('../app/components/SessionSidebar/utils', () => {
+  return {
+    encodeTitle: vi.fn((title) => title), // Simple mock that returns the title unchanged
+  };
+});
+
+// Import mocked modules
+import { useNavigate, useParams, useLocation } from 'react-router-dom';
+import { act } from '@testing-library/react';
+
+describe('ViewState Coverage Tests', () => {
+  const mockNavigate = vi.fn();
+  const mockSessionId = 'test-session-123';
+  const mockTitle = 'test-title';
+
+  beforeEach(() => {
+    vi.resetAllMocks();
+
+    // Setup default mocks
+    vi.mocked(useNavigate).mockReturnValue(mockNavigate);
+    vi.mocked(useParams).mockReturnValue({
+      sessionId: mockSessionId,
+      title: mockTitle,
+    });
+  });
+
+  test('should navigate to app view when streaming ends and preview is ready', () => {
+    // Mock location to base path
+    vi.mocked(useLocation).mockReturnValue({
+      pathname: `/chat/${mockSessionId}/${mockTitle}`, // Not in data or code view
+    } as any);
+
+    // Setup initial props
+    const initialProps = {
+      sessionId: mockSessionId,
+      title: mockTitle,
+      code: 'console.log("test")',
+      isStreaming: true,
+      previewReady: true,
+    };
+
+    let hookResult: any;
+
+    // First initialize with streaming state
+    const { unmount } = renderHook(
+      (props) => {
+        hookResult = useViewState(props);
+        return hookResult;
+      },
+      {
+        initialProps: initialProps,
+      }
+    );
+
+    // Cleanup to reset refs
+    unmount();
+
+    // Render the hook with initial streaming state
+    const { rerender } = renderHook(
+      (props) => {
+        hookResult = useViewState(props);
+        return hookResult;
+      },
+      {
+        initialProps: initialProps,
+      }
+    );
+
+    // Clear any initial navigation calls
+    mockNavigate.mockClear();
+
+    // Update to simulate streaming ending
+    rerender({
+      ...initialProps,
+      isStreaming: false, // Streaming has ended
+      previewReady: true, // Preview is ready
+    });
+
+    // Verify navigation to app view occurred
+    expect(mockNavigate).toHaveBeenCalledWith(`/chat/${mockSessionId}/${mockTitle}/app`);
+  });
+
+  test('should navigate to specified view when navigateToView is called with valid session', () => {
+    // Mock location
+    vi.mocked(useLocation).mockReturnValue({
+      pathname: `/chat/${mockSessionId}/${mockTitle}`,
+    } as any);
+
+    // Setup props
+    const props = {
+      sessionId: mockSessionId,
+      title: mockTitle,
+      code: 'console.log("test")',
+      isStreaming: false,
+      previewReady: true,
+    };
+
+    // Render the hook
+    const { result } = renderHook(() => useViewState(props));
+
+    // Call navigateToView to navigate to data view
+    act(() => {
+      result.current.navigateToView('data');
+    });
+
+    // Verify navigation occurred with correct path
+    expect(mockNavigate).toHaveBeenCalledWith(`/chat/${mockSessionId}/${mockTitle}/data`);
+
+    // Clear mock for next test
+    mockNavigate.mockClear();
+
+    // Test preview view which should use 'app' suffix
+    act(() => {
+      result.current.navigateToView('preview');
+    });
+
+    // Verify navigation with 'app' suffix
+    expect(mockNavigate).toHaveBeenCalledWith(`/chat/${mockSessionId}/${mockTitle}/app`);
+  });
+
+  test('should not navigate when view is disabled', () => {
+    // Mock location
+    vi.mocked(useLocation).mockReturnValue({
+      pathname: `/chat/${mockSessionId}/${mockTitle}`,
+    } as any);
+
+    // Setup props with data view disabled (during streaming)
+    const props = {
+      sessionId: mockSessionId,
+      title: mockTitle,
+      code: 'console.log("test")',
+      isStreaming: true, // This should disable the data view
+      previewReady: false,
+    };
+
+    // Render the hook
+    const { result } = renderHook(() => useViewState(props));
+
+    // Attempt to navigate to data view (which should be disabled)
+    act(() => {
+      result.current.navigateToView('data');
+    });
+
+    // Verify no navigation occurred since data view is disabled
+    expect(mockNavigate).not.toHaveBeenCalled();
+  });
+});
