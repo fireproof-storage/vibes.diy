@@ -15,22 +15,20 @@ interface IframeContentProps {
   filesContent: IframeFiles;
   isStreaming: boolean;
   codeReady: boolean;
-
-  setActiveView: (view: 'preview' | 'code' | 'data') => void;
   dependencies: Record<string, string>;
-  isDarkMode: boolean; // Add isDarkMode prop
+  isDarkMode: boolean;
 }
 
 const IframeContent: React.FC<IframeContentProps> = ({
   activeView,
   filesContent,
   isStreaming,
-
   codeReady,
   dependencies,
-  setActiveView,
-  isDarkMode, // Receive the isDarkMode prop
+  isDarkMode,
 }) => {
+  // No need to access context since we're not using navigateToView
+  // leaving the import for potential future use
   const iframeRef = useRef<HTMLIFrameElement>(null);
   // Theme state is now received from parent via props
   const contentLoadedRef = useRef(false);

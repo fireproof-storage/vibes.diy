@@ -1,6 +1,7 @@
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState, useCallback, useMemo } from 'react';
 import { encodeTitle } from '../components/SessionSidebar/utils';
+import { CALLAI_API_KEY } from '../config/env';
 
 // Helper to detect mobile viewport
 export const isMobileViewport = () => {
@@ -9,7 +10,53 @@ export const isMobileViewport = () => {
 
 export type ViewType = 'preview' | 'code' | 'data';
 
-export function useViewState(props: {
+// Define the shape of the state returned by the hook
+export type ViewState = {
+  currentView: ViewType;
+  displayView: ViewType;
+  navigateToView: (view: ViewType) => void;
+  viewControls: {
+    preview: {
+      enabled: boolean;
+      icon: string;
+      label: string;
+      loading: boolean | undefined;
+    };
+    code: {
+      enabled: boolean;
+      icon: string;
+      label: string;
+      loading: boolean | undefined;
+    };
+    data: {
+      enabled: boolean;
+      icon: string;
+      label: string;
+      loading: boolean | undefined;
+    };
+  };
+  showViewControls: boolean;
+  sessionId: string | undefined;
+  encodedTitle: string;
+  mobilePreviewShown: boolean;
+  setMobilePreviewShown: (mobilePreviewShown: boolean) => void;
+  userClickedBack: boolean;
+  setUserClickedBack: (userClickedBack: boolean) => void;
+  handleBackAction: () => void;
+  isDarkMode: boolean;
+  isIframeFetching: boolean;
+  setIsIframeFetching: (isIframeFetching: boolean) => void;
+  filesContent: {
+    '/App.jsx': {
+      code: string;
+      active: boolean;
+    };
+  };
+  showWelcome: boolean;
+};
+
+// Props for the ViewState hook
+export type ViewStateProps = {
   sessionId?: string;
   title?: string;
   code: string;
@@ -17,13 +64,28 @@ export function useViewState(props: {
   previewReady: boolean;
   isIframeFetching?: boolean;
   initialLoad?: boolean;
-}) {
+  // Mobile support
+  isMobileView?: boolean;
+  onBackClicked?: () => void;
+  // Preview-related callbacks
+  onPreviewLoaded?: () => void;
+  onScreenshotCaptured?: (data: string | null) => void;
+  // Code-related props
+  codeReady?: boolean;
+  dependencies?: Record<string, string>;
+};
+
+// Rename the hook internally to avoid naming conflicts
+function useViewStateInternal(props: ViewStateProps): ViewState {
   const { sessionId: paramSessionId, title: paramTitle } = useParams<{
     sessionId: string;
     title: string;
   }>();
   const navigate = useNavigate();
   const location = useLocation();
+
+  // Default values for conditional logic
+  const initialViewBehavior = props.initialLoad !== false; // Default to true if not explicitly false
 
   // Consolidate session and title from props or params
   const sessionId = props.sessionId || paramSessionId;
@@ -46,6 +108,10 @@ export function useViewState(props: {
   const wasPreviewReadyRef = useRef(props.previewReady);
   const initialNavigationDoneRef = useRef(false);
 
+  // Mobile-specific state
+  const [mobilePreviewShown, setMobilePreviewShown] = useState(true);
+  const [userClickedBack, setUserClickedBack] = useState(false);
+
   // Auto-navigate based on app state changes
   useEffect(() => {
     // Don't auto-navigate if we don't have session and title info for URLs
@@ -67,8 +133,6 @@ export function useViewState(props: {
       // Only if we're already at a specific view (app, code, data), should we navigate
       const path = location.pathname;
       const basePath = path.replace(/\/(app|code|data)$/, '');
-
-      // If current path has a view suffix, remove it for auto-navigation to work
       if (path !== basePath) {
         navigate(`/chat/${sessionId}/${encodedTitle}`);
       }
@@ -93,8 +157,19 @@ export function useViewState(props: {
       // Also don't redirect on mobile devices
       const isInDataView = location.pathname.endsWith('/data');
       const isInCodeView = location.pathname.endsWith('/code');
-      if (!isInDataView && !isInCodeView && !isMobileViewport()) {
-        navigate(`/chat/${sessionId}/${encodedTitle}/app`);
+      const isInSpecificView = isInDataView || isInCodeView;
+
+      // Check if streaming has just ended
+      const streamingJustEnded = !props.isStreaming && wasStreamingRef.current;
+
+      // Navigate if: not in specific view AND (not streaming OR streaming just ended)
+      if (!isInSpecificView && (!props.isStreaming || streamingJustEnded)) {
+        // Navigate to app view
+        if (!isInDataView && !isInCodeView && !isMobileViewport()) {
+          navigate(`/chat/${sessionId}/${encodedTitle}/app`);
+          // Also set previewShown to true on mobile
+          setMobilePreviewShown(true);
+        }
       }
     }
 
@@ -102,20 +177,22 @@ export function useViewState(props: {
     wasStreamingRef.current = props.isStreaming;
     hadCodeRef.current = props.code && props.code.length > 0;
     wasPreviewReadyRef.current = props.previewReady;
-  }, [props.isStreaming, props.previewReady, props.code, sessionId, encodedTitle, navigate]);
+  }, [
+    props.isStreaming,
+    props.previewReady,
+    props.code,
+    sessionId,
+    encodedTitle,
+    navigate,
+    setMobilePreviewShown,
+  ]);
 
   // We handle the initial view display without changing the URL
   // This allows for proper auto-navigation to app view when preview is ready
-  useEffect(() => {
-    // The actual display of code view is handled by the component that uses this hook
-    // We don't navigate to /code on initial load anymore
-  }, []);
-
-  // Access control data
   const viewControls = {
     preview: {
       enabled: props.previewReady,
-      icon: 'app-icon',
+      icon: 'preview-icon',
       label: 'App',
       loading: props.isIframeFetching,
     },
@@ -133,32 +210,170 @@ export function useViewState(props: {
     },
   };
 
-  // Navigate to a view (explicit user action)
-  const navigateToView = (view: ViewType) => {
-    if (!viewControls[view].enabled) return;
-
-    if (sessionId && encodedTitle) {
-      const suffix = view === 'preview' ? 'app' : view;
-      navigate(`/chat/${sessionId}/${encodedTitle}/${suffix}`);
+  // Handle back action
+  const handleBackAction = useCallback(() => {
+    if (props.isStreaming) {
+      setUserClickedBack(true);
     }
-  };
+    setMobilePreviewShown(false);
+    if (props.onBackClicked) {
+      props.onBackClicked();
+    }
+  }, [props.isStreaming, props.onBackClicked]);
+
+  // Navigate to a view (explicit user action)
+  const navigateToView = useCallback(
+    (view: ViewType) => {
+      if (!viewControls[view].enabled) return;
+
+      // Always show mobile preview when changing views
+      setMobilePreviewShown(true);
+
+      // Reset userClickedBack when manually selecting a view
+      if (props.isStreaming) {
+        setUserClickedBack(false);
+      }
+
+      if (sessionId && encodedTitle) {
+        const suffix = view === 'preview' ? 'app' : view;
+        navigate(`/chat/${sessionId}/${encodedTitle}/${suffix}`);
+      }
+    },
+    [viewControls, sessionId, encodedTitle, props.isStreaming, navigate, setMobilePreviewShown]
+  );
 
   // Only show view controls when we have content or a valid session
-  const showViewControls =
-    (props.code && props.code.length > 0) || (sessionId && sessionId.length > 0);
+  const showViewControls: boolean = !!(
+    (props.code && props.code.length > 0) ||
+    (sessionId && sessionId.length > 0)
+  );
 
   // Determine what view should be displayed (may differ from URL-based currentView)
   // During streaming, we always show code view regardless of the URL
   // On mobile, don't force code view during streaming
   const displayView = props.isStreaming && !isMobileViewport() ? 'code' : currentView;
 
+  // State for iframe functionality
+  const [isIframeFetching, setIsIframeFetching] = useState(!!props.isIframeFetching);
+  const [isDarkMode, setIsDarkMode] = useState(true); // Default to dark mode
+
+  // Initial code loading - show code view
+  useEffect(() => {
+    if (props.code && props.code.length > 0 && initialViewBehavior) {
+      // Check if we're currently on the base path (no specific view)
+      const path = location.pathname;
+      const basePath = path.replace(/\/(app|code|data)$/, '');
+      if (path === basePath && !path.endsWith('/code') && !path.endsWith('/data')) {
+        navigateToView('code');
+      }
+    }
+  }, [props.code, location.pathname, initialViewBehavior, navigateToView]); // Depend only on code for initial check
+
+  // Theme detection effect
+  useEffect(() => {
+    // Add a small delay to ensure the app's theme detection has run first
+    const timeoutId = setTimeout(() => {
+      // Check if document has the dark class
+      const hasDarkClass = document.documentElement.classList.contains('dark');
+      // Set the theme state
+      setIsDarkMode(hasDarkClass);
+
+      // Set up observer to watch for class changes on document.documentElement
+      const observer = new MutationObserver((mutations) => {
+        mutations.forEach((mutation) => {
+          if (mutation.attributeName === 'class') {
+            const hasDarkClass = document.documentElement.classList.contains('dark');
+            setIsDarkMode(hasDarkClass);
+          }
+        });
+      });
+
+      // Start observing
+      observer.observe(document.documentElement, { attributes: true });
+
+      return () => observer.disconnect();
+    }, 100);
+
+    return () => clearTimeout(timeoutId);
+  }, []);
+
+  // Iframe message handler
+  useEffect(() => {
+    const handleMessage = ({ data }: MessageEvent) => {
+      if (data) {
+        if (data.type === 'preview-ready' || data.type === 'preview-loaded') {
+          // respond with the API key
+          const iframe = document.querySelector('iframe') as HTMLIFrameElement;
+          iframe?.contentWindow?.postMessage({ type: 'callai-api-key', key: CALLAI_API_KEY }, '*');
+
+          setMobilePreviewShown(true);
+
+          // Add a small delay before navigation to ensure the iframe is fully ready
+          // This helps prevent race conditions that might cause button click issues
+          setTimeout(() => {
+            // Navigate to the preview view when iframe is ready
+            navigateToView('preview');
+
+            // Notify parent component that preview is loaded
+            if (props.onPreviewLoaded) {
+              props.onPreviewLoaded();
+            }
+          }, 50); // Small delay to ensure state updates properly
+        } else if (data.type === 'streaming' && data.state !== undefined) {
+          setIsIframeFetching(data.state);
+        } else if (data.type === 'screenshot' && data.data) {
+          if (props.onScreenshotCaptured) {
+            props.onScreenshotCaptured(data.data);
+          }
+        } else if (data.type === 'screenshot-error' && data.error) {
+          console.warn('Screenshot capture error:', data.error);
+          // Still call onScreenshotCaptured with null to signal that the screenshot failed
+          if (props.onScreenshotCaptured) {
+            props.onScreenshotCaptured(null);
+          }
+        }
+      }
+    };
+
+    window.addEventListener('message', handleMessage);
+    return () => {
+      window.removeEventListener('message', handleMessage);
+    };
+  }, [props.onPreviewLoaded, props.onScreenshotCaptured, navigateToView]);
+
+  // Compute whether we should show welcome screen
+  const showWelcome = !props.isStreaming && (!props.code || props.code.length === 0);
+
+  // Calculate filesContent for iframe
+  const filesContent = useMemo(() => {
+    return {
+      '/App.jsx': {
+        code: props.code && !showWelcome ? props.code : '', // Use code if available, else empty string
+        active: true,
+      },
+    };
+  }, [props.code, showWelcome]);
+
   return {
-    currentView, // The view based on URL (for navigation)
-    displayView, // The view that should actually be displayed
+    currentView,
+    displayView,
     navigateToView,
     viewControls,
     showViewControls,
     sessionId,
     encodedTitle,
+    mobilePreviewShown,
+    setMobilePreviewShown,
+    userClickedBack,
+    setUserClickedBack,
+    handleBackAction,
+    isDarkMode,
+    isIframeFetching,
+    setIsIframeFetching,
+    filesContent,
+    showWelcome,
   };
 }
+
+// Export the hook with the original name
+export const useViewState = useViewStateInternal;

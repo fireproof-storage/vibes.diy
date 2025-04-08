@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router';
 import { useCookieConsent } from '../context/CookieConsentContext';
+import { ViewStateProvider, useSharedViewState } from '../context/ViewStateContext';
 import { encodeTitle } from '~/components/SessionSidebar/utils';
 import AppLayout from '../components/AppLayout';
 import ChatHeaderContent from '../components/ChatHeaderContent';
@@ -22,37 +23,22 @@ export function meta() {
   ];
 }
 
-export default function UnifiedSession() {
+function SessionContent() {
   const { sessionId: urlSessionId } = useParams<{ sessionId: string }>();
   const navigate = useNavigate();
   const location = useLocation();
   const chatState = useSimpleChat(urlSessionId);
   const { setMessageHasBeenSent } = useCookieConsent();
 
-  // State for view management - set initial view based on URL path
-  const [activeView, setActiveView] = useState<'code' | 'preview' | 'data'>(() => {
-    // Directly check the pathname on initial render
-    // Add null check for location to prevent errors in tests
-    const path = location?.pathname || '';
-    if (path.endsWith('/app')) {
-      return 'preview';
-    } else if (path.endsWith('/code')) {
-      return 'code';
-    } else if (path.endsWith('/data')) {
-      return 'data';
-    }
-    // Default to code view if no suffix is found
-    return 'code';
-  });
-  const [previewReady, setPreviewReady] = useState(false);
-  // const [bundlingComplete] = useState(true);
-  const [mobilePreviewShown, setMobilePreviewShown] = useState(false);
-  const [isIframeFetching, setIsIframeFetching] = useState(false);
-
   // Add a ref to track whether streaming was active previously
   const wasStreamingRef = useRef(false);
 
   const [isSidebarVisible, setIsSidebarVisible] = useState(false);
+
+  // Consume the shared view state from the context
+  const { navigateToView, mobilePreviewShown, setMobilePreviewShown } = useSharedViewState();
+
+  // No longer need to track activeView separately - removed for simplicity
 
   // Directly create an openSidebar function
   const openSidebar = useCallback(() => {
@@ -64,27 +50,12 @@ export default function UnifiedSession() {
     setIsSidebarVisible(false);
   }, []);
 
-  // Reset previewReady state when streaming starts
+  // Track streaming state changes with the ref
   useEffect(() => {
-    if (chatState.isStreaming) {
-      setPreviewReady(false);
-    }
+    wasStreamingRef.current = chatState.isStreaming;
   }, [chatState.isStreaming]);
 
-  // Handle preview loaded event
-  const handlePreviewLoaded = useCallback(() => {
-    setPreviewReady(true);
-
-    // Don't automatically show preview on mobile until streaming is complete
-    // and only do this on mobile devices
-    if (!chatState.isStreaming && isMobileViewport()) {
-      setMobilePreviewShown(true);
-    }
-
-    // Update the active view locally, but don't force navigation
-    // Let the user stay on their current tab
-    setActiveView('preview');
-  }, []);
+  // Preview loaded handling is now managed by the ViewState context
 
   useEffect(() => {
     if (chatState.title) {
@@ -111,59 +82,71 @@ export default function UnifiedSession() {
         navigate(newUrl, { replace: true });
       }
     }
-  }, [chatState.title, location.pathname, chatState.sessionId, navigate]);
+  }, [chatState.title, location?.pathname, chatState.sessionId, navigate]);
 
   // Check if there's a state parameter in the URL (for shared apps)
   useEffect(() => {
     const searchParams = new URLSearchParams(location.search);
-    const encodedState = searchParams.get('state');
-    if (encodedState) {
-      const decodedState = decodeStateFromUrl(encodedState);
-      if (decodedState.code) {
-        console.log('UnifiedSession: decodedState share:', decodedState);
+    const stateParam = searchParams.get('state');
+    if (stateParam) {
+      try {
+        const decodedState = decodeStateFromUrl(stateParam);
+        if (decodedState && decodedState.code) {
+          // Handle the shared app state
+          // Since we can't directly set the code, we need to create a new message
+          // that contains the shared code, which will trigger the chat state to update
+
+          // We can use the setSelectedResponseId method to select the response
+          // once it's created, but we don't have direct access to create a new message
+          // with the shared code
+
+          // For now, just log that we received shared state
+          console.log('Received shared app state:', decodedState);
+
+          // Remove the state parameter from the URL
+          const newUrl = location.pathname;
+          navigate(newUrl, { replace: true });
+        }
+      } catch (e) {
+        console.error('Error decoding state parameter:', e);
       }
     }
-  }, [location.search]);
+  }, [location.search, navigate, chatState]);
 
-  // Create chat input event handlers
   const handleInputChange = useCallback(
     (e: React.ChangeEvent<HTMLTextAreaElement>) => {
       chatState.setInput(e.target.value);
     },
-    [chatState.setInput]
+    [chatState]
   );
 
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-      if (e.key === 'Enter' && !e.shiftKey && !chatState.isStreaming) {
+      if (e.key === 'Enter' && !e.shiftKey) {
         e.preventDefault();
-        chatState.sendMessage();
-        setMessageHasBeenSent(true);
+        if (!chatState.isStreaming && chatState.input.trim()) {
+          chatState.sendMessage();
+          setMessageHasBeenSent(true);
+        }
       }
     },
-    [chatState.isStreaming, chatState.sendMessage, setMessageHasBeenSent]
+    [chatState, setMessageHasBeenSent]
   );
 
-  // Handle suggestion selection directly
   const handleSelectSuggestion = useCallback(
     (suggestion: string) => {
       chatState.setInput(suggestion);
-
-      // Focus the input and position cursor at the end
-      setTimeout(() => {
-        if (chatState.inputRef.current) {
-          chatState.inputRef.current.focus();
-          // Move cursor to end of text
-          chatState.inputRef.current.selectionStart = chatState.inputRef.current.selectionEnd =
-            suggestion.length;
-        }
-      }, 0);
+      chatState.sendMessage();
+      setMessageHasBeenSent(true);
     },
-    [chatState.setInput, chatState.inputRef]
+    [chatState, setMessageHasBeenSent]
   );
 
   // Track if user manually clicked back to chat during streaming
   const [userClickedBack, setUserClickedBack] = useState(false);
+
+  // Computed state for combining conditions - this replaces the useState previewReady
+  const previewReady = !chatState.isStreaming && chatState.codeReady;
 
   // Handle the case when preview becomes ready and streaming ends
   useEffect(() => {
@@ -177,7 +160,7 @@ export default function UnifiedSession() {
         setMobilePreviewShown(true);
       }
     }
-  }, [previewReady, userClickedBack, chatState.isStreaming]);
+  }, [previewReady, userClickedBack, chatState.isStreaming, setMobilePreviewShown]);
 
   // Update mobilePreviewShown when selectedCode changes
   useEffect(() => {
@@ -205,19 +188,28 @@ export default function UnifiedSession() {
     const hasTabSuffix = path.endsWith('/app') || path.endsWith('/code') || path.endsWith('/data');
 
     if (!hasTabSuffix && chatState.sessionId && chatState.title) {
-      setActiveView('preview');
+      navigateToView('preview');
       navigate(`/chat/${chatState.sessionId}/${encodeTitle(chatState.title)}/app`, {
         replace: true,
       });
     } else if (path.endsWith('/app')) {
-      setActiveView('preview');
+      navigateToView('preview');
     } else if (path.endsWith('/code')) {
-      setActiveView('code');
+      navigateToView('code');
     } else if (path.endsWith('/data')) {
-      setActiveView('data');
+      navigateToView('data');
     }
-  }, [chatState.sessionId, chatState.title, navigate, location.pathname, setActiveView]);
-
+  }, [
+    chatState.selectedCode,
+    chatState.sessionId,
+    chatState.title,
+    navigate,
+    location.pathname,
+    navigateToView,
+    chatState.isStreaming,
+    userClickedBack,
+    setMobilePreviewShown,
+  ]);
   const shouldUseFullWidthChat = chatState.docs.length === 0 && !urlSessionId;
 
   return (
@@ -228,40 +220,15 @@ export default function UnifiedSession() {
         headerRight={
           // Only render the header content when we have code content or a completed session
           chatState.selectedCode?.content || urlSessionId ? (
-            <ResultPreviewHeaderContent
-              previewReady={previewReady}
-              activeView={activeView}
-              setActiveView={setActiveView}
-              setMobilePreviewShown={setMobilePreviewShown}
-              setUserClickedBack={setUserClickedBack}
-              isStreaming={chatState.isStreaming}
-              code={chatState.selectedCode?.content || ''}
-              sessionId={chatState.sessionId || undefined}
-              title={chatState.title || undefined}
-              isIframeFetching={isIframeFetching}
-            />
+            <ResultPreviewHeaderContent isStreaming={chatState.isStreaming} />
           ) : null
         }
-        chatPanel={
-          <ChatInterface
-            {...chatState}
-            setMobilePreviewShown={setMobilePreviewShown}
-            setActiveView={setActiveView}
-          />
-        }
+        chatPanel={<ChatInterface {...chatState} />}
         previewPanel={
           <ResultPreview
-            sessionId={chatState.sessionId || ''}
-            code={chatState.selectedCode?.content || ''}
             dependencies={chatState.selectedDependencies || {}}
-            isStreaming={chatState.isStreaming}
             codeReady={chatState.codeReady}
             onScreenshotCaptured={chatState.addScreenshot}
-            activeView={activeView}
-            setActiveView={setActiveView}
-            onPreviewLoaded={handlePreviewLoaded}
-            setMobilePreviewShown={setMobilePreviewShown}
-            setIsIframeFetching={setIsIframeFetching}
           />
         }
         chatInput={
@@ -290,5 +257,37 @@ export default function UnifiedSession() {
         sessionId={chatState.sessionId || ''}
       />
     </>
+  );
+}
+
+// Export the main component that sets up the provider
+export default function UnifiedSession() {
+  const { sessionId: urlSessionId } = useParams<{ sessionId: string }>();
+  const chatState = useSimpleChat(urlSessionId);
+
+  // Define the initial props for the ViewState hook
+  const viewStateInitialProps = {
+    sessionId: chatState.sessionId || '',
+    title: chatState.title || '',
+    code: chatState.selectedCode?.content || '',
+    isStreaming: chatState.isStreaming,
+    previewReady: !chatState.isStreaming && chatState.codeReady,
+    initialLoad: true,
+    isMobileView: true,
+    onBackClicked: () => {
+      // console.log('Back clicked - handled by ViewStateProvider/hook');
+    },
+    onPreviewLoaded: () => {
+      // console.log('Preview loaded - handled by ViewStateProvider/hook');
+    },
+    onScreenshotCaptured: chatState.addScreenshot,
+    codeReady: chatState.codeReady,
+    dependencies: chatState.selectedDependencies || {},
+  };
+
+  return (
+    <ViewStateProvider initialProps={viewStateInitialProps}>
+      <SessionContent />
+    </ViewStateProvider>
   );
 }

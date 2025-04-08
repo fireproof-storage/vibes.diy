@@ -4,7 +4,7 @@ import MessageList from './MessageList';
 import WelcomeScreen from './WelcomeScreen';
 
 interface ChatInterfaceProps extends ChatState {
-  setMobilePreviewShown: (shown: boolean) => void;
+  setMobilePreviewShown?: (shown: boolean) => void;
   setActiveView?: (view: 'preview' | 'code' | 'data') => void;
 }
 
@@ -39,7 +39,7 @@ function ChatInterface({
         isStreaming={isStreaming}
         setSelectedResponseId={setSelectedResponseId}
         selectedResponseId={selectedResponseDoc?._id || ''}
-        setMobilePreviewShown={setMobilePreviewShown}
+        setMobilePreviewShown={setMobilePreviewShown || (() => {})}
         setActiveView={setActiveView}
       />
     );
