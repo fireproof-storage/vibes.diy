@@ -215,18 +215,21 @@ export default function UnifiedSession() {
         fullWidthChat={shouldUseFullWidthChat}
         headerLeft={<ChatHeaderContent onOpenSidebar={openSidebar} title={chatState.title || ''} />}
         headerRight={
-          <ResultPreviewHeaderContent
-            previewReady={previewReady}
-            activeView={activeView}
-            setActiveView={setActiveView}
-            setMobilePreviewShown={setMobilePreviewShown}
-            setUserClickedBack={setUserClickedBack}
-            isStreaming={chatState.isStreaming}
-            code={chatState.selectedCode?.content || ''}
-            sessionId={chatState.sessionId || undefined}
-            title={chatState.title || undefined}
-            isIframeFetching={isIframeFetching}
-          />
+          // Only render the header content when we have code content or a completed session
+          chatState.selectedCode?.content || urlSessionId ? (
+            <ResultPreviewHeaderContent
+              previewReady={previewReady}
+              activeView={activeView}
+              setActiveView={setActiveView}
+              setMobilePreviewShown={setMobilePreviewShown}
+              setUserClickedBack={setUserClickedBack}
+              isStreaming={chatState.isStreaming}
+              code={chatState.selectedCode?.content || ''}
+              sessionId={chatState.sessionId || undefined}
+              title={chatState.title || undefined}
+              isIframeFetching={isIframeFetching}
+            />
+          ) : null
         }
         chatPanel={
           <ChatInterface
