@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router';
 import { useCookieConsent } from '../context/CookieConsentContext';
 import { ViewStateProvider, useSharedViewState } from '../context/ViewStateContext';
@@ -13,6 +13,8 @@ import ResultPreviewHeaderContent from '../components/ResultPreview/ResultPrevie
 import SessionSidebar from '../components/SessionSidebar';
 import { useSimpleChat } from '../hooks/useSimpleChat';
 import { decodeStateFromUrl } from '../utils/sharing';
+import { isMobileViewport } from '../utils/ViewState';
+// import { useSession } from '../hooks/useSession';
 
 export function meta() {
   return [
@@ -28,7 +30,29 @@ function SessionContent() {
   const chatState = useSimpleChat(urlSessionId);
   const { setMessageHasBeenSent } = useCookieConsent();
 
-  // Local state for sidebar visibility only
+  // State for view management - set initial view based on URL path
+  const [activeView, setActiveView] = useState<'code' | 'preview' | 'data'>(() => {
+    // Directly check the pathname on initial render
+    // Add null check for location to prevent errors in tests
+    const path = location?.pathname || '';
+    if (path.endsWith('/app')) {
+      return 'preview';
+    } else if (path.endsWith('/code')) {
+      return 'code';
+    } else if (path.endsWith('/data')) {
+      return 'data';
+    }
+    // Default to code view if no suffix is found
+    return 'code';
+  });
+  const [previewReady, setPreviewReady] = useState(false);
+  // const [bundlingComplete] = useState(true);
+  const [mobilePreviewShown, setMobilePreviewShown] = useState(false);
+  const [isIframeFetching, setIsIframeFetching] = useState(false);
+
+  // Add a ref to track whether streaming was active previously
+  const wasStreamingRef = useRef(false);
+
   const [isSidebarVisible, setIsSidebarVisible] = useState(false);
 
   // For backwards compatibility with components that expect setActiveView
@@ -52,6 +76,28 @@ function SessionContent() {
   // Add closeSidebar function
   const closeSidebar = useCallback(() => {
     setIsSidebarVisible(false);
+  }, []);
+
+  // Reset previewReady state when streaming starts
+  useEffect(() => {
+    if (chatState.isStreaming) {
+      setPreviewReady(false);
+    }
+  }, [chatState.isStreaming]);
+
+  // Handle preview loaded event
+  const handlePreviewLoaded = useCallback(() => {
+    setPreviewReady(true);
+
+    // Don't automatically show preview on mobile until streaming is complete
+    // and only do this on mobile devices
+    if (!chatState.isStreaming && isMobileViewport()) {
+      setMobilePreviewShown(true);
+    }
+
+    // Update the active view locally, but don't force navigation
+    // Let the user stay on their current tab
+    setActiveView('preview');
   }, []);
 
   useEffect(() => {
@@ -145,10 +191,13 @@ function SessionContent() {
   // Computed state for combining conditions
   const previewReady = !chatState.isStreaming && chatState.codeReady;
 
-  // Handle the case when preview becomes ready
+  // Computed state for combining conditions
+  const previewReady = !chatState.isStreaming && chatState.codeReady;
+
+  // Handle the case when preview becomes ready and streaming ends
   useEffect(() => {
-    // Only switch to preview view when preview becomes ready (not when streaming just ends)
-    if (previewReady) {
+    // Only switch to preview view when preview becomes ready AND streaming is complete
+    if (previewReady && !chatState.isStreaming) {
       // Reset user preference so future code content will auto-show preview
       setUserClickedBack(false);
 
@@ -157,22 +206,32 @@ function SessionContent() {
         setMobilePreviewShown(true);
       }
     }
-  }, [previewReady, userClickedBack, setMobilePreviewShown]);
+  }, [previewReady, userClickedBack, chatState.isStreaming, setMobilePreviewShown]);
 
   // Update mobilePreviewShown when selectedCode changes
   useEffect(() => {
+    // If we're on a mobile device and there's code content
     if (chatState.selectedCode?.content) {
-      // Only auto-show preview if the user hasn't clicked back during this streaming session
-      if (!chatState.isStreaming || !userClickedBack) {
+      // Only show preview when:
+      // 1. Streaming has finished (!chatState.isStreaming)
+      // 2. Preview is ready (previewReady)
+      // 3. We're on mobile (isMobileViewport())
+      if (!chatState.isStreaming && previewReady && isMobileViewport()) {
         setMobilePreviewShown(true);
       }
+    }
 
-      // Only navigate to /app if we're not already on a specific tab route
-      // This prevents overriding user's manual tab selection
-      // Add null check for location to prevent errors in tests
-      const path = location?.pathname || '';
-      const hasTabSuffix =
-        path.endsWith('/app') || path.endsWith('/code') || path.endsWith('/data');
+    // Update wasStreaming ref to track state changes
+    wasStreamingRef.current = chatState.isStreaming;
+  }, [chatState.selectedCode, chatState.isStreaming, previewReady]);
+
+  // Handle URL path navigation
+  useEffect(() => {
+    // Only navigate to /app if we're not already on a specific tab route
+    // This prevents overriding user's manual tab selection
+    // Add null check for location to prevent errors in tests
+    const path = location?.pathname || '';
+    const hasTabSuffix = path.endsWith('/app') || path.endsWith('/code') || path.endsWith('/data');
 
       if (!hasTabSuffix && chatState.sessionId && chatState.title) {
         setActiveView('preview');

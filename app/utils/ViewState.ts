@@ -3,6 +3,11 @@ import { useEffect, useRef, useState, useCallback, useMemo } from 'react';
 import { encodeTitle } from '../components/SessionSidebar/utils';
 import { CALLAI_API_KEY } from '../config/env';
 
+// Helper to detect mobile viewport
+export const isMobileViewport = () => {
+  return typeof window !== 'undefined' && window.innerWidth < 768;
+};
+
 export type ViewType = 'preview' | 'code' | 'data';
 
 // Define the shape of the state returned by the hook
@@ -113,7 +118,9 @@ function useViewStateInternal(props: ViewStateProps): ViewState {
     if (
       props.isStreaming &&
       !wasStreamingRef.current &&
-      (!hadCodeRef.current || props.code.length === 0)
+      (!hadCodeRef.current || props.code.length === 0) &&
+      // Don't auto-switch on mobile
+      !isMobileViewport()
     ) {
       // For the initial code streaming, we want to display code without changing URL
       // This is handled by the component that uses this hook
@@ -130,7 +137,20 @@ function useViewStateInternal(props: ViewStateProps): ViewState {
     // When preview becomes ready, auto jump to preview view, but respect explicit navigation
     // AND don't redirect to app during active streaming
     if (props.previewReady && !wasPreviewReadyRef.current) {
+      // Don't redirect to app if user is explicitly in data or code view OR if still streaming
+      // Also don't redirect on mobile devices
+      const isInDataView = location.pathname.endsWith('/data');
+      const isInCodeView = location.pathname.endsWith('/code');
+      if (!isInDataView && !isInCodeView && !props.isStreaming && !isMobileViewport()) {
+        navigate(`/chat/${sessionId}/${encodedTitle}/app`);
+      }
+    }
+
+    // Handle the state when streaming ENDS and preview is ready
+    // This ensures we navigate to the app view after streaming completes
+    if (!props.isStreaming && wasStreamingRef.current && props.previewReady) {
       // Don't redirect to app if user is explicitly in data or code view
+      // Also don't redirect on mobile devices
       const isInDataView = location.pathname.endsWith('/data');
       const isInCodeView = location.pathname.endsWith('/code');
       const isInSpecificView = isInDataView || isInCodeView;
@@ -141,6 +161,7 @@ function useViewStateInternal(props: ViewStateProps): ViewState {
       // Navigate if: not in specific view AND (not streaming OR streaming just ended)
       if (!isInSpecificView && (!props.isStreaming || streamingJustEnded)) {
         // Navigate to app view
+      if (!isInDataView && !isInCodeView && !isMobileViewport()) {
         navigate(`/chat/${sessionId}/${encodedTitle}/app`);
         // Also set previewShown to true on mobile
         setMobilePreviewShown(true);
@@ -235,7 +256,8 @@ function useViewStateInternal(props: ViewStateProps): ViewState {
 
   // Determine what view should be displayed (may differ from URL-based currentView)
   // During streaming, we always show code view regardless of the URL
-  const displayView = props.isStreaming ? 'code' : currentView;
+  // On mobile, don't force code view during streaming
+  const displayView = props.isStreaming && !isMobileViewport() ? 'code' : currentView;
 
   // State for iframe functionality
   const [isIframeFetching, setIsIframeFetching] = useState(!!props.isIframeFetching);

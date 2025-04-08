@@ -4,12 +4,12 @@ const LightUpYourData = () => {
       <img
         src="/code-things-black.png"
         alt="You can just code things"
-        className="logo-pulse opacity-3 dark:hidden"
+        className="logo-pulse opacity-2 dark:hidden"
       />
       <img
         src="/code-things.png"
         alt="You can just code things"
-        className="logo-pulse hidden opacity-3 dark:block"
+        className="logo-pulse hidden opacity-2 dark:block"
       />
     </div>
   );
