@@ -158,4 +158,64 @@ describe('ViewState Coverage Tests', () => {
     // Verify no navigation occurred since data view is disabled
     expect(mockNavigate).not.toHaveBeenCalled();
   });
+  test('should navigate to app view when streaming ends and user is not in data or code view', () => {
+    // Mock location to base path - not in data or code view
+    vi.mocked(useLocation).mockReturnValue({
+      pathname: `/chat/${mockSessionId}/${mockTitle}`,
+    } as any);
+
+    let hookResult: any;
+
+    // First render to establish the wasStreamingRef value as true
+    const { unmount } = renderHook(
+      (props) => {
+        hookResult = useViewState(props);
+        return hookResult;
+      },
+      {
+        initialProps: {
+          sessionId: mockSessionId,
+          title: mockTitle,
+          code: 'console.log("test")',
+          isStreaming: true, // Initially streaming
+          previewReady: true, // Preview is already ready
+        },
+      }
+    );
+
+    // Cleanup to reset refs
+    unmount();
+
+    // Re-render to get fresh refs
+    const { rerender } = renderHook(
+      (props) => {
+        hookResult = useViewState(props);
+        return hookResult;
+      },
+      {
+        initialProps: {
+          sessionId: mockSessionId,
+          title: mockTitle,
+          code: 'console.log("test")',
+          isStreaming: true, // Still streaming
+          previewReady: true, // Preview is ready
+        },
+      }
+    );
+
+    // Clear any initial navigation calls
+    mockNavigate.mockClear();
+
+    // Transition from streaming to not streaming - this should trigger lines 66-67
+    rerender({
+      sessionId: mockSessionId,
+      title: mockTitle,
+      code: 'console.log("test")',
+      isStreaming: false, // Streaming just ended
+      previewReady: true, // Preview is ready
+    });
+
+    // Verify navigation to app view occurred
+    expect(mockNavigate).toHaveBeenCalledWith(`/chat/${mockSessionId}/${mockTitle}/app`);
+  });
 });
