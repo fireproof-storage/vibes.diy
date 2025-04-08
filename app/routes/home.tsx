@@ -139,6 +139,65 @@ function SessionContent() {
     [chatState, setMessageHasBeenSent]
   );
 
+  // Track if user manually clicked back to chat during streaming
+  const [userClickedBack, setUserClickedBack] = useState(false);
+
+  // Computed state for combining conditions
+  const previewReady = !chatState.isStreaming && chatState.codeReady;
+
+  // Handle the case when preview becomes ready
+  useEffect(() => {
+    // Only switch to preview view when preview becomes ready (not when streaming just ends)
+    if (previewReady) {
+      // Reset user preference so future code content will auto-show preview
+      setUserClickedBack(false);
+
+      // Only auto-show preview if the user hasn't explicitly clicked back to chat
+      if (!userClickedBack) {
+        setMobilePreviewShown(true);
+      }
+    }
+  }, [previewReady, userClickedBack, setMobilePreviewShown]);
+
+  // Update mobilePreviewShown when selectedCode changes
+  useEffect(() => {
+    if (chatState.selectedCode?.content) {
+      // Only auto-show preview if the user hasn't clicked back during this streaming session
+      if (!chatState.isStreaming || !userClickedBack) {
+        setMobilePreviewShown(true);
+      }
+
+      // Only navigate to /app if we're not already on a specific tab route
+      // This prevents overriding user's manual tab selection
+      // Add null check for location to prevent errors in tests
+      const path = location?.pathname || '';
+      const hasTabSuffix =
+        path.endsWith('/app') || path.endsWith('/code') || path.endsWith('/data');
+
+      if (!hasTabSuffix && chatState.sessionId && chatState.title) {
+        setActiveView('preview');
+        navigate(`/chat/${chatState.sessionId}/${encodeTitle(chatState.title)}/app`, {
+          replace: true,
+        });
+      } else if (path.endsWith('/app')) {
+        setActiveView('preview');
+      } else if (path.endsWith('/code')) {
+        setActiveView('code');
+      } else if (path.endsWith('/data')) {
+        setActiveView('data');
+      }
+    }
+  }, [
+    chatState.selectedCode,
+    chatState.sessionId,
+    chatState.title,
+    navigate,
+    location.pathname,
+    setActiveView,
+    chatState.isStreaming,
+    userClickedBack,
+    setMobilePreviewShown,
+  ]);
   const shouldUseFullWidthChat = chatState.docs.length === 0 && !urlSessionId;
 
   return (
@@ -151,6 +210,9 @@ function SessionContent() {
           chatState.selectedCode?.content || urlSessionId ? (
             <ResultPreviewHeaderContent
               previewReady={!chatState.isStreaming && chatState.codeReady}
+              activeView={activeView}
+              setActiveView={setActiveView}
+              setMobilePreviewShown={setMobilePreviewShown}
               isStreaming={chatState.isStreaming}
               code={chatState.selectedCode?.content || ''}
               sessionId={chatState.sessionId || undefined}
