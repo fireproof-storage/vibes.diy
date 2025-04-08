@@ -3,11 +3,14 @@
 exports[`ResultPreview > renders empty state correctly 1`] = `
 <div>
   <div
-    class="h-full"
-    style="overflow: hidden;"
+    data-testid="memory-router"
   >
-    <style>
-      
+    <div
+      class="h-full"
+      style="overflow: hidden;"
+    >
+      <style>
+        
   @keyframes spin-slow {
     from {
       transform: rotate(0deg);
@@ -20,10 +23,11 @@ exports[`ResultPreview > renders empty state correctly 1`] = `
     animation: spin-slow 1s linear infinite;
   }
 
-    </style>
-    <div
-      class="h-full"
-    />
+      </style>
+      <div
+        class="h-full"
+      />
+    </div>
   </div>
 </div>
 `;

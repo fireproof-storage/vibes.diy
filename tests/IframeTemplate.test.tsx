@@ -1,7 +1,9 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render } from '@testing-library/react';
+import { MemoryRouter } from 'react-router-dom';
 import iframeTemplateRaw from '../app/components/ResultPreview/templates/iframe-template.html?raw';
 import ResultPreview from '../app/components/ResultPreview/ResultPreview';
+import { ViewStateProvider } from '../app/context/ViewStateContext';
 
 vi.mock('@remix-run/router', () => ({
   createBrowserRouter: vi.fn(),
@@ -159,20 +161,36 @@ describe('Iframe Template', () => {
       const onScreenshotCapturedMock = vi.fn();
       const onPreviewLoadedMock = vi.fn();
 
-      // Render the ResultPreview component with sample code
+      // Render the ResultPreview component with sample code and context providers
       render(
-        <ResultPreview
-          code={testAppCode}
-          dependencies={{}}
-          onScreenshotCaptured={onScreenshotCapturedMock}
-          sessionId="test-session"
-          isStreaming={false}
-          codeReady={true}
-          activeView="preview"
-          setActiveView={vi.fn()}
-          onPreviewLoaded={onPreviewLoadedMock}
-          setMobilePreviewShown={vi.fn()}
-        />
+        <MemoryRouter>
+          <ViewStateProvider
+            initialProps={{
+              sessionId: 'test-session',
+              title: 'Test Title',
+              code: testAppCode,
+              isStreaming: false,
+              previewReady: true,
+              isMobileView: false,
+              initialLoad: true,
+              onPreviewLoaded: onPreviewLoadedMock,
+              onScreenshotCaptured: onScreenshotCapturedMock,
+            }}
+          >
+            <ResultPreview
+              code={testAppCode}
+              dependencies={{}}
+              onScreenshotCaptured={onScreenshotCapturedMock}
+              sessionId="test-session"
+              isStreaming={false}
+              codeReady={true}
+              activeView="preview"
+              setActiveView={vi.fn()}
+              onPreviewLoaded={onPreviewLoadedMock}
+              setMobilePreviewShown={vi.fn()}
+            />
+          </ViewStateProvider>
+        </MemoryRouter>
       );
 
       // Get the mock iframe created by our mocks

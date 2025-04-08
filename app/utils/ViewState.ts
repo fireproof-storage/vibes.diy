@@ -5,7 +5,53 @@ import { CALLAI_API_KEY } from '../config/env';
 
 export type ViewType = 'preview' | 'code' | 'data';
 
-export function useViewState(props: {
+// Define the shape of the state returned by the hook
+export type ViewState = {
+  currentView: ViewType;
+  displayView: ViewType;
+  navigateToView: (view: ViewType) => void;
+  viewControls: {
+    preview: {
+      enabled: boolean;
+      icon: string;
+      label: string;
+      loading: boolean | undefined;
+    };
+    code: {
+      enabled: boolean;
+      icon: string;
+      label: string;
+      loading: boolean | undefined;
+    };
+    data: {
+      enabled: boolean;
+      icon: string;
+      label: string;
+      loading: boolean | undefined;
+    };
+  };
+  showViewControls: boolean | string | undefined;
+  sessionId: string | undefined;
+  encodedTitle: string;
+  mobilePreviewShown: boolean;
+  setMobilePreviewShown: (mobilePreviewShown: boolean) => void;
+  userClickedBack: boolean;
+  setUserClickedBack: (userClickedBack: boolean) => void;
+  handleBackAction: () => void;
+  isDarkMode: boolean;
+  isIframeFetching: boolean;
+  setIsIframeFetching: (isIframeFetching: boolean) => void;
+  filesContent: {
+    '/App.jsx': {
+      code: string;
+      active: boolean;
+    };
+  };
+  showWelcome: boolean;
+};
+
+// Rename the hook internally to avoid naming conflicts
+function useViewStateInternal(props: {
   sessionId?: string;
   title?: string;
   code: string;
@@ -305,3 +351,6 @@ export function useViewState(props: {
     showWelcome,
   };
 }
+
+// Export the hook with the original name
+export const useViewState = useViewStateInternal;

@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router';
 import { useCookieConsent } from '../context/CookieConsentContext';
+import { ViewStateProvider, useSharedViewState } from '../context/ViewStateContext';
 import { encodeTitle } from '~/components/SessionSidebar/utils';
 import AppLayout from '../components/AppLayout';
 import ChatHeaderContent from '../components/ChatHeaderContent';
@@ -12,8 +13,6 @@ import ResultPreviewHeaderContent from '../components/ResultPreview/ResultPrevie
 import SessionSidebar from '../components/SessionSidebar';
 import { useSimpleChat } from '../hooks/useSimpleChat';
 import { decodeStateFromUrl } from '../utils/sharing';
-import { useViewState } from '../utils/ViewState';
-// import { useSession } from '../hooks/useSession';
 
 export function meta() {
   return [
@@ -22,7 +21,7 @@ export function meta() {
   ];
 }
 
-export default function UnifiedSession() {
+function SessionContent() {
   const { sessionId: urlSessionId } = useParams<{ sessionId: string }>();
   const navigate = useNavigate();
   const location = useLocation();
@@ -35,37 +34,15 @@ export default function UnifiedSession() {
   // For backwards compatibility with components that expect setActiveView
   const [activeView, setActiveView] = useState<'code' | 'preview' | 'data'>('code');
 
-  // Use the centralized ViewState hook for all view-related state management
-  const viewState = useViewState({
-    sessionId: chatState.sessionId || '',
-    title: chatState.title || '',
-    code: chatState.selectedCode?.content || '',
-    isStreaming: chatState.isStreaming,
-    previewReady: !chatState.isStreaming && chatState.codeReady,
-    initialLoad: true,
-    isMobileView: true,
-    onBackClicked: () => {
-      // Any home-specific behavior when back is clicked
-    },
-  });
-
-  // Extract only the values we need from viewState
-  const {
-    currentView,
-    mobilePreviewShown,
-    setMobilePreviewShown,
-    isIframeFetching,
-    setIsIframeFetching,
-  } = viewState;
+  // Consume the shared view state from the context
+  const { currentView, mobilePreviewShown, setMobilePreviewShown, isIframeFetching } =
+    useSharedViewState();
 
   // For backwards compatibility, sync ViewState with local state
   // This allows us to gradually migrate components to use ViewState directly
   useEffect(() => {
     setActiveView(currentView);
   }, [currentView, setActiveView]);
-
-  // Derive previewReady from chatState for backwards compatibility
-  const previewReady = !chatState.isStreaming && chatState.codeReady;
 
   // Directly create an openSidebar function
   const openSidebar = useCallback(() => {
@@ -75,12 +52,6 @@ export default function UnifiedSession() {
   // Add closeSidebar function
   const closeSidebar = useCallback(() => {
     setIsSidebarVisible(false);
-  }, []);
-
-  // Handle preview loaded event - simplified since ViewState manages most of this
-  const handlePreviewLoaded = useCallback(() => {
-    // ViewState now handles setting mobilePreviewShown and navigating to preview
-    // This handler remains for any app-specific needs
   }, []);
 
   useEffect(() => {
@@ -168,27 +139,6 @@ export default function UnifiedSession() {
     [chatState, setMessageHasBeenSent]
   );
 
-  // Preview visibility is now managed by ViewState
-  // No need for a separate effect to show preview when ready
-
-  // Handle URL-specific navigation when code changes
-  useEffect(() => {
-    if (chatState.selectedCode?.content) {
-      // Only navigate to /app if we're not already on a specific tab route
-      // This prevents overriding user's manual tab selection
-      const path = location?.pathname || '';
-      const hasTabSuffix =
-        path.endsWith('/app') || path.endsWith('/code') || path.endsWith('/data');
-
-      if (!hasTabSuffix && chatState.sessionId && chatState.title) {
-        // Navigate to preview URL - view state itself is managed by ViewState
-        navigate(`/chat/${chatState.sessionId}/${encodeTitle(chatState.title)}/app`, {
-          replace: true,
-        });
-      }
-    }
-  }, [chatState.selectedCode, chatState.sessionId, chatState.title, navigate, location?.pathname]);
-
   const shouldUseFullWidthChat = chatState.docs.length === 0 && !urlSessionId;
 
   return (
@@ -200,7 +150,7 @@ export default function UnifiedSession() {
           // Only render the header content when we have code content or a completed session
           chatState.selectedCode?.content || urlSessionId ? (
             <ResultPreviewHeaderContent
-              previewReady={previewReady}
+              previewReady={!chatState.isStreaming && chatState.codeReady}
               isStreaming={chatState.isStreaming}
               code={chatState.selectedCode?.content || ''}
               sessionId={chatState.sessionId || undefined}
@@ -226,9 +176,9 @@ export default function UnifiedSession() {
             onScreenshotCaptured={chatState.addScreenshot}
             activeView={activeView}
             setActiveView={setActiveView}
-            onPreviewLoaded={handlePreviewLoaded}
+            onPreviewLoaded={() => {}}
             setMobilePreviewShown={setMobilePreviewShown}
-            setIsIframeFetching={setIsIframeFetching}
+            setIsIframeFetching={() => {}}
           />
         }
         chatInput={
@@ -257,5 +207,37 @@ export default function UnifiedSession() {
         sessionId={chatState.sessionId || ''}
       />
     </>
+  );
+}
+
+// Export the main component that sets up the provider
+export default function UnifiedSession() {
+  const { sessionId: urlSessionId } = useParams<{ sessionId: string }>();
+  const chatState = useSimpleChat(urlSessionId);
+
+  // Define the initial props for the ViewState hook
+  const viewStateInitialProps = {
+    sessionId: chatState.sessionId || '',
+    title: chatState.title || '',
+    code: chatState.selectedCode?.content || '',
+    isStreaming: chatState.isStreaming,
+    previewReady: !chatState.isStreaming && chatState.codeReady,
+    initialLoad: true,
+    isMobileView: true,
+    onBackClicked: () => {
+      // console.log('Back clicked - handled by ViewStateProvider/hook');
+    },
+    onPreviewLoaded: () => {
+      // console.log('Preview loaded - handled by ViewStateProvider/hook');
+    },
+    onScreenshotCaptured: chatState.addScreenshot,
+    codeReady: chatState.codeReady,
+    dependencies: chatState.selectedDependencies || {},
+  };
+
+  return (
+    <ViewStateProvider initialProps={viewStateInitialProps}>
+      <SessionContent />
+    </ViewStateProvider>
   );
 }

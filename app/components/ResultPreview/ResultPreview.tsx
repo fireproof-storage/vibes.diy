@@ -3,8 +3,8 @@ import { animationStyles } from './ResultPreviewTemplates';
 import type { ResultPreviewProps } from './ResultPreviewTypes';
 // Components
 import IframeContent from './IframeContent';
-// State management
-import { useViewState } from '../../utils/ViewState';
+// Context
+import { useSharedViewState } from '../../context/ViewStateContext';
 
 function ResultPreview({
   code,
@@ -21,20 +21,13 @@ function ResultPreview({
   children,
   title,
 }: ResultPreviewProps & { children?: React.ReactNode }) {
-  // Use the centralized ViewState hook for all view-related state management
-  const { displayView, isDarkMode, filesContent, showWelcome, isIframeFetching } = useViewState({
-    sessionId,
-    title,
-    code,
-    isStreaming,
-    previewReady: codeReady,
-    onPreviewLoaded,
-    onScreenshotCaptured,
-    codeReady,
-    dependencies,
-  });
+  // Consume shared state from context
+  const { displayView, isDarkMode, filesContent, showWelcome, isIframeFetching } =
+    useSharedViewState();
 
   // For backwards compatibility, sync with any parent state
+  // TODO: Remove these effects and the props (`activeView`, `setActiveView`, `setIsIframeFetching`)
+  // once all consuming components fully rely on the context.
   React.useEffect(() => {
     if (setActiveView && displayView !== activeView) {
       setActiveView(displayView);
@@ -56,7 +49,7 @@ function ResultPreview({
       isStreaming={!codeReady}
       codeReady={codeReady}
       setActiveView={setActiveView} // Keep for backwards compatibility
-      dependencies={dependencies}
+      dependencies={dependencies} // Pass dependencies down
       isDarkMode={isDarkMode}
     />
   );

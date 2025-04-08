@@ -1,5 +1,5 @@
 import React from 'react';
-import { useViewState } from '../../utils/ViewState';
+import { useSharedViewState } from '../../context/ViewStateContext';
 import type { ViewType } from '../../utils/ViewState';
 import {
   PreviewIcon,
@@ -28,7 +28,6 @@ const ResultPreviewHeaderContent: React.FC<ResultPreviewHeaderContentProps> = ({
   isIframeFetching = false,
   onBackClicked,
 }) => {
-  // Use the enhanced ViewState hook to manage all view-related state and navigation
   const {
     currentView,
     displayView,
@@ -37,22 +36,8 @@ const ResultPreviewHeaderContent: React.FC<ResultPreviewHeaderContentProps> = ({
     showViewControls,
     sessionId,
     encodedTitle,
-    // Mobile-specific state and handlers from the hook
     handleBackAction,
-  } = useViewState({
-    sessionId: propSessionId,
-    title: propTitle,
-    code,
-    isStreaming,
-    previewReady,
-    isIframeFetching,
-    onBackClicked: () => {}, // No-op as this component doesn't need to handle back clicks directly
-  });
-
-  // No synchronization effects needed since we're directly using ViewState
-
-  // This effect has been replaced by the displayView from useViewState hook
-  // The hook now handles the logic of showing code view during streaming
+  } = useSharedViewState();
 
   return (
     <div className="flex h-full w-full items-center px-2 py-4">
