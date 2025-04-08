@@ -11,12 +11,12 @@
 
 2. **When Code Starts Streaming**:
 
-   - Display: Code view
+   - Display: Code view (mobile stay on chat)
    - Path: Should remain at base path (no /code suffix)
    - This allows the automatic transition to app view later
 
 3. **When Preview Becomes Ready**:
-   - Auto-navigate to: App view (/app)
+   - Auto-navigate to: App view (/app) (That when mobile goes to app)
    - But only if URL doesn't have explicit /code or /data paths
    - Respect the user's explicit navigation choices
 
