@@ -2,9 +2,9 @@ import { useCallback, useState } from 'react';
 import { useFireproof } from 'use-fireproof';
 import { FIREPROOF_CHAT_HISTORY } from '../config/env';
 import type {
-    AiChatMessageDocument,
-    SessionDocument,
-    UserChatMessageDocument,
+  AiChatMessageDocument,
+  SessionDocument,
+  UserChatMessageDocument,
 } from '../types/chat';
 import { getSessionDatabaseName } from '../utils/databaseManager';
 

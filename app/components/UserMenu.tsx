@@ -26,9 +26,9 @@ export function UserMenu({ isOpen, onLogout, onClose, buttonRef }: UserMenuProps
   };
 
   return createPortal(
-    <dialog 
+    <dialog
       open
-      className="fixed inset-0 z-[9999] bg-transparent m-0 p-0"
+      className="fixed inset-0 z-[9999] m-0 bg-transparent p-0"
       onClick={handleBackdropClick}
       onKeyDown={(e) => {
         if (e.key === 'Escape') {
@@ -37,15 +37,15 @@ export function UserMenu({ isOpen, onLogout, onClose, buttonRef }: UserMenuProps
       }}
       aria-label="User menu"
     >
-      <div 
+      <div
         style={menuStyle}
-        className="w-48 rounded-md bg-white dark:bg-gray-800 shadow-lg ring-1 ring-black ring-opacity-5"
+        className="ring-opacity-5 w-48 rounded-md bg-white shadow-lg ring-1 ring-black dark:bg-gray-800"
       >
         <div className="py-1" role="menu" aria-orientation="vertical" aria-labelledby="user-menu">
           <button
             type="button"
             onClick={onLogout}
-            className="block w-full px-4 py-2 text-left text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
+            className="block w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-700"
             role="menuitem"
           >
             Logout
@@ -55,4 +55,4 @@ export function UserMenu({ isOpen, onLogout, onClose, buttonRef }: UserMenuProps
     </dialog>,
     document.body
   );
-} 
+}

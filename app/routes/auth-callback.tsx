@@ -8,23 +8,23 @@ import { redirect } from 'react-router';
 export async function clientLoader({ request }: LoaderFunctionArgs) {
   const url = new URL(request.url);
   const token = url.searchParams.get('fpToken');
-  
+
   if (!token) {
     console.error('No token found in auth callback');
     return redirect('/');
   }
-  
+
   try {
     // Store token in localStorage
     localStorage.setItem('auth_token', token);
-    
+
     // Clear the redirect prevention flag
     sessionStorage.removeItem('auth_redirect_prevention');
-    
+
     // Get the return URL and clear it
     const returnUrl = sessionStorage.getItem('auth_return_url') || '/';
     sessionStorage.removeItem('auth_return_url');
-    
+
     // Redirect to the return URL
     return redirect(returnUrl);
   } catch (error) {
@@ -43,9 +43,9 @@ export default function AuthCallback() {
       <div className="text-center">
         <h1 className="text-xl font-semibold">Processing authentication...</h1>
         <div className="mt-4">
-          <div className="h-2 w-24 animate-pulse rounded-full bg-blue-500 mx-auto" />
+          <div className="mx-auto h-2 w-24 animate-pulse rounded-full bg-blue-500" />
         </div>
       </div>
     </div>
   );
-} 
+}
