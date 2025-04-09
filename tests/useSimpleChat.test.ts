@@ -35,6 +35,17 @@ vi.mock('../app/prompts', () => ({
   makeBaseSystemPrompt: vi.fn().mockResolvedValue('Mocked system prompt'),
 }));
 
+// Mock the provisioning module
+vi.mock('../app/config/provisioning');
+
+// Import the mocked module
+import { createSessionKey } from '../app/config/provisioning';
+
+// Mock the env module
+vi.mock('../app/config/env', () => ({
+  OPENROUTER_PROV_KEY: 'mock-provisioning-key',
+}));
+
 // Define shared state and reset function *outside* the mock factory
 type MockDoc = { _id: string; type: string; text: string; session_id: string; timestamp: number };
 let mockDocs: MockDoc[] = [];
@@ -451,6 +462,21 @@ Here's how to use React.
 
 describe('useSimpleChat', () => {
   beforeEach(() => {
+    // Reset the createSessionKey mock to ensure it returns the correct structure
+    vi.mocked(createSessionKey).mockImplementation(async () => {
+      return {
+        key: 'mock-api-key-for-testing',
+        hash: 'mock-hash',
+        name: 'Mock Session Key',
+        label: 'mock-session',
+        limit: 0.01,
+        disabled: false,
+        usage: 0,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      };
+    });
+
     // Mock window.fetch
     vi.spyOn(window, 'fetch').mockImplementation(async () => {
       // Mock response with a readable stream
