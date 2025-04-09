@@ -1,11 +1,12 @@
 /**
- * Utility functions for working with the OpenRouter API
+ * Utility functions for working with AI models via call-ai library
  */
 
 import { CALLAI_API_KEY } from '../config/env';
+import { callAI, type Message } from 'call-ai';
 
 /**
- * Call OpenRouter API with streaming enabled
+ * Call AI model with streaming enabled using call-ai library
  *
  * @param model - The model to use (e.g. 'anthropic/claude-3.7-sonnet')
  * @param systemPrompt - The system prompt
@@ -13,68 +14,85 @@ import { CALLAI_API_KEY } from '../config/env';
  * @param userMessage - The current user message
  * @returns A Response object with the stream
  */
-export async function callOpenRouterAPI(
+export async function callAIWithStream(
   model: string,
   systemPrompt: string,
   messageHistory: Array<{ role: 'user' | 'assistant'; content: string }>,
   userMessage: string
 ): Promise<Response> {
   try {
-    const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-      method: 'POST',
+    // Format messages for call-ai
+    const messages: Message[] = [
+      { role: 'system', content: systemPrompt },
+      ...messageHistory,
+      { role: 'user', content: userMessage },
+    ];
+
+    // Configure call-ai options
+    const options = {
+      apiKey: CALLAI_API_KEY,
+      model: model,
+      // Using OpenRouter endpoint
+      endpoint: 'https://openrouter.ai/api/v1/chat/completions',
+      stream: true,
       headers: {
-        Authorization: `Bearer ${CALLAI_API_KEY}`,
-        'Content-Type': 'application/json',
         'HTTP-Referer': 'https://vibes.diy',
         'X-Title': 'Vibes DIY',
       },
-      body: JSON.stringify({
-        model: model,
-        stream: true,
-        messages: [
-          {
-            role: 'system',
-            content: systemPrompt,
-          },
-          ...messageHistory,
-          {
-            role: 'user',
-            content: userMessage,
-          },
-        ],
-      }),
-    });
+      // Setting skipRetry to false allows automatic fallback
+      skipRetry: false,
+    };
 
-    if (!response.ok) {
-      // If we get a 400 status
-      if (response.status === 400) {
-        // Clone the response so we can read the body
-        const clonedResponse = response.clone();
-        try {
-          const errorData = await clonedResponse.json();
-          // Check if the error message indicates an invalid model
-          if (
-            errorData.error &&
-            errorData.error.message &&
-            errorData.error.message.toLowerCase().includes('not a valid model')
-          ) {
-            console.warn(`Model ${model} not valid, retrying with openrouter/auto`);
-            // Retry with openrouter/auto model
-            return callOpenRouterAPI('openrouter/auto', systemPrompt, messageHistory, userMessage);
-          }
-        } catch (parseError) {
-          // If we can't parse the response as JSON, throw the original error
-          console.error('Failed to parse error response:', parseError);
+    // Get the streamed response generator from call-ai
+    // call-ai will handle model validation and fallback automatically
+    const streamingGenerator = callAI(messages, options);
+
+    // Create a TransformStream to convert the generator into a web standard Response
+    const { readable, writable } = new TransformStream();
+    const writer = writable.getWriter();
+    const encoder = new TextEncoder();
+
+    // Process the stream in the background
+    (async () => {
+      try {
+        for await (const chunk of streamingGenerator as AsyncGenerator<string>) {
+          // Format each chunk as Server-Sent Events (SSE)
+          const data = JSON.stringify({ choices: [{ delta: { content: chunk } }] });
+          const sseMessage = `data: ${data}\n\n`;
+          await writer.write(encoder.encode(sseMessage));
         }
+      } catch (error) {
+        console.error('Error processing stream:', error);
+      } finally {
+        await writer.close();
       }
-      throw new Error(`HTTP error! Status: ${response.status}`);
-    }
+    })();
 
-    return response;
+    // Return a standard Response object with the readable stream
+    return new Response(readable, {
+      headers: {
+        'Content-Type': 'text/event-stream',
+        'Cache-Control': 'no-cache',
+        Connection: 'keep-alive',
+      },
+    });
   } catch (error) {
-    // Rethrow any other errors that weren't handled
+    console.error('Error in callAIWithStream:', error);
     throw error;
   }
+}
+
+/**
+ * Legacy function for backward compatibility
+ * @deprecated Use callAIWithStream instead
+ */
+export async function callOpenRouterAPI(
+  model: string,
+  systemPrompt: string,
+  messageHistory: Array<{ role: 'user' | 'assistant'; content: string }>,
+  userMessage: string
+): Promise<Response> {
+  return callAIWithStream(model, systemPrompt, messageHistory, userMessage);
 }
 
 /**
