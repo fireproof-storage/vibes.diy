@@ -279,20 +279,6 @@ export function useSimpleChat(sessionId: string | undefined): ChatState {
     setSelectedResponseId,
   ]);
 
-  // TODO: make a version of this that only saves the first
-  // for the given message source. so one each message.
-  // const addFirstScreenshot = useCallback(
-  //   async (screenshotData: string) => {
-  //     const { rows: screenshots } = await database.query((doc: any) => [doc.session_id, doc.type], {
-  //       key: [session._id, 'screenshot'],
-  //     });
-  //     if (screenshots.length === 0) {
-  //       addScreenshot(screenshotData);
-  //     }
-  //   },
-  //   [session._id, database, addScreenshot]
-  // );
-
   const codeReady = useMemo(() => {
     return !isStreaming || selectedSegments.length > 2;
   }, [isStreaming, selectedSegments]);
