@@ -233,19 +233,13 @@ export function useSimpleChat(sessionId: string | undefined): ChatState {
             aiMessage.text = finalContent;
           }
 
-          // Then persist to session database
-          if (sessionDatabase) {
-            aiMessage.model = modelToUse;
-            // Assert the return type to include the document id
-            const { id } = (await sessionDatabase.put(aiMessage)) as { id: string };
-            // Capture the completed message *after* persistence, using the returned id
-            setPendingAiMessage({ ...aiMessage, _id: id });
-            // HACK: Always select the message that just finished streaming
-            setSelectedResponseId(id);
-          } else {
-            console.error('Session db missing');
-          }
-
+          aiMessage.model = modelToUse;
+          // Assert the return type to include the document id
+          const { id } = (await sessionDatabase.put(aiMessage)) as { id: string };
+          // Capture the completed message *after* persistence, using the returned id
+          setPendingAiMessage({ ...aiMessage, _id: id });
+          // HACK: Always select the message that just finished streaming
+          setSelectedResponseId(id);
           // Finally, generate title if needed and handle auto-selection
           const { segments } = parseContent(aiMessage.text);
 
