@@ -1,14 +1,14 @@
 import { useEffect, useRef, useState } from 'react';
-import { useNavigate, useParams } from 'react-router';
+import { useParams } from 'react-router';
 import { useSession } from '../../hooks/useSession';
 import type { ViewType } from '../../utils/ViewState';
 import { useViewState } from '../../utils/ViewState';
 import { type TokenPayload, initiateAuthFlow, parseToken, verifyToken } from '../../utils/auth';
 import {
-    BackArrowIcon,
-    CodeIcon,
-    DataIcon,
-    PreviewIcon,
+  BackArrowIcon,
+  CodeIcon,
+  DataIcon,
+  PreviewIcon,
 } from '../HeaderContent/SvgIcons';
 import { PublishMenu } from '../PublishMenu';
 import { UserMenu } from '../UserMenu';
@@ -38,7 +38,6 @@ const ResultPreviewHeaderContent: React.FC<ResultPreviewHeaderContentProps> = ({
   title: propTitle,
   isIframeFetching = false,
 }) => {
-  const navigate = useNavigate();
   const { sessionId: urlSessionId, view: urlView } = useParams();
   const [userInfo, setUserInfo] = useState<TokenPayload | null>(null);
   const [isUserAuthenticated, setIsUserAuthenticated] = useState(false);

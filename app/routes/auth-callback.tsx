@@ -1,10 +1,6 @@
 import type { LoaderFunctionArgs } from 'react-router';
 import { redirect } from 'react-router';
 
-interface LoaderData {
-  success: boolean;
-}
-
 /**
  * Loader function that handles token processing and storage operations
  * This is more efficient than handling in useEffect
