@@ -6,7 +6,7 @@ import { parseContent, parseDependencies } from '../utils/segmentParser';
 import { useSession } from './useSession';
 import { useFireproof } from 'use-fireproof';
 import { generateTitle } from '../utils/titleGenerator';
-import { processStream, callOpenRouterAPI } from '../utils/streamHandler';
+import { streamAI } from '../utils/streamHandler';
 
 const CODING_MODEL = 'anthropic/claude-3.7-sonnet';
 // const CODING_MODEL = 'openrouter/quasar-alpha';
@@ -211,8 +211,7 @@ export function useSimpleChat(sessionId: string | undefined): ChatState {
       }
     }
 
-    // Reset stream buffer and set streaming state
-    streamBufferRef.current = '';
+    // Set streaming state
     setIsStreaming(true);
 
     // Submit user message first
@@ -221,24 +220,24 @@ export function useSimpleChat(sessionId: string | undefined): ChatState {
         const messageHistory = buildMessageHistory();
         // Use the hoisted modelToUse variable from the hook scope
         // Use the locally captured system prompt value, not the state variable
-        return callOpenRouterAPI(modelToUse, currentSystemPrompt, messageHistory, userMessage.text);
+        return streamAI(
+          modelToUse,
+          currentSystemPrompt,
+          messageHistory,
+          userMessage.text,
+          // This callback receives the complete content so far
+          (content) => throttledMergeAiMessage(content)
+        );
       })
-      .then((response) => {
-        return processStream(response, (content) => {
-          // Append to buffer and use throttled update
-          streamBufferRef.current += content;
-          throttledMergeAiMessage(streamBufferRef.current);
-        });
-      })
-      .then(async () => {
+      .then(async (finalContent) => {
         // Set processing flag to prevent infinite updates
         isProcessingRef.current = true;
 
         try {
-          // Only do a final update if the current state doesn't match our buffer
-          if (aiMessage.text !== streamBufferRef.current) {
+          // Only do a final update if the current state doesn't match our final content
+          if (aiMessage.text !== finalContent) {
             // First update the aiMessage object (no state update)
-            aiMessage.text = streamBufferRef.current;
+            aiMessage.text = finalContent;
           }
 
           // Then persist to session database

@@ -1,5 +1,6 @@
 import type { Segment } from '../types/chat';
 import { CALLAI_API_KEY } from '../config/env';
+import { callAI, type Message } from 'call-ai';
 
 /**
  * Generate a title based on the first two segments (markdown and code)
@@ -25,36 +26,35 @@ export async function generateTitle(segments: Segment[], model: string): Promise
     titleContent += '```\n' + firstCode.content.split('\n').slice(0, 15).join('\n') + '\n```';
   }
 
-  const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-    method: 'POST',
+  // Format messages for callAI
+  const messages: Message[] = [
+    {
+      role: 'system',
+      content:
+        'You are a helpful assistant that generates short, descriptive titles. Create a concise title (3-5 words) that captures the essence of the content. Return only the title, no other text or markup. Don\'t say "Fireproof" or "app".',
+    },
+    {
+      role: 'user',
+      content: `Generate a short, descriptive title (3-5 words) for this app, use the React JSX <h1> tag's value if you can find it:\n\n${titleContent}`,
+    },
+  ];
+
+  // Configure callAI options
+  const options = {
+    apiKey: CALLAI_API_KEY,
+    model: model,
     headers: {
-      Authorization: `Bearer ${CALLAI_API_KEY}`,
-      'Content-Type': 'application/json',
       'HTTP-Referer': 'https://vibes.diy',
       'X-Title': 'Vibes DIY',
     },
-    body: JSON.stringify({
-      model,
-      stream: false,
-      messages: [
-        {
-          role: 'system',
-          content:
-            'You are a helpful assistant that generates short, descriptive titles. Create a concise title (3-5 words) that captures the essence of the content. Return only the title, no other text or markup. Don\'t say "Fireproof" or "app".',
-        },
-        {
-          role: 'user',
-          content: `Generate a short, descriptive title (3-5 words) for this app, use the React JSX <h1> tag's value if you can find it:\n\n${titleContent}`,
-        },
-      ],
-    }),
-  });
+  };
 
-  if (response.ok) {
-    const data = await response.json();
-    const newTitle = data.choices[0]?.message?.content?.trim();
-    return newTitle || 'New Chat';
+  try {
+    // Use callAI to get the title
+    const title = (await callAI(messages, options)) as string;
+    return title.trim() || 'New Chat';
+  } catch (error) {
+    console.error('Error generating title:', error);
+    return 'New Chat';
   }
-
-  return 'New Chat';
 }
