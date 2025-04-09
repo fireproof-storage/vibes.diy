@@ -87,7 +87,7 @@ const ResultPreviewHeaderContent: React.FC<ResultPreviewHeaderContentProps> = ({
         // If we have a token and it's valid, use it
         if (token && (await verifyToken(token))) {
           const payload = parseToken(token);
-          if (payload && payload.exp * 1000 > Date.now()) {
+          if (payload && payload.exp > Date.now()) {
             setUserInfo(payload);
             setIsUserAuthenticated(true);
             setIsVerifying(false);
