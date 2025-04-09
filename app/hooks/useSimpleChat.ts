@@ -35,7 +35,6 @@ export function useSimpleChat(sessionId: string | undefined): ChatState {
   } = useSession(sessionId);
 
   // First declare ALL ref hooks to maintain hook order consistency
-  const streamBufferRef = useRef<string>('');
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const isProcessingRef = useRef<boolean>(false);
   const lastUpdateTimeRef = useRef<number>(0);
@@ -142,9 +141,6 @@ export function useSimpleChat(sessionId: string | undefined): ChatState {
 
   const throttledMergeAiMessage = useCallback(
     (content: string) => {
-      // Store content in ref to ensure latest content is always available
-      streamBufferRef.current = content;
-
       // If we're already processing a database operation, don't trigger more updates
       if (isProcessingRef.current) {
         return;
@@ -177,14 +173,11 @@ export function useSimpleChat(sessionId: string | undefined): ChatState {
 
       // Schedule update with calculated delay
       updateTimeoutRef.current = setTimeout(() => {
-        // Capture the current content at time of execution
-        const currentContent = streamBufferRef.current;
-
         // Record update time before the actual update
         lastUpdateTimeRef.current = Date.now();
 
-        // Only update if the content has actually changed
-        mergeAiMessage({ text: currentContent });
+        // Update with the content passed directly to this function
+        mergeAiMessage({ text: content });
       }, delay);
     },
     [mergeAiMessage]
@@ -278,7 +271,6 @@ export function useSimpleChat(sessionId: string | undefined): ChatState {
     userMessage.text,
     systemPrompt,
     setSystemPrompt,
-    streamBufferRef,
     setIsStreaming,
     submitUserMessage,
     buildMessageHistory,
