@@ -7,6 +7,7 @@ import { useSession } from './useSession';
 import { useFireproof } from 'use-fireproof';
 import { generateTitle } from '../utils/titleGenerator';
 import { streamAI } from '../utils/streamHandler';
+import { CALLAI_API_KEY } from '../config/env';
 
 const CODING_MODEL = 'anthropic/claude-3.7-sonnet';
 // const CODING_MODEL = 'openrouter/quasar-alpha';
@@ -219,7 +220,8 @@ export function useSimpleChat(sessionId: string | undefined): ChatState {
           messageHistory,
           userMessage.text,
           // This callback receives the complete content so far
-          (content) => throttledMergeAiMessage(content)
+          (content) => throttledMergeAiMessage(content),
+          CALLAI_API_KEY
         );
       })
       .then(async (finalContent) => {
@@ -244,7 +246,7 @@ export function useSimpleChat(sessionId: string | undefined): ChatState {
           const { segments } = parseContent(aiMessage.text);
 
           if (!session?.title) {
-            await generateTitle(segments, TITLE_MODEL).then(updateTitle);
+            await generateTitle(segments, TITLE_MODEL, CALLAI_API_KEY).then(updateTitle);
           }
         } finally {
           // Always clear the processing flag
