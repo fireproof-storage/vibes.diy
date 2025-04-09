@@ -2,9 +2,9 @@ import { useCallback, useState } from 'react';
 import { useFireproof } from 'use-fireproof';
 import { FIREPROOF_CHAT_HISTORY } from '../config/env';
 import type {
-  UserChatMessageDocument,
-  AiChatMessageDocument,
-  SessionDocument,
+    AiChatMessageDocument,
+    SessionDocument,
+    UserChatMessageDocument,
 } from '../types/chat';
 import { getSessionDatabaseName } from '../utils/databaseManager';
 
@@ -82,6 +82,16 @@ export function useSession(routedSessionId?: string) {
     [mainDatabase, mergeSession, session, sessionDatabase]
   );
 
+  // Update published URL (in main database)
+  const updatePublishedUrl = useCallback(
+    async (publishedUrl: string) => {
+      session.publishedUrl = publishedUrl;
+      await mainDatabase.put(session);
+      mergeSession({ publishedUrl });
+    },
+    [mainDatabase, mergeSession, session]
+  );
+
   // Add a screenshot to the session (in session-specific database)
   const addScreenshot = useCallback(
     async (screenshotData: string | null) => {
@@ -120,6 +130,7 @@ export function useSession(routedSessionId?: string) {
 
     // Session management functions
     updateTitle,
+    updatePublishedUrl,
     addScreenshot,
 
     // Message management

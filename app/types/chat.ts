@@ -52,6 +52,7 @@ export interface SessionDocument extends DocTypes {
   title?: string;
   created_at: number;
   favorite?: boolean; // Added favorite property for starring sessions
+  publishedUrl?: string; // URL where the app is published
   messages?: Array<{
     text: string;
     type: 'user' | 'ai';
