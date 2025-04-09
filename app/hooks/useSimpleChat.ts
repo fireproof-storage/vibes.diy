@@ -6,7 +6,7 @@ import { useSession } from './useSession';
 import { useFireproof } from 'use-fireproof';
 import { generateTitle } from '../utils/titleGenerator';
 import { streamAI } from '../utils/streamHandler';
-import { CALLAI_API_KEY } from '../config/env';
+import { useApiKey } from './useApiKey';
 
 // Import our custom hooks
 import { useSystemPromptManager } from './useSystemPromptManager';
@@ -23,6 +23,9 @@ const TITLE_MODEL = 'google/gemini-2.0-flash-lite-001';
  * @returns ChatState object with all chat functionality and state
  */
 export function useSimpleChat(sessionId: string | undefined): ChatState {
+  // Get API key
+  const { apiKey } = useApiKey();
+
   // Get session data
   const {
     session,
@@ -90,6 +93,10 @@ export function useSimpleChat(sessionId: string | undefined): ChatState {
    */
   const sendMessage = useCallback(async (): Promise<void> => {
     if (!userMessage.text.trim()) return;
+    if (!apiKey) {
+      console.error('API key not available yet');
+      return;
+    }
 
     // Ensure we have a system prompt
     const currentSystemPrompt = await ensureSystemPrompt();
@@ -107,7 +114,7 @@ export function useSimpleChat(sessionId: string | undefined): ChatState {
           messageHistory,
           userMessage.text,
           (content) => throttledMergeAiMessage(content),
-          CALLAI_API_KEY
+          apiKey || ''
         );
       })
       .then(async (finalContent) => {
@@ -130,7 +137,7 @@ export function useSimpleChat(sessionId: string | undefined): ChatState {
           // Generate title if needed
           const { segments } = parseContent(aiMessage.text);
           if (!session?.title) {
-            await generateTitle(segments, TITLE_MODEL, CALLAI_API_KEY).then(updateTitle);
+            await generateTitle(segments, TITLE_MODEL, apiKey || '').then(updateTitle);
           }
         } finally {
           isProcessingRef.current = false;

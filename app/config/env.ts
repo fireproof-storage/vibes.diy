@@ -38,3 +38,5 @@ export const CALLAI_API_KEY =
   import.meta.env.VITE_CALLAI_API_KEY || import.meta.env.VITE_OPENROUTER_API_KEY;
 // Deprecated: Use CALLAI_API_KEY instead
 // export const OPENROUTER_API_KEY = CALLAI_API_KEY;
+
+export const OPENROUTER_PROV_KEY = import.meta.env.VITE_OPENROUTER_PROV_KEY;
