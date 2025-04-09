@@ -14,6 +14,7 @@ vi.mock('use-fireproof', () => ({
   useFireproof: () => ({
     database: {},
     useLiveQuery: () => ({ docs: [] }),
+    useAllDocs: () => ({ docs: [] }),
   }),
 }));
 

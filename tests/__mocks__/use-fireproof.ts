@@ -52,6 +52,12 @@ const useFireproof = vi.fn().mockImplementation(() => ({
     const queryStr = typeof query === 'string' ? query : '';
     return getQueryResult(queryStr);
   }),
+  useAllDocs: vi.fn().mockImplementation(() => {
+    console.log('useAllDocs mock called');
+    return {
+      docs: mockSessions,
+    };
+  }),
   useDocument: vi.fn().mockReturnValue({
     doc: mockSessions[0],
     merge: vi.fn(),
