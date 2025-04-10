@@ -114,7 +114,7 @@ export function useSimpleChat(sessionId: string | undefined): ChatState {
       const credits = await getCredits(apiKey);
       console.log('💳 Credits:', credits);
 
-      if (credits && credits.available <= 0.7) {
+      if (credits && credits.available <= 0.75) {
         setNeedsNewKey(true);
       }
     } catch (error) {
@@ -158,6 +158,28 @@ export function useSimpleChat(sessionId: string | undefined): ChatState {
         isProcessingRef.current = true;
 
         try {
+          // Check if finalContent is a string that could be JSON
+          if (typeof finalContent === 'string' && finalContent.startsWith('{')) {
+            try {
+              const parsedContent = JSON.parse(finalContent);
+
+              // Check if there's an error property
+              if (parsedContent.error) {
+                console.log('Error in API response:', parsedContent);
+                setNeedsNewKey(true);
+                // Preserve the user message in case they want to retry
+                setInput(userMessage.text);
+                // Return early with an error message
+                finalContent = `Error: ${JSON.stringify(parsedContent.error)}`;
+              } else {
+                // If no error, continue with the parsed content
+                finalContent = parsedContent;
+              }
+            } catch (jsonError) {
+              console.log('Error parsing JSON response:', jsonError, finalContent);
+            }
+          }
+
           // Handle empty responses with a friendly message
           if (
             !finalContent ||

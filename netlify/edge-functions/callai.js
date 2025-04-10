@@ -69,12 +69,9 @@ export default async (request, context) => {
 async function handleCreateKey(requestData, provisioningKey, userId) {
   console.log(`🔑 Edge Function: Creating key for user: ${userId}`);
   try {
-    // Use the requestData that was already parsed
     const { name = 'Session Key', label = `session-${Date.now()}` } = requestData;
 
-    // Set dollar amount based on user authentication status
-    // Anonymous users get $0.75, logged-in users get $1.00
-    const dollarAmount = userId !== 'anonymous' ? 2.0 : 1.0;
+    const dollarAmount = userId !== 'anonymous' ? 2.50 : 1.25;
     console.log(
       `💰 Edge Function: Setting dollar amount to $${dollarAmount} for ${userId !== 'anonymous' ? 'authenticated' : 'anonymous'} user`
     );
