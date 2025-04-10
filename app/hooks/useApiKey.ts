@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
-import { OPENROUTER_PROV_KEY } from '../config/env';
+import { CALLAI_API_KEY } from '../config/env';
 import { createSessionKey } from '../config/provisioning';
 import { createKeyViaEdgeFunction } from '../services/apiKeyService';
 
@@ -63,12 +63,12 @@ export function useApiKey(userId?: string) {
     console.log('[useApiKey] Checking conditions:', {
       hasApiKey: !!apiKey,
       isLoading,
-      hasProvKey: !!OPENROUTER_PROV_KEY,
+      hasCallaiKey: !!CALLAI_API_KEY,
       hasFetchStarted: hasFetchStarted.current,
       hasUserId: !!userId,
     });
 
-    if (!apiKey && !isLoading && OPENROUTER_PROV_KEY && !hasFetchStarted.current) {
+    if (!apiKey && !isLoading && CALLAI_API_KEY && !hasFetchStarted.current) {
       // Set ref to true to prevent double fetching in React dev mode
       hasFetchStarted.current = true;
       const fetchApiKey = async () => {
@@ -94,7 +94,7 @@ export function useApiKey(userId?: string) {
             if (isDev) {
               // In dev mode, use direct API call as a fallback
               console.log('[useApiKey] Dev mode detected, using direct API call');
-              keyData = await createSessionKey(OPENROUTER_PROV_KEY, 0.5, {
+              keyData = await createSessionKey(CALLAI_API_KEY, 0.5, {
                 name: userId ? `Vibes.DIY User Session` : 'Vibes.DIY Anonymous Session',
                 label: keyLabel,
               });
@@ -110,7 +110,7 @@ export function useApiKey(userId?: string) {
             );
 
             // Fall back to direct API call if Edge Function fails
-            keyData = await createSessionKey(OPENROUTER_PROV_KEY, 0.5, {
+            keyData = await createSessionKey(CALLAI_API_KEY, 0.5, {
               name: userId ? `Vibes.DIY User Session` : 'Vibes.DIY Anonymous Session',
               label: keyLabel,
             });

@@ -9,5 +9,5 @@
   status = 200
 
 [[edge_functions]]
-  path = "/api/openrouter/*"
-  function = "openrouter"
+  path = "/api/callai/*"
+  function = "callai"

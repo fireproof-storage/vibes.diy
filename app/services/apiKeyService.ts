@@ -1,9 +1,9 @@
 /**
- * Service for managing OpenRouter API keys through Netlify Edge Functions
+ * Service for managing CallAI API keys through Netlify Edge Functions
  */
 
 /**
- * Creates a new OpenRouter session key through the secure Netlify Edge Function
+ * Creates a new session key through the secure Netlify Edge Function
  * @param userId Optional user ID to associate with the key
  * @param dollarAmount Dollar amount limit for the key
  * @returns The created key data
@@ -22,7 +22,7 @@ export async function createKeyViaEdgeFunction(
   created_at: string;
   updated_at: string;
 }> {
-  const response = await fetch('/api/openrouter/create-key', {
+  const response = await fetch('/api/callai/create-key', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -55,7 +55,7 @@ export async function checkCreditsViaEdgeFunction(keyHash: string): Promise<{
   usage: number;
   limit: number;
 }> {
-  const response = await fetch('/api/openrouter/check-credits', {
+  const response = await fetch('/api/callai/check-credits', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',

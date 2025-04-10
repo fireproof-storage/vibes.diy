@@ -4,21 +4,21 @@
  * Creates a new OpenRouter API key and checks its credit information
  */
 import { createSessionKey, getCredits } from '../app/config/provisioning';
-import { OPENROUTER_PROV_KEY } from '../app/config/env';
+import { CALLAI_API_KEY } from '../app/config/env';
 
 /**
  * Creates a new API key and returns the key data
  * @param dollarAmount - Dollar amount to set as credit limit
  */
 async function createApiKey(dollarAmount = 0.01) {
-  if (!OPENROUTER_PROV_KEY) {
-    throw new Error('No provisioning key found in environment variables');
+  if (!CALLAI_API_KEY) {
+    throw new Error('No API key found in environment variables');
   }
 
   console.log(`Creating new API key with $${dollarAmount} limit...`);
 
   try {
-    const keyData = await createSessionKey(OPENROUTER_PROV_KEY, dollarAmount, {
+    const keyData = await createSessionKey(CALLAI_API_KEY, dollarAmount, {
       name: 'Vibes.DIY CLI Session',
       label: `vibes-cli-${Date.now()}`,
     });
