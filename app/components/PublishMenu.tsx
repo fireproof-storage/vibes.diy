@@ -209,11 +209,11 @@ export function PublishMenu({
               type="button"
               onClick={handlePublish}
               disabled={isPublishing}
-              className="block w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50 dark:text-gray-200 dark:hover:bg-gray-700"
+              className="block px-4 py-2 w-full rounded-md text-center text-sm text-gray-700 hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50 dark:text-gray-200 dark:hover:bg-gray-700"
               role="menuitem"
             >
               <div className="flex items-center justify-between">
-                <span>Publish App</span>
+                <span className="text-center w-full font-bold">Publish App</span>
                 {isPublishing && (
                   <svg
                     className="h-4 w-4 animate-spin text-gray-500"
