@@ -130,43 +130,25 @@ export function useSimpleChat(sessionId: string | undefined): ChatState {
 
         try {
           // Check for various error cases including empty responses and different error formats
-          console.log('Final content type:', typeof finalContent);
-          console.log('Final content length:', finalContent ? finalContent.length : 0);
           
           // Empty response detection - a sign of possible API issues
           if (!finalContent || (typeof finalContent === 'string' && finalContent.trim().length === 0)) {
-            console.log('Empty response detected - possible API error');
-            
             // We should check credits to see if this is a credit issue
             if (apiKey) {
-              console.log('Checking credits to determine if this is a credit issue');
               try {
                 const credits = await getCredits(apiKey);
                 if (credits && credits.available <= 0) {
-                  console.log('No credits available - need new key');
                   setNeedsNewKey(true);
                   return;
                 } else {
-                  console.log('Credits available but got empty response - likely rate limiting or other API error');
                   // We'll use a default message instead of empty response
                   finalContent = 'Sorry, there was an error processing your request. Please try again in a moment.';
                 }
               } catch (creditError) {
-                console.error('Error checking credits:', creditError);
                 // Default message for error case
                 finalContent = 'Unable to process request. Please try again later.';
               }
             }
-          }
-          
-          // For debugging - show first/last part of content if it's long
-          if (typeof finalContent === 'string' && finalContent.length > 100) {
-            console.log('Content preview:', 
-              finalContent.substring(0, 50) + '...' + 
-              finalContent.substring(finalContent.length - 50)
-            );
-          } else {
-            console.log('Full content:', finalContent);
           }
           
           // If it's a string that looks like JSON, try parsing it for error detection
@@ -176,31 +158,24 @@ export function useSimpleChat(sessionId: string | undefined): ChatState {
             if (trimmed.startsWith('{') || trimmed.startsWith('[')) {
               try {
                 const parsedContent = JSON.parse(trimmed);
-                console.log('Successfully parsed JSON');
                 
                 // Check for different error formats
                 
                 // 1. OpenRouter format with user_id
                 if (parsedContent.error && parsedContent.user_id) {
-                  console.log('OpenRouter error format detected:', parsedContent.error);
-                  
                   if (parsedContent.error.code === 402 || 
                       (parsedContent.error.message && 
                        parsedContent.error.message.includes('requires more credits'))) {
-                    console.log('Credit limit error - need new key');
                     setNeedsNewKey(true);
                     return;
                   }
                 }
                 // 2. CallAI format (according to docs)
                 else if (parsedContent.error && parsedContent.message) {
-                  console.log('CallAI error format detected:', parsedContent);
-                  
                   // Check for credit-related issues in message
                   if (parsedContent.message.includes('credit') || 
                       parsedContent.message.includes('quota') ||
                       parsedContent.message.includes('limit')) {
-                    console.log('Credit/quota limit error detected in message');
                     setNeedsNewKey(true);
                     return;
                   }

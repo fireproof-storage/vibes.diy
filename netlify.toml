@@ -4,7 +4,7 @@
   functions = "netlify/functions"
 
 [dev]
-  command = "pnpm run dev"
+  command = "react-router dev"
   targetPort = 5173
   framework = "#custom"
 
