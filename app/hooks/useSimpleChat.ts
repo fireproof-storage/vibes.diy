@@ -180,33 +180,10 @@ export function useSimpleChat(sessionId: string | undefined): ChatState {
                     return;
                   }
                 }
-                // 3. Direct error object
-                else if (parsedContent.code === 402 || 
-                         (parsedContent.message && 
-                          (parsedContent.message.includes('credit') || 
-                           parsedContent.message.includes('quota') || 
-                           parsedContent.message.includes('limit')))) {
-                  console.log('Direct error object detected:', parsedContent);
-                  console.log('Credit/quota limit error detected');
-                  setNeedsNewKey(true);
-                  return;
-                }
-              } catch (e) {
-                // Add details about what failed to parse for debugging
-                console.log('JSON parse error:', e);
-                console.log('Content that failed to parse:', trimmed.length > 100 ? 
-                  trimmed.substring(0, 50) + '...' + trimmed.substring(trimmed.length - 50) : 
-                  trimmed
-                );
+              } catch (e: any) {
+                // Parsing failed, but no need to log errors
               }
-            } else {
-              // Not JSON format (doesn't start with { or [)
-              console.log('Content doesn\'t look like JSON:', 
-                trimmed.length > 100 ? trimmed.substring(0, 100) + '...' : trimmed
-              );
             }
-          } else if (!finalContent) {
-            console.log('Content is empty or undefined');
           }
 
           // Only do a final update if the current state doesn't match our final content
@@ -230,12 +207,13 @@ export function useSimpleChat(sessionId: string | undefined): ChatState {
           isProcessingRef.current = false;
         }
       })
-      .catch((error) => {
-        console.error('Error processing stream:', error);
-        
-        // Check for our special credit limit error thrown by streamAI
-        if (error.message && error.message.startsWith('CREDIT_LIMIT_ERROR:')) {
-          console.log('Credit limit error caught from streamAI');
+      .catch((error: any) => {
+        // Check for credit limit errors in the new CallAI 0.6.4 format
+        if (error.message && (
+          error.message.includes('credit') || 
+          error.message.includes('402') || 
+          error.message.includes('limit')
+        )) {
           setNeedsNewKey(true);
         }
         
@@ -247,13 +225,11 @@ export function useSimpleChat(sessionId: string | undefined): ChatState {
         if (apiKey) {
           getCredits(apiKey)
             .then((credits: { available: number; usage: number; limit: number }) => {
-              console.log('Remaining credits:', credits);
+              // Credits fetched successfully (no need to log here)
             })
             .catch((error: Error) => {
-              console.error('Failed to fetch credits:', error);
+              // Error checking credits (handled silently)
             });
-        } else {
-          console.error('API key not available to fetch credits');
         }
 
         setIsStreaming(false);

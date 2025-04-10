@@ -23,7 +23,7 @@ export async function streamAI(
   onContent: (content: string) => void,
   apiKey: string
 ): Promise<string> {
-  console.log('streamAI: Starting with model:', model);
+  // Stream process starts
   
   // Format messages for call-ai
   const messages: Message[] = [
@@ -64,7 +64,7 @@ export async function streamAI(
       throw streamError;
     }
   } catch (initialError) {
-    console.error('streamAI: Error creating generator:', initialError);
+    // Re-throw any initialization errors
     throw initialError;
   }
 }
