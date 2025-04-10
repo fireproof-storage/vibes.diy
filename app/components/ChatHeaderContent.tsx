@@ -5,9 +5,15 @@ interface ChatHeaderContentProps {
   onOpenSidebar: () => void;
   title: string;
   isStreaming: boolean;
+  codeReady: boolean;
 }
 
-function ChatHeaderContent({ onOpenSidebar, title, isStreaming }: ChatHeaderContentProps) {
+function ChatHeaderContent({
+  onOpenSidebar,
+  title,
+  isStreaming,
+  codeReady,
+}: ChatHeaderContentProps) {
   return (
     <div className="flex h-full w-full items-center justify-between p-2 py-4">
       <div className="flex items-center">
@@ -22,7 +28,7 @@ function ChatHeaderContent({ onOpenSidebar, title, isStreaming }: ChatHeaderCont
       </div>
       <div className="text-light-primary dark:text-dark-primary text-center text-sm">{title}</div>
 
-      {(title || isStreaming) && (
+      {(codeReady || isStreaming || title) && (
         <div className="relative px-2">
           <a
             href="/"
@@ -49,6 +55,7 @@ export default memo(ChatHeaderContent, (prevProps, nextProps) => {
   return (
     prevProps.onOpenSidebar === nextProps.onOpenSidebar &&
     prevProps.title === nextProps.title &&
-    prevProps.isStreaming === nextProps.isStreaming
+    prevProps.isStreaming === nextProps.isStreaming &&
+    prevProps.codeReady === nextProps.codeReady
   );
 });

@@ -228,6 +228,7 @@ export default function UnifiedSession() {
           <ChatHeaderContent
             onOpenSidebar={openSidebar}
             isStreaming={chatState.isStreaming}
+            codeReady={chatState.codeReady}
             title={chatState.title || ''}
           />
         }

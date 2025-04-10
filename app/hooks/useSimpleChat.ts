@@ -129,7 +129,7 @@ export function useSimpleChat(sessionId: string | undefined): ChatState {
       const credits = await getCredits(apiKey);
       console.log('💳 Credits:', credits);
 
-      if (credits && credits.available <= 0.75) {
+      if (credits && credits.available <= 0.9) {
         setNeedsNewKey(true);
       }
     } catch (error) {
