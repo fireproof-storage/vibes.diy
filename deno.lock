@@ -28,7 +28,7 @@
         "npm:@types/react-dom@^19.0.4",
         "npm:@types/react@^19.0.10",
         "npm:@vitest/coverage-v8@^3.0.8",
-        "npm:call-ai@0.6.1",
+        "npm:call-ai@0.6.3",
         "npm:isbot@^5.1.17",
         "npm:jsdom@26",
         "npm:prettier-plugin-tailwindcss@~0.6.11",

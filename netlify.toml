@@ -3,6 +3,11 @@
   command = "pnpm run build"
   functions = "netlify/functions"
 
+[dev]
+  command = "pnpm run dev"
+  targetPort = 5173
+  framework = "#custom"
+
 [[redirects]]
   from = "/*"
   to = "/index.html"

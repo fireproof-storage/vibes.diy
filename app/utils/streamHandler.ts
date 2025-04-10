@@ -38,6 +38,7 @@ export async function streamAI(
     apiKey: apiKey,
     model: model,
     stream: true,
+    debug: true, // Enable debugging to log raw SSE responses
     headers: {
       'HTTP-Referer': 'https://vibes.diy',
       'X-Title': 'Vibes DIY',
@@ -61,16 +62,22 @@ export async function streamAI(
         // Each yielded content already contains the full accumulated text
         finalResponse = content;
 
-        // Log a preview of the content periodically
-        if (chunkCount % 10 === 0 || chunkCount < 3) {
-          const preview = content.length > 100 ? 
-            `${content.substring(0, 50)}...${content.substring(content.length - 50)}` : 
-            content;
-          console.log(`streamAI: Chunk #${chunkCount}, length: ${content.length}, preview: ${preview}`);
-          
-          // Check if the content looks like a JSON error
-          if (content.includes('"error"') && content.includes('"code"')) {
-            console.log('streamAI: Potential error in response:', content);
+        // LOG EVERYTHING, exactly as received
+        console.log(`
+---------------------------------------------------
+RAW CONTENT #${chunkCount}:
+---------------------------------------------------`);
+        console.log(content);
+        console.log(`
+---------------------------------------------------
+END RAW CONTENT #${chunkCount}, TYPE: ${typeof content}, LENGTH: ${content ? content.length : 0}
+---------------------------------------------------`);
+        
+        // Specifically look for error patterns but just log them
+        if (typeof content === 'string') {
+          if (content.includes('error') || content.includes('402') || content.includes('credit')) {
+            console.log(`
+🔴🔴🔴 ERROR PATTERN DETECTED IN CHUNK #${chunkCount} 🔴🔴🔴`);
           }
         }
 
