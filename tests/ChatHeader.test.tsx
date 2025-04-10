@@ -17,14 +17,14 @@ describe('ChatHeader', () => {
   });
 
   it('renders correctly', () => {
-    render(<ChatHeader onOpenSidebar={onOpenSidebar} title="Test Chat" />);
+    render(<ChatHeader onOpenSidebar={onOpenSidebar} title="Test Chat" isStreaming={false} />);
 
     expect(screen.getByLabelText('Open chat history')).toBeDefined();
     expect(screen.getByLabelText('New Vibe')).toBeDefined();
   });
 
   it('calls openSidebar when the sidebar button is clicked', () => {
-    render(<ChatHeader onOpenSidebar={onOpenSidebar} title="Test Chat" />);
+    render(<ChatHeader onOpenSidebar={onOpenSidebar} title="Test Chat" isStreaming={false} />);
 
     const openButton = screen.getByLabelText('Open chat history');
     fireEvent.click(openButton);
@@ -33,7 +33,7 @@ describe('ChatHeader', () => {
   });
 
   it('navigates to home when the new chat button is clicked', () => {
-    render(<ChatHeader onOpenSidebar={onOpenSidebar} title="Test Chat" />);
+    render(<ChatHeader onOpenSidebar={onOpenSidebar} title="Test Chat" isStreaming={false} />);
 
     // Just verify the new vibe button exists since we can't easily mock document.location
     const newVibeButton = screen.getByLabelText('New Vibe');

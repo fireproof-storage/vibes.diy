@@ -95,19 +95,19 @@ describe('Component Rendering', () => {
 
   describe('ChatHeader', () => {
     it('renders without crashing', () => {
-      render(<ChatHeader onOpenSidebar={onOpenSidebar} title="Test Chat" />);
+      render(<ChatHeader onOpenSidebar={onOpenSidebar} title="Test Chat" isStreaming={false} />);
       expect(screen.getByText('Test Chat')).toBeInTheDocument();
     });
 
     it('applies tooltip classes correctly', () => {
-      render(<ChatHeader onOpenSidebar={onOpenSidebar} title="Test Chat" />);
+      render(<ChatHeader onOpenSidebar={onOpenSidebar} title="Test Chat" isStreaming={false} />);
       expect(
         screen.getByText('New Vibe', { selector: 'span.pointer-events-none' })
       ).toBeInTheDocument();
     });
 
     it('handles new chat button click', () => {
-      render(<ChatHeader onOpenSidebar={onOpenSidebar} title="Test Chat" />);
+      render(<ChatHeader onOpenSidebar={onOpenSidebar} title="Test Chat" isStreaming={false} />);
 
       // Just verify the new vibe button exists since we can't easily mock document.location
       const newVibeButton = screen.getByLabelText('New Vibe');
