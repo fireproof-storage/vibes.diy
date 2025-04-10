@@ -16,3 +16,40 @@
 [[edge_functions]]
   path = "/api/callai/*"
   function = "callai"
+
+# No caching for Netlify system files
+[[headers]]
+  for = "/.netlify/*"
+  [headers.values]
+    Cache-Control = "no-store, no-cache"
+
+# HTML files - revalidate but allow serving stale during revalidation
+# This applies to all route paths in your SPA
+[[headers]]
+  for = "/*"
+  [headers.values]
+    Cache-Control = "public, max-age=0, must-revalidate"
+
+# JavaScript files with content hashes - immutable and long cache
+[[headers]]
+  for = "/assets/*.js"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+# CSS files with content hashes - immutable and long cache
+[[headers]]
+  for = "/assets/*.css"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+# Image files - immutable and long cache
+[[headers]]
+  for = "/assets/*.{png,jpg,jpeg,gif,webp,svg,ico}"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+# Fonts - immutable and long cache
+[[headers]]
+  for = "/assets/*.{woff,woff2,ttf,otf,eot}"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
