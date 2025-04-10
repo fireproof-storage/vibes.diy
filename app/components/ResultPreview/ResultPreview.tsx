@@ -109,20 +109,19 @@ function ResultPreview({
 
           // Only check localStorage if no dev key is set
           if (!apiKey) {
-            console.log('No dev API key found, checking localStorage...');
-            // Check localStorage for API key
+
             const storedKey = localStorage.getItem('vibes-openrouter-key');
             if (storedKey) {
               try {
                 const keyData = JSON.parse(storedKey);
                 apiKey = keyData.key;
-                console.log('Using API key from localStorage for iframe');
+
               } catch (e) {
-                console.error('Error parsing stored API key:', e);
+
               }
             }
           } else {
-            console.log('Using dev API key for iframe');
+
           }
 
           const iframe = document.querySelector('iframe') as HTMLIFrameElement;
@@ -154,7 +153,7 @@ function ResultPreview({
             onScreenshotCaptured(data.data);
           }
         } else if (data.type === 'screenshot-error' && data.error) {
-          console.warn('Screenshot capture error:', data.error);
+
           // Still call onScreenshotCaptured with null to signal that the screenshot failed
           if (onScreenshotCaptured) {
             onScreenshotCaptured(null);
