@@ -2,6 +2,8 @@
  * Utilities for publishing apps to the server
  */
 
+import { normalizeComponentExports } from './normalizeComponentExports';
+
 /**
  * Transform bare import statements to use esm.sh URLs
  * @param code The source code to transform
@@ -46,7 +48,7 @@ export async function publishApp({
     const normalizedCode = code.replace(/\r\n/g, '\n').trim();
 
     // Transform imports to use esm.sh
-    const transformedCode = transformImports(normalizedCode);
+    const transformedCode = transformImports(normalizeComponentExports(normalizedCode));
 
     const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8787';
 
