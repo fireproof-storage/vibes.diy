@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { CALLAI_API_KEY } from '../config/env';
 import { createKeyViaEdgeFunction } from '../services/apiKeyService';
 
@@ -54,7 +54,7 @@ export function useApiKey(userId?: string) {
   }, [storageKey]); // Only re-run if storageKey changes (e.g., if userId changes)
 
   // Function to fetch a new key - moved outside useEffect for reuse
-  const fetchNewKey = async () => {
+  const fetchNewKey = useCallback(async () => {
     setIsLoading(true);
     setError(null);
 
@@ -93,7 +93,12 @@ export function useApiKey(userId?: string) {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [userId, storageKey]);
 
-  return { apiKey, isLoading, error };
+  const refreshKey = useCallback(async () => {
+    // todo test for userId
+    return await fetchNewKey();
+  }, [fetchNewKey]);
+
+  return { apiKey, isLoading, error, refreshKey };
 }

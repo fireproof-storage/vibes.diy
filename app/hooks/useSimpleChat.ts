@@ -30,7 +30,7 @@ export function useSimpleChat(sessionId: string | undefined): ChatState {
   // This approach ensures anonymous users get one API key with limited credits
   // and logged-in users will get proper credit assignment based on their ID
   const userId = undefined; // Will come from auth when implemented
-  const { apiKey } = useApiKey(userId);
+  const { apiKey, refreshKey } = useApiKey(userId);
 
   // Get session data
   const {
@@ -59,6 +59,17 @@ export function useSimpleChat(sessionId: string | undefined): ChatState {
   const [selectedResponseId, setSelectedResponseId] = useState<string>('');
   const [pendingAiMessage, setPendingAiMessage] = useState<ChatMessageDocument | null>(null);
   const [needsNewKey, setNeedsNewKey] = useState<boolean>(false);
+
+  // when needsNewKey turns true, call refreshKey
+  useEffect(() => {
+    async function refresh() {
+      if (needsNewKey) {
+        await refreshKey();
+        setNeedsNewKey(false);
+      }
+    }
+    refresh();
+  }, [needsNewKey, refreshKey]);
 
   // Derive model to use from settings or default
   const modelToUse = useMemo(
@@ -234,7 +245,7 @@ export function useSimpleChat(sessionId: string | undefined): ChatState {
         if (apiKey) {
           getCredits(apiKey)
             .then((credits: { available: number; usage: number; limit: number }) => {
-              // Credits fetched successfully (no need to log here)
+              console.log('💳 Credits:', credits);
             })
             .catch((error: Error) => {
               // Error checking credits (handled silently)
