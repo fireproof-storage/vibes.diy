@@ -72,7 +72,7 @@ export function PublishMenu({
     >
       <div
         style={menuStyle}
-        className="ring-opacity-5 p-2 w-80 rounded-md bg-white shadow-lg ring-1 ring-black dark:bg-gray-800"
+        className="ring-opacity-5 w-80 rounded-md bg-white p-4 shadow-lg ring-1 ring-black dark:bg-gray-800"
       >
         <div
           className="py-1"
@@ -80,15 +80,20 @@ export function PublishMenu({
           aria-orientation="vertical"
           aria-labelledby="publish-menu"
         >
+          <p className="mb-4 text-xs text-blue-700 italic dark:text-blue-200">
+            <strong>Technical Preview:</strong> Data is browser-local, multi-user sync coming soon.
+          </p>
           {publishedAppUrl ? (
-            <div className="px-4 py-2 text-sm text-gray-700 dark:text-gray-200">
-              <div className="mb-2 font-medium">Published App:</div>
-              <div className="flex items-center gap-2">
+            <div className="rounded-md bg-gray-50 px-2 py-2 text-sm text-gray-700 dark:bg-gray-700 dark:text-gray-200">
+              <div className="mb-2 text-center font-medium">
+                <strong>Published</strong>
+              </div>
+              <div className="flex">
                 <input
                   type="text"
                   readOnly
                   value={publishedAppUrl}
-                  className="flex-1 truncate rounded bg-gray-100 px-2 py-1 text-xs dark:bg-gray-700"
+                  className="flex-1 truncate rounded bg-gray-100 px-1 py-1 text-xs dark:bg-gray-600"
                 />
                 <button
                   type="button"
@@ -174,7 +179,7 @@ export function PublishMenu({
                           d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
                         />
                       </svg>
-                      <span>Update to Latest</span>
+                      <span className="text-xs">Update Code</span>
                       {isPublishing && (
                         <svg
                           className="h-3.5 w-3.5 animate-spin text-gray-500"
@@ -209,11 +214,11 @@ export function PublishMenu({
               type="button"
               onClick={handlePublish}
               disabled={isPublishing}
-              className="block px-4 py-2 w-full rounded-md text-center text-sm text-gray-700 hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50 dark:text-gray-200 dark:hover:bg-gray-700"
+              className="block w-full rounded-md bg-gray-300 px-4 py-2 text-center text-sm text-gray-700 hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-gray-600 dark:text-gray-200 dark:hover:bg-gray-700"
               role="menuitem"
             >
               <div className="flex items-center justify-between">
-                <span className="text-center w-full font-bold">Publish App</span>
+                <span className="w-full text-center font-bold">Publish App</span>
                 {isPublishing && (
                   <svg
                     className="h-4 w-4 animate-spin text-gray-500"

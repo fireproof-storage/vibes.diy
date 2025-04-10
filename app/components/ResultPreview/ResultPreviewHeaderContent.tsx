@@ -294,13 +294,13 @@ const ResultPreviewHeaderContent: React.FC<ResultPreviewHeaderContentProps> = ({
       {/* Right side */}
       <div className="flex w-1/4 justify-end">
         <div className="flex items-center gap-2">
-          {isUserAuthenticated && showViewControls && (
+          {isUserAuthenticated && showViewControls && previewReady && (
             <div className="relative">
               <button
                 ref={publishButtonRef}
                 type="button"
                 onClick={() => setIsPublishMenuOpen(!isPublishMenuOpen)}
-                className="bg-light-decorative-00 border-glimmer dark:bg-dark-decorative-00 text-light-primary dark:text-dark-primary hover:bg-light-decorative-01 dark:hover:bg-dark-decorative-01 flex items-center justify-center rounded-lg p-2 transition-colors -ml-10 -mt-4.5"
+                className="bg-light-decorative-00 border-glimmer dark:bg-dark-decorative-00 text-light-primary dark:text-dark-primary hover:bg-light-decorative-01 dark:hover:bg-dark-decorative-01 -mt-4.5 -ml-10 flex items-center justify-center rounded-lg p-2 transition-colors"
                 aria-label="Publish"
                 title="Publish"
               >
@@ -347,11 +347,7 @@ const ResultPreviewHeaderContent: React.FC<ResultPreviewHeaderContentProps> = ({
               >
                 <UserIcon isVerifying={isVerifying} isUserAuthenticated={isUserAuthenticated} />
                 <span className="hidden min-[480px]:inline">
-                  {isVerifying
-                    ? 'Verifying...'
-                    : isUserAuthenticated
-                      ? ''
-                      : 'Share'}
+                  {isVerifying ? 'Verifying...' : isUserAuthenticated ? '' : 'Share'}
                 </span>
               </button>
             </div>
