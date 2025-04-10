@@ -277,7 +277,7 @@ export function useSimpleChat(sessionId: string | undefined): ChatState {
     if (apiKey) {
       getCredits(apiKey)
         .then((credits: { available: number; usage: number; limit: number }) => {
-          console.log('Initial credits check:', credits);
+          console.log('💳 Credits:', credits);
         })
         .catch((error: Error) => {});
     }
