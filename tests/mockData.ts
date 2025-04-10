@@ -9,6 +9,7 @@ export const mockChatStateProps = {
   codeReady: false,
   addScreenshot: () => Promise.resolve(),
   setSelectedResponseId: () => {},
+  setNeedsNewKey: () => {},
 };
 
 export const mockSessionSidebarProps = {
@@ -34,5 +35,6 @@ export const createMockChatState = (overrides = {}) => ({
   codeReady: false,
   addScreenshot: () => Promise.resolve(),
   setSelectedResponseId: () => {},
+  setNeedsNewKey: () => {},
   ...overrides,
 });
