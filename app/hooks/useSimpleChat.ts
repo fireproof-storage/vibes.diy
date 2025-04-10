@@ -199,6 +199,20 @@ export function useSimpleChat(sessionId: string | undefined): ChatState {
     }
   }, [docs, pendingAiMessage]);
 
+  // Check credits whenever we get an API key
+  useEffect(() => {
+    if (apiKey) {
+      console.log('API key available, checking credits...');
+      getCredits(apiKey)
+        .then((credits: { available: number; usage: number; limit: number }) => {
+          console.log('Initial credits check:', credits);
+        })
+        .catch((error: Error) => {
+          console.error('Failed to fetch initial credits:', error);
+        });
+    }
+  }, [apiKey]);
+
   return {
     sessionId: session._id,
     addScreenshot,

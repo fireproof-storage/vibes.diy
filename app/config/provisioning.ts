@@ -12,6 +12,7 @@ export async function getCredits(apiKey: string): Promise<{
   usage: number;
   limit: number;
 }> {
+  console.log('📊 Checking credits for API key...');
   try {
     // Use the auth/key endpoint to get information about the key itself
     const response = await fetch('https://openrouter.ai/api/v1/auth/key', {
@@ -23,14 +24,32 @@ export async function getCredits(apiKey: string): Promise<{
       throw new Error(`Failed to fetch key credits: ${response.status}`);
     }
 
-    const data = await response.json();
-
+    const responseData = await response.json();
+    
+    // Following OpenRouter docs structure for /api/v1/auth/key endpoint
+    // https://openrouter.ai/docs/api-reference/limits
+    console.log('📋 Raw credit response:', responseData);
+    console.log('🧩 Response structure:', Object.keys(responseData).join(', '));
+    
     // Map the response to the expected format
-    return {
-      available: data.limit_remaining || 0,
-      usage: data.limit - data.limit_remaining || 0,
-      limit: data.limit || 0,
+    const data = responseData.data || responseData;
+    const limit = data.limit || 0;
+    const usage = data.usage || 0;
+    
+    const result = {
+      available: limit > usage ? limit - usage : 0,
+      usage: usage,
+      limit: limit,
     };
+    
+    console.log('💵 Credit summary:', result);
+    
+    // If credits are low, provide a clear message
+    if (result.available < 0.2 && result.limit > 0) {
+      console.warn('⚠️ Credits are running low - consider logging in for more credits');
+    }
+    
+    return result;
   } catch (error) {
     console.error('Error fetching key credits:', error);
     throw error;

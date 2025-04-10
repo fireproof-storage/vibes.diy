@@ -104,8 +104,29 @@ function ResultPreview({
       if (data) {
         if (data.type === 'preview-ready' || data.type === 'preview-loaded') {
           // respond with the API key
+          // Use CALLAI_API_KEY if available (dev mode), otherwise check localStorage
+          let apiKey = CALLAI_API_KEY;
+          
+          // Only check localStorage if no dev key is set
+          if (!apiKey) {
+            console.log('No dev API key found, checking localStorage...');
+            // Check localStorage for anonymous key
+            const storedKey = localStorage.getItem('vibes-openrouter-key-anonymous');
+            if (storedKey) {
+              try {
+                const keyData = JSON.parse(storedKey);
+                apiKey = keyData.key;
+                console.log('Using API key from localStorage for iframe');
+              } catch (e) {
+                console.error('Error parsing stored API key:', e);
+              }
+            }
+          } else {
+            console.log('Using dev API key for iframe');
+          }
+          
           const iframe = document.querySelector('iframe') as HTMLIFrameElement;
-          iframe?.contentWindow?.postMessage({ type: 'callai-api-key', key: CALLAI_API_KEY }, '*');
+          iframe?.contentWindow?.postMessage({ type: 'callai-api-key', key: apiKey }, '*');
 
           setMobilePreviewShown(true);
 

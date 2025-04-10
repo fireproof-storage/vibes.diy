@@ -37,7 +37,4 @@ export const FIREPROOF_CHAT_HISTORY =
 export const CALLAI_API_KEY =
   import.meta.env.VITE_CALLAI_API_KEY || import.meta.env.VITE_OPENROUTER_API_KEY;
 
-// Verify that CALLAI_API_KEY is set in development mode
-if (import.meta.env.DEV && !CALLAI_API_KEY) {
-  console.error('VITE_CALLAI_API_KEY must be set in development mode');
-}
+  

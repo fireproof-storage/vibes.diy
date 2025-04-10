@@ -19,6 +19,7 @@ export function useApiKey(userId?: string) {
 
   useEffect(() => {
     if (!apiKey && !isLoading && !hasFetchStarted.current) {
+      console.log('💾 Checking localStorage for API key at:', storageKey);
       const storedKey = localStorage.getItem(storageKey);
       if (storedKey) {
         try {
@@ -28,20 +29,35 @@ export function useApiKey(userId?: string) {
           const keyAgeInDays = (now - creationTime) / (1000 * 60 * 60 * 24);
 
           if (keyAgeInDays < 7) {
+            console.log('✅ Using valid key from localStorage, age:', keyAgeInDays.toFixed(2), 'days');
             setApiKey(keyData.key);
             return;
           } else {
+            console.log('⏰ Key expired, age:', keyAgeInDays.toFixed(2), 'days, removing from storage');
             localStorage.removeItem(storageKey);
           }
         } catch (e) {
+          console.error('❌ Error parsing stored key, removing:', e);
           localStorage.removeItem(storageKey);
         }
+      } else {
+        console.log('🔍 No API key found in localStorage');
       }
     }
   }, [apiKey, isLoading, storageKey]);
 
   useEffect(() => {
-    if (!apiKey && !isLoading && CALLAI_API_KEY && !hasFetchStarted.current) {
+    // Simple environment check that only runs once
+    if (!hasFetchStarted.current) {
+      console.log('ENV CHECK:', { 
+        CALLAI_API_KEY: !!CALLAI_API_KEY,
+        viteEnvKeys: Object.keys(import.meta.env).filter(key => key.includes('OPENROUTER') || key.includes('CALLAI'))
+      });
+    }
+    
+    // If we have no API key and we're not already loading or fetching, get a key
+    // This should work whether or not CALLAI_API_KEY is set
+    if (!apiKey && !isLoading && !hasFetchStarted.current) {
       hasFetchStarted.current = true;
       const fetchApiKey = async () => {
         setIsLoading(true);
@@ -49,8 +65,11 @@ export function useApiKey(userId?: string) {
 
         try {
           let keyData;
-
+          
+          // Log which path we're taking: direct key or provisioning API
           if (CALLAI_API_KEY) {
+            console.log('🔑 Using DIRECT CALLAI DEV KEY from environment variable');
+            console.log('💡 To test provisioning API, remove VITE_CALLAI_API_KEY from .env');
             keyData = {
               key: CALLAI_API_KEY,
               hash: 'local-dev',
@@ -63,6 +82,7 @@ export function useApiKey(userId?: string) {
               updated_at: new Date().toISOString(),
             };
           } else {
+            console.log('🔄 Using PROVISIONING API via edge function');
             try {
               keyData = await createKeyViaEdgeFunction(userId);
             } catch (error) {
@@ -74,6 +94,12 @@ export function useApiKey(userId?: string) {
             ...keyData,
             createdAt: Date.now(),
           };
+          console.log('💾 Saving new API key to localStorage:', {
+            hash: keyData.hash,
+            limit: keyData.limit,
+            label: keyData.label,
+            storage_key: storageKey
+          });
           localStorage.setItem(storageKey, JSON.stringify(keyToStore));
 
           setApiKey(keyData.key);

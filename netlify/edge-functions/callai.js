@@ -1,8 +1,12 @@
 export default async (request, context) => {
+  console.log(`💾 EDGE FUNCTION: Request received for ${request.url}`);
   // Extract the path segment after /api/callai/
   const url = new URL(request.url);
   const pathSegments = url.pathname.split('/');
-  const action = pathSegments[3]; // e.g., "create-key", "check-credits"
+  // Extract the action and strip any file extension like .html
+  let action = pathSegments[3] || ''; // e.g., "create-key", "check-credits"
+  action = action.split('.')[0]; // Remove any file extension
+  console.log(`📍 EDGE FUNCTION: Processing action: ${action}`);
 
   try {
     // For now, simple validation
@@ -19,14 +23,18 @@ export default async (request, context) => {
     let requestData;
     try {
       requestData = await request.json();
+      console.log(`📥 EDGE FUNCTION: Request data:`, requestData);
     } catch (e) {
+      console.log(`⚠️ EDGE FUNCTION: No JSON body in request`);
       requestData = {};
     }
 
     const userId = requestData.userId || 'anonymous';
+    console.log(`👤 EDGE FUNCTION: User identified as: ${userId}`);
 
     // Access the secure provisioning key from environment variables
     const provisioningKey = Netlify.env.get('SERVER_OPENROUTER_PROV_KEY');
+    console.log(`🔑 EDGE FUNCTION: Provisioning key ${provisioningKey ? 'found' : 'NOT FOUND'}`);
 
     if (!provisioningKey) {
       return new Response(JSON.stringify({ error: 'Server configuration error' }), {
@@ -38,11 +46,11 @@ export default async (request, context) => {
     // Handle different API actions
     switch (action) {
       case 'create-key':
-        return await handleCreateKey(request, provisioningKey, userId);
+        return await handleCreateKey(requestData, provisioningKey, userId);
       case 'check-credits':
-        return await handleCheckCredits(request, provisioningKey);
+        return await handleCheckCredits(requestData, provisioningKey);
       case 'list-keys':
-        return await handleListKeys(request, provisioningKey);
+        return await handleListKeys(requestData, provisioningKey);
       default:
         return new Response(JSON.stringify({ error: 'Invalid action' }), {
           status: 400,
@@ -58,22 +66,27 @@ export default async (request, context) => {
 };
 
 // Function to create a new OpenRouter session key
-async function handleCreateKey(request, provisioningKey, userId) {
+async function handleCreateKey(requestData, provisioningKey, userId) {
+  console.log(`🔑 Edge Function: Creating key for user: ${userId}`);
   try {
-    const requestData = await request.json();
+    // Use the requestData that was already parsed
     const {
       name = 'Session Key',
       label = `session-${Date.now()}`,
     } = requestData;
     
     // Set dollar amount based on user authentication status
-    // Anonymous users get $0.50, logged-in users get $1.00
-    const dollarAmount = userId !== 'anonymous' ? 1.0 : 0.5;
+    // Anonymous users get $0.75, logged-in users get $1.00
+    const dollarAmount = userId !== 'anonymous' ? 1.0 : 0.75;
+    console.log(`💰 Edge Function: Setting dollar amount to $${dollarAmount} for ${userId !== 'anonymous' ? 'authenticated' : 'anonymous'} user`);
 
     // Add userId to the key label if available
     const keyLabel = userId !== 'anonymous' ? `user-${userId}-${label}` : `anonymous-${label}`;
+    console.log(`🏷️ Edge Function: Using label: ${keyLabel}`);
 
-    const response = await fetch('https://openrouter.ai/api/v1/keys/', {
+    console.log(`📤 Edge Function: Sending request to OpenRouter API with limit: ${dollarAmount}`);
+    // Updated to use endpoint without trailing slash per OpenRouter API docs
+    const response = await fetch('https://openrouter.ai/api/v1/keys', {
       method: 'POST',
       headers: {
         Authorization: `Bearer ${provisioningKey}`,
@@ -89,13 +102,40 @@ async function handleCreateKey(request, provisioningKey, userId) {
     const data = await response.json();
 
     if (!response.ok) {
+      console.error(`❌ Edge Function: Error creating key:`, data);
       return new Response(JSON.stringify({ error: 'Failed to create key', details: data }), {
         status: response.status,
         headers: { 'Content-Type': 'application/json' },
       });
     }
+    
+    // OpenRouter API returns data in a nested structure
+    // The key is at the top level, metadata in data object
+    if (!data.key) {
+      console.error(`❌ Edge Function: Unexpected API response format:`, data);
+      return new Response(JSON.stringify({ error: 'Invalid API response format' }), {
+        status: 500,
+        headers: { 'Content-Type': 'application/json' },
+      });
+    }
+    
+    // Enhanced logging for successful key creation
+    // Format the response to combine top-level key with nested metadata
+    const formattedResponse = {
+      ...data.data, // Include all metadata from the data object
+      key: data.key, // Add the key from the top level
+    };
+    
+    console.log(`✅ EDGE FUNCTION: Successfully created key:`, {
+      hash: formattedResponse.hash || 'unknown',
+      label: formattedResponse.label || 'unknown',
+      limit: formattedResponse.limit || 0,
+      limitInCents: (formattedResponse.limit || 0) * 100,
+      dollarAmount: dollarAmount,
+      responseKeys: Object.keys(formattedResponse).join(', ')
+    });
 
-    return new Response(JSON.stringify(data), {
+    return new Response(JSON.stringify(formattedResponse), {
       status: 200,
       headers: { 'Content-Type': 'application/json' },
     });
@@ -108,9 +148,9 @@ async function handleCreateKey(request, provisioningKey, userId) {
 }
 
 // Function to check credits for a specific key
-async function handleCheckCredits(request, provisioningKey) {
+async function handleCheckCredits(requestData, provisioningKey) {
   try {
-    const { keyHash } = await request.json();
+    const { keyHash } = requestData;
 
     if (!keyHash) {
       return new Response(JSON.stringify({ error: 'Key hash is required' }), {
@@ -147,7 +187,7 @@ async function handleCheckCredits(request, provisioningKey) {
 }
 
 // Function to list keys
-async function handleListKeys(request, provisioningKey) {
+async function handleListKeys(requestData, provisioningKey) {
   try {
     const response = await fetch('https://openrouter.ai/api/v1/keys', {
       headers: {
