@@ -46,5 +46,9 @@ function ChatHeaderContent({ onOpenSidebar, title, isStreaming }: ChatHeaderCont
 // re-renders when its props actually change
 export default memo(ChatHeaderContent, (prevProps, nextProps) => {
   // Only re-render if title or onOpenSidebar changes
-  return prevProps.onOpenSidebar === nextProps.onOpenSidebar && prevProps.title === nextProps.title && prevProps.isStreaming === nextProps.isStreaming;
+  return (
+    prevProps.onOpenSidebar === nextProps.onOpenSidebar &&
+    prevProps.title === nextProps.title &&
+    prevProps.isStreaming === nextProps.isStreaming
+  );
 });

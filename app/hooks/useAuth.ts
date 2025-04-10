@@ -14,10 +14,10 @@ export function useAuth() {
     const checkAuth = async () => {
       try {
         setIsLoading(true);
-        
+
         // Get token from localStorage
         const token = localStorage.getItem('auth_token');
-        
+
         // If we have a token and it's valid, use it
         if (token && (await verifyToken(token))) {
           const payload = parseToken(token);
@@ -28,7 +28,7 @@ export function useAuth() {
             return;
           }
         }
-        
+
         // No valid token
         setUserId(undefined);
         setIsAuthenticated(false);

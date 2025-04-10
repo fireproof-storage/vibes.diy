@@ -27,7 +27,7 @@ const TITLE_MODEL = 'google/gemini-2.0-flash-lite-001';
 export function useSimpleChat(sessionId: string | undefined): ChatState {
   // Get userId from auth system
   const { userId, isAuthenticated } = useAuth();
-  
+
   // Get API key
   // For anonymous users: uses the sessionId (chat ID) as an identifier
   // For logged-in users: uses userId from auth
