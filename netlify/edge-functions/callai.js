@@ -77,7 +77,7 @@ async function handleCreateKey(requestData, provisioningKey, userId) {
     
     // Set dollar amount based on user authentication status
     // Anonymous users get $0.75, logged-in users get $1.00
-    const dollarAmount = userId !== 'anonymous' ? 1.0 : 0.75;
+    const dollarAmount = userId !== 'anonymous' ? 2.0 : 1.00;
     console.log(`💰 Edge Function: Setting dollar amount to $${dollarAmount} for ${userId !== 'anonymous' ? 'authenticated' : 'anonymous'} user`);
 
     // Add userId to the key label if available

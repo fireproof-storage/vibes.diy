@@ -30,7 +30,7 @@ export function useSimpleChat(sessionId: string | undefined): ChatState {
   // This approach ensures anonymous users get one API key with limited credits
   // and logged-in users will get proper credit assignment based on their ID
   const userId = undefined; // Will come from auth when implemented
-  const { apiKey } = useApiKey(userId || sessionId);
+  const { apiKey } = useApiKey(userId);
 
   // Get session data
   const {
