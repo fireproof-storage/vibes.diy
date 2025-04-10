@@ -178,7 +178,7 @@ export const BackArrowIcon: React.FC<SvgIconProps> = ({ className = 'h-5 w-5' })
 
 export const UserIcon: React.FC<
   SvgIconProps & { isVerifying?: boolean; isUserAuthenticated?: boolean }
-> = ({ className = 'h-3.5 w-3.5 sm:h-4 sm:w-4', isVerifying, isUserAuthenticated }) => {
+> = ({ className = 'h-3.5 w-3.5 sm:h-4 sm:w-4 ml-1', isVerifying, isUserAuthenticated }) => {
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"

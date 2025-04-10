@@ -300,9 +300,9 @@ const ResultPreviewHeaderContent: React.FC<ResultPreviewHeaderContentProps> = ({
                 ref={publishButtonRef}
                 type="button"
                 onClick={() => setIsPublishMenuOpen(!isPublishMenuOpen)}
-                className="bg-light-decorative-00 dark:bg-dark-decorative-00 text-light-primary dark:text-dark-primary hover:bg-light-decorative-01 dark:hover:bg-dark-decorative-01 flex items-center justify-center rounded-lg p-2 transition-colors"
-                aria-label="Share"
-                title="Share"
+                className="bg-light-decorative-00 border-glimmer dark:bg-dark-decorative-00 text-light-primary dark:text-dark-primary hover:bg-light-decorative-01 dark:hover:bg-dark-decorative-01 flex items-center justify-center rounded-lg p-2 transition-colors -ml-10 -mt-4.5"
+                aria-label="Publish"
+                title="Publish"
               >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -337,12 +337,12 @@ const ResultPreviewHeaderContent: React.FC<ResultPreviewHeaderContentProps> = ({
                 type="button"
                 onClick={handleAuthCheck}
                 disabled={isVerifying}
-                className={`text-light-primary dark:text-dark-primary hover:bg-light-decorative-01 dark:hover:bg-dark-decorative-01 flex items-center justify-center space-x-1 rounded-md px-3 py-1.5 text-xs font-medium transition-colors sm:space-x-1.5 sm:px-4 sm:text-sm ${isVerifying ? 'cursor-wait opacity-50' : ''}`}
+                className={`text-light-primary dark:text-dark-primary hover:bg-light-decorative-01 dark:hover:bg-dark-decorative-01 flex items-center justify-center space-x-1 rounded-md px-2 py-1.5 text-xs font-medium transition-colors sm:space-x-1.5 sm:px-1.5 sm:text-sm ${isVerifying ? 'cursor-wait opacity-50' : ''}`}
                 aria-label={isUserAuthenticated ? `User: ${userInfo?.userId}` : 'Connect Account'}
                 title={
                   isUserAuthenticated
                     ? `Logged in as ${userInfo?.userId}`
-                    : 'Connect Fireproof Account'
+                    : 'Login with Fireproof to Publish'
                 }
               >
                 <UserIcon isVerifying={isVerifying} isUserAuthenticated={isUserAuthenticated} />
@@ -350,8 +350,8 @@ const ResultPreviewHeaderContent: React.FC<ResultPreviewHeaderContentProps> = ({
                   {isVerifying
                     ? 'Verifying...'
                     : isUserAuthenticated
-                      ? `${userInfo?.userId?.substring(0, 8) ?? 'User'}...`
-                      : 'Connect'}
+                      ? ''
+                      : 'Share'}
                 </span>
               </button>
             </div>

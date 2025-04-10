@@ -72,7 +72,7 @@ export function PublishMenu({
     >
       <div
         style={menuStyle}
-        className="ring-opacity-5 w-80 rounded-md bg-white shadow-lg ring-1 ring-black dark:bg-gray-800"
+        className="ring-opacity-5 p-2 w-80 rounded-md bg-white shadow-lg ring-1 ring-black dark:bg-gray-800"
       >
         <div
           className="py-1"
