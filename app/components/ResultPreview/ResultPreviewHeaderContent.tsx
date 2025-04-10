@@ -349,7 +349,13 @@ const ResultPreviewHeaderContent: React.FC<ResultPreviewHeaderContentProps> = ({
               >
                 <UserIcon isVerifying={isVerifying} isUserAuthenticated={isUserAuthenticated} />
                 <span className="hidden min-[480px]:inline">
-                  {isVerifying ? 'Verifying...' : isUserAuthenticated ? '' : 'Share'}
+                  {isVerifying
+                    ? 'Verifying...'
+                    : isUserAuthenticated
+                      ? ''
+                      : needsLogin
+                        ? 'Get Credits'
+                        : 'Share'}
                 </span>
               </button>
             </div>
