@@ -110,8 +110,8 @@ function ResultPreview({
           // Only check localStorage if no dev key is set
           if (!apiKey) {
             console.log('No dev API key found, checking localStorage...');
-            // Check localStorage for anonymous key
-            const storedKey = localStorage.getItem('vibes-openrouter-key-anonymous');
+            // Check localStorage for API key
+            const storedKey = localStorage.getItem('vibes-openrouter-key');
             if (storedKey) {
               try {
                 const keyData = JSON.parse(storedKey);

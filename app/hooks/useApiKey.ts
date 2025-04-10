@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useMemo } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { CALLAI_API_KEY } from '../config/env';
 import { createKeyViaEdgeFunction } from '../services/apiKeyService';
 
@@ -13,9 +13,8 @@ export function useApiKey(userId?: string) {
   const [error, setError] = useState<Error | null>(null);
   const hasFetchStarted = useRef(false);
 
-  const storageKey = useMemo(() => {
-    return userId ? `vibes-openrouter-key-${userId}` : 'vibes-openrouter-key-anonymous';
-  }, [userId]);
+  // Always use a consistent storage key regardless of user ID
+  const storageKey = 'vibes-openrouter-key';
 
   // Combined effect to check localStorage and fetch new key if needed
   useEffect(() => {
