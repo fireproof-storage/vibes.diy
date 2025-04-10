@@ -1,27 +1,21 @@
 #!/usr/bin/env tsx
 /**
  * API Key utility script
- * Creates a new OpenRouter API key and checks its credit information
+ * Creates a new API key and checks its credit information using Edge Functions
  */
-import { createSessionKey, getCredits } from '../app/config/provisioning';
-import { CALLAI_API_KEY } from '../app/config/env';
+import { getCredits } from '../app/config/provisioning';
+import { createKeyViaEdgeFunction } from '../app/services/apiKeyService';
 
 /**
- * Creates a new API key and returns the key data
- * @param dollarAmount - Dollar amount to set as credit limit
+ * Creates a new API key and returns the key data using the Edge Function
  */
-async function createApiKey(dollarAmount = 0.01) {
-  if (!CALLAI_API_KEY) {
-    throw new Error('No API key found in environment variables');
-  }
-
-  console.log(`Creating new API key with $${dollarAmount} limit...`);
+async function createApiKey() {
+  console.log('Creating new API key...');
 
   try {
-    const keyData = await createSessionKey(CALLAI_API_KEY, dollarAmount, {
-      name: 'Vibes.DIY CLI Session',
-      label: `vibes-cli-${Date.now()}`,
-    });
+    // Mock user ID for testing
+    const testUserId = `test-${Date.now()}`;
+    const keyData = await createKeyViaEdgeFunction(testUserId);
 
     console.log('API key created successfully:');
     console.log(`- Hash: ${keyData.hash}`);
@@ -67,7 +61,7 @@ async function checkCredits(apiKey: string) {
 async function main() {
   try {
     // Create a new API key
-    const keyData = await createApiKey(0.01);
+    const keyData = await createApiKey();
 
     // Check credits for the new key
     const credits = await checkCredits(keyData.key);

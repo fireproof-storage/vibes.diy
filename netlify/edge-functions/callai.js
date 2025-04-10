@@ -15,7 +15,7 @@ export default async (request, context) => {
       });
     }
 
-    // Extract the device ID or user ID from the request
+    // Extract the userId from the request
     let requestData;
     try {
       requestData = await request.json();
@@ -62,10 +62,13 @@ async function handleCreateKey(request, provisioningKey, userId) {
   try {
     const requestData = await request.json();
     const {
-      dollarAmount = 0.5,
       name = 'Session Key',
       label = `session-${Date.now()}`,
     } = requestData;
+    
+    // Set dollar amount based on user authentication status
+    // Anonymous users get $0.50, logged-in users get $1.00
+    const dollarAmount = userId !== 'anonymous' ? 1.0 : 0.5;
 
     // Add userId to the key label if available
     const keyLabel = userId !== 'anonymous' ? `user-${userId}-${label}` : `anonymous-${label}`;

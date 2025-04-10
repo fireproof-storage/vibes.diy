@@ -24,22 +24,13 @@ const TITLE_MODEL = 'google/gemini-2.0-flash-lite-001';
  * @returns ChatState object with all chat functionality and state
  */
 export function useSimpleChat(sessionId: string | undefined): ChatState {
-  // Get user ID from session or generate a device ID
-  const deviceId = useMemo(() => {
-    // For now, use a device ID from localStorage if user isn't logged in
-    // This will be replaced with actual user ID when that branch is merged
-    const storedDeviceId = localStorage.getItem('vibes-device-id');
-    if (storedDeviceId) return storedDeviceId;
-
-    // Generate a new device ID if none exists
-    const newDeviceId = `device-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
-    localStorage.setItem('vibes-device-id', newDeviceId);
-    return newDeviceId;
-  }, []);
-
-  // Get API key, passing the deviceId as a standin for userId
-  // This will be replaced with actual userId when that branch is merged
-  const { apiKey } = useApiKey(deviceId);
+  // Get API key
+  // For anonymous users: uses the sessionId (chat ID) as an identifier
+  // For logged-in users: will use userId from auth once implemented
+  // This approach ensures anonymous users get one API key with limited credits
+  // and logged-in users will get proper credit assignment based on their ID
+  const userId = undefined; // Will come from auth when implemented
+  const { apiKey } = useApiKey(userId || sessionId);
 
   // Get session data
   const {

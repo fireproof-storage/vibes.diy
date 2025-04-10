@@ -41,6 +41,3 @@ export const CALLAI_API_KEY =
 if (import.meta.env.DEV && !CALLAI_API_KEY) {
   console.error('VITE_CALLAI_API_KEY must be set in development mode');
 }
-
-// Deprecated: Use CALLAI_API_KEY instead
-// export const OPENROUTER_API_KEY = CALLAI_API_KEY;

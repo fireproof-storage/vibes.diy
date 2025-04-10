@@ -39,11 +39,15 @@ vi.mock('../app/prompts', () => ({
 vi.mock('../app/config/provisioning');
 
 // Import the mocked module
-import { createSessionKey, getCredits } from '../app/config/provisioning';
+import { getCredits } from '../app/config/provisioning';
+
+// Mock the apiKeyService module
+vi.mock('../app/services/apiKeyService');
+import { createKeyViaEdgeFunction } from '../app/services/apiKeyService';
 
 // Mock the env module
 vi.mock('../app/config/env', () => ({
-  OPENROUTER_PROV_KEY: 'mock-provisioning-key',
+  CALLAI_API_KEY: 'mock-callai-api-key-for-testing',
 }));
 
 // Define shared state and reset function *outside* the mock factory
@@ -462,8 +466,8 @@ Here's how to use React.
 
 describe('useSimpleChat', () => {
   beforeEach(() => {
-    // Reset the createSessionKey mock to ensure it returns the correct structure
-    vi.mocked(createSessionKey).mockImplementation(async () => {
+    // Mock createKeyViaEdgeFunction to ensure it returns the correct structure
+    vi.mocked(createKeyViaEdgeFunction).mockImplementation(async () => {
       return {
         key: 'mock-api-key-for-testing',
         hash: 'mock-hash',
