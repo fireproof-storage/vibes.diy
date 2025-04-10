@@ -62,7 +62,7 @@ export function useApiKey(userId?: string) {
       let keyData;
 
       // Log which path we're taking: direct key or provisioning API
-      if (CALLAI_API_KEY) {
+      if (CALLAI_API_KEY === 'force-prov') {
         keyData = {
           key: CALLAI_API_KEY,
           hash: 'local-dev',

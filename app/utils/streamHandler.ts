@@ -48,15 +48,11 @@ export async function streamAI(
 
     // Process the stream - callAI already accumulates content
     let finalResponse = '';
-    let chunkCount = 0;
 
     try {
       for await (const content of generator) {
-        chunkCount++;
         // Each yielded content already contains the full accumulated text
         finalResponse = content;
-
-        // Call the callback with the content
         onContent(content);
       }
       return finalResponse;
@@ -64,7 +60,6 @@ export async function streamAI(
       throw streamError;
     }
   } catch (initialError) {
-    // Re-throw any initialization errors
     throw initialError;
   }
 }
