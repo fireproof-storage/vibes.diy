@@ -1,5 +1,4 @@
 import type { Segment } from '../types/chat';
-import { CALLAI_API_KEY } from '../config/env';
 import { callAI, type Message } from 'call-ai';
 
 /**
@@ -8,9 +7,14 @@ import { callAI, type Message } from 'call-ai';
  *
  * @param segments - Array of content segments to analyze
  * @param model - The AI model to use for title generation
+ * @param apiKey - The API key to use for the callAI service
  * @returns A promise that resolves to the generated title or null if generation failed
  */
-export async function generateTitle(segments: Segment[], model: string): Promise<string> {
+export async function generateTitle(
+  segments: Segment[],
+  model: string,
+  apiKey: string
+): Promise<string> {
   // Get first markdown segment and first code segment (if they exist)
   const firstMarkdown = segments.find((seg) => seg.type === 'markdown');
   const firstCode = segments.find((seg) => seg.type === 'code');
@@ -31,7 +35,7 @@ export async function generateTitle(segments: Segment[], model: string): Promise
     {
       role: 'system',
       content:
-        'You are a helpful assistant that generates short, descriptive titles. Create a concise title (3-5 words) that captures the essence of the content. Return only the title, no other text or markup. Don\'t say "Fireproof" or "app".',
+        'You are a helpful assistant that generates short, descriptive titles. Create a concise title (3-5 words) that captures the essence of the content. Return only the title, no other text or markup. Don\'t say "AI", "Fireproof" or "app".',
     },
     {
       role: 'user',
@@ -41,7 +45,7 @@ export async function generateTitle(segments: Segment[], model: string): Promise
 
   // Configure callAI options
   const options = {
-    apiKey: CALLAI_API_KEY,
+    apiKey: apiKey,
     model: model,
     headers: {
       'HTTP-Referer': 'https://vibes.diy',

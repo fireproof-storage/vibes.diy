@@ -1,0 +1,58 @@
+{
+  "version": "4",
+  "remote": {
+    "https://edge.netlify.com/": "fd941d61d88673d5f28aab283fb86fcc50f08a3bc80ee5470498fcfa88c65cfb",
+    "https://edge.netlify.com/bootstrap/config.ts": "0aa0a225d978b89e0e62cbd853701605199e7a84095e55eeb70147faf1a24803",
+    "https://edge.netlify.com/bootstrap/context.ts": "b9b4e7cbb67a9d83cb28e45145ba3dfa6f05ad965587ef7e2fb0896da62dd16e",
+    "https://edge.netlify.com/bootstrap/cookie.ts": "8b0baae708989ca183c6f3b4ab3d029e6abcbc2e43f93edeb0ff447b3bbc3a05",
+    "https://edge.netlify.com/bootstrap/edge_function.ts": "b8253e86aa83c67341f5cfedeba5049d77fbf84dcab7eceff7566b7728ae9b39",
+    "https://edge.netlify.com/bootstrap/globals/types.ts": "eaa6148ded3121d8dee62dd91c86e7fe76601df0f3ca8d7962243a30f4c8935f"
+  },
+  "workspace": {
+    "packageJson": {
+      "dependencies": [
+        "npm:@anthropic-ai/sdk@~0.36.3",
+        "npm:@codesandbox/sandpack-react@latest",
+        "npm:@monaco-editor/react@^4.7.0",
+        "npm:@react-router/dev@^7.1.5",
+        "npm:@react-router/node@^7.1.5",
+        "npm:@react-router/serve@^7.1.5",
+        "npm:@shikijs/monaco@^3.2.1",
+        "npm:@tailwindcss/typography@~0.5.16",
+        "npm:@tailwindcss/vite@4",
+        "npm:@testing-library/jest-dom@^6.6.3",
+        "npm:@testing-library/react-hooks@^8.0.1",
+        "npm:@testing-library/react@^16.2.0",
+        "npm:@testing-library/user-event@^14.6.1",
+        "npm:@types/node@^22.13.4",
+        "npm:@types/react-dom@^19.0.4",
+        "npm:@types/react@^19.0.10",
+        "npm:@vitest/coverage-v8@^3.0.8",
+        "npm:call-ai@0.6.4",
+        "npm:concurrently@^9.1.2",
+        "npm:isbot@^5.1.17",
+        "npm:jsdom@26",
+        "npm:netlify-cli@^17.17.1",
+        "npm:prettier-plugin-tailwindcss@~0.6.11",
+        "npm:prettier@^3.5.2",
+        "npm:react-cookie-consent@9",
+        "npm:react-dom@19",
+        "npm:react-ga4@^2.1.0",
+        "npm:react-markdown@^10.1.0",
+        "npm:react-router-devtools@^1.1.0",
+        "npm:react-router-dom@^7.5.0",
+        "npm:react-router@^7.1.5",
+        "npm:react@19",
+        "npm:serve@^14.2.4",
+        "npm:shiki@^3.2.1",
+        "npm:tailwindcss@4",
+        "npm:tsx@^4.19.3",
+        "npm:typescript@^5.7.2",
+        "npm:use-fireproof@0.20.1",
+        "npm:vite-tsconfig-paths@^5.1.4",
+        "npm:vite@^6.1.0",
+        "npm:vitest@^3.0.8"
+      ]
+    }
+  }
+}

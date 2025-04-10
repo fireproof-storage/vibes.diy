@@ -1,24 +1,37 @@
 import { useState, useRef, useCallback, useEffect, useMemo } from 'react';
-import type { Segment, ChatMessageDocument, ChatState } from '../types/chat';
+import type { ChatMessageDocument, ChatState } from '../types/chat';
 import type { UserSettings } from '../types/settings';
-import { makeBaseSystemPrompt } from '../prompts';
-import { parseContent, parseDependencies } from '../utils/segmentParser';
+import { parseContent } from '../utils/segmentParser';
 import { useSession } from './useSession';
 import { useFireproof } from 'use-fireproof';
 import { generateTitle } from '../utils/titleGenerator';
 import { streamAI } from '../utils/streamHandler';
+import { useApiKey } from './useApiKey';
+import { getCredits } from '../config/provisioning';
 
+// Import our custom hooks
+import { useSystemPromptManager } from './useSystemPromptManager';
+import { useMessageSelection } from './useMessageSelection';
+import { useThrottledUpdates } from './useThrottledUpdates';
+
+// Constants
 const CODING_MODEL = 'anthropic/claude-3.7-sonnet';
-// const CODING_MODEL = 'openrouter/quasar-alpha';
-// const CODING_MODEL = 'google/gemini-2.0-flash-001';
-// const CODING_MODEL = 'google/gemini-2.5-pro-preview-03-25';
 const TITLE_MODEL = 'google/gemini-2.0-flash-lite-001';
+
 /**
  * Simplified chat hook that focuses on data-driven state management
  * Uses session-based architecture with individual message documents
  * @returns ChatState object with all chat functionality and state
  */
 export function useSimpleChat(sessionId: string | undefined): ChatState {
+  // Get API key
+  // For anonymous users: uses the sessionId (chat ID) as an identifier
+  // For logged-in users: will use userId from auth once implemented
+  // This approach ensures anonymous users get one API key with limited credits
+  // and logged-in users will get proper credit assignment based on their ID
+  const userId = undefined; // Will come from auth when implemented
+  const { apiKey, refreshKey } = useApiKey(userId);
+
   // Get session data
   const {
     session,
@@ -34,21 +47,29 @@ export function useSimpleChat(sessionId: string | undefined): ChatState {
     aiMessage,
   } = useSession(sessionId);
 
-  // First declare ALL ref hooks to maintain hook order consistency
+  // Reference for input element
   const inputRef = useRef<HTMLTextAreaElement>(null);
-  const isProcessingRef = useRef<boolean>(false);
-  const lastUpdateTimeRef = useRef<number>(0);
-  const updateTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Get settings document with proper type definition
+  // Get settings document
   const { useDocument } = useFireproof(mainDatabase);
   const { doc: settingsDoc } = useDocument<UserSettings>({ _id: 'user_settings' });
 
-  // Then declare state hooks
-  const [systemPrompt, setSystemPrompt] = useState('');
+  // State hooks
   const [isStreaming, setIsStreaming] = useState<boolean>(false);
-  const [selectedResponseId, setSelectedResponseId] = useState<string>(''); // default most recent
+  const [selectedResponseId, setSelectedResponseId] = useState<string>('');
   const [pendingAiMessage, setPendingAiMessage] = useState<ChatMessageDocument | null>(null);
+  const [needsNewKey, setNeedsNewKey] = useState<boolean>(false);
+
+  // when needsNewKey turns true, call refreshKey
+  useEffect(() => {
+    async function refresh() {
+      if (needsNewKey) {
+        await refreshKey();
+        setNeedsNewKey(false);
+      }
+    }
+    refresh();
+  }, [needsNewKey, refreshKey]);
 
   // Derive model to use from settings or default
   const modelToUse = useMemo(
@@ -57,42 +78,27 @@ export function useSimpleChat(sessionId: string | undefined): ChatState {
     [settingsDoc?.model]
   );
 
-  // The list of messages for the UI: docs + streaming message if active
-  const messages = useMemo(() => {
-    const baseDocs = docs.filter(
-      (doc: any) => doc.type === 'ai' || doc.type === 'user'
-    ) as unknown as ChatMessageDocument[];
-    return isStreaming && aiMessage.text.length > 0 ? [...baseDocs, aiMessage] : baseDocs;
-  }, [docs, isStreaming, aiMessage.text]);
+  // Use our custom hooks
+  const { ensureSystemPrompt } = useSystemPromptManager(settingsDoc);
 
-  const selectedResponseDoc = useMemo(() => {
-    // Priority 1: Explicit user selection (from confirmed docs)
-    if (selectedResponseId) {
-      const foundInDocs = docs.find(
-        (doc: any) => doc.type === 'ai' && doc._id === selectedResponseId
-      );
-      if (foundInDocs) return foundInDocs;
-      // If user selected an ID not (yet?) in docs, ignore it for now and proceed to defaults
-      // This prevents showing inconsistent state if docs haven't updated
-    }
+  const { throttledMergeAiMessage, isProcessingRef } = useThrottledUpdates(mergeAiMessage);
 
-    // Priority 2: Pending message (if no valid user selection)
-    if (pendingAiMessage) {
-      return pendingAiMessage;
-    }
+  const {
+    messages,
+    selectedResponseDoc,
+    selectedSegments,
+    selectedCode,
+    selectedDependencies,
+    buildMessageHistory,
+  } = useMessageSelection({
+    docs,
+    isStreaming,
+    aiMessage,
+    selectedResponseId,
+    pendingAiMessage,
+  });
 
-    // Priority 3: Streaming message (if no valid user selection and not pending)
-    if (isStreaming) {
-      return aiMessage;
-    }
-
-    // Priority 4: Default to latest AI message from docs (if no valid selection, not pending, not streaming)
-    const latestAiDoc = docs.filter((doc: any) => doc.type === 'ai').reverse()[0];
-    return latestAiDoc;
-  }, [selectedResponseId, docs, pendingAiMessage, isStreaming, aiMessage]) as
-    | ChatMessageDocument
-    | undefined;
-
+  // Simple input handler
   const setInput = useCallback(
     (input: string) => {
       mergeUserMessage({ text: input });
@@ -100,109 +106,36 @@ export function useSimpleChat(sessionId: string | undefined): ChatState {
     [mergeUserMessage]
   );
 
-  // Process docs into messages for the UI
-  const filteredDocs = docs.filter((doc: any) => doc.type === 'ai' || doc.type === 'user');
-  const buildMessageHistory = useCallback(() => {
-    return filteredDocs.map((msg: any) => ({
-      role: msg.type === 'user' ? ('user' as const) : ('assistant' as const),
-      content: msg.text || '',
-    }));
-  }, [filteredDocs]);
+  // Function to check credits and set needsNewKey if needed
+  const checkCredits = useCallback(async () => {
+    if (!apiKey) return;
 
-  const { selectedSegments, selectedCode, selectedDependencies } = useMemo(() => {
-    const { segments, dependenciesString } = selectedResponseDoc
-      ? parseContent(selectedResponseDoc.text)
-      : { segments: [], dependenciesString: '' };
+    try {
+      const credits = await getCredits(apiKey);
+      console.log('💳 Credits:', credits);
 
-    const code =
-      segments.find((segment) => segment.type === 'code') || ({ content: '' } as Segment);
-
-    const dependencies = dependenciesString ? parseDependencies(dependenciesString) : {};
-
-    return {
-      selectedSegments: segments,
-      selectedCode: code,
-      selectedDependencies: dependencies,
-    };
-  }, [selectedResponseDoc]);
-
-  // Throttled update function with fixed delay and debouncing
-  // Reset system prompt when settings change
-  useEffect(() => {
-    if (settingsDoc && systemPrompt) {
-      // Only reset if we already have a system prompt (don't trigger on initial load)
-      const loadNewPrompt = async () => {
-        const newPrompt = await makeBaseSystemPrompt(CODING_MODEL, settingsDoc);
-        setSystemPrompt(newPrompt);
-      };
-      loadNewPrompt();
+      if (credits && credits.available <= 0.75) {
+        setNeedsNewKey(true);
+      }
+    } catch (error) {
+      // If we can't check credits, we might need a new key
+      console.error('Error checking credits:', error);
+      setNeedsNewKey(true);
     }
-  }, [settingsDoc, systemPrompt, CODING_MODEL]);
-
-  const throttledMergeAiMessage = useCallback(
-    (content: string) => {
-      // If we're already processing a database operation, don't trigger more updates
-      if (isProcessingRef.current) {
-        return;
-      }
-
-      // Clear any pending timeout to implement proper debouncing
-      if (updateTimeoutRef.current) {
-        clearTimeout(updateTimeoutRef.current);
-        updateTimeoutRef.current = null;
-      }
-
-      // Throttle parameters
-      const THROTTLE_DELAY = 10; // Increased from 10ms for better stability
-      const MIN_UPDATE_INTERVAL = 50; // Minimum time between updates
-
-      // Add minimum time between updates check
-      const now = Date.now();
-      const timeSinceLastUpdate = now - lastUpdateTimeRef.current;
-
-      // Calculate delay - use a longer delay if we've updated recently
-      let delay = THROTTLE_DELAY;
-
-      if (timeSinceLastUpdate < MIN_UPDATE_INTERVAL) {
-        // If we've updated too recently, use adaptive delay
-        delay = Math.max(
-          MIN_UPDATE_INTERVAL - timeSinceLastUpdate + THROTTLE_DELAY,
-          MIN_UPDATE_INTERVAL
-        );
-      }
-
-      // Schedule update with calculated delay
-      updateTimeoutRef.current = setTimeout(() => {
-        // Record update time before the actual update
-        lastUpdateTimeRef.current = Date.now();
-
-        // Update with the content passed directly to this function
-        mergeAiMessage({ text: content });
-      }, delay);
-    },
-    [mergeAiMessage]
-  );
+  }, [apiKey]);
 
   /**
    * Send a message and process the AI response
-   * Returns a promise that resolves when the entire process is complete, including title generation
    */
   const sendMessage = useCallback(async (): Promise<void> => {
     if (!userMessage.text.trim()) return;
-
-    // First, ensure we have the system prompt
-    // Instead of setting state and immediately using it, get the value and use it directly
-    let currentSystemPrompt = systemPrompt;
-    if (!currentSystemPrompt) {
-      if (import.meta.env.MODE === 'test') {
-        currentSystemPrompt = 'Test system prompt';
-        setSystemPrompt(currentSystemPrompt);
-      } else {
-        // Pass the settings document to makeBaseSystemPrompt
-        currentSystemPrompt = await makeBaseSystemPrompt(CODING_MODEL, settingsDoc);
-        setSystemPrompt(currentSystemPrompt);
-      }
+    if (!apiKey) {
+      console.error('API key not available yet');
+      return;
     }
+
+    // Ensure we have a system prompt
+    const currentSystemPrompt = await ensureSystemPrompt();
 
     // Set streaming state
     setIsStreaming(true);
@@ -211,15 +144,13 @@ export function useSimpleChat(sessionId: string | undefined): ChatState {
     return submitUserMessage()
       .then(() => {
         const messageHistory = buildMessageHistory();
-        // Use the hoisted modelToUse variable from the hook scope
-        // Use the locally captured system prompt value, not the state variable
         return streamAI(
           modelToUse,
           currentSystemPrompt,
           messageHistory,
           userMessage.text,
-          // This callback receives the complete content so far
-          (content) => throttledMergeAiMessage(content)
+          (content) => throttledMergeAiMessage(content),
+          apiKey || ''
         );
       })
       .then(async (finalContent) => {
@@ -227,83 +158,97 @@ export function useSimpleChat(sessionId: string | undefined): ChatState {
         isProcessingRef.current = true;
 
         try {
+          // Check if finalContent is a string that could be JSON
+          if (typeof finalContent === 'string' && finalContent.startsWith('{')) {
+            try {
+              const parsedContent = JSON.parse(finalContent);
+
+              // Check if there's an error property
+              if (parsedContent.error) {
+                console.log('Error in API response:', parsedContent);
+                setNeedsNewKey(true);
+                // Preserve the user message in case they want to retry
+                setInput(userMessage.text);
+                // Return early with an error message
+                finalContent = `Error: ${JSON.stringify(parsedContent.error)}`;
+              } else {
+                // If no error, continue with the parsed content
+                finalContent = parsedContent;
+              }
+            } catch (jsonError) {
+              console.log('Error parsing JSON response:', jsonError, finalContent);
+            }
+          }
+
+          // Handle empty responses with a friendly message
+          if (
+            !finalContent ||
+            (typeof finalContent === 'string' && finalContent.trim().length === 0)
+          ) {
+            finalContent =
+              'Sorry, there was an error processing your request. Please try again in a moment.';
+          }
+
           // Only do a final update if the current state doesn't match our final content
           if (aiMessage.text !== finalContent) {
-            // First update the aiMessage object (no state update)
             aiMessage.text = finalContent;
           }
 
           aiMessage.model = modelToUse;
-          // Assert the return type to include the document id
+          // Save to database
           const { id } = (await sessionDatabase.put(aiMessage)) as { id: string };
-          // Capture the completed message *after* persistence, using the returned id
+          // Update state with the saved message
           setPendingAiMessage({ ...aiMessage, _id: id });
-          // HACK: Always select the message that just finished streaming
           setSelectedResponseId(id);
-          // Finally, generate title if needed and handle auto-selection
-          const { segments } = parseContent(aiMessage.text);
 
+          // Generate title if needed
+          const { segments } = parseContent(aiMessage.text);
           if (!session?.title) {
-            await generateTitle(segments, TITLE_MODEL).then(updateTitle);
+            await generateTitle(segments, TITLE_MODEL, apiKey || '').then(updateTitle);
           }
         } finally {
-          // Always clear the processing flag
           isProcessingRef.current = false;
         }
       })
-      .catch((error) => {
-        console.error('Error processing stream:', error);
+      .catch((error: any) => {
+        // Log the error for debugging
+        console.log('Error:', error);
+
+        // Reset processing state
         isProcessingRef.current = false;
-        // Clear pending message and selection on error
         setPendingAiMessage(null);
         setSelectedResponseId('');
       })
       .finally(() => {
+        // Check credits status
+        checkCredits();
+
+        // Reset streaming state
         setIsStreaming(false);
       });
   }, [
     userMessage.text,
-    systemPrompt,
-    setSystemPrompt,
+    ensureSystemPrompt,
     setIsStreaming,
     submitUserMessage,
     buildMessageHistory,
+    modelToUse,
     throttledMergeAiMessage,
+    isProcessingRef,
     aiMessage,
     sessionDatabase,
+    setPendingAiMessage,
+    setSelectedResponseId,
     session?.title,
     updateTitle,
-    settingsDoc,
-    setSelectedResponseId,
+    checkCredits,
+    apiKey,
   ]);
 
-  // TODO: make a version of this that only saves the first
-  // for the given message source. so one each message.
-  // const addFirstScreenshot = useCallback(
-  //   async (screenshotData: string) => {
-  //     const { rows: screenshots } = await database.query((doc: any) => [doc.session_id, doc.type], {
-  //       key: [session._id, 'screenshot'],
-  //     });
-  //     if (screenshots.length === 0) {
-  //       addScreenshot(screenshotData);
-  //     }
-  //   },
-  //   [session._id, database, addScreenshot]
-  // );
-
+  // Determine if code is ready for display
   const codeReady = useMemo(() => {
     return !isStreaming || selectedSegments.length > 2;
   }, [isStreaming, selectedSegments]);
-
-  // Cleanup any pending updates when the component unmounts
-  useEffect(() => {
-    return () => {
-      if (updateTimeoutRef.current) {
-        clearTimeout(updateTimeoutRef.current);
-        updateTimeoutRef.current = null;
-      }
-    };
-  }, []);
 
   // Effect to clear pending message once it appears in the main docs list
   useEffect(() => {
@@ -311,6 +256,13 @@ export function useSimpleChat(sessionId: string | undefined): ChatState {
       setPendingAiMessage(null);
     }
   }, [docs, pendingAiMessage]);
+
+  // Check credits whenever we get an API key
+  useEffect(() => {
+    if (apiKey) {
+      checkCredits();
+    }
+  }, [apiKey, checkCredits]);
 
   return {
     sessionId: session._id,
@@ -328,5 +280,7 @@ export function useSimpleChat(sessionId: string | undefined): ChatState {
     sendMessage,
     inputRef,
     title: session?.title || '',
+    needsNewKey,
+    setNeedsNewKey,
   };
 }

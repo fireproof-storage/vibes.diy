@@ -104,8 +104,23 @@ function ResultPreview({
       if (data) {
         if (data.type === 'preview-ready' || data.type === 'preview-loaded') {
           // respond with the API key
+          // Use CALLAI_API_KEY if available (dev mode), otherwise check localStorage
+          let apiKey = CALLAI_API_KEY;
+
+          // Only check localStorage if no dev key is set
+          if (!apiKey) {
+            const storedKey = localStorage.getItem('vibes-openrouter-key');
+            if (storedKey) {
+              try {
+                const keyData = JSON.parse(storedKey);
+                apiKey = keyData.key;
+              } catch (e) {}
+            }
+          } else {
+          }
+
           const iframe = document.querySelector('iframe') as HTMLIFrameElement;
-          iframe?.contentWindow?.postMessage({ type: 'callai-api-key', key: CALLAI_API_KEY }, '*');
+          iframe?.contentWindow?.postMessage({ type: 'callai-api-key', key: apiKey }, '*');
 
           setMobilePreviewShown(true);
 
@@ -133,7 +148,6 @@ function ResultPreview({
             onScreenshotCaptured(data.data);
           }
         } else if (data.type === 'screenshot-error' && data.error) {
-          console.warn('Screenshot capture error:', data.error);
           // Still call onScreenshotCaptured with null to signal that the screenshot failed
           if (onScreenshotCaptured) {
             onScreenshotCaptured(null);

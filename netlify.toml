@@ -1,8 +1,18 @@
 [build]
   publish = "build/client"
   command = "pnpm run build"
+  functions = "netlify/functions"
+
+[dev]
+  command = "react-router dev"
+  targetPort = 5173
+  framework = "#custom"
 
 [[redirects]]
   from = "/*"
   to = "/index.html"
   status = 200
+
+[[edge_functions]]
+  path = "/api/callai/*"
+  function = "callai"

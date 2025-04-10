@@ -36,5 +36,3 @@ export const FIREPROOF_CHAT_HISTORY =
 // Using CALLAI_API_KEY as the primary API key for all AI services
 export const CALLAI_API_KEY =
   import.meta.env.VITE_CALLAI_API_KEY || import.meta.env.VITE_OPENROUTER_API_KEY;
-// Deprecated: Use CALLAI_API_KEY instead
-// export const OPENROUTER_API_KEY = CALLAI_API_KEY;

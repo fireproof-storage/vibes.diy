@@ -6,3 +6,8 @@
 /.react-router/
 /build/
 /coverage/
+# Local Netlify folder
+.netlify
+
+# VS Code settings
+.vscode/settings.json

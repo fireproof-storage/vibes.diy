@@ -35,6 +35,21 @@ vi.mock('../app/prompts', () => ({
   makeBaseSystemPrompt: vi.fn().mockResolvedValue('Mocked system prompt'),
 }));
 
+// Mock the provisioning module
+vi.mock('../app/config/provisioning');
+
+// Import the mocked module
+import { getCredits } from '../app/config/provisioning';
+
+// Mock the apiKeyService module
+vi.mock('../app/services/apiKeyService');
+import { createKeyViaEdgeFunction } from '../app/services/apiKeyService';
+
+// Mock the env module
+vi.mock('../app/config/env', () => ({
+  CALLAI_API_KEY: 'mock-callai-api-key-for-testing',
+}));
+
 // Define shared state and reset function *outside* the mock factory
 type MockDoc = { _id: string; type: string; text: string; session_id: string; timestamp: number };
 let mockDocs: MockDoc[] = [];
@@ -451,6 +466,30 @@ Here's how to use React.
 
 describe('useSimpleChat', () => {
   beforeEach(() => {
+    // Mock createKeyViaEdgeFunction to ensure it returns the correct structure
+    vi.mocked(createKeyViaEdgeFunction).mockImplementation(async () => {
+      return {
+        key: 'mock-api-key-for-testing',
+        hash: 'mock-hash',
+        name: 'Mock Session Key',
+        label: 'mock-session',
+        limit: 0.01,
+        disabled: false,
+        usage: 0,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      };
+    });
+
+    // Mock the getCredits function
+    vi.mocked(getCredits).mockImplementation(async () => {
+      return {
+        available: 0.005,
+        usage: 0.005,
+        limit: 0.01,
+      };
+    });
+
     // Mock window.fetch
     vi.spyOn(window, 'fetch').mockImplementation(async () => {
       // Mock response with a readable stream
