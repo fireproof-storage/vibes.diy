@@ -71,7 +71,7 @@ async function handleCreateKey(requestData, provisioningKey, userId) {
   try {
     const { name = 'Session Key', label = `session-${Date.now()}` } = requestData;
 
-    const dollarAmount = userId !== 'anonymous' ? 2.50 : 1.25;
+    const dollarAmount = userId !== 'anonymous' ? 2.5 : 1.25;
     console.log(
       `💰 Edge Function: Setting dollar amount to $${dollarAmount} for ${userId !== 'anonymous' ? 'authenticated' : 'anonymous'} user`
     );
