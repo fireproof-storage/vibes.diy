@@ -109,11 +109,11 @@ export function useSimpleChat(sessionId: string | undefined): ChatState {
   // Function to check credits and set needsNewKey if needed
   const checkCredits = useCallback(async () => {
     if (!apiKey) return;
-    
+
     try {
       const credits = await getCredits(apiKey);
       console.log('💳 Credits:', credits);
-      
+
       if (credits && credits.available <= 0.7) {
         setNeedsNewKey(true);
       }
@@ -159,8 +159,12 @@ export function useSimpleChat(sessionId: string | undefined): ChatState {
 
         try {
           // Handle empty responses with a friendly message
-          if (!finalContent || (typeof finalContent === 'string' && finalContent.trim().length === 0)) {
-            finalContent = 'Sorry, there was an error processing your request. Please try again in a moment.';
+          if (
+            !finalContent ||
+            (typeof finalContent === 'string' && finalContent.trim().length === 0)
+          ) {
+            finalContent =
+              'Sorry, there was an error processing your request. Please try again in a moment.';
           }
 
           // Only do a final update if the current state doesn't match our final content
@@ -187,7 +191,7 @@ export function useSimpleChat(sessionId: string | undefined): ChatState {
       .catch((error: any) => {
         // Log the error for debugging
         console.log('Error:', error);
-        
+
         // Reset processing state
         isProcessingRef.current = false;
         setPendingAiMessage(null);
@@ -196,7 +200,7 @@ export function useSimpleChat(sessionId: string | undefined): ChatState {
       .finally(() => {
         // Check credits status
         checkCredits();
-        
+
         // Reset streaming state
         setIsStreaming(false);
       });
