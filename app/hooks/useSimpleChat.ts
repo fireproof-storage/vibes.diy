@@ -106,6 +106,24 @@ export function useSimpleChat(sessionId: string | undefined): ChatState {
     [mergeUserMessage]
   );
 
+  // Function to check credits and set needsNewKey if needed
+  const checkCredits = useCallback(async () => {
+    if (!apiKey) return;
+    
+    try {
+      const credits = await getCredits(apiKey);
+      console.log('💳 Credits:', credits);
+      
+      if (credits && credits.available <= 0.7) {
+        setNeedsNewKey(true);
+      }
+    } catch (error) {
+      // If we can't check credits, we might need a new key
+      console.error('Error checking credits:', error);
+      setNeedsNewKey(true);
+    }
+  }, [apiKey]);
+
   /**
    * Send a message and process the AI response
    */
@@ -140,69 +158,9 @@ export function useSimpleChat(sessionId: string | undefined): ChatState {
         isProcessingRef.current = true;
 
         try {
-          // Check for various error cases including empty responses and different error formats
-
-          // Empty response detection - a sign of possible API issues
-          if (
-            !finalContent ||
-            (typeof finalContent === 'string' && finalContent.trim().length === 0)
-          ) {
-            // We should check credits to see if this is a credit issue
-            if (apiKey) {
-              try {
-                const credits = await getCredits(apiKey);
-                if (credits && credits.available <= 0) {
-                  setNeedsNewKey(true);
-                  return;
-                } else {
-                  // We'll use a default message instead of empty response
-                  finalContent =
-                    'Sorry, there was an error processing your request. Please try again in a moment.';
-                }
-              } catch (creditError) {
-                // Default message for error case
-                finalContent = 'Unable to process request. Please try again later.';
-              }
-            }
-          }
-
-          // If it's a string that looks like JSON, try parsing it for error detection
-          if (typeof finalContent === 'string' && finalContent.trim()) {
-            const trimmed = finalContent.trim();
-            // Only try to parse if it starts with { or [
-            if (trimmed.startsWith('{') || trimmed.startsWith('[')) {
-              try {
-                const parsedContent = JSON.parse(trimmed);
-
-                // Check for different error formats
-
-                // 1. OpenRouter format with user_id
-                if (parsedContent.error && parsedContent.user_id) {
-                  if (
-                    parsedContent.error.code === 402 ||
-                    (parsedContent.error.message &&
-                      parsedContent.error.message.includes('requires more credits'))
-                  ) {
-                    setNeedsNewKey(true);
-                    return;
-                  }
-                }
-                // 2. CallAI format (according to docs)
-                else if (parsedContent.error && parsedContent.message) {
-                  // Check for credit-related issues in message
-                  if (
-                    parsedContent.message.includes('credit') ||
-                    parsedContent.message.includes('quota') ||
-                    parsedContent.message.includes('limit')
-                  ) {
-                    setNeedsNewKey(true);
-                    return;
-                  }
-                }
-              } catch (e: any) {
-                // Parsing failed, but no need to log errors
-              }
-            }
+          // Handle empty responses with a friendly message
+          if (!finalContent || (typeof finalContent === 'string' && finalContent.trim().length === 0)) {
+            finalContent = 'Sorry, there was an error processing your request. Please try again in a moment.';
           }
 
           // Only do a final update if the current state doesn't match our final content
@@ -227,31 +185,19 @@ export function useSimpleChat(sessionId: string | undefined): ChatState {
         }
       })
       .catch((error: any) => {
-        // Check for credit limit errors in the new CallAI 0.6.4 format
-        if (
-          error.message &&
-          (error.message.includes('credit') ||
-            error.message.includes('402') ||
-            error.message.includes('limit'))
-        ) {
-          setNeedsNewKey(true);
-        }
-
+        // Log the error for debugging
+        console.log('Error:', error);
+        
+        // Reset processing state
         isProcessingRef.current = false;
         setPendingAiMessage(null);
         setSelectedResponseId('');
       })
       .finally(() => {
-        if (apiKey) {
-          getCredits(apiKey)
-            .then((credits: { available: number; usage: number; limit: number }) => {
-              console.log('💳 Credits:', credits);
-            })
-            .catch((error: Error) => {
-              // Error checking credits (handled silently)
-            });
-        }
-
+        // Check credits status
+        checkCredits();
+        
+        // Reset streaming state
         setIsStreaming(false);
       });
   }, [
@@ -269,6 +215,8 @@ export function useSimpleChat(sessionId: string | undefined): ChatState {
     setSelectedResponseId,
     session?.title,
     updateTitle,
+    checkCredits,
+    apiKey,
   ]);
 
   // Determine if code is ready for display
@@ -286,13 +234,9 @@ export function useSimpleChat(sessionId: string | undefined): ChatState {
   // Check credits whenever we get an API key
   useEffect(() => {
     if (apiKey) {
-      getCredits(apiKey)
-        .then((credits: { available: number; usage: number; limit: number }) => {
-          console.log('💳 Credits:', credits);
-        })
-        .catch((error: Error) => {});
+      checkCredits();
     }
-  }, [apiKey]);
+  }, [apiKey, checkCredits]);
 
   return {
     sessionId: session._id,
