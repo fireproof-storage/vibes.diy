@@ -81,7 +81,8 @@ export function PublishMenu({
           aria-labelledby="publish-menu"
         >
           <p className="mb-4 text-xs text-blue-700 italic dark:text-blue-200">
-            <strong>Technical Preview:</strong> Data is browser-local, multi-user sync coming soon.
+            <strong>Technical Preview:</strong> Data is browser-local, AI in published apps and
+            multi-user sync coming soon.
           </p>
           {publishedAppUrl ? (
             <div className="rounded-md bg-gray-50 px-2 py-2 text-sm text-gray-700 dark:bg-gray-700 dark:text-gray-200">
