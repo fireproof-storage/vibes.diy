@@ -39,7 +39,7 @@ vi.mock('../app/prompts', () => ({
 vi.mock('../app/config/provisioning');
 
 // Import the mocked module
-import { createSessionKey } from '../app/config/provisioning';
+import { createSessionKey, getCredits } from '../app/config/provisioning';
 
 // Mock the env module
 vi.mock('../app/config/env', () => ({
@@ -474,6 +474,15 @@ describe('useSimpleChat', () => {
         usage: 0,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
+      };
+    });
+
+    // Mock the getCredits function
+    vi.mocked(getCredits).mockImplementation(async () => {
+      return {
+        available: 0.005,
+        usage: 0.005,
+        limit: 0.01,
       };
     });
 

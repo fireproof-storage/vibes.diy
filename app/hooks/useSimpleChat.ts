@@ -7,6 +7,7 @@ import { useFireproof } from 'use-fireproof';
 import { generateTitle } from '../utils/titleGenerator';
 import { streamAI } from '../utils/streamHandler';
 import { useApiKey } from './useApiKey';
+import { getCredits } from '../config/provisioning';
 
 // Import our custom hooks
 import { useSystemPromptManager } from './useSystemPromptManager';
@@ -23,8 +24,22 @@ const TITLE_MODEL = 'google/gemini-2.0-flash-lite-001';
  * @returns ChatState object with all chat functionality and state
  */
 export function useSimpleChat(sessionId: string | undefined): ChatState {
-  // Get API key
-  const { apiKey } = useApiKey();
+  // Get user ID from session or generate a device ID
+  const deviceId = useMemo(() => {
+    // For now, use a device ID from localStorage if user isn't logged in
+    // This will be replaced with actual user ID when that branch is merged
+    const storedDeviceId = localStorage.getItem('vibes-device-id');
+    if (storedDeviceId) return storedDeviceId;
+
+    // Generate a new device ID if none exists
+    const newDeviceId = `device-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+    localStorage.setItem('vibes-device-id', newDeviceId);
+    return newDeviceId;
+  }, []);
+
+  // Get API key, passing the deviceId as a standin for userId
+  // This will be replaced with actual userId when that branch is merged
+  const { apiKey } = useApiKey(deviceId);
 
   // Get session data
   const {
@@ -150,6 +165,18 @@ export function useSimpleChat(sessionId: string | undefined): ChatState {
         setSelectedResponseId('');
       })
       .finally(() => {
+        if (apiKey) {
+          getCredits(apiKey)
+            .then((credits: { available: number; usage: number; limit: number }) => {
+              console.log('Remaining credits:', credits);
+            })
+            .catch((error: Error) => {
+              console.error('Failed to fetch credits:', error);
+            });
+        } else {
+          console.error('API key not available to fetch credits');
+        }
+
         setIsStreaming(false);
       });
   }, [

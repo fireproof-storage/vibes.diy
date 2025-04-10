@@ -1,8 +1,13 @@
 [build]
   publish = "build/client"
   command = "pnpm run build"
+  functions = "netlify/functions"
 
 [[redirects]]
   from = "/*"
   to = "/index.html"
   status = 200
+
+[[edge_functions]]
+  path = "/api/openrouter/*"
+  function = "openrouter"

@@ -88,3 +88,31 @@ export async function getKeyInfo(provisioningKey: string, keyHash: string) {
     throw error;
   }
 }
+
+/**
+ * Fetches the credit information for an API key
+ * @param apiKey The API key to check credits for
+ * @returns The credit information including available credits and usage
+ */
+export async function getCredits(apiKey: string): Promise<{
+  available: number;
+  usage: number;
+  limit: number;
+}> {
+  try {
+    const response = await fetch('https://openrouter.ai/api/v1/credits', {
+      method: 'GET',
+      headers: { Authorization: `Bearer ${apiKey}` },
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to fetch credits: ${response.status}`);
+    }
+
+    const { data } = await response.json();
+    return data;
+  } catch (error) {
+    console.error('Error fetching OpenRouter credits:', error);
+    throw error;
+  }
+}
