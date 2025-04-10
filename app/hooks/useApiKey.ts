@@ -25,7 +25,6 @@ export function useApiKey(userId?: string) {
       }
 
       hasFetchStarted.current = true;
-      console.log('💾 Checking localStorage for API key at:', storageKey);
 
       const storedKey = localStorage.getItem(storageKey);
       if (storedKey) {
@@ -36,27 +35,15 @@ export function useApiKey(userId?: string) {
           const keyAgeInDays = (now - creationTime) / (1000 * 60 * 60 * 24);
 
           if (keyAgeInDays < 7) {
-            console.log(
-              '✅ Using valid key from localStorage, age:',
-              keyAgeInDays.toFixed(2),
-              'days'
-            );
             setApiKey(keyData.key);
             return; // Exit early since we found a valid key
           } else {
-            console.log(
-              '⏰ Key expired, age:',
-              keyAgeInDays.toFixed(2),
-              'days, removing from storage'
-            );
             localStorage.removeItem(storageKey);
           }
         } catch (e) {
-          console.error('❌ Error parsing stored key, removing:', e);
           localStorage.removeItem(storageKey);
         }
       } else {
-        console.log('🔍 No API key found in localStorage');
       }
 
       // If we reach here, we need to fetch a new key
@@ -71,20 +58,11 @@ export function useApiKey(userId?: string) {
     setIsLoading(true);
     setError(null);
 
-    console.log('ENV CHECK:', {
-      CALLAI_API_KEY: !!CALLAI_API_KEY,
-      viteEnvKeys: Object.keys(import.meta.env).filter(
-        (key) => key.includes('OPENROUTER') || key.includes('CALLAI')
-      ),
-    });
-
     try {
       let keyData;
 
       // Log which path we're taking: direct key or provisioning API
       if (CALLAI_API_KEY) {
-        console.log('🔑 Using DIRECT CALLAI DEV KEY from environment variable');
-        console.log('💡 To test provisioning API, remove VITE_CALLAI_API_KEY from .env');
         keyData = {
           key: CALLAI_API_KEY,
           hash: 'local-dev',
@@ -97,7 +75,6 @@ export function useApiKey(userId?: string) {
           updated_at: new Date().toISOString(),
         };
       } else {
-        console.log('🔄 Using PROVISIONING API via edge function');
         try {
           keyData = await createKeyViaEdgeFunction(userId);
         } catch (error) {
@@ -109,12 +86,7 @@ export function useApiKey(userId?: string) {
         ...keyData,
         createdAt: Date.now(),
       };
-      console.log('💾 Saving new API key to localStorage:', {
-        hash: keyData.hash,
-        limit: keyData.limit,
-        label: keyData.label,
-        storage_key: storageKey,
-      });
+
       localStorage.setItem(storageKey, JSON.stringify(keyToStore));
 
       setApiKey(keyData.key);

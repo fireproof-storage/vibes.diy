@@ -109,19 +109,14 @@ function ResultPreview({
 
           // Only check localStorage if no dev key is set
           if (!apiKey) {
-
             const storedKey = localStorage.getItem('vibes-openrouter-key');
             if (storedKey) {
               try {
                 const keyData = JSON.parse(storedKey);
                 apiKey = keyData.key;
-
-              } catch (e) {
-
-              }
+              } catch (e) {}
             }
           } else {
-
           }
 
           const iframe = document.querySelector('iframe') as HTMLIFrameElement;
@@ -153,7 +148,6 @@ function ResultPreview({
             onScreenshotCaptured(data.data);
           }
         } else if (data.type === 'screenshot-error' && data.error) {
-
           // Still call onScreenshotCaptured with null to signal that the screenshot failed
           if (onScreenshotCaptured) {
             onScreenshotCaptured(null);
