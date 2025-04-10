@@ -102,6 +102,8 @@ export interface ChatState {
   selectedSegments?: Segment[];
   selectedCode?: Segment;
   selectedDependencies?: Record<string, string>;
+  needsNewKey?: boolean;
+  setNeedsNewKey: (value: boolean) => void;
 }
 
 export interface ChatInterfaceProps {

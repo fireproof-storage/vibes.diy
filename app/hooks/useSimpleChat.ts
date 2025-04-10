@@ -58,6 +58,7 @@ export function useSimpleChat(sessionId: string | undefined): ChatState {
   const [isStreaming, setIsStreaming] = useState<boolean>(false);
   const [selectedResponseId, setSelectedResponseId] = useState<string>('');
   const [pendingAiMessage, setPendingAiMessage] = useState<ChatMessageDocument | null>(null);
+  const [needsNewKey, setNeedsNewKey] = useState<boolean>(false);
 
   // Derive model to use from settings or default
   const modelToUse = useMemo(
@@ -128,6 +129,65 @@ export function useSimpleChat(sessionId: string | undefined): ChatState {
         isProcessingRef.current = true;
 
         try {
+          // Handle empty responses and error detection
+          if (!finalContent || (typeof finalContent === 'string' && finalContent.trim().length === 0)) {
+            // Default message instead of empty response
+            finalContent = 'Sorry, there was an error processing your request. Please try again in a moment.';
+            
+            // Set needs new key
+            console.log('OpenRouter API returned empty response - setting needsNewKey');
+            setNeedsNewKey(true);
+            return;
+          }
+          
+          // Error detection from JSON responses
+          if (typeof finalContent === 'string' && finalContent.trim()) {
+            const trimmed = finalContent.trim();
+            
+            // Only try to parse if it looks like JSON
+            if (trimmed.startsWith('{') || trimmed.startsWith('[')) {
+              try {
+                const parsedContent = JSON.parse(trimmed);
+                
+                // Check different error formats that would indicate credit issues
+                
+                // OpenRouter format
+                if (parsedContent.error && parsedContent.user_id) {
+                  if (parsedContent.error.code === 402 || 
+                      (parsedContent.error.message && 
+                       parsedContent.error.message.includes('requires more credits'))) {
+                    console.log('Credit limit error detected - setting needsNewKey');
+                    setNeedsNewKey(true);
+                    return;
+                  }
+                }
+                // CallAI format
+                else if (parsedContent.error && parsedContent.message) {
+                  // Check for credit-related issues in message
+                  if (parsedContent.message.includes('credit') || 
+                      parsedContent.message.includes('quota') ||
+                      parsedContent.message.includes('limit')) {
+                    console.log('Credit/quota limit error detected - setting needsNewKey');
+                    setNeedsNewKey(true);
+                    return;
+                  }
+                }
+                // Direct error object
+                else if (parsedContent.code === 402 || 
+                         (parsedContent.message && 
+                          (parsedContent.message.includes('credit') || 
+                           parsedContent.message.includes('quota') || 
+                           parsedContent.message.includes('limit')))) {
+                  console.log('Credit/quota limit error detected - setting needsNewKey');
+                  setNeedsNewKey(true);
+                  return;
+                }
+              } catch (e) {
+                // Silent fail - not critical to log parse errors
+              }
+            }
+          }
+
           // Only do a final update if the current state doesn't match our final content
           if (aiMessage.text !== finalContent) {
             aiMessage.text = finalContent;
@@ -229,5 +289,7 @@ export function useSimpleChat(sessionId: string | undefined): ChatState {
     sendMessage,
     inputRef,
     title: session?.title || '',
+    needsNewKey,
+    setNeedsNewKey,
   };
 }
