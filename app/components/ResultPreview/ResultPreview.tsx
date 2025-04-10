@@ -106,7 +106,7 @@ function ResultPreview({
           // respond with the API key
           // Use CALLAI_API_KEY if available (dev mode), otherwise check localStorage
           let apiKey = CALLAI_API_KEY;
-          
+
           // Only check localStorage if no dev key is set
           if (!apiKey) {
             console.log('No dev API key found, checking localStorage...');
@@ -124,7 +124,7 @@ function ResultPreview({
           } else {
             console.log('Using dev API key for iframe');
           }
-          
+
           const iframe = document.querySelector('iframe') as HTMLIFrameElement;
           iframe?.contentWindow?.postMessage({ type: 'callai-api-key', key: apiKey }, '*');
 

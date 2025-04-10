@@ -130,9 +130,12 @@ export function useSimpleChat(sessionId: string | undefined): ChatState {
 
         try {
           // Check for various error cases including empty responses and different error formats
-          
+
           // Empty response detection - a sign of possible API issues
-          if (!finalContent || (typeof finalContent === 'string' && finalContent.trim().length === 0)) {
+          if (
+            !finalContent ||
+            (typeof finalContent === 'string' && finalContent.trim().length === 0)
+          ) {
             // We should check credits to see if this is a credit issue
             if (apiKey) {
               try {
@@ -142,7 +145,8 @@ export function useSimpleChat(sessionId: string | undefined): ChatState {
                   return;
                 } else {
                   // We'll use a default message instead of empty response
-                  finalContent = 'Sorry, there was an error processing your request. Please try again in a moment.';
+                  finalContent =
+                    'Sorry, there was an error processing your request. Please try again in a moment.';
                 }
               } catch (creditError) {
                 // Default message for error case
@@ -150,7 +154,7 @@ export function useSimpleChat(sessionId: string | undefined): ChatState {
               }
             }
           }
-          
+
           // If it's a string that looks like JSON, try parsing it for error detection
           if (typeof finalContent === 'string' && finalContent.trim()) {
             const trimmed = finalContent.trim();
@@ -158,14 +162,16 @@ export function useSimpleChat(sessionId: string | undefined): ChatState {
             if (trimmed.startsWith('{') || trimmed.startsWith('[')) {
               try {
                 const parsedContent = JSON.parse(trimmed);
-                
+
                 // Check for different error formats
-                
+
                 // 1. OpenRouter format with user_id
                 if (parsedContent.error && parsedContent.user_id) {
-                  if (parsedContent.error.code === 402 || 
-                      (parsedContent.error.message && 
-                       parsedContent.error.message.includes('requires more credits'))) {
+                  if (
+                    parsedContent.error.code === 402 ||
+                    (parsedContent.error.message &&
+                      parsedContent.error.message.includes('requires more credits'))
+                  ) {
                     setNeedsNewKey(true);
                     return;
                   }
@@ -173,9 +179,11 @@ export function useSimpleChat(sessionId: string | undefined): ChatState {
                 // 2. CallAI format (according to docs)
                 else if (parsedContent.error && parsedContent.message) {
                   // Check for credit-related issues in message
-                  if (parsedContent.message.includes('credit') || 
-                      parsedContent.message.includes('quota') ||
-                      parsedContent.message.includes('limit')) {
+                  if (
+                    parsedContent.message.includes('credit') ||
+                    parsedContent.message.includes('quota') ||
+                    parsedContent.message.includes('limit')
+                  ) {
                     setNeedsNewKey(true);
                     return;
                   }
@@ -209,14 +217,15 @@ export function useSimpleChat(sessionId: string | undefined): ChatState {
       })
       .catch((error: any) => {
         // Check for credit limit errors in the new CallAI 0.6.4 format
-        if (error.message && (
-          error.message.includes('credit') || 
-          error.message.includes('402') || 
-          error.message.includes('limit')
-        )) {
+        if (
+          error.message &&
+          (error.message.includes('credit') ||
+            error.message.includes('402') ||
+            error.message.includes('limit'))
+        ) {
           setNeedsNewKey(true);
         }
-        
+
         isProcessingRef.current = false;
         setPendingAiMessage(null);
         setSelectedResponseId('');

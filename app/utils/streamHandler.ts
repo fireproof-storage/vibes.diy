@@ -24,7 +24,7 @@ export async function streamAI(
   apiKey: string
 ): Promise<string> {
   // Stream process starts
-  
+
   // Format messages for call-ai
   const messages: Message[] = [
     { role: 'system', content: systemPrompt },

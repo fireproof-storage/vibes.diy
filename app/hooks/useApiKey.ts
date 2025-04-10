@@ -23,10 +23,10 @@ export function useApiKey(userId?: string) {
       if (apiKey || isLoading || hasFetchStarted.current) {
         return;
       }
-      
+
       hasFetchStarted.current = true;
       console.log('💾 Checking localStorage for API key at:', storageKey);
-      
+
       const storedKey = localStorage.getItem(storageKey);
       if (storedKey) {
         try {
@@ -36,11 +36,19 @@ export function useApiKey(userId?: string) {
           const keyAgeInDays = (now - creationTime) / (1000 * 60 * 60 * 24);
 
           if (keyAgeInDays < 7) {
-            console.log('✅ Using valid key from localStorage, age:', keyAgeInDays.toFixed(2), 'days');
+            console.log(
+              '✅ Using valid key from localStorage, age:',
+              keyAgeInDays.toFixed(2),
+              'days'
+            );
             setApiKey(keyData.key);
             return; // Exit early since we found a valid key
           } else {
-            console.log('⏰ Key expired, age:', keyAgeInDays.toFixed(2), 'days, removing from storage');
+            console.log(
+              '⏰ Key expired, age:',
+              keyAgeInDays.toFixed(2),
+              'days, removing from storage'
+            );
             localStorage.removeItem(storageKey);
           }
         } catch (e) {
@@ -50,11 +58,11 @@ export function useApiKey(userId?: string) {
       } else {
         console.log('🔍 No API key found in localStorage');
       }
-      
+
       // If we reach here, we need to fetch a new key
       await fetchNewKey();
     };
-    
+
     checkAndLoadKey();
   }, [storageKey]); // Only re-run if storageKey changes (e.g., if userId changes)
 
@@ -62,15 +70,17 @@ export function useApiKey(userId?: string) {
   const fetchNewKey = async () => {
     setIsLoading(true);
     setError(null);
-    
-    console.log('ENV CHECK:', { 
+
+    console.log('ENV CHECK:', {
       CALLAI_API_KEY: !!CALLAI_API_KEY,
-      viteEnvKeys: Object.keys(import.meta.env).filter(key => key.includes('OPENROUTER') || key.includes('CALLAI'))
+      viteEnvKeys: Object.keys(import.meta.env).filter(
+        (key) => key.includes('OPENROUTER') || key.includes('CALLAI')
+      ),
     });
 
     try {
       let keyData;
-      
+
       // Log which path we're taking: direct key or provisioning API
       if (CALLAI_API_KEY) {
         console.log('🔑 Using DIRECT CALLAI DEV KEY from environment variable');
@@ -103,7 +113,7 @@ export function useApiKey(userId?: string) {
         hash: keyData.hash,
         limit: keyData.limit,
         label: keyData.label,
-        storage_key: storageKey
+        storage_key: storageKey,
       });
       localStorage.setItem(storageKey, JSON.stringify(keyToStore));
 

@@ -8,9 +8,7 @@
  * @param dollarAmount Dollar amount limit for the key
  * @returns The created key data
  */
-export async function createKeyViaEdgeFunction(
-  userId: string | undefined
-): Promise<{
+export async function createKeyViaEdgeFunction(userId: string | undefined): Promise<{
   key: string;
   hash: string;
   name: string;
@@ -21,7 +19,10 @@ export async function createKeyViaEdgeFunction(
   created_at: string;
   updated_at: string;
 }> {
-  console.log('🔄 Creating new API key via edge function for', userId ? `user ${userId}` : 'anonymous user');
+  console.log(
+    '🔄 Creating new API key via edge function for',
+    userId ? `user ${userId}` : 'anonymous user'
+  );
   const requestStart = Date.now();
   const response = await fetch('/api/callai/create-key', {
     method: 'POST',
@@ -39,7 +40,7 @@ export async function createKeyViaEdgeFunction(
 
   const responseTime = Date.now() - requestStart;
   console.log(`⏱️ Edge function responded in ${responseTime}ms with status ${response.status}`);
-  
+
   if (!response.ok) {
     const errorData = await response.json();
     console.error('❌ Edge function error:', errorData);
@@ -50,8 +51,8 @@ export async function createKeyViaEdgeFunction(
   console.log('✅ New key received:', {
     hash: responseData.hash,
     limit: responseData.limit,
-    label: responseData.label
+    label: responseData.label,
   });
-  
+
   return responseData;
 }

@@ -70,15 +70,14 @@ async function handleCreateKey(requestData, provisioningKey, userId) {
   console.log(`🔑 Edge Function: Creating key for user: ${userId}`);
   try {
     // Use the requestData that was already parsed
-    const {
-      name = 'Session Key',
-      label = `session-${Date.now()}`,
-    } = requestData;
-    
+    const { name = 'Session Key', label = `session-${Date.now()}` } = requestData;
+
     // Set dollar amount based on user authentication status
     // Anonymous users get $0.75, logged-in users get $1.00
-    const dollarAmount = userId !== 'anonymous' ? 2.0 : 1.00;
-    console.log(`💰 Edge Function: Setting dollar amount to $${dollarAmount} for ${userId !== 'anonymous' ? 'authenticated' : 'anonymous'} user`);
+    const dollarAmount = userId !== 'anonymous' ? 2.0 : 1.0;
+    console.log(
+      `💰 Edge Function: Setting dollar amount to $${dollarAmount} for ${userId !== 'anonymous' ? 'authenticated' : 'anonymous'} user`
+    );
 
     // Add userId to the key label if available
     const keyLabel = userId !== 'anonymous' ? `user-${userId}-${label}` : `anonymous-${label}`;
@@ -108,7 +107,7 @@ async function handleCreateKey(requestData, provisioningKey, userId) {
         headers: { 'Content-Type': 'application/json' },
       });
     }
-    
+
     // OpenRouter API returns data in a nested structure
     // The key is at the top level, metadata in data object
     if (!data.key) {
@@ -118,21 +117,21 @@ async function handleCreateKey(requestData, provisioningKey, userId) {
         headers: { 'Content-Type': 'application/json' },
       });
     }
-    
+
     // Enhanced logging for successful key creation
     // Format the response to combine top-level key with nested metadata
     const formattedResponse = {
       ...data.data, // Include all metadata from the data object
       key: data.key, // Add the key from the top level
     };
-    
+
     console.log(`✅ EDGE FUNCTION: Successfully created key:`, {
       hash: formattedResponse.hash || 'unknown',
       label: formattedResponse.label || 'unknown',
       limit: formattedResponse.limit || 0,
       limitInCents: (formattedResponse.limit || 0) * 100,
       dollarAmount: dollarAmount,
-      responseKeys: Object.keys(formattedResponse).join(', ')
+      responseKeys: Object.keys(formattedResponse).join(', '),
     });
 
     return new Response(JSON.stringify(formattedResponse), {
