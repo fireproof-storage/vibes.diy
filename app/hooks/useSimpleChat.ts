@@ -7,6 +7,7 @@ import { useFireproof } from 'use-fireproof';
 import { generateTitle } from '../utils/titleGenerator';
 import { streamAI } from '../utils/streamHandler';
 import { useApiKey } from './useApiKey';
+import { useAuth } from './useAuth';
 import { getCredits } from '../config/provisioning';
 
 // Import our custom hooks
@@ -24,12 +25,14 @@ const TITLE_MODEL = 'google/gemini-2.0-flash-lite-001';
  * @returns ChatState object with all chat functionality and state
  */
 export function useSimpleChat(sessionId: string | undefined): ChatState {
+  // Get userId from auth system
+  const { userId, isAuthenticated } = useAuth();
+  
   // Get API key
   // For anonymous users: uses the sessionId (chat ID) as an identifier
-  // For logged-in users: will use userId from auth once implemented
+  // For logged-in users: uses userId from auth
   // This approach ensures anonymous users get one API key with limited credits
   // and logged-in users will get proper credit assignment based on their ID
-  const userId = undefined; // Will come from auth when implemented
   const { apiKey, refreshKey } = useApiKey(userId);
 
   // Get session data
@@ -59,17 +62,29 @@ export function useSimpleChat(sessionId: string | undefined): ChatState {
   const [selectedResponseId, setSelectedResponseId] = useState<string>('');
   const [pendingAiMessage, setPendingAiMessage] = useState<ChatMessageDocument | null>(null);
   const [needsNewKey, setNeedsNewKey] = useState<boolean>(false);
+  const [needsLogin, setNeedsLogin] = useState<boolean>(false);
 
-  // when needsNewKey turns true, call refreshKey
+  // when needsNewKey turns true, call refreshKey or indicate login needed
   useEffect(() => {
     async function refresh() {
       if (needsNewKey) {
-        await refreshKey();
-        setNeedsNewKey(false);
+        if (isAuthenticated) {
+          try {
+            await refreshKey();
+            setNeedsNewKey(false);
+            setNeedsLogin(false);
+          } catch (error) {
+            console.error('Failed to refresh API key:', error);
+            setNeedsLogin(true); // Also set login needed if refresh fails
+          }
+        } else {
+          // Not authenticated and needs a new key
+          setNeedsLogin(true);
+        }
       }
     }
     refresh();
-  }, [needsNewKey, refreshKey]);
+  }, [needsNewKey, refreshKey, isAuthenticated]);
 
   // Derive model to use from settings or default
   const modelToUse = useMemo(
@@ -282,5 +297,6 @@ export function useSimpleChat(sessionId: string | undefined): ChatState {
     title: session?.title || '',
     needsNewKey,
     setNeedsNewKey,
+    needsLogin,
   };
 }

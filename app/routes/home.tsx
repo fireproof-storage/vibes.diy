@@ -224,7 +224,7 @@ export default function UnifiedSession() {
     <>
       <AppLayout
         fullWidthChat={shouldUseFullWidthChat}
-        headerLeft={<ChatHeaderContent onOpenSidebar={openSidebar} title={chatState.title || ''} />}
+        headerLeft={<ChatHeaderContent onOpenSidebar={openSidebar} isStreaming={chatState.isStreaming} title={chatState.title || ''} />}
         headerRight={
           // Only render the header content when we have code content or a completed session
           chatState.selectedCode?.content || urlSessionId ? (
@@ -239,6 +239,7 @@ export default function UnifiedSession() {
               sessionId={chatState.sessionId || undefined}
               title={chatState.title || undefined}
               isIframeFetching={isIframeFetching}
+              needsLogin={chatState.needsLogin}
             />
           ) : null
         }

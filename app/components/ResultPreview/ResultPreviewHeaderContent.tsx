@@ -26,6 +26,7 @@ interface ResultPreviewHeaderContentProps {
   sessionId?: string;
   title?: string;
   isIframeFetching?: boolean;
+  needsLogin?: boolean;
 }
 
 const ResultPreviewHeaderContent: React.FC<ResultPreviewHeaderContentProps> = ({
@@ -39,6 +40,7 @@ const ResultPreviewHeaderContent: React.FC<ResultPreviewHeaderContentProps> = ({
   sessionId: propSessionId,
   title: propTitle,
   isIframeFetching = false,
+  needsLogin = false,
 }) => {
   const { sessionId: urlSessionId, view: urlView } = useParams();
   const [userInfo, setUserInfo] = useState<TokenPayload | null>(null);
@@ -337,7 +339,7 @@ const ResultPreviewHeaderContent: React.FC<ResultPreviewHeaderContentProps> = ({
                 type="button"
                 onClick={handleAuthCheck}
                 disabled={isVerifying}
-                className={`text-light-primary dark:text-dark-primary hover:bg-light-decorative-01 dark:hover:bg-dark-decorative-01 flex items-center justify-center space-x-1 rounded-md px-2 py-1.5 text-xs font-medium transition-colors sm:space-x-1.5 sm:px-1.5 sm:text-sm ${isVerifying ? 'cursor-wait opacity-50' : ''}`}
+                className={`${needsLogin ? 'text-orange-500' : 'text-light-primary dark:text-dark-primary'} hover:bg-light-decorative-01 dark:hover:bg-dark-decorative-01 flex items-center justify-center space-x-1 rounded-md px-2 py-1.5 text-xs font-medium transition-colors sm:space-x-1.5 sm:px-1.5 sm:text-sm ${isVerifying ? 'cursor-wait opacity-50' : ''}`}
                 aria-label={isUserAuthenticated ? `User: ${userInfo?.userId}` : 'Connect Account'}
                 title={
                   isUserAuthenticated

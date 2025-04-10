@@ -4,9 +4,10 @@ import { MenuIcon, EditIcon } from './ChatHeaderIcons';
 interface ChatHeaderContentProps {
   onOpenSidebar: () => void;
   title: string;
+  isStreaming: boolean;
 }
 
-function ChatHeaderContent({ onOpenSidebar, title }: ChatHeaderContentProps) {
+function ChatHeaderContent({ onOpenSidebar, title, isStreaming }: ChatHeaderContentProps) {
   return (
     <div className="flex h-full w-full items-center justify-between p-2 py-4">
       <div className="flex items-center">
@@ -21,7 +22,7 @@ function ChatHeaderContent({ onOpenSidebar, title }: ChatHeaderContentProps) {
       </div>
       <div className="text-light-primary dark:text-dark-primary text-center text-sm">{title}</div>
 
-      {title && (
+      {(title || isStreaming) && (
         <div className="relative px-2">
           <a
             href="/"
@@ -45,5 +46,5 @@ function ChatHeaderContent({ onOpenSidebar, title }: ChatHeaderContentProps) {
 // re-renders when its props actually change
 export default memo(ChatHeaderContent, (prevProps, nextProps) => {
   // Only re-render if title or onOpenSidebar changes
-  return prevProps.onOpenSidebar === nextProps.onOpenSidebar && prevProps.title === nextProps.title;
+  return prevProps.onOpenSidebar === nextProps.onOpenSidebar && prevProps.title === nextProps.title && prevProps.isStreaming === nextProps.isStreaming;
 });

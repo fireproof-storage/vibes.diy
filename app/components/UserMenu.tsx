@@ -39,16 +39,16 @@ export function UserMenu({ isOpen, onLogout, onClose, buttonRef }: UserMenuProps
     >
       <div
         style={menuStyle}
-        className="ring-opacity-5 w-48 rounded-md bg-white p-4 shadow-lg ring-1 ring-black dark:bg-gray-800"
+        className="ring-opacity-5 p-4 w-48 rounded-md bg-white shadow-lg ring-1 ring-black dark:bg-gray-800"
       >
         <div className="py-1" role="menu" aria-orientation="vertical" aria-labelledby="user-menu">
           <button
             type="button"
             onClick={onLogout}
-            className="block w-full rounded-md bg-gray-300 px-4 py-2 text-center text-sm text-gray-700 hover:bg-gray-100 dark:bg-gray-600 dark:text-gray-200 dark:hover:bg-gray-700"
+            className="block px-4 py-2 w-full rounded-md text-center text-sm text-gray-700 hover:bg-gray-100 bg-gray-300 dark:bg-gray-600 dark:text-gray-200 dark:hover:bg-gray-700"
             role="menuitem"
           >
-            <span className="w-full text-center font-bold">Logout</span>
+            <span className="text-center w-full font-bold">Logout</span>
           </button>
         </div>
       </div>

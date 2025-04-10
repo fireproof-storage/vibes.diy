@@ -105,6 +105,7 @@ export interface ChatState {
   selectedDependencies?: Record<string, string>;
   needsNewKey?: boolean;
   setNeedsNewKey: (value: boolean) => void;
+  needsLogin?: boolean;
 }
 
 export interface ChatInterfaceProps {
