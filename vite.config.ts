@@ -15,6 +15,8 @@ export default defineConfig(({ command, mode }: ConfigEnv): UserConfig => {
       ...(!disableReactRouter ? [reactRouter()] : []),
       tsconfigPaths(),
     ],
+    // Configure asset handling for YAML files
+    assetsInclude: ['**/*.yml', '**/*.yaml'],
     // Define global constants
     // define: {
     //   IFRAME__CALLAI_API_KEY: JSON.stringify(env.VITE_OPENROUTER_API_KEY),
