@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
-import yamlRaw from '../data/quick-suggestions.yml?raw';
 import yaml from 'js-yaml';
+import suggestionYamlRaw from '../data/quick-suggestions.yml?raw';
 
 interface QuickSuggestionsProps {
   onSelectSuggestion: (suggestion: string) => void;
@@ -11,26 +11,22 @@ interface Suggestion {
   text: string;
 }
 
-interface SuggestionsData {
-  suggestions: Suggestion[];
-}
-
 function QuickSuggestions({ onSelectSuggestion }: QuickSuggestionsProps) {
-  // Parse the YAML data
-  const parsedData = yaml.load(yamlRaw) as SuggestionsData;
-  const suggestions = parsedData.suggestions;
+  // Parse the YAML data to get suggestions
+  const parsedData = yaml.load(suggestionYamlRaw) as { suggestions: Suggestion[] };
+  const allSuggestions = parsedData.suggestions;
 
-  const [randomSuggestions, setRandomSuggestions] = useState<typeof suggestions>([]);
+  const [randomSuggestions, setRandomSuggestions] = useState<Suggestion[]>([]);
 
   useEffect(() => {
-    const shuffled = [...suggestions].sort(() => 0.5 - Math.random());
+    const shuffled = [...allSuggestions].sort(() => 0.5 - Math.random());
     setRandomSuggestions(shuffled.slice(0, 8));
-  }, []);
+  }, [allSuggestions]);
 
   return (
     <div className="px-4 py-1">
       <div className="flex flex-wrap gap-2">
-        {randomSuggestions.map((suggestion, index) => (
+        {randomSuggestions.map((suggestion: Suggestion, index: number) => (
           <button
             key={index}
             type="button"
