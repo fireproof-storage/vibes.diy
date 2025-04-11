@@ -31,16 +31,15 @@ export type GroupedSession = {
  * @returns An object containing the grouped sessions and loading state
  */
 export function useSessionList(justFavorites = false) {
-  const { database, useLiveQuery } = useFireproof(FIREPROOF_CHAT_HISTORY);
+  const { database, useAllDocs } = useFireproof(FIREPROOF_CHAT_HISTORY);
   const [allSessionsWithScreenshots, setAllSessionsWithScreenshots] = useState<GroupedSession[]>(
     []
   );
   const [groupedSessions, setGroupedSessions] = useState<GroupedSession[]>([]);
 
   // Query only session metadata from the main database
-  const { docs: sessionDocs } = useLiveQuery<SessionDocument>('type', {
-    key: 'session',
-  });
+  const { docs: allDocs } = useAllDocs<SessionDocument>();
+  const sessionDocs = allDocs.filter((doc) => doc.type === 'session');
 
   // Fetch screenshots for each session from their respective databases
   // This effect only runs when sessionDocs changes, not when justFavorites changes
