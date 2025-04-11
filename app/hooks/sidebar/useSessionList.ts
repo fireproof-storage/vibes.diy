@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback, useMemo } from 'react';
 import { useFireproof, fireproof } from 'use-fireproof';
 import { FIREPROOF_CHAT_HISTORY } from '../../config/env';
 import type { SessionDocument, ScreenshotDocument } from '../../types/chat';
@@ -31,83 +31,121 @@ export type GroupedSession = {
  * @returns An object containing the grouped sessions and loading state
  */
 export function useSessionList(justFavorites = false) {
-  const { database, useLiveQuery } = useFireproof(FIREPROOF_CHAT_HISTORY);
+  const { database, useAllDocs } = useFireproof(FIREPROOF_CHAT_HISTORY);
   const [allSessionsWithScreenshots, setAllSessionsWithScreenshots] = useState<GroupedSession[]>(
     []
   );
-  const [groupedSessions, setGroupedSessions] = useState<GroupedSession[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<Error | null>(null);
 
   // Query only session metadata from the main database
-  const { docs: sessionDocs } = useLiveQuery<SessionDocument>('type', {
-    key: 'session',
-  });
+  const { docs: allDocs } = useAllDocs<SessionDocument>();
+  // Track loading state ourselves since it's not provided by useAllDocs
+  const isDocsLoading = allDocs.length === 0;
+
+  // Memoize the filtered session documents to avoid recomputation on every render
+  const sessionDocs = useMemo(() => allDocs.filter((doc) => doc.type === 'session'), [allDocs]);
+
+  // Process all sessions and fetch their screenshots
+  // Wrapped in useCallback to avoid recreating this function on every render
+  const fetchSessionScreenshots = useCallback(
+    async (sessions: SessionDocument[]): Promise<GroupedSession[]> => {
+      if (!sessions || sessions.length === 0) {
+        return [];
+      }
+
+      try {
+        const sessionsWithScreenshots = await Promise.all(
+          sessions.map(async (session) => {
+            if (!session._id) {
+              throw new Error('Session without ID encountered');
+            }
+
+            // Get the session-specific database
+            const sessionDb = fireproof(getSessionDatabaseName(session._id));
+
+            // Query screenshots from the session database
+            const result = await sessionDb.query('type', {
+              key: 'screenshot',
+            });
+
+            const screenshots = (result.rows || [])
+              .map((row) => row.doc)
+              .filter(Boolean) as ScreenshotDocument[];
+
+            return {
+              session,
+              screenshots,
+            };
+          })
+        );
+
+        // Sort by creation date (newest first)
+        return sessionsWithScreenshots.sort((a, b) => {
+          const timeA = a.session.created_at || 0;
+          const timeB = b.session.created_at || 0;
+          return timeB - timeA;
+        });
+      } catch (err) {
+        // Proper error handling
+        setError(err instanceof Error ? err : new Error(String(err)));
+        return [];
+      }
+    },
+    []
+  ); // No dependencies needed as this doesn't rely on changing state/props
 
   // Fetch screenshots for each session from their respective databases
-  // This effect only runs when sessionDocs changes, not when justFavorites changes
   useEffect(() => {
-    if (!sessionDocs || sessionDocs.length === 0) {
+    // Don't fetch if we're still loading docs or have no session docs
+    if (isDocsLoading || !sessionDocs || sessionDocs.length === 0) {
       setAllSessionsWithScreenshots([]);
       return;
     }
 
-    // Process all sessions and fetch their screenshots
-    const fetchSessionScreenshots = async () => {
-      const sessionsWithScreenshots = await Promise.all(
-        sessionDocs.map(async (session) => {
-          if (!session._id) {
-            throw new Error('Session without ID encountered');
-          }
+    let isMounted = true;
+    setIsLoading(true);
+    setError(null);
 
-          // Get the session-specific database
-          const sessionDb = fireproof(getSessionDatabaseName(session._id));
+    // Fetch data and update state if component is still mounted
+    (async () => {
+      try {
+        const sortedSessions = await fetchSessionScreenshots(sessionDocs);
+        if (isMounted) {
+          setAllSessionsWithScreenshots(sortedSessions);
+          setIsLoading(false);
+        }
+      } catch (err) {
+        if (isMounted) {
+          setError(err instanceof Error ? err : new Error(String(err)));
+          setIsLoading(false);
+        }
+      }
+    })();
 
-          // Query screenshots from the session database
-          const result = await sessionDb.query('type', {
-            key: 'screenshot',
-          });
-
-          const screenshots = (result.rows || [])
-            .map((row) => row.doc)
-            .filter(Boolean) as ScreenshotDocument[];
-
-          return {
-            session,
-            screenshots,
-          };
-        })
-      );
-
-      // Sort by creation date (newest first)
-      const sortedSessions = sessionsWithScreenshots.sort((a, b) => {
-        const timeA = a.session.created_at || 0;
-        const timeB = b.session.created_at || 0;
-        return timeB - timeA;
-      });
-
-      setAllSessionsWithScreenshots(sortedSessions);
+    // Cleanup function to prevent state updates after unmount
+    return () => {
+      isMounted = false;
     };
+  }, [sessionDocs, fetchSessionScreenshots, isDocsLoading]);
 
-    fetchSessionScreenshots();
-  }, [sessionDocs]); // Only depends on sessionDocs, not justFavorites
-
-  // This effect runs when justFavorites or allSessionsWithScreenshots changes
-  // It filters the already loaded sessions without any async operations
-  useEffect(() => {
+  // Memoize the filtered sessions based on the favorites flag
+  // This avoids unnecessary recomputations and re-renders
+  const groupedSessions = useMemo(() => {
     if (allSessionsWithScreenshots.length === 0) {
-      setGroupedSessions([]);
-      return;
+      return [];
     }
 
-    // Apply the favorites filter without any async operations
-    const filteredSessions = justFavorites
+    // Apply the favorites filter
+    return justFavorites
       ? allSessionsWithScreenshots.filter((item) => item.session.favorite)
       : allSessionsWithScreenshots;
-
-    setGroupedSessions(filteredSessions);
   }, [allSessionsWithScreenshots, justFavorites]);
 
   return {
     database,
     groupedSessions,
+    isLoading: isLoading || isDocsLoading,
+    error,
   };
 }
