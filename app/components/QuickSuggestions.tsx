@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react';
-import yaml from 'js-yaml';
-import suggestionYamlRaw from '../data/quick-suggestions.yml?raw';
+import { quickSuggestions } from '../data/quick-suggestions-data';
 
 interface QuickSuggestionsProps {
   onSelectSuggestion: (suggestion: string) => void;
@@ -12,16 +11,12 @@ interface Suggestion {
 }
 
 function QuickSuggestions({ onSelectSuggestion }: QuickSuggestionsProps) {
-  // Parse the YAML data to get suggestions
-  const parsedData = yaml.load(suggestionYamlRaw) as { suggestions: Suggestion[] };
-  const allSuggestions = parsedData.suggestions;
-
   const [randomSuggestions, setRandomSuggestions] = useState<Suggestion[]>([]);
 
   useEffect(() => {
-    const shuffled = [...allSuggestions].sort(() => 0.5 - Math.random());
+    const shuffled = [...quickSuggestions].sort(() => 0.5 - Math.random());
     setRandomSuggestions(shuffled.slice(0, 8));
-  }, [allSuggestions]);
+  }, []);
 
   return (
     <div className="px-4 py-1">
