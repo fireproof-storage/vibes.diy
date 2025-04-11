@@ -31,9 +31,6 @@ importers:
       jose:
         specifier: ^6.0.10
         version: 6.0.10
-      js-yaml:
-        specifier: ^4.1.0
-        version: 4.1.0
       react:
         specifier: ^19.1.0
         version: 19.1.0
@@ -71,9 +68,6 @@ importers:
       '@testing-library/user-event':
         specifier: ^14.6.1
         version: 14.6.1(@testing-library/dom@10.4.0)
-      '@types/js-yaml':
-        specifier: ^4.0.9
-        version: 4.0.9
       '@types/node':
         specifier: ^22.14.0
         version: 22.14.0
@@ -3076,12 +3070,6 @@ packages:
     resolution:
       {
         integrity: sha512-pk2B1NWalF9toCRu6gjBzR69syFjP4Od8WRAX+0mmf9lAjCRicLOWc+ZrxZHx/0XRjotgkF9t6iaMJ+aXcOdZQ==,
-      }
-
-  '@types/js-yaml@4.0.9':
-    resolution:
-      {
-        integrity: sha512-k4MGaQl5TGo/iipqb2UDG2UwjXziSWkh0uysQelTlJpX1qGlpUZYm8PnO4DxG1qBomtJUdYJ6qR6xdIah10JLg==,
       }
 
   '@types/mdast@4.0.4':
@@ -14053,8 +14041,6 @@ snapshots:
   '@types/istanbul-reports@3.0.4':
     dependencies:
       '@types/istanbul-lib-report': 3.0.3
-
-  '@types/js-yaml@4.0.9': {}
 
   '@types/mdast@4.0.4':
     dependencies:
