@@ -10,7 +10,7 @@
     "description": "Fast coding assistant (cloaked)"
   },
   {
-    "id":"qwen/qwen-2.5-coder-32b-instruct",
+    "id": "qwen/qwen-2.5-coder-32b-instruct",
     "name": "Qwen 2.5 Coder 32B Instruct",
     "description": "Latest Qwen code-specific model with improved generation, reasoning, and fixing capabilities"
   },
