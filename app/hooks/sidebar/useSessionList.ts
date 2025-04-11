@@ -32,7 +32,9 @@ export type GroupedSession = {
  */
 export function useSessionList(justFavorites = false) {
   const { database, useAllDocs } = useFireproof(FIREPROOF_CHAT_HISTORY);
-  const [allSessionsWithScreenshots, setAllSessionsWithScreenshots] = useState<GroupedSession[]>([]);
+  const [allSessionsWithScreenshots, setAllSessionsWithScreenshots] = useState<GroupedSession[]>(
+    []
+  );
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
 
@@ -40,58 +42,58 @@ export function useSessionList(justFavorites = false) {
   const { docs: allDocs } = useAllDocs<SessionDocument>();
   // Track loading state ourselves since it's not provided by useAllDocs
   const isDocsLoading = allDocs.length === 0;
-  
+
   // Memoize the filtered session documents to avoid recomputation on every render
-  const sessionDocs = useMemo(() => 
-    allDocs.filter((doc) => doc.type === 'session'),
-    [allDocs]
-  );
+  const sessionDocs = useMemo(() => allDocs.filter((doc) => doc.type === 'session'), [allDocs]);
 
   // Process all sessions and fetch their screenshots
   // Wrapped in useCallback to avoid recreating this function on every render
-  const fetchSessionScreenshots = useCallback(async (sessions: SessionDocument[]): Promise<GroupedSession[]> => {
-    if (!sessions || sessions.length === 0) {
-      return [];
-    }
-    
-    try {
-      const sessionsWithScreenshots = await Promise.all(
-        sessions.map(async (session) => {
-          if (!session._id) {
-            throw new Error('Session without ID encountered');
-          }
+  const fetchSessionScreenshots = useCallback(
+    async (sessions: SessionDocument[]): Promise<GroupedSession[]> => {
+      if (!sessions || sessions.length === 0) {
+        return [];
+      }
 
-          // Get the session-specific database
-          const sessionDb = fireproof(getSessionDatabaseName(session._id));
+      try {
+        const sessionsWithScreenshots = await Promise.all(
+          sessions.map(async (session) => {
+            if (!session._id) {
+              throw new Error('Session without ID encountered');
+            }
 
-          // Query screenshots from the session database
-          const result = await sessionDb.query('type', {
-            key: 'screenshot',
-          });
+            // Get the session-specific database
+            const sessionDb = fireproof(getSessionDatabaseName(session._id));
 
-          const screenshots = (result.rows || [])
-            .map((row) => row.doc)
-            .filter(Boolean) as ScreenshotDocument[];
+            // Query screenshots from the session database
+            const result = await sessionDb.query('type', {
+              key: 'screenshot',
+            });
 
-          return {
-            session,
-            screenshots,
-          };
-        })
-      );
+            const screenshots = (result.rows || [])
+              .map((row) => row.doc)
+              .filter(Boolean) as ScreenshotDocument[];
 
-      // Sort by creation date (newest first)
-      return sessionsWithScreenshots.sort((a, b) => {
-        const timeA = a.session.created_at || 0;
-        const timeB = b.session.created_at || 0;
-        return timeB - timeA;
-      });
-    } catch (err) {
-      // Proper error handling
-      setError(err instanceof Error ? err : new Error(String(err)));
-      return [];
-    }
-  }, []); // No dependencies needed as this doesn't rely on changing state/props
+            return {
+              session,
+              screenshots,
+            };
+          })
+        );
+
+        // Sort by creation date (newest first)
+        return sessionsWithScreenshots.sort((a, b) => {
+          const timeA = a.session.created_at || 0;
+          const timeB = b.session.created_at || 0;
+          return timeB - timeA;
+        });
+      } catch (err) {
+        // Proper error handling
+        setError(err instanceof Error ? err : new Error(String(err)));
+        return [];
+      }
+    },
+    []
+  ); // No dependencies needed as this doesn't rely on changing state/props
 
   // Fetch screenshots for each session from their respective databases
   useEffect(() => {
@@ -144,6 +146,6 @@ export function useSessionList(justFavorites = false) {
     database,
     groupedSessions,
     isLoading: isLoading || isDocsLoading,
-    error
+    error,
   };
 }
