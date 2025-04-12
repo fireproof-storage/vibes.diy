@@ -172,17 +172,6 @@
     <script>
       window.CALLAI_API_KEY = '{{API_KEY}}';
       window.SESSION_ID = '{{SESSION_ID}}';
-
-      // Set up a proxy for Fireproof database namespacing
-      window.FireproofWrapper = {
-        sessionId: window.SESSION_ID || 'default-session',
-        wrapDbName: function (name) {
-          if (!name) {
-            return `v-${this.sessionId}-default-db`;
-          }
-          return `v-${this.sessionId}-${name}`;
-        },
-      };
     </script>
     <script type="importmap">
       {
@@ -197,66 +186,28 @@
       }
     </script>
 
-    <!-- Setup direct ES module interception for use-fireproof -->
+    <!-- IndexedDB hook to prefix database names with session ID -->
     <script>
-      // Create our import map interceptor - this needs to run before any modules load
-      (function() {
-        // Store the original import map
-        const originalImportMap = document.querySelector('script[type="importmap"]').textContent;
-        const importMap = JSON.parse(originalImportMap);
-        
-        // Save the original URL
-        const originalFireproofUrl = importMap.imports['use-fireproof'];
-        
-        // Create a proxy URL that will intercept all imports
-        const proxyUrl = URL.createObjectURL(new Blob([
-          `// Proxy module for use-fireproof
-          import * as originalModule from '${originalFireproofUrl}';
-          
-          // Create wrapped useFireproof function
-          export function useFireproof(...args) {
-            // Get session ID from window
-            const sessionId = window.SESSION_ID || 'default-session';
-            let modifiedArgs = [...args];
-            
-            // Add v- prefix and session ID to database name
-            if (args.length === 0) {
-              modifiedArgs = ['v-' + sessionId + '-default-db'];
-            } else if (typeof args[0] === 'string') {
-              modifiedArgs[0] = 'v-' + sessionId + '-' + args[0];
-            }
-            
-            console.log('🔥 FIREPROOF WRAPPER 🔥 Database name:', modifiedArgs[0]);
-            return originalModule.useFireproof(...modifiedArgs);
-          }
-          
-          // Re-export everything else from the original module
-          export const { fireproof, connectStorageSource, createSyncAdapter, lf, localFirst, connectIdb, connectWeb } = originalModule;
-          `
-        ], { type: 'application/javascript' }));
-        
-        // Update the import map to use our proxy URL
-        importMap.imports['use-fireproof'] = proxyUrl;
-        
-        // Replace the original import map with our modified one
-        document.querySelector('script[type="importmap"]').textContent = JSON.stringify(importMap, null, 2);
-        
-        // Clean up when we're done
-        window.addEventListener('unload', () => URL.revokeObjectURL(proxyUrl));
-      })();
+      // Save the original indexedDB.open method
+      const originalIndexedDBOpen = indexedDB.open;
+      const sessionId = window.SESSION_ID || 'default-session';
+      
+      // Replace it with our wrapped version
+      indexedDB.open = function(name, ...args) {
+        const prefixedName = 'v-' + sessionId + '-' + name;
+        console.log('🔥 FIREPROOF DB NAMESPACING 🔥 ' + name + ' → ' + prefixedName);
+        return originalIndexedDBOpen.call(this, prefixedName, ...args);
+      };
     </script>
-
+    
     <script type="text/babel" data-type="module">
       import ReactDOMClient from 'react-dom/client';
       
-      // No need for extra import handling, our import map is already intercepting
-      // any imports of use-fireproof with our wrapped version
-      
-      // The APP_CODE will be injected here
+      // App runs normally without our interference, but the iframe loads our script to modify use-fireproof
       // prettier-ignore
       {{APP_CODE}}
       // prettier-ignore-end
-
+      
       const rootElement = document.getElementById('container');
       ReactDOMClient.createRoot(rootElement).render(<App />);
     </script>
