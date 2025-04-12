@@ -17,7 +17,6 @@ interface IframeContentProps {
   codeReady: boolean;
 
   setActiveView: (view: 'preview' | 'code' | 'data') => void;
-  dependencies: Record<string, string>;
   isDarkMode: boolean; // Add isDarkMode prop
   sessionId?: string; // Add sessionId prop
 }
@@ -26,9 +25,7 @@ const IframeContent: React.FC<IframeContentProps> = ({
   activeView,
   filesContent,
   isStreaming,
-
   codeReady,
-  dependencies,
   setActiveView,
   isDarkMode, // Receive the isDarkMode prop
   sessionId, // Receive the sessionId prop
@@ -327,7 +324,7 @@ const IframeContent: React.FC<IframeContentProps> = ({
         <div className="data-container">
           <DatabaseListView
             appCode={filesContent['/App.jsx']?.code || ''}
-            isDarkMode={isDarkMode}
+            sessionId={sessionId || "default-session"}
           />
         </div>
       </div>

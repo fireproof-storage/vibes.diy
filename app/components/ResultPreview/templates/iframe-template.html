@@ -192,7 +192,11 @@
       const originalIndexedDBOpen = indexedDB.open;
       const sessionId = window.SESSION_ID || 'default-session';
       
-      // Replace it with our wrapped version - only for Fireproof databases, with exceptions
+      /*
+       * Replace with our wrapped version - only for Fireproof databases, with exceptions
+       * This namespacing follows the same pattern used in DatabaseData.tsx: fp.vx-[sessionId]-[originalName]
+       * So a database named 'fp.ai-playlist-db' would become 'fp.vx-sessionId-ai-playlist-db'
+       */
       indexedDB.open = function(name, ...args) {
         // Skip namespacing for non-Fireproof databases (must start with 'fp.').
         // NOTE: This also implicitly skips databases like 'fp-keybag' that use a hyphen.
@@ -206,16 +210,19 @@
           return originalIndexedDBOpen.call(this, name, ...args);
         }
         
-        // Skip if already namespaced (starts with v-)
+        // Skip if already namespaced (starts with v-) - handles namespacing from DataView/DatabaseData.tsx
         if (name.startsWith('v-')) {
           console.log('🔥 FIREPROOF SKIPPING 🔥 Already namespaced: ' + name);
           return originalIndexedDBOpen.call(this, name, ...args);
         }
         
         // Apply namespacing to all other Fireproof databases
-        const prefixedName = 'v-' + sessionId + '-' + name;
-        console.log('🔥 FIREPROOF DB NAMESPACING 🔥 ' + name + ' → ' + prefixedName);
-        return originalIndexedDBOpen.call(this, prefixedName, ...args);
+        // IMPORTANT: This pattern must match what's used in DataView/DatabaseData.tsx
+        // Insert the vx-sessionId into the database name instead of prefixing the whole name
+        const dbNameWithoutPrefix = name.substring(3); // Remove 'fp.' prefix
+        const namespacedName = 'fp.vx-' + sessionId + '-' + dbNameWithoutPrefix;
+        console.log('🔥 FIREPROOF DB NAMESPACING 🔥 ' + name + ' → ' + namespacedName);
+        return originalIndexedDBOpen.call(this, namespacedName, ...args);
       };
     </script>
     

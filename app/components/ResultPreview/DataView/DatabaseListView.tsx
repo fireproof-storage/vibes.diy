@@ -2,9 +2,9 @@ import React, { useMemo } from 'react';
 import DatabaseData from './DatabaseData';
 
 // Component to find and display database names from app code
-const DatabaseListView: React.FC<{ appCode: string; isDarkMode: boolean }> = ({
+const DatabaseListView: React.FC<{ appCode: string; sessionId: string }> = ({
   appCode,
-  isDarkMode,
+  sessionId,
 }) => {
   // Extract first 50 lines using memoization
   const firstFiftyLines = useMemo(() => {
@@ -36,7 +36,7 @@ const DatabaseListView: React.FC<{ appCode: string; isDarkMode: boolean }> = ({
           <h2 className="mb-2 text-lg font-medium">
             Data stored in <span className="font-mono">{databaseName}</span>
           </h2>
-          <DatabaseData dbName={databaseName} key={databaseName} />
+          {sessionId && <DatabaseData dbName={databaseName} key={databaseName} sessionId={sessionId} />}
         </div>
       )}
     </div>
