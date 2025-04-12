@@ -36,7 +36,9 @@ const DatabaseListView: React.FC<{ appCode: string; sessionId: string }> = ({
           <h2 className="mb-2 text-lg font-medium">
             Data stored in <span className="font-mono">{databaseName}</span>
           </h2>
-          {sessionId && <DatabaseData dbName={databaseName} key={databaseName} sessionId={sessionId} />}
+          {sessionId && (
+            <DatabaseData dbName={databaseName} key={databaseName} sessionId={sessionId} />
+          )}
         </div>
       )}
     </div>

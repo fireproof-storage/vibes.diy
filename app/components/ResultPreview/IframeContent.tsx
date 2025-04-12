@@ -324,7 +324,7 @@ const IframeContent: React.FC<IframeContentProps> = ({
         <div className="data-container">
           <DatabaseListView
             appCode={filesContent['/App.jsx']?.code || ''}
-            sessionId={sessionId || "default-session"}
+            sessionId={sessionId || 'default-session'}
           />
         </div>
       </div>

@@ -9,7 +9,7 @@ let isPatched = false;
 
 /**
  * Apply the IndexedDB monkeypatch for the current window
- * 
+ *
  * @param sessionId The session ID to use for namespacing
  */
 export const applyIndexedDBPatch = (sessionId: string): void => {
@@ -22,7 +22,7 @@ export const applyIndexedDBPatch = (sessionId: string): void => {
   const originalIndexedDBOpen = indexedDB.open;
 
   // Apply the monkey patch
-  indexedDB.open = function(name, ...args) {
+  indexedDB.open = function (name, ...args) {
     // Skip namespacing for non-Fireproof databases (must start with 'fp.')
     // This also implicitly skips databases like 'fp-keybag' that use a hyphen
     if (!name || !name.startsWith('fp.')) {

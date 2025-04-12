@@ -23,13 +23,13 @@ const DatabaseData: React.FC<{ dbName: string; sessionId: string }> = ({ dbName,
         setAvailableDbs(['API not supported in this browser']);
         return;
       }
-      
+
       // Get all available databases
       const databases = await window.indexedDB.databases();
-      const dbNames = databases.map(db => db.name).filter(Boolean) as string[];
-      
+      const dbNames = databases.map((db) => db.name).filter(Boolean) as string[];
+
       // Filter for databases with this session ID
-      const sessionMatches = dbNames.filter(name => name?.includes(sessionId));
+      const sessionMatches = dbNames.filter((name) => name?.includes(sessionId));
       setAvailableDbs(sessionMatches);
     } catch (err) {
       console.error('Error listing databases:', err);
@@ -41,7 +41,7 @@ const DatabaseData: React.FC<{ dbName: string; sessionId: string }> = ({ dbName,
   useEffect(() => {
     // Apply the patch as soon as the component mounts
     applyIndexedDBPatch(sessionId);
-    
+
     // Load the initial database list
     listSessionDatabases();
   }, []);
@@ -60,24 +60,36 @@ const DatabaseData: React.FC<{ dbName: string; sessionId: string }> = ({ dbName,
   // Create a simple debug display component
   const DbDebugInfo = () => (
     <details className="mb-2 text-sm">
-      <summary className="cursor-pointer text-blue-500 hover:text-blue-700">Database Inspection Details</summary>
-      <div className="pl-2 mt-1 border-l-2 border-gray-300">
-        <p><strong>Original DB Name:</strong> {dbName}</p>
-        <p><strong>Session ID:</strong> {sessionId}</p>
-        <p><strong>Namespaced DB Name:</strong> {namespacedDbName}</p>
-        <p><strong>Current DB Name:</strong> {database.name}</p>
+      <summary className="cursor-pointer text-blue-500 hover:text-blue-700">
+        Database Inspection Details
+      </summary>
+      <div className="mt-1 border-l-2 border-gray-300 pl-2">
+        <p>
+          <strong>Original DB Name:</strong> {dbName}
+        </p>
+        <p>
+          <strong>Session ID:</strong> {sessionId}
+        </p>
+        <p>
+          <strong>Namespaced DB Name:</strong> {namespacedDbName}
+        </p>
+        <p>
+          <strong>Current DB Name:</strong> {database.name}
+        </p>
         <div className="mt-1">
-          <p><strong>Session Databases ({availableDbs.length}):</strong></p>
-          <button 
-            onClick={() => listSessionDatabases()} 
-            className="text-xs bg-blue-500 hover:bg-blue-700 text-white py-1 px-2 rounded mr-2 mb-2"
+          <p>
+            <strong>Session Databases ({availableDbs.length}):</strong>
+          </p>
+          <button
+            onClick={() => listSessionDatabases()}
+            className="mr-2 mb-2 rounded bg-blue-500 px-2 py-1 text-xs text-white hover:bg-blue-700"
           >
             Refresh DB List
           </button>
           <span className="text-xs text-gray-600">(Filtered by session ID: {sessionId})</span>
-          <ul className="list-disc pl-4 mt-1">
+          <ul className="mt-1 list-disc pl-4">
             {availableDbs.map((name, idx) => (
-              <li key={idx} className={name === namespacedDbName ? 'text-green-600 font-bold' : ''}>
+              <li key={idx} className={name === namespacedDbName ? 'font-bold text-green-600' : ''}>
                 {name}
               </li>
             ))}

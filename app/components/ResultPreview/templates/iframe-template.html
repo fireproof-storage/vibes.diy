@@ -191,29 +191,29 @@
       // Save the original indexedDB.open method
       const originalIndexedDBOpen = indexedDB.open;
       const sessionId = window.SESSION_ID || 'default-session';
-      
+
       /*
        * Replace with our wrapped version - only for Fireproof databases, with exceptions
        * This namespacing follows the same pattern used in DatabaseData.tsx: fp.vx-[sessionId]-[originalName]
        * So a database named 'fp.ai-playlist-db' would become 'fp.vx-sessionId-ai-playlist-db'
        */
-      indexedDB.open = function(name, ...args) {
+      indexedDB.open = function (name, ...args) {
         // Skip namespacing for non-Fireproof databases (must start with 'fp.').
         // NOTE: This also implicitly skips databases like 'fp-keybag' that use a hyphen.
         if (!name || !name.startsWith('fp.')) {
           return originalIndexedDBOpen.call(this, name, ...args);
         }
-        
+
         // Skip namespacing for internal Vibes databases
         if (name.startsWith('fp.vibe-') || name.startsWith('fp.vibes-')) {
           return originalIndexedDBOpen.call(this, name, ...args);
         }
-        
+
         // Skip if already namespaced (starts with v-) - handles namespacing from DataView/DatabaseData.tsx
         if (name.startsWith('v-')) {
           return originalIndexedDBOpen.call(this, name, ...args);
         }
-        
+
         // Apply namespacing to all other Fireproof databases
         // IMPORTANT: This pattern must match what's used in DataView/DatabaseData.tsx
         // Insert the vx-sessionId into the database name instead of prefixing the whole name
@@ -222,15 +222,15 @@
         return originalIndexedDBOpen.call(this, namespacedName, ...args);
       };
     </script>
-    
+
     <script type="text/babel" data-type="module">
       import ReactDOMClient from 'react-dom/client';
-      
+
       // App runs normally without our interference, but the iframe loads our script to modify use-fireproof
       // prettier-ignore
       {{APP_CODE}}
       // prettier-ignore-end
-      
+
       const rootElement = document.getElementById('container');
       ReactDOMClient.createRoot(rootElement).render(<App />);
     </script>
