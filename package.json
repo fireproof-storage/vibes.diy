@@ -35,7 +35,7 @@
     "react-ga4": "^2.1.0",
     "react-markdown": "^10.1.0",
     "react-router": "^7.4.1",
-    "use-fireproof": "0.20.2-dev-preview-3"
+    "use-fireproof": "0.20.2"
   },
   "devDependencies": {
     "@react-router/dev": "^7.4.1",
