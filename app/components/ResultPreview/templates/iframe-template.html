@@ -206,13 +206,11 @@
         
         // Skip namespacing for internal Vibes databases
         if (name.startsWith('fp.vibe-') || name.startsWith('fp.vibes-')) {
-          console.log('🔥 FIREPROOF SKIPPING 🔥 Internal database: ' + name);
           return originalIndexedDBOpen.call(this, name, ...args);
         }
         
         // Skip if already namespaced (starts with v-) - handles namespacing from DataView/DatabaseData.tsx
         if (name.startsWith('v-')) {
-          console.log('🔥 FIREPROOF SKIPPING 🔥 Already namespaced: ' + name);
           return originalIndexedDBOpen.call(this, name, ...args);
         }
         
@@ -221,7 +219,6 @@
         // Insert the vx-sessionId into the database name instead of prefixing the whole name
         const dbNameWithoutPrefix = name.substring(3); // Remove 'fp.' prefix
         const namespacedName = 'fp.vx-' + sessionId + '-' + dbNameWithoutPrefix;
-        console.log('🔥 FIREPROOF DB NAMESPACING 🔥 ' + name + ' → ' + namespacedName);
         return originalIndexedDBOpen.call(this, namespacedName, ...args);
       };
     </script>

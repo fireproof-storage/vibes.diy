@@ -15,39 +15,22 @@ const DatabaseData: React.FC<{ dbName: string; sessionId: string }> = ({ dbName,
   const namespacedDbName = `vx-${sessionId}-${dbName}`;
   const [availableDbs, setAvailableDbs] = useState<string[]>([]);
 
-  // Function to list all available databases
-  const listAllDatabases = async () => {
-    console.log('🔥 FIREPROOF DB INSPECTOR 🔥 Starting database inspection...', { dbName, namespacedDbName });
+  // Function to list available databases with the current session ID
+  const listSessionDatabases = async () => {
     try {
       // Check if the databases API is available
       if (typeof window.indexedDB.databases !== 'function') {
-        console.warn('🔥 FIREPROOF DB INSPECTOR 🔥 indexedDB.databases() is not supported in this browser');
         setAvailableDbs(['API not supported in this browser']);
         return;
       }
       
       // Get all available databases
       const databases = await window.indexedDB.databases();
-      // console.log('🔥 RAW DB LIST:', databases); // Log the raw response
-      
       const dbNames = databases.map(db => db.name).filter(Boolean) as string[];
-      setAvailableDbs(dbNames);
       
-      // console.log('🔥 FIREPROOF DB INSPECTOR 🔥 Available databases:', dbNames);
-      
-      // Look for databases matching our patterns
-      const originalDbMatches = dbNames.filter(name => name === dbName);
-      const namespacedDbMatches = dbNames.filter(name => name === namespacedDbName);
+      // Filter for databases with this session ID
       const sessionMatches = dbNames.filter(name => name?.includes(sessionId));
-      
-      // Filter the available databases list to only show those with the session ID
-      // This makes it easier to focus on the databases relevant to the current session
       setAvailableDbs(sessionMatches);
-      
-      console.log(`🔥 DB MATCHES for '${dbName}':
-        - Exact matches: ${originalDbMatches.length}
-        - Namespaced matches: ${namespacedDbMatches.length}
-        - Session ID matches: ${sessionMatches.length}`);
     } catch (err) {
       console.error('Error listing databases:', err);
       setAvailableDbs(['Error: ' + (err as Error).message]);
@@ -59,14 +42,8 @@ const DatabaseData: React.FC<{ dbName: string; sessionId: string }> = ({ dbName,
     // Apply the patch as soon as the component mounts
     applyIndexedDBPatch(sessionId);
     
-    console.log('🔥 FIREPROOF DB inspection NAMESPACING 🔥 ' + dbName + ' → ' + namespacedDbName);
-    
-    // Immediate call for debugging
-    listAllDatabases();
-    
-    // Also add a button to manually trigger it later if needed
-    // Add a global refresh function for easier debugging via console
-    (window as any)._refreshDbList = listAllDatabases;
+    // Load the initial database list
+    listSessionDatabases();
   }, []);
 
   // With the IndexedDB patch, we should now be able to use the original dbName
@@ -92,7 +69,7 @@ const DatabaseData: React.FC<{ dbName: string; sessionId: string }> = ({ dbName,
         <div className="mt-1">
           <p><strong>Session Databases ({availableDbs.length}):</strong></p>
           <button 
-            onClick={() => listAllDatabases()} 
+            onClick={() => listSessionDatabases()} 
             className="text-xs bg-blue-500 hover:bg-blue-700 text-white py-1 px-2 rounded mr-2 mb-2"
           >
             Refresh DB List
