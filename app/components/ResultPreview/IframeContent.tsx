@@ -19,6 +19,7 @@ interface IframeContentProps {
   setActiveView: (view: 'preview' | 'code' | 'data') => void;
   dependencies: Record<string, string>;
   isDarkMode: boolean; // Add isDarkMode prop
+  sessionId?: string; // Add sessionId prop
 }
 
 const IframeContent: React.FC<IframeContentProps> = ({
@@ -30,6 +31,7 @@ const IframeContent: React.FC<IframeContentProps> = ({
   dependencies,
   setActiveView,
   isDarkMode, // Receive the isDarkMode prop
+  sessionId, // Receive the sessionId prop
 }) => {
   const iframeRef = useRef<HTMLIFrameElement>(null);
   // Theme state is now received from parent via props
@@ -98,6 +100,9 @@ const IframeContent: React.FC<IframeContentProps> = ({
 
       // Use the extracted function to normalize component export patterns
       const normalizedCode = normalizeComponentExports(appCode);
+      
+      // Create a session ID variable for the iframe template
+      const sessionIdValue = sessionId || 'default-session';
 
       // Transform bare import statements to use esm.sh URLs
       const transformImports = (code: string): string => {
@@ -126,7 +131,8 @@ const IframeContent: React.FC<IframeContentProps> = ({
       // Use the template and replace placeholders
       const htmlContent = iframeTemplateRaw
         .replace('{{API_KEY}}', CALLAI_API_KEY)
-        .replace('{{APP_CODE}}', transformedCode);
+        .replace('{{APP_CODE}}', transformedCode)
+        .replace('{{SESSION_ID}}', sessionIdValue);
 
       const blob = new Blob([htmlContent], { type: 'text/html' });
       const url = URL.createObjectURL(blob);

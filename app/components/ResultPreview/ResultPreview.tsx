@@ -181,6 +181,7 @@ function ResultPreview({
       setActiveView={setActiveView}
       dependencies={dependencies}
       isDarkMode={isDarkMode} // Pass down the theme state
+      sessionId={sessionId} // Pass the sessionId to IframeContent
     />
   );
 
