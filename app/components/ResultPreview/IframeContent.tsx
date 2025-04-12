@@ -100,7 +100,7 @@ const IframeContent: React.FC<IframeContentProps> = ({
 
       // Use the extracted function to normalize component export patterns
       const normalizedCode = normalizeComponentExports(appCode);
-      
+
       // Create a session ID variable for the iframe template
       const sessionIdValue = sessionId || 'default-session';
 

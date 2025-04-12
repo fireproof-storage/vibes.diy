@@ -172,16 +172,16 @@
     <script>
       window.CALLAI_API_KEY = '{{API_KEY}}';
       window.SESSION_ID = '{{SESSION_ID}}';
-      
+
       // Set up a proxy for Fireproof database namespacing
       window.FireproofWrapper = {
         sessionId: window.SESSION_ID || 'default-session',
-        wrapDbName: function(name) {
+        wrapDbName: function (name) {
           if (!name) {
             return `${this.sessionId}-default-db`;
           }
           return `${this.sessionId}-${name}`;
-        }
+        },
       };
     </script>
     <script type="importmap">
@@ -196,47 +196,47 @@
         }
       }
     </script>
-    
+
     <!-- Custom import map handler script to intercept use-fireproof imports -->
     <script type="module">
       // Import this from inside a module script
       import { useFireproof } from 'use-fireproof';
-      
+
       // Create a sessionId-prefixed wrapper for useFireproof
       const wrappedUseFireproof = (...args) => {
         const sessionId = window.SESSION_ID || 'default-session';
         let modifiedArgs = [...args];
-        
+
         // Add session ID prefix to database name
         if (args.length === 0) {
           modifiedArgs = [`${sessionId}-default-db`];
         } else if (typeof args[0] === 'string') {
           modifiedArgs[0] = `${sessionId}-${args[0]}`;
         }
-        
+
         console.log(`Fireproof wrapper: using database '${modifiedArgs[0]}'`);
         return useFireproof(...modifiedArgs);
       };
-      
+
       // Expose the wrapped version to the window for our APP_CODE to use
       window.fireproofHooks = { wrappedUseFireproof };
     </script>
-    
+
     <script type="text/babel" data-type="module">
       import ReactDOMClient from 'react-dom/client';
-      
+
       // Import our wrapped version at the top of the module
       import { useFireproof as originalUseFireproof } from 'use-fireproof';
 
       // This makes the wrapped version available in the global scope
       // before the APP_CODE is executed
       window.useFireproof = window.fireproofHooks.wrappedUseFireproof;
-      
+
       // The APP_CODE will be injected here
       // prettier-ignore
       {{APP_CODE}}
       // prettier-ignore-end
-      
+
       const rootElement = document.getElementById('container');
       ReactDOMClient.createRoot(rootElement).render(<App />);
     </script>
