@@ -178,9 +178,9 @@
         sessionId: window.SESSION_ID || 'default-session',
         wrapDbName: function (name) {
           if (!name) {
-            return `${this.sessionId}-default-db`;
+            return `v-${this.sessionId}-default-db`;
           }
-          return `${this.sessionId}-${name}`;
+          return `v-${this.sessionId}-${name}`;
         },
       };
     </script>
@@ -197,41 +197,61 @@
       }
     </script>
 
-    <!-- Custom import map handler script to intercept use-fireproof imports -->
-    <script type="module">
-      // Import this from inside a module script
-      import { useFireproof } from 'use-fireproof';
-
-      // Create a sessionId-prefixed wrapper for useFireproof
-      const wrappedUseFireproof = (...args) => {
-        const sessionId = window.SESSION_ID || 'default-session';
-        let modifiedArgs = [...args];
-
-        // Add session ID prefix to database name
-        if (args.length === 0) {
-          modifiedArgs = [`${sessionId}-default-db`];
-        } else if (typeof args[0] === 'string') {
-          modifiedArgs[0] = `${sessionId}-${args[0]}`;
-        }
-
-        console.log(`Fireproof wrapper: using database '${modifiedArgs[0]}'`);
-        return useFireproof(...modifiedArgs);
-      };
-
-      // Expose the wrapped version to the window for our APP_CODE to use
-      window.fireproofHooks = { wrappedUseFireproof };
+    <!-- Setup direct ES module interception for use-fireproof -->
+    <script>
+      // Create our import map interceptor - this needs to run before any modules load
+      (function() {
+        // Store the original import map
+        const originalImportMap = document.querySelector('script[type="importmap"]').textContent;
+        const importMap = JSON.parse(originalImportMap);
+        
+        // Save the original URL
+        const originalFireproofUrl = importMap.imports['use-fireproof'];
+        
+        // Create a proxy URL that will intercept all imports
+        const proxyUrl = URL.createObjectURL(new Blob([
+          `// Proxy module for use-fireproof
+          import * as originalModule from '${originalFireproofUrl}';
+          
+          // Create wrapped useFireproof function
+          export function useFireproof(...args) {
+            // Get session ID from window
+            const sessionId = window.SESSION_ID || 'default-session';
+            let modifiedArgs = [...args];
+            
+            // Add v- prefix and session ID to database name
+            if (args.length === 0) {
+              modifiedArgs = ['v-' + sessionId + '-default-db'];
+            } else if (typeof args[0] === 'string') {
+              modifiedArgs[0] = 'v-' + sessionId + '-' + args[0];
+            }
+            
+            console.log('🔥 FIREPROOF WRAPPER 🔥 Database name:', modifiedArgs[0]);
+            return originalModule.useFireproof(...modifiedArgs);
+          }
+          
+          // Re-export everything else from the original module
+          export const { fireproof, connectStorageSource, createSyncAdapter, lf, localFirst, connectIdb, connectWeb } = originalModule;
+          `
+        ], { type: 'application/javascript' }));
+        
+        // Update the import map to use our proxy URL
+        importMap.imports['use-fireproof'] = proxyUrl;
+        
+        // Replace the original import map with our modified one
+        document.querySelector('script[type="importmap"]').textContent = JSON.stringify(importMap, null, 2);
+        
+        // Clean up when we're done
+        window.addEventListener('unload', () => URL.revokeObjectURL(proxyUrl));
+      })();
     </script>
 
     <script type="text/babel" data-type="module">
       import ReactDOMClient from 'react-dom/client';
-
-      // Import our wrapped version at the top of the module
-      import { useFireproof as originalUseFireproof } from 'use-fireproof';
-
-      // This makes the wrapped version available in the global scope
-      // before the APP_CODE is executed
-      window.useFireproof = window.fireproofHooks.wrappedUseFireproof;
-
+      
+      // No need for extra import handling, our import map is already intercepting
+      // any imports of use-fireproof with our wrapped version
+      
       // The APP_CODE will be injected here
       // prettier-ignore
       {{APP_CODE}}
