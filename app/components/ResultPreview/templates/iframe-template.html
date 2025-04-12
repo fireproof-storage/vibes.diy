@@ -194,7 +194,8 @@
       
       // Replace it with our wrapped version - only for Fireproof databases, with exceptions
       indexedDB.open = function(name, ...args) {
-        // Skip namespacing for non-Fireproof databases
+        // Skip namespacing for non-Fireproof databases (must start with 'fp.').
+        // NOTE: This also implicitly skips databases like 'fp-keybag' that use a hyphen.
         if (!name || !name.startsWith('fp.')) {
           return originalIndexedDBOpen.call(this, name, ...args);
         }
