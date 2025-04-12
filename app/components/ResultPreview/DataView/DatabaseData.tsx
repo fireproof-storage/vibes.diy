@@ -3,6 +3,8 @@ import DynamicTable from './DynamicTable';
 import { headersForDocs } from './dynamicTableHelpers';
 // Import Fireproof for database access
 import { useFireproof } from 'use-fireproof';
+// Import the monkey patch utility
+import { applyIndexedDBPatch } from './indexedDBMonkeyPatch';
 
 // Component for displaying database data
 const DatabaseData: React.FC<{ dbName: string; sessionId: string }> = ({ dbName, sessionId }) => {
@@ -52,8 +54,11 @@ const DatabaseData: React.FC<{ dbName: string; sessionId: string }> = ({ dbName,
     }
   };
 
-  // Enhanced debug logging  
+  // Apply the IndexedDB monkey patch to ensure consistent namespacing with the iframe
   useEffect(() => {
+    // Apply the patch as soon as the component mounts
+    applyIndexedDBPatch(sessionId);
+    
     console.log('🔥 FIREPROOF DB inspection NAMESPACING 🔥 ' + dbName + ' → ' + namespacedDbName);
     
     // Immediate call for debugging
@@ -64,8 +69,9 @@ const DatabaseData: React.FC<{ dbName: string; sessionId: string }> = ({ dbName,
     (window as any)._refreshDbList = listAllDatabases;
   }, []);
 
-  // Always use Fireproof with useLiveQuery for reactive data access
-  const { useAllDocs, database } = useFireproof(namespacedDbName);
+  // With the IndexedDB patch, we should now be able to use the original dbName
+  // and the patch will handle the namespacing at the IndexedDB.open level
+  const { useAllDocs, database } = useFireproof(dbName);
 
   // Always call hooks at the top level regardless of conditions
   // In Fireproof, useLiveQuery returns docs and potentially other properties
