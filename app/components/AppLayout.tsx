@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 import LightUpYourData from './ResultPreview/LightUpYourData';
-
+import Footer from './Footer';
 interface AppLayoutProps {
   chatPanel: ReactNode;
   previewPanel: ReactNode;
@@ -25,11 +25,13 @@ export default function AppLayout({
   fullWidthChat = false,
 }: AppLayoutProps) {
   return (
-    <div className="relative flex h-dvh flex-col md:flex-row md:overflow-hidden">
+    <div className='h-dvh'>
       {/* Background component that covers the entire viewport */}
-      <div className="absolute inset-0 z-0 h-full w-full overflow-hidden">
+      <div className="absolute inset-0 z-0 h-full w-full pointer-events-none overflow-hidden">
         <LightUpYourData />
       </div>
+
+    <div className="relative flex h-[calc(100%-2rem)] flex-col md:flex-row md:overflow-hidden">
 
       {/* Content with relative positioning to appear above the background */}
       <div
@@ -57,7 +59,6 @@ export default function AppLayout({
           </div>
         </div>
       </div>
-
       <div
         className={`flex w-full flex-col ${fullWidthChat ? 'md:w-0' : 'md:w-2/3'} ${
           mobilePreviewShown ? 'h-full' : 'h-auto overflow-visible opacity-100 md:h-full'
@@ -73,6 +74,8 @@ export default function AppLayout({
 
         <div className="w-full">{appInfo}</div>
       </div>
+    </div>
+    <Footer/>
     </div>
   );
 }
