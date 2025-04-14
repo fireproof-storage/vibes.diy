@@ -1,5 +1,6 @@
 import type { DocTypes } from 'use-fireproof';
 import type { GroupedSession } from '../hooks/sidebar/useSessionList';
+import type { RuntimeError } from '../hooks/useRuntimeErrors';
 
 // ===== Content Segment Types =====
 export type Segment = {
@@ -106,6 +107,13 @@ export interface ChatState {
   needsNewKey?: boolean;
   setNeedsNewKey: (value: boolean) => void;
   needsLogin?: boolean;
+  
+  // Error tracking
+  immediateErrors: RuntimeError[];
+  advisoryErrors: RuntimeError[];
+  addError: (error: RuntimeError) => void;
+  clearImmediateErrors: () => void;
+  clearAdvisoryErrors: () => void;
 }
 
 export interface ChatInterfaceProps {

@@ -2,6 +2,7 @@ import { useState, useRef, useCallback, useEffect, useMemo } from 'react';
 import type { ChatMessageDocument, ChatState } from '../types/chat';
 import type { UserSettings } from '../types/settings';
 import { parseContent } from '../utils/segmentParser';
+import { useRuntimeErrors } from './useRuntimeErrors';
 import { useSession } from './useSession';
 import { useFireproof } from 'use-fireproof';
 import { generateTitle } from '../utils/titleGenerator';
@@ -34,6 +35,15 @@ export function useSimpleChat(sessionId: string | undefined): ChatState {
   // This approach ensures anonymous users get one API key with limited credits
   // and logged-in users will get proper credit assignment based on their ID
   const { apiKey, refreshKey } = useApiKey(userId);
+
+  // Runtime error tracking
+  const {
+    immediateErrors,
+    advisoryErrors,
+    addError,
+    clearImmediateErrors,
+    clearAdvisoryErrors
+  } = useRuntimeErrors();
 
   // Get session data
   const {
@@ -279,6 +289,22 @@ export function useSimpleChat(sessionId: string | undefined): ChatState {
     }
   }, [apiKey, checkCredits]);
 
+  // Log immediate errors whenever they change (critical errors)
+  useEffect(() => {
+    if (immediateErrors.length > 0) {
+      console.log('[useSimpleChat] Immediate errors detected:', immediateErrors);
+      // You could implement additional logic here like showing notifications
+    }
+  }, [immediateErrors]);
+
+  // Log advisory errors whenever they change (non-critical errors)
+  useEffect(() => {
+    if (advisoryErrors.length > 0) {
+      console.log('[useSimpleChat] Advisory errors detected:', advisoryErrors);
+      // You could track these errors for analytics or debugging
+    }
+  }, [advisoryErrors]);
+
   return {
     sessionId: session._id,
     addScreenshot,
@@ -298,5 +324,11 @@ export function useSimpleChat(sessionId: string | undefined): ChatState {
     needsNewKey,
     setNeedsNewKey,
     needsLogin,
+    // Error tracking
+    immediateErrors,
+    advisoryErrors,
+    addError,
+    clearImmediateErrors,
+    clearAdvisoryErrors
   };
 }

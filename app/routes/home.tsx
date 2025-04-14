@@ -275,6 +275,7 @@ export default function UnifiedSession() {
             onPreviewLoaded={handlePreviewLoaded}
             setMobilePreviewShown={setMobilePreviewShown}
             setIsIframeFetching={setIsIframeFetching}
+            addError={(error) => chatState.addError(error)}
           />
         }
         chatInput={

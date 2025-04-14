@@ -1,3 +1,5 @@
+import type { RuntimeError } from '../../hooks/useRuntimeErrors';
+
 export interface ResultPreviewProps {
   code: string;
   dependencies?: Record<string, string>;
@@ -11,6 +13,7 @@ export interface ResultPreviewProps {
   onPreviewLoaded: () => void;
   setMobilePreviewShown: (shown: boolean) => void;
   setIsIframeFetching?: (fetching: boolean) => void;
+  addError?: (error: RuntimeError) => void; // Single error handler for all types of errors
 }
 
 export type IframeFiles = {
