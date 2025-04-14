@@ -1,7 +1,11 @@
 import { memo } from 'react';
 import ReactMarkdown from 'react-markdown';
 import StructuredMessage from './StructuredMessage';
-import type { ChatMessageDocument, AiChatMessageDocument } from '../types/chat';
+import type {
+  ChatMessageDocument,
+  AiChatMessageDocument,
+  SystemChatMessageDocument,
+} from '../types/chat';
 import { parseContent } from '~/utils/segmentParser';
 
 interface MessageProps {
@@ -109,6 +113,39 @@ const UserMessage = memo(({ message }: { message: ChatMessageDocument }) => {
   );
 });
 
+// System Message component for errors and system notifications
+const SystemMessage = memo(({ message }: { message: SystemChatMessageDocument }) => {
+  // Format error message for display - parse error details
+  const lines = message.text.split('\n');
+  const errorTitle = lines[0] || 'System Message';
+  const errorDetails = lines.slice(1).join('\n');
+
+  // Determine if this is an error message (vs other potential system messages)
+  const isError = message.errorType && message.errorCategory;
+  const errorClass = isError
+    ? message.errorCategory === 'immediate'
+      ? 'border-red-500 bg-red-50 dark:bg-red-900/20'
+      : 'border-amber-500 bg-amber-50 dark:bg-amber-900/20'
+    : 'border-blue-500 bg-blue-50 dark:bg-blue-900/20';
+
+  return (
+    <div className="mb-4 flex flex-row justify-center px-4">
+      <div
+        className={`max-w-[90%] rounded-md border-l-4 px-4 py-3 text-gray-800 shadow-sm dark:text-gray-200 ${errorClass}`}
+      >
+        <div className="prose prose-sm dark:prose-invert max-w-none">
+          <h4 className="m-0 font-semibold">{errorTitle}</h4>
+          {errorDetails && (
+            <pre className="mt-2 max-h-[200px] overflow-auto font-mono text-xs whitespace-pre-wrap">
+              {errorDetails}
+            </pre>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+});
+
 // Main Message component that handles animation and decides which subcomponent to render
 const Message = memo(
   ({
@@ -131,6 +168,8 @@ const Message = memo(
             setMobilePreviewShown={setMobilePreviewShown}
             setActiveView={setActiveView}
           />
+        ) : message.type === 'system' ? (
+          <SystemMessage message={message as SystemChatMessageDocument} />
         ) : (
           <UserMessage message={message} />
         )}

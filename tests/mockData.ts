@@ -10,6 +10,10 @@ export const mockChatStateProps = {
   addScreenshot: () => Promise.resolve(),
   setSelectedResponseId: () => {},
   setNeedsNewKey: () => {},
+  // Error tracking properties
+  immediateErrors: [],
+  advisoryErrors: [],
+  addError: () => Promise.resolve(),
 };
 
 export const mockSessionSidebarProps = {
@@ -36,5 +40,9 @@ export const createMockChatState = (overrides = {}) => ({
   addScreenshot: () => Promise.resolve(),
   setSelectedResponseId: () => {},
   setNeedsNewKey: () => {},
+  // Error tracking properties
+  immediateErrors: [],
+  advisoryErrors: [],
+  addError: () => Promise.resolve(),
   ...overrides,
 });
