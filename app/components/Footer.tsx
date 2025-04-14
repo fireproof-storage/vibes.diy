@@ -4,7 +4,7 @@ export default function Footer() {
             <p>
                 Powered by <a href="https://use-fireproof.com" className="cursor-pointer">Fireproof</a>
                 &ensp;&ndash;&ensp;Join
-                us on <a href="https://discord.gg/xC55bhgf6n" className="cursor-pointer">Discord</a>
+                us on <a href="https://discord.gg/vnpWycj4Ta" className="cursor-pointer">Discord</a>
             </p>
         </footer>
     )
