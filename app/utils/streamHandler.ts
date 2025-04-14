@@ -2,13 +2,7 @@
  * Utility functions for working with AI models via call-ai library
  */
 
-import { callAI } from 'call-ai';
-
-// Define our own Message type to support system messages
-type Message = {
-  role: 'user' | 'assistant' | 'system';
-  content: string;
-};
+import { callAI, type Message } from 'call-ai';
 
 /**
  * Stream AI responses with accumulated content callback
@@ -32,14 +26,11 @@ export async function streamAI(
   // Stream process starts
 
   // Format messages for call-ai
-  // NOTE FOR call-ai ENGINEER: We need 'system' role support in messageHistory, not just the initial system prompt
-  // This is a type workaround - at runtime, we're sending system messages directly
-
-  const messages = [
+  const messages: Message[] = [
     { role: 'system', content: systemPrompt },
-    ...(messageHistory as any[]), // Type workaround - system messages work at runtime but not in types
+    ...messageHistory,
     { role: 'user', content: userMessage },
-  ] as Message[];
+  ];
   // Configure call-ai options
   const options = {
     apiKey: apiKey,
