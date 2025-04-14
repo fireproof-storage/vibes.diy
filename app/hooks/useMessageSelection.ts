@@ -76,11 +76,22 @@ export function useMessageSelection({
   const filteredDocs = docs.filter(
     (doc: any) => doc.type === 'ai' || doc.type === 'user' || doc.type === 'system'
   );
-  const buildMessageHistory = useCallback(() => {
-    return filteredDocs.map((msg: any) => ({
-      role: msg.type === 'user' ? 'user' : msg.type === 'system' ? 'system' : 'assistant',
-      content: msg.text || '',
-    }));
+  const buildMessageHistory = useCallback((): Array<{
+    role: 'user' | 'assistant' | 'system';
+    content: string;
+  }> => {
+    return filteredDocs.map((msg: any) => {
+      const role =
+        msg.type === 'user'
+          ? ('user' as const)
+          : msg.type === 'system'
+            ? ('system' as const)
+            : ('assistant' as const);
+      return {
+        role,
+        content: msg.text || '',
+      };
+    });
   }, [filteredDocs]);
 
   return {
