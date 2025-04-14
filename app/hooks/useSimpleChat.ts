@@ -2,7 +2,7 @@ import { useState, useRef, useCallback, useEffect, useMemo } from 'react';
 import type { ChatMessageDocument, ChatState } from '../types/chat';
 import type { UserSettings } from '../types/settings';
 import { parseContent } from '../utils/segmentParser';
-import { useRuntimeErrors } from './useRuntimeErrors';
+import { useRuntimeErrors, type RuntimeError, type ErrorCategory } from './useRuntimeErrors';
 import { useSession } from './useSession';
 import { useFireproof } from 'use-fireproof';
 import { generateTitle } from '../utils/titleGenerator';
@@ -36,15 +36,6 @@ export function useSimpleChat(sessionId: string | undefined): ChatState {
   // and logged-in users will get proper credit assignment based on their ID
   const { apiKey, refreshKey } = useApiKey(userId);
 
-  // Runtime error tracking
-  const {
-    immediateErrors,
-    advisoryErrors,
-    addError,
-    clearImmediateErrors,
-    clearAdvisoryErrors
-  } = useRuntimeErrors();
-
   // Get session data
   const {
     session,
@@ -59,6 +50,47 @@ export function useSimpleChat(sessionId: string | undefined): ChatState {
     mainDatabase,
     aiMessage,
   } = useSession(sessionId);
+
+  // Function to save errors as system messages to the session database
+  const saveErrorAsSystemMessage = useCallback(async (error: RuntimeError, category: ErrorCategory) => {
+    if (!sessionDatabase) return;
+    
+    // Format the error message
+    const errorType = error.errorType || 'Unknown';
+    const errorReason = error.reason || 'Unknown reason';
+    const errorMessage = error.message || 'No message';
+    const errorSource = error.source || 'Unknown source';
+    
+    // Create a readable error message for the AI
+    const systemMessageText = `ERROR [${category}]: ${errorType}\n${errorMessage}\n${errorReason}\nSource: ${errorSource}\nStack: ${error.stack || 'No stack trace'}\nTimestamp: ${error.timestamp}`;
+    
+    // Create a system message document
+    const systemMessage = {
+      type: 'system',
+      session_id: sessionId || '',
+      text: systemMessageText,
+      created_at: Date.now(),
+      errorType: errorType,
+      errorCategory: category
+    };
+    
+    // Save to the session database
+    try {
+      await sessionDatabase.put(systemMessage);
+      console.log(`Saved ${category} error as system message to database`);
+    } catch (err) {
+      console.error('Failed to save error as system message:', err);
+    }
+  }, [sessionDatabase, sessionId]);
+
+  // Runtime error tracking with save callback
+  const {
+    immediateErrors,
+    advisoryErrors,
+    addError,
+    clearImmediateErrors,
+    clearAdvisoryErrors
+  } = useRuntimeErrors(saveErrorAsSystemMessage);
 
   // Reference for input element
   const inputRef = useRef<HTMLTextAreaElement>(null);
@@ -294,6 +326,9 @@ export function useSimpleChat(sessionId: string | undefined): ChatState {
     if (immediateErrors.length > 0) {
       console.log('[useSimpleChat] Immediate errors detected:', immediateErrors);
       // You could implement additional logic here like showing notifications
+      setTimeout(() => {
+        
+      }, 500);
     }
   }, [immediateErrors]);
 

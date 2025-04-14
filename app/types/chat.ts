@@ -26,7 +26,13 @@ export type AiChatMessageDocument = BaseChatMessageDocument & {
   model?: string; // The model used to generate this message
 };
 
-export type ChatMessageDocument = UserChatMessageDocument | AiChatMessageDocument;
+export type SystemChatMessageDocument = BaseChatMessageDocument & {
+  type: 'system';
+  errorType?: string; // Type of error if this is an error message
+  errorCategory?: 'immediate' | 'advisory'; // Category of error
+};
+
+export type ChatMessageDocument = UserChatMessageDocument | AiChatMessageDocument | SystemChatMessageDocument;
 
 /**
  * Base document interface with common properties
@@ -56,7 +62,7 @@ export interface SessionDocument extends DocTypes {
   publishedUrl?: string; // URL where the app is published
   messages?: Array<{
     text: string;
-    type: 'user' | 'ai';
+    type: 'user' | 'ai' | 'system';
     code?: string;
     dependencies?: Record<string, string>;
   }>;
@@ -85,6 +91,13 @@ export type AiChatMessage = ChatMessage & {
   segments?: Segment[];
   isStreaming?: boolean;
   dependenciesString?: string;
+};
+
+// System message type for errors and important system notifications
+export type SystemChatMessage = ChatMessage & {
+  type: 'system';
+  errorType?: string;
+  errorCategory?: 'immediate' | 'advisory';
 };
 
 // ===== Component Props =====

@@ -14,7 +14,7 @@ export interface RuntimeError {
 
 export type ErrorCategory = 'immediate' | 'advisory';
 
-export function useRuntimeErrors() {
+export function useRuntimeErrors(onSaveError?: (error: RuntimeError, category: ErrorCategory) => Promise<void>) {
   const [immediateErrors, setImmediateErrors] = useState<RuntimeError[]>([]);
   const [advisoryErrors, setAdvisoryErrors] = useState<RuntimeError[]>([]);
 
@@ -53,7 +53,7 @@ export function useRuntimeErrors() {
   }, []);
 
   // Add a new error, categorizing it automatically
-  const addError = useCallback((error: RuntimeError) => {
+  const addError = useCallback(async (error: RuntimeError) => {
     const category = categorizeError(error);
     
     if (category === 'immediate') {
@@ -61,7 +61,16 @@ export function useRuntimeErrors() {
     } else {
       setAdvisoryErrors(prev => [...prev, error]);
     }
-  }, [categorizeError]);
+
+    // If a save callback is provided, save the error to the database
+    if (onSaveError) {
+      try {
+        await onSaveError(error, category);
+      } catch (err) {
+        console.error('Failed to save error to database:', err);
+      }
+    }
+  }, [categorizeError, onSaveError]);
 
   // Clear errors
   const clearImmediateErrors = useCallback(() => {
