@@ -52,45 +52,59 @@ export function useSimpleChat(sessionId: string | undefined): ChatState {
   } = useSession(sessionId);
 
   // Function to save errors as system messages to the session database
-  const saveErrorAsSystemMessage = useCallback(async (error: RuntimeError, category: ErrorCategory) => {
-    if (!sessionDatabase) return;
-    
-    // Format the error message
-    const errorType = error.errorType || 'Unknown';
-    const errorReason = error.reason || 'Unknown reason';
-    const errorMessage = error.message || 'No message';
-    const errorSource = error.source || 'Unknown source';
-    
-    // Create a readable error message for the AI
-    const systemMessageText = `ERROR [${category}]: ${errorType}\n${errorMessage}\n${errorReason}\nSource: ${errorSource}\nStack: ${error.stack || 'No stack trace'}\nTimestamp: ${error.timestamp}`;
-    
-    // Create a system message document
-    const systemMessage = {
-      type: 'system',
-      session_id: sessionId || '',
-      text: systemMessageText,
-      created_at: Date.now(),
-      errorType: errorType,
-      errorCategory: category
-    };
-    
-    // Save to the session database
-    try {
-      await sessionDatabase.put(systemMessage);
-      console.log(`Saved ${category} error as system message to database`);
-    } catch (err) {
-      console.error('Failed to save error as system message:', err);
-    }
-  }, [sessionDatabase, sessionId]);
+  const saveErrorAsSystemMessage = useCallback(
+    async (error: RuntimeError, category: ErrorCategory) => {
+      if (!sessionDatabase) return;
 
-  // Runtime error tracking with save callback
-  const {
-    immediateErrors,
-    advisoryErrors,
-    addError,
-    clearImmediateErrors,
-    clearAdvisoryErrors
-  } = useRuntimeErrors(saveErrorAsSystemMessage);
+      // Format the error message
+      const errorType = error.errorType || 'Unknown';
+      const errorReason = error.reason || 'Unknown reason';
+      const errorMessage = error.message || 'No message';
+      const errorSource = error.source || 'Unknown source';
+
+      // Create a readable error message for the AI
+      const systemMessageText = `ERROR [${category}]: ${errorType}\n${errorMessage}\n${errorReason}\nSource: ${errorSource}\nStack: ${error.stack || 'No stack trace'}\nTimestamp: ${error.timestamp}`;
+
+      // Create a system message document
+      const systemMessage = {
+        type: 'system',
+        session_id: sessionId || '',
+        text: systemMessageText,
+        created_at: Date.now(),
+        errorType: errorType,
+        errorCategory: category,
+      };
+
+      // Save to the session database
+      try {
+        await sessionDatabase.put(systemMessage);
+        console.log(`Saved ${category} error as system message to database`);
+      } catch (err) {
+        console.error('Failed to save error as system message:', err);
+      }
+    },
+    [sessionDatabase, sessionId]
+  );
+
+  // State to track when errors were sent to the AI
+  const [didSendErrors, setDidSendErrors] = useState(false);
+
+  // Runtime error tracking with save callback and event-based clearing
+  const { immediateErrors, advisoryErrors, addError } = useRuntimeErrors({
+    onSaveError: saveErrorAsSystemMessage,
+    didSendErrors,
+  });
+
+  // Reset didSendErrors after it's been processed
+  useEffect(() => {
+    if (didSendErrors) {
+      // Small delay to ensure the errors are cleared before resetting
+      const timer = setTimeout(() => {
+        setDidSendErrors(false);
+      }, 100);
+      return () => clearTimeout(timer);
+    }
+  }, [didSendErrors]);
 
   // Reference for input element
   const inputRef = useRef<HTMLTextAreaElement>(null);
@@ -328,27 +342,27 @@ export function useSimpleChat(sessionId: string | undefined): ChatState {
   useEffect(() => {
     if (immediateErrors.length > 0 && !isStreaming) {
       console.log('[useSimpleChat] Immediate errors detected:', immediateErrors);
-      
+
       // Only start a debounce timer if one isn't already running
       // This ensures we don't indefinitely postpone sending in a rapid error scenario
       if (!debouncedSendRef.current) {
         console.log('[useSimpleChat] Starting debounce timer for error report');
-        
+
         // Set a timeout for auto-sending
         debouncedSendRef.current = setTimeout(async () => {
           try {
             // Simple prompt message - errors have already been saved as system messages
             const promptText = `Please help me fix the errors shown above. Simplify the code if necessary.`;
-            
+
             // Set the user message text to the prompt
             userMessage.text = promptText;
-            
+
             // Send the message (will be picked up by the sendMessage function)
             await sendMessage();
-            
-            // Clear the immediate errors since we've now sent them
-            clearImmediateErrors();
-            
+
+            // Signal that errors were sent to trigger clearing
+            setDidSendErrors(true);
+
             console.log('[useSimpleChat] Auto-sent error report to AI');
           } catch (error) {
             console.error('[useSimpleChat] Failed to auto-send error report:', error);
@@ -358,7 +372,7 @@ export function useSimpleChat(sessionId: string | undefined): ChatState {
         }, 500); // 500ms debounce
       }
     }
-    
+
     // Cleanup function
     return () => {
       if (debouncedSendRef.current) {
@@ -366,7 +380,7 @@ export function useSimpleChat(sessionId: string | undefined): ChatState {
         debouncedSendRef.current = null;
       }
     };
-  }, [immediateErrors, isStreaming, userMessage, sendMessage, clearImmediateErrors]);
+  }, [immediateErrors, isStreaming, userMessage, sendMessage, setDidSendErrors]);
 
   // Log advisory errors whenever they change (non-critical errors)
   useEffect(() => {
@@ -399,7 +413,5 @@ export function useSimpleChat(sessionId: string | undefined): ChatState {
     immediateErrors,
     advisoryErrors,
     addError,
-    clearImmediateErrors,
-    clearAdvisoryErrors
   };
 }

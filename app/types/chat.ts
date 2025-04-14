@@ -32,7 +32,10 @@ export type SystemChatMessageDocument = BaseChatMessageDocument & {
   errorCategory?: 'immediate' | 'advisory'; // Category of error
 };
 
-export type ChatMessageDocument = UserChatMessageDocument | AiChatMessageDocument | SystemChatMessageDocument;
+export type ChatMessageDocument =
+  | UserChatMessageDocument
+  | AiChatMessageDocument
+  | SystemChatMessageDocument;
 
 /**
  * Base document interface with common properties
@@ -120,13 +123,11 @@ export interface ChatState {
   needsNewKey?: boolean;
   setNeedsNewKey: (value: boolean) => void;
   needsLogin?: boolean;
-  
+
   // Error tracking
   immediateErrors: RuntimeError[];
   advisoryErrors: RuntimeError[];
   addError: (error: RuntimeError) => void;
-  clearImmediateErrors: () => void;
-  clearAdvisoryErrors: () => void;
 }
 
 export interface ChatInterfaceProps {

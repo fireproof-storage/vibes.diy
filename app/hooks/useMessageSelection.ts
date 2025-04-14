@@ -73,7 +73,9 @@ export function useMessageSelection({
   }, [selectedResponseDoc]);
 
   // Build message history for AI requests
-  const filteredDocs = docs.filter((doc: any) => doc.type === 'ai' || doc.type === 'user' || doc.type === 'system');
+  const filteredDocs = docs.filter(
+    (doc: any) => doc.type === 'ai' || doc.type === 'user' || doc.type === 'system'
+  );
   const buildMessageHistory = useCallback(() => {
     return filteredDocs.map((msg: any) => ({
       role: msg.type === 'user' ? 'user' : msg.type === 'system' ? 'system' : 'assistant',

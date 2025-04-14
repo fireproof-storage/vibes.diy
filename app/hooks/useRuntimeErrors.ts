@@ -14,7 +14,13 @@ export interface RuntimeError {
 
 export type ErrorCategory = 'immediate' | 'advisory';
 
-export function useRuntimeErrors(onSaveError?: (error: RuntimeError, category: ErrorCategory) => Promise<void>) {
+export function useRuntimeErrors({
+  onSaveError,
+  didSendErrors = false,
+}: {
+  onSaveError?: (error: RuntimeError, category: ErrorCategory) => Promise<void>;
+  didSendErrors?: boolean;
+} = {}) {
   const [immediateErrors, setImmediateErrors] = useState<RuntimeError[]>([]);
   const [advisoryErrors, setAdvisoryErrors] = useState<RuntimeError[]>([]);
 
@@ -48,38 +54,40 @@ export function useRuntimeErrors(onSaveError?: (error: RuntimeError, category: E
     ) {
       return 'immediate';
     }
-    
+
     return 'advisory';
   }, []);
 
   // Add a new error, categorizing it automatically
-  const addError = useCallback(async (error: RuntimeError) => {
-    const category = categorizeError(error);
-    
-    if (category === 'immediate') {
-      setImmediateErrors(prev => [...prev, error]);
-    } else {
-      setAdvisoryErrors(prev => [...prev, error]);
-    }
+  const addError = useCallback(
+    async (error: RuntimeError) => {
+      const category = categorizeError(error);
 
-    // If a save callback is provided, save the error to the database
-    if (onSaveError) {
-      try {
-        await onSaveError(error, category);
-      } catch (err) {
-        console.error('Failed to save error to database:', err);
+      if (category === 'immediate') {
+        setImmediateErrors((prev) => [...prev, error]);
+      } else {
+        setAdvisoryErrors((prev) => [...prev, error]);
       }
+
+      // If a save callback is provided, save the error to the database
+      if (onSaveError) {
+        try {
+          await onSaveError(error, category);
+        } catch (err) {
+          console.error('Failed to save error to database:', err);
+        }
+      }
+    },
+    [categorizeError, onSaveError]
+  );
+
+  // Clear errors based on didSendErrors event
+  useEffect(() => {
+    if (didSendErrors && immediateErrors.length > 0) {
+      console.log('[useRuntimeErrors] Clearing immediate errors after send');
+      setImmediateErrors([]);
     }
-  }, [categorizeError, onSaveError]);
-
-  // Clear errors
-  const clearImmediateErrors = useCallback(() => {
-    setImmediateErrors([]);
-  }, []);
-
-  const clearAdvisoryErrors = useCallback(() => {
-    setAdvisoryErrors([]);
-  }, []);
+  }, [didSendErrors, immediateErrors]);
 
   // We don't need separate adder functions as categorization is handled by addError
 
@@ -100,7 +108,6 @@ export function useRuntimeErrors(onSaveError?: (error: RuntimeError, category: E
     immediateErrors,
     advisoryErrors,
     addError,
-    clearImmediateErrors,
-    clearAdvisoryErrors
+    // No longer exposing clear methods - they're handled internally
   };
 }
