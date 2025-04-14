@@ -165,9 +165,9 @@
       window.addEventListener('DOMContentLoaded', function () {
         pageIsLoaded();
       });
-      
+
       // Global error handlers to catch and log all errors
-      window.onerror = function(message, source, lineno, colno, error) {
+      window.onerror = function (message, source, lineno, colno, error) {
         const errorDetails = {
           type: 'error',
           message: message,
@@ -175,21 +175,21 @@
           lineno: lineno,
           colno: colno,
           stack: error?.stack || 'No stack trace available',
-          timestamp: new Date().toISOString()
+          timestamp: new Date().toISOString(),
         };
         console.error('Uncaught error:', errorDetails);
         // Send error to parent window
         window.parent.postMessage({ type: 'iframe-error', error: errorDetails }, '*');
         return false; // Let the default error handler run
       };
-      
+
       // Handle unhandled promise rejections
-      window.addEventListener('unhandledrejection', function(event) {
+      window.addEventListener('unhandledrejection', function (event) {
         const errorDetails = {
           type: 'unhandledrejection',
           reason: event.reason?.toString() || 'Unknown reason',
           stack: event.reason?.stack || 'No stack trace available',
-          timestamp: new Date().toISOString()
+          timestamp: new Date().toISOString(),
         };
         console.error('Unhandled promise rejection:', errorDetails);
         // Send rejection to parent window
