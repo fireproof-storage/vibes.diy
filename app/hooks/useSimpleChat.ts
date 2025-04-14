@@ -321,16 +321,52 @@ export function useSimpleChat(sessionId: string | undefined): ChatState {
     }
   }, [apiKey, checkCredits]);
 
-  // Log immediate errors whenever they change (critical errors)
+  // Auto-send for immediate errors (with debounce)
+  const debouncedSendRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Handle immediate errors with debounced auto-send
   useEffect(() => {
-    if (immediateErrors.length > 0) {
+    if (immediateErrors.length > 0 && !isStreaming) {
       console.log('[useSimpleChat] Immediate errors detected:', immediateErrors);
-      // You could implement additional logic here like showing notifications
-      setTimeout(() => {
+      
+      // Only start a debounce timer if one isn't already running
+      // This ensures we don't indefinitely postpone sending in a rapid error scenario
+      if (!debouncedSendRef.current) {
+        console.log('[useSimpleChat] Starting debounce timer for error report');
         
-      }, 500);
+        // Set a timeout for auto-sending
+        debouncedSendRef.current = setTimeout(async () => {
+          try {
+            // Simple prompt message - errors have already been saved as system messages
+            const promptText = `Please help me fix the errors shown above. Simplify the code if necessary.`;
+            
+            // Set the user message text to the prompt
+            userMessage.text = promptText;
+            
+            // Send the message (will be picked up by the sendMessage function)
+            await sendMessage();
+            
+            // Clear the immediate errors since we've now sent them
+            clearImmediateErrors();
+            
+            console.log('[useSimpleChat] Auto-sent error report to AI');
+          } catch (error) {
+            console.error('[useSimpleChat] Failed to auto-send error report:', error);
+          } finally {
+            debouncedSendRef.current = null;
+          }
+        }, 500); // 500ms debounce
+      }
     }
-  }, [immediateErrors]);
+    
+    // Cleanup function
+    return () => {
+      if (debouncedSendRef.current) {
+        clearTimeout(debouncedSendRef.current);
+        debouncedSendRef.current = null;
+      }
+    };
+  }, [immediateErrors, isStreaming, userMessage, sendMessage, clearImmediateErrors]);
 
   // Log advisory errors whenever they change (non-critical errors)
   useEffect(() => {
