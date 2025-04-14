@@ -152,6 +152,8 @@ function ResultPreview({
           if (onScreenshotCaptured) {
             onScreenshotCaptured(null);
           }
+        } else if (data.type === 'iframe-error' && data.error) {
+          console.error('[ResultPreview] Error in iframe:', data.error);
         }
       }
     };
