@@ -204,7 +204,7 @@ export function useSimpleChat(sessionId: string | undefined): ChatState {
       console.error('API key not available yet');
       return;
     }
-
+    const promptText = userMessage.text;
     // Ensure we have a system prompt
     const currentSystemPrompt = await ensureSystemPrompt();
 
@@ -219,7 +219,7 @@ export function useSimpleChat(sessionId: string | undefined): ChatState {
           modelToUse,
           currentSystemPrompt,
           messageHistory,
-          userMessage.text,
+          promptText,
           (content) => throttledMergeAiMessage(content),
           apiKey || ''
         );
@@ -239,7 +239,7 @@ export function useSimpleChat(sessionId: string | undefined): ChatState {
                 console.log('Error in API response:', parsedContent);
                 setNeedsNewKey(true);
                 // Preserve the user message in case they want to retry
-                setInput(userMessage.text);
+                setInput(promptText);
                 // Return early with an error message
                 finalContent = `Error: ${JSON.stringify(parsedContent.error)}`;
               } else {
