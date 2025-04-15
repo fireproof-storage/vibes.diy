@@ -349,7 +349,7 @@ export function useSimpleChat(sessionId: string | undefined): ChatState {
 
   // Auto-send for immediate errors (with debounce)
   const debouncedSendRef = useRef<NodeJS.Timeout | null>(null);
-  
+
   // Track which errors we've already sent to prevent duplicate sends
   const sentErrorsRef = useRef<Set<string>>(new Set());
 
@@ -362,10 +362,10 @@ export function useSimpleChat(sessionId: string | undefined): ChatState {
 
     // Generate a fingerprint for the current set of errors to track if we've already handled them
     const errorFingerprint = immediateErrors
-      .map(error => `${error.errorType}:${error.message}`)
+      .map((error) => `${error.errorType}:${error.message}`)
       .sort()
       .join('|');
-    
+
     // Exit if we've already sent this exact set of errors - prevents duplicating messages
     if (sentErrorsRef.current.has(errorFingerprint)) {
       return;
@@ -382,13 +382,12 @@ export function useSimpleChat(sessionId: string | undefined): ChatState {
     // Process all errors regardless of streaming state
     // Only start a debounce timer if one isn't already running
     if (!debouncedSendRef.current) {
-
       // Use a consistent debounce time to collect all related errors
       debouncedSendRef.current = setTimeout(async () => {
         try {
           // Add this error set to our tracking to prevent duplicate sends
           sentErrorsRef.current.add(errorFingerprint);
-          
+
           // Simple prompt message - errors have already been saved as system messages
           const promptText = `Please help me fix the errors shown above. Simplify the code if necessary.`;
 
@@ -406,7 +405,7 @@ export function useSimpleChat(sessionId: string | undefined): ChatState {
         }
       }, 500); // Use consistent 500ms debounce for all errors
     }
-    
+
     // Cleanup function
     return () => {
       if (debouncedSendRef.current) {

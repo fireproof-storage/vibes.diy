@@ -44,20 +44,31 @@ export async function streamAI(
   };
 
   try {
-    const generator = callAI(messages, options) as AsyncGenerator<string>;
+    const response = await callAI(messages, options);
 
-    // Process the stream - callAI already accumulates content
+    // Process the stream - handle both string and StreamResponse cases
     let finalResponse = '';
 
-    try {
-      for await (const content of generator) {
-        // Each yielded content already contains the full accumulated text
-        finalResponse = content;
-        onContent(content);
-      }
+    if (typeof response === 'string') {
+      // Handle direct string response
+      finalResponse = response;
+      onContent(response);
       return finalResponse;
-    } catch (streamError) {
-      throw streamError;
+    } else if (response && typeof response === 'object') {
+      // Handle StreamResponse object - assuming it's an async generator
+      try {
+        const generator = response as AsyncGenerator<string>;
+        for await (const content of generator) {
+          // Each yielded content already contains the full accumulated text
+          finalResponse = content;
+          onContent(content);
+        }
+        return finalResponse;
+      } catch (streamError) {
+        throw streamError;
+      }
+    } else {
+      throw new Error('Unexpected response type from callAI');
     }
   } catch (initialError) {
     throw initialError;
