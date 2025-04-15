@@ -1,4 +1,4 @@
-import { memo, useMemo } from 'react';
+import { memo, useEffect, useMemo } from 'react';
 import Message from './Message';
 import type { ChatMessageDocument } from '../types/chat';
 
@@ -21,6 +21,10 @@ function MessageList({
 }: MessageListProps) {
   // Create a special message list when there's only one user message
   const shouldShowWaitingIndicator = messages.length === 1 && messages[0]?.type === 'user';
+
+  useEffect(() => {
+    console.log('MessageList props:', messages);
+  }, [messages.map(m => m._id).join(',')]);
 
   // Handle special case for waiting state
   const messageElements = useMemo(() => {

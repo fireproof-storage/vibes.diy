@@ -23,7 +23,7 @@ export function useMessageSelection({
   // The list of messages for the UI: docs + streaming message if active
   const messages = useMemo(() => {
     const baseDocs = docs.filter(
-      (doc: any) => doc.type === 'ai' || doc.type === 'user'
+      (doc: any) => doc.type === 'ai' || doc.type === 'user' || doc.type === 'system'
     ) as unknown as ChatMessageDocument[];
     return isStreaming && aiMessage.text.length > 0 ? [...baseDocs, aiMessage] : baseDocs;
   }, [docs, isStreaming, aiMessage.text]);
