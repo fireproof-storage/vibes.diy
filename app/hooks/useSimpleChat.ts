@@ -199,131 +199,134 @@ export function useSimpleChat(sessionId: string | undefined): ChatState {
    * Send a message and process the AI response
    * @param textOverride Optional text to use instead of the current userMessage
    */
-  const sendMessage = useCallback(async (textOverride?: string): Promise<void> => {
-    // Use provided text or fall back to userMessage.text
-    const promptText = textOverride || userMessage.text;
-    
-    if (!promptText.trim()) return;
-    if (!apiKey) {
-      console.error('API key not available yet');
-      return;
-    }
-    
-    // Update user message with the text we're about to send if using an override
-    if (textOverride) {
-      mergeUserMessage({ text: textOverride });
-    }
-    
-    // Ensure we have a system prompt
-    const currentSystemPrompt = await ensureSystemPrompt();
+  const sendMessage = useCallback(
+    async (textOverride?: string): Promise<void> => {
+      // Use provided text or fall back to userMessage.text
+      const promptText = textOverride || userMessage.text;
 
-    // Set streaming state
-    setIsStreaming(true);
+      if (!promptText.trim()) return;
+      if (!apiKey) {
+        console.error('API key not available yet');
+        return;
+      }
 
-    // Submit user message first
-    return submitUserMessage()
-      .then(() => {
-        const messageHistory = buildMessageHistory();
-        return streamAI(
-          modelToUse,
-          currentSystemPrompt,
-          messageHistory,
-          promptText,
-          (content) => throttledMergeAiMessage(content),
-          apiKey || ''
-        );
-      })
-      .then(async (finalContent) => {
-        // Set processing flag to prevent infinite updates
-        isProcessingRef.current = true;
+      // Update user message with the text we're about to send if using an override
+      if (textOverride) {
+        mergeUserMessage({ text: textOverride });
+      }
 
-        try {
-          // Check if finalContent is a string that could be JSON
-          if (typeof finalContent === 'string' && finalContent.startsWith('{')) {
-            try {
-              const parsedContent = JSON.parse(finalContent);
+      // Ensure we have a system prompt
+      const currentSystemPrompt = await ensureSystemPrompt();
 
-              // Check if there's an error property
-              if (parsedContent.error) {
-                console.log('Error in API response:', parsedContent);
-                setNeedsNewKey(true);
-                // Preserve the user message in case they want to retry
-                setInput(promptText);
-                // Return early with an error message
-                finalContent = `Error: ${JSON.stringify(parsedContent.error)}`;
-              } else {
-                // If no error, continue with the parsed content
-                finalContent = parsedContent;
+      // Set streaming state
+      setIsStreaming(true);
+
+      // Submit user message first
+      return submitUserMessage()
+        .then(() => {
+          const messageHistory = buildMessageHistory();
+          return streamAI(
+            modelToUse,
+            currentSystemPrompt,
+            messageHistory,
+            promptText,
+            (content) => throttledMergeAiMessage(content),
+            apiKey || ''
+          );
+        })
+        .then(async (finalContent) => {
+          // Set processing flag to prevent infinite updates
+          isProcessingRef.current = true;
+
+          try {
+            // Check if finalContent is a string that could be JSON
+            if (typeof finalContent === 'string' && finalContent.startsWith('{')) {
+              try {
+                const parsedContent = JSON.parse(finalContent);
+
+                // Check if there's an error property
+                if (parsedContent.error) {
+                  console.log('Error in API response:', parsedContent);
+                  setNeedsNewKey(true);
+                  // Preserve the user message in case they want to retry
+                  setInput(promptText);
+                  // Return early with an error message
+                  finalContent = `Error: ${JSON.stringify(parsedContent.error)}`;
+                } else {
+                  // If no error, continue with the parsed content
+                  finalContent = parsedContent;
+                }
+              } catch (jsonError) {
+                console.log('Error parsing JSON response:', jsonError, finalContent);
               }
-            } catch (jsonError) {
-              console.log('Error parsing JSON response:', jsonError, finalContent);
             }
-          }
 
-          // Handle empty responses with a friendly message
-          if (
-            !finalContent ||
-            (typeof finalContent === 'string' && finalContent.trim().length === 0)
-          ) {
-            finalContent =
-              'Sorry, there was an error processing your request. Please try again in a moment.';
-          }
+            // Handle empty responses with a friendly message
+            if (
+              !finalContent ||
+              (typeof finalContent === 'string' && finalContent.trim().length === 0)
+            ) {
+              finalContent =
+                'Sorry, there was an error processing your request. Please try again in a moment.';
+            }
 
-          // Only do a final update if the current state doesn't match our final content
-          if (aiMessage.text !== finalContent) {
-            aiMessage.text = finalContent;
-          }
+            // Only do a final update if the current state doesn't match our final content
+            if (aiMessage.text !== finalContent) {
+              aiMessage.text = finalContent;
+            }
 
-          aiMessage.model = modelToUse;
-          // Save to database
-          const { id } = (await sessionDatabase.put(aiMessage)) as { id: string };
-          // Update state with the saved message
-          setPendingAiMessage({ ...aiMessage, _id: id });
-          setSelectedResponseId(id);
+            aiMessage.model = modelToUse;
+            // Save to database
+            const { id } = (await sessionDatabase.put(aiMessage)) as { id: string };
+            // Update state with the saved message
+            setPendingAiMessage({ ...aiMessage, _id: id });
+            setSelectedResponseId(id);
 
-          // Generate title if needed
-          const { segments } = parseContent(aiMessage.text);
-          if (!session?.title) {
-            await generateTitle(segments, TITLE_MODEL, apiKey || '').then(updateTitle);
+            // Generate title if needed
+            const { segments } = parseContent(aiMessage.text);
+            if (!session?.title) {
+              await generateTitle(segments, TITLE_MODEL, apiKey || '').then(updateTitle);
+            }
+          } finally {
+            isProcessingRef.current = false;
           }
-        } finally {
+        })
+        .catch((error: any) => {
+          // Log the error for debugging
+          console.log('Error:', error);
+
+          // Reset processing state
           isProcessingRef.current = false;
-        }
-      })
-      .catch((error: any) => {
-        // Log the error for debugging
-        console.log('Error:', error);
+          setPendingAiMessage(null);
+          setSelectedResponseId('');
+        })
+        .finally(() => {
+          // Check credits status
+          checkCredits();
 
-        // Reset processing state
-        isProcessingRef.current = false;
-        setPendingAiMessage(null);
-        setSelectedResponseId('');
-      })
-      .finally(() => {
-        // Check credits status
-        checkCredits();
-
-        // Reset streaming state
-        setIsStreaming(false);
-      });
-  }, [
-    userMessage.text,
-    ensureSystemPrompt,
-    setIsStreaming,
-    submitUserMessage,
-    buildMessageHistory,
-    modelToUse,
-    throttledMergeAiMessage,
-    isProcessingRef,
-    aiMessage,
-    sessionDatabase,
-    setPendingAiMessage,
-    setSelectedResponseId,
-    session?.title,
-    updateTitle,
-    checkCredits,
-    apiKey,
-  ]);
+          // Reset streaming state
+          setIsStreaming(false);
+        });
+    },
+    [
+      userMessage.text,
+      ensureSystemPrompt,
+      setIsStreaming,
+      submitUserMessage,
+      buildMessageHistory,
+      modelToUse,
+      throttledMergeAiMessage,
+      isProcessingRef,
+      aiMessage,
+      sessionDatabase,
+      setPendingAiMessage,
+      setSelectedResponseId,
+      session?.title,
+      updateTitle,
+      checkCredits,
+      apiKey,
+    ]
+  );
 
   // Determine if code is ready for display
   const codeReady = useMemo(() => {
@@ -351,12 +354,10 @@ export function useSimpleChat(sessionId: string | undefined): ChatState {
   useEffect(() => {
     if (immediateErrors.length > 0) {
       console.log('[useSimpleChat] Immediate errors detected:', immediateErrors);
-      
+
       // Determine if this is a syntax error
-      const hasSyntaxErrors = immediateErrors.some(
-        error => error.errorType === 'SyntaxError'
-      );
-      
+      const hasSyntaxErrors = immediateErrors.some((error) => error.errorType === 'SyntaxError');
+
       // Cancel any streaming if there are syntax errors
       if (isStreaming && hasSyntaxErrors) {
         console.log('[useSimpleChat] Stopping stream for syntax error');
@@ -398,7 +399,15 @@ export function useSimpleChat(sessionId: string | undefined): ChatState {
         debouncedSendRef.current = null;
       }
     };
-  }, [immediateErrors, isStreaming, userMessage, sendMessage, setDidSendErrors, setIsStreaming, mergeUserMessage]);
+  }, [
+    immediateErrors,
+    isStreaming,
+    userMessage,
+    sendMessage,
+    setDidSendErrors,
+    setIsStreaming,
+    mergeUserMessage,
+  ]);
 
   // Log advisory errors whenever they change (non-critical errors)
   useEffect(() => {

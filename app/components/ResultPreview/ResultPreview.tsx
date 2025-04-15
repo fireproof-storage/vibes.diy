@@ -155,8 +155,6 @@ function ResultPreview({
             onScreenshotCaptured(null);
           }
         } else if (data.type === 'iframe-error' && data.error) {
-          console.error('[ResultPreview] Error in iframe:', data.error);
-
           // Process the error and forward it to the error handler
           const error = data.error as RuntimeError;
 

@@ -41,9 +41,9 @@ export const quickSuggestions: Suggestion[] = [
   },
   {
     label: 'Web Art',
-    text: 'Page mutator that automatically sends document.body.innerHTML to callAI with model "openrouter/optimus-alpha" to make it more interesting web art, then extracts the HTML result, updates the body, and uses DOM (not ReactDOM) functions to insert a toggleable open control panel that lists the iteration history and shows the most recent 5 lines of the current mutation stream in a fixed size area. After each response, count 10 seconds and recursively send HTML to AI again. The page should start with the technicolor transition from Wizard of Oz, "we\'re not in Kansas anymore."',
+    text: 'Page mutator that automatically sends document.body.innerHTML to callAI to make it more interesting web art, then extracts the HTML result, updates the body, and uses DOM (not ReactDOM) functions to insert a toggleable open control panel that lists the iteration history and shows the most recent 5 lines of the current mutation stream in a fixed size area. After each response, count 10 seconds and recursively send HTML to AI again. The page should start with the technicolor transition from Wizard of Oz, "we\'re not in Kansas anymore."',
   },
-  {
+  { 
     label: 'Guitar',
     text: "Create Hendrix-like guitar solos with Web Audio API: Set up oscillators (ctx.createOscillator()) with 'sawtooth' waveforms for guitar-like harmonics, use modulator.connect(modulationGain).connect(carrier.frequency) for expressive bends and feedback effects, create signature wah-wah with BiquadFilter (filter.frequency.setValueAtTime() + automated sweeps), simulate feedback using high modulationGain.gain values, achieve dramatic dives with carrier.frequency.exponentialRampToValueAtTime(), implement string bending/vibrato by modulating pitch with LFOs, create percussive attacks with gainNode.gain.linearRampToValueAtTime() for fast attack/sustain, and simulate whammy bar techniques with rapid frequency wobbles. Add distortion via WaveShaperNode with custom curves for that iconic fuzz tone, and schedule phrases with setTimeout()/Math.random() for human-like timing variations in pentatonic patterns. Average carrier wave around 1kHz, note density: rests are rare.",
   },

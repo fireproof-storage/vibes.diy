@@ -78,18 +78,41 @@ export function useRuntimeErrors({
     return 'advisory';
   }, []);
 
+  // Maximum number of errors to keep per category
+  const MAX_ERRORS_PER_CATEGORY = 3;
+
   // Add a new error, categorizing it automatically
   const addError = useCallback(
     async (error: RuntimeError) => {
       const category = categorizeError(error);
 
+      // Check if we already have the maximum number of errors for this category
       if (category === 'immediate') {
-        setImmediateErrors((prev) => [...prev, error]);
+        setImmediateErrors((prev) => {
+          // Only add if we have fewer than MAX_ERRORS_PER_CATEGORY
+          if (prev.length >= MAX_ERRORS_PER_CATEGORY) {
+            console.log(
+              `[useRuntimeErrors] Ignoring immediate error, already at max (${MAX_ERRORS_PER_CATEGORY})`
+            );
+            return prev; // Don't add more errors
+          }
+          return [...prev, error];
+        });
       } else {
-        setAdvisoryErrors((prev) => [...prev, error]);
+        setAdvisoryErrors((prev) => {
+          // Only add if we have fewer than MAX_ERRORS_PER_CATEGORY
+          if (prev.length >= MAX_ERRORS_PER_CATEGORY) {
+            console.log(
+              `[useRuntimeErrors] Ignoring advisory error, already at max (${MAX_ERRORS_PER_CATEGORY})`
+            );
+            return prev; // Don't add more errors
+          }
+          return [...prev, error];
+        });
       }
 
       // If a save callback is provided, save the error to the database
+      // Note: We still save to DB even if at max display limit
       if (onSaveError) {
         try {
           await onSaveError(error, category);
