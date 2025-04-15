@@ -349,49 +349,71 @@ export function useSimpleChat(sessionId: string | undefined): ChatState {
 
   // Auto-send for immediate errors (with debounce)
   const debouncedSendRef = useRef<NodeJS.Timeout | null>(null);
+  
+  // Track which errors we've already sent to prevent duplicate sends
+  const sentErrorsRef = useRef<Set<string>>(new Set());
 
   // Handle immediate errors with debounced auto-send
   useEffect(() => {
-    if (immediateErrors.length > 0) {
-      console.log('[useSimpleChat] Immediate errors detected:', immediateErrors);
+    // Exit early if we don't have any errors
+    if (immediateErrors.length === 0) {
+      return;
+    }
+    
+    console.log('[useSimpleChat] Immediate errors detected:', immediateErrors);
 
-      // Determine if this is a syntax error
-      const hasSyntaxErrors = immediateErrors.some((error) => error.errorType === 'SyntaxError');
-
-      // Cancel any streaming if there are syntax errors
-      if (isStreaming && hasSyntaxErrors) {
-        console.log('[useSimpleChat] Stopping stream for syntax error');
-        setIsStreaming(false);
-      }
-
-      // Process all errors regardless of streaming state
-      // Only start a debounce timer if one isn't already running
-      if (!debouncedSendRef.current) {
-        console.log('[useSimpleChat] Starting debounce timer for error report');
-
-        // Use a consistent debounce time to collect all related errors
-        debouncedSendRef.current = setTimeout(async () => {
-          try {
-            // Simple prompt message - errors have already been saved as system messages
-            const promptText = `Please help me fix the errors shown above. Simplify the code if necessary.`;
-
-            // Send the message with the prompt text directly
-            // No need to separately set message text first
-            await sendMessage(promptText);
-
-            // Signal that errors were sent to trigger clearing
-            setDidSendErrors(true);
-
-            console.log('[useSimpleChat] Auto-sent error report to AI');
-          } catch (error) {
-            console.error('[useSimpleChat] Failed to auto-send error report:', error);
-          } finally {
-            debouncedSendRef.current = null;
-          }
-        }, 500); // Use consistent 500ms debounce for all errors
-      }
+    // Generate a fingerprint for the current set of errors to track if we've already handled them
+    const errorFingerprint = immediateErrors
+      .map(error => `${error.errorType}:${error.message}`)
+      .sort()
+      .join('|');
+    
+    // Exit if we've already sent this exact set of errors - prevents duplicating messages
+    if (sentErrorsRef.current.has(errorFingerprint)) {
+      console.log('[useSimpleChat] Skipping - already sent this exact error set');
+      return;
     }
 
+    // Determine if this is a syntax error
+    const hasSyntaxErrors = immediateErrors.some((error) => error.errorType === 'SyntaxError');
+
+    // Cancel any streaming if there are syntax errors
+    if (isStreaming && hasSyntaxErrors) {
+      console.log('[useSimpleChat] Stopping stream for syntax error');
+      setIsStreaming(false);
+    }
+
+    // Process all errors regardless of streaming state
+    // Only start a debounce timer if one isn't already running
+    if (!debouncedSendRef.current) {
+      console.log('[useSimpleChat] Starting debounce timer for error report');
+
+      // Use a consistent debounce time to collect all related errors
+      debouncedSendRef.current = setTimeout(async () => {
+        try {
+          // Add this error set to our tracking to prevent duplicate sends
+          sentErrorsRef.current.add(errorFingerprint);
+          
+          // Simple prompt message - errors have already been saved as system messages
+          const promptText = `Please help me fix the errors shown above. Simplify the code if necessary.`;
+
+          // Send the message with the prompt text directly
+          await sendMessage(promptText);
+
+          // Signal that errors were sent to trigger clearing
+          setDidSendErrors(true);
+
+          console.log('[useSimpleChat] Auto-sent error report to AI');
+        } catch (error) {
+          console.error('[useSimpleChat] Failed to auto-send error report:', error);
+          // Remove from sent errors if there was a failure
+          sentErrorsRef.current.delete(errorFingerprint);
+        } finally {
+          debouncedSendRef.current = null;
+        }
+      }, 500); // Use consistent 500ms debounce for all errors
+    }
+    
     // Cleanup function
     return () => {
       if (debouncedSendRef.current) {
