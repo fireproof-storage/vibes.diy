@@ -5,9 +5,9 @@
     "description": "Advanced reasoning model from Anthropic"
   },
   {
-    "id": "openrouter/optimus-alpha",
-    "name": "Optimus Alpha (Free)",
-    "description": "Fast coding assistant (cloaked)"
+    "id": "openai/gpt-4.1",
+    "name": "GPT-4.1",
+    "description": "Fast coding assistant"
   },
   {
     "id": "qwen/qwen-2.5-coder-32b-instruct",

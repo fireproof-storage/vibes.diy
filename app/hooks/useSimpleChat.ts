@@ -355,7 +355,7 @@ export function useSimpleChat(sessionId: string | undefined): ChatState {
             const promptText = `Please help me fix the errors shown above. Simplify the code if necessary.`;
 
             // Set the user message text to the prompt
-            userMessage.text = promptText;
+            mergeUserMessage({ text: promptText });
 
             // Send the message (will be picked up by the sendMessage function)
             await sendMessage();
