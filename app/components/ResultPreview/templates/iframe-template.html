@@ -253,6 +253,35 @@
       };
     </script>
 
+    <!-- Babel error handling script to catch syntax errors during transform -->
+    <script>
+      window.babelTransformError = null;
+      // Patch Babel transform to capture syntax errors
+      if (window.Babel && window.Babel.transform) {
+        const originalTransform = window.Babel.transform;
+        window.Babel.transform = function (code, options) {
+          try {
+            return originalTransform.call(this, code, options);
+          } catch (err) {
+            // Capture and format Babel error
+            const errorDetails = {
+              type: 'error',
+              message: `Babel Syntax Error: ${err.message || 'Invalid syntax'}`,
+              source: 'babel-transform',
+              stack: err.stack || '',
+              timestamp: new Date().toISOString(),
+              errorType: 'SyntaxError',
+            };
+            console.error('Babel transform error:', errorDetails);
+            // Report error to parent
+            window.parent.postMessage({ type: 'iframe-error', error: errorDetails }, '*');
+            window.babelTransformError = errorDetails;
+            throw err;
+          }
+        };
+      }
+    </script>
+
     <script type="text/babel" data-type="module">
       import ReactDOMClient from 'react-dom/client';
 
@@ -262,7 +291,18 @@
       // prettier-ignore-end
 
       const rootElement = document.getElementById('container');
-      ReactDOMClient.createRoot(rootElement).render(<App />);
+      // Check for babel errors before attempting to render
+      if (!window.babelTransformError) {
+        ReactDOMClient.createRoot(rootElement).render(<App />);
+      } else {
+        // Create fallback error UI if babel failed
+        rootElement.innerHTML = `
+          <div style="padding: 20px; color: red; font-family: monospace; white-space: pre-wrap;">
+            <h2>Syntax Error</h2>
+            <p>${window.babelTransformError.message}</p>
+          </div>
+        `;
+      }
     </script>
   </body>
 </html>
