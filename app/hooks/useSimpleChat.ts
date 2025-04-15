@@ -78,7 +78,7 @@ export function useSimpleChat(sessionId: string | undefined): ChatState {
       // Save to the session database
       try {
         await sessionDatabase.put(systemMessage);
-        console.log(`Saved ${category} error as system message to database`);
+        // Saved successfully
       } catch (err) {
         console.error('Failed to save error as system message:', err);
       }
@@ -359,8 +359,6 @@ export function useSimpleChat(sessionId: string | undefined): ChatState {
     if (immediateErrors.length === 0) {
       return;
     }
-    
-    console.log('[useSimpleChat] Immediate errors detected:', immediateErrors);
 
     // Generate a fingerprint for the current set of errors to track if we've already handled them
     const errorFingerprint = immediateErrors
@@ -370,7 +368,6 @@ export function useSimpleChat(sessionId: string | undefined): ChatState {
     
     // Exit if we've already sent this exact set of errors - prevents duplicating messages
     if (sentErrorsRef.current.has(errorFingerprint)) {
-      console.log('[useSimpleChat] Skipping - already sent this exact error set');
       return;
     }
 
@@ -379,14 +376,12 @@ export function useSimpleChat(sessionId: string | undefined): ChatState {
 
     // Cancel any streaming if there are syntax errors
     if (isStreaming && hasSyntaxErrors) {
-      console.log('[useSimpleChat] Stopping stream for syntax error');
       setIsStreaming(false);
     }
 
     // Process all errors regardless of streaming state
     // Only start a debounce timer if one isn't already running
     if (!debouncedSendRef.current) {
-      console.log('[useSimpleChat] Starting debounce timer for error report');
 
       // Use a consistent debounce time to collect all related errors
       debouncedSendRef.current = setTimeout(async () => {
@@ -402,8 +397,6 @@ export function useSimpleChat(sessionId: string | undefined): ChatState {
 
           // Signal that errors were sent to trigger clearing
           setDidSendErrors(true);
-
-          console.log('[useSimpleChat] Auto-sent error report to AI');
         } catch (error) {
           console.error('[useSimpleChat] Failed to auto-send error report:', error);
           // Remove from sent errors if there was a failure
@@ -431,12 +424,10 @@ export function useSimpleChat(sessionId: string | undefined): ChatState {
     mergeUserMessage,
   ]);
 
-  // Log advisory errors whenever they change (non-critical errors)
+  // Monitor advisory errors whenever they change (non-critical errors)
   useEffect(() => {
-    if (advisoryErrors.length > 0) {
-      console.log('[useSimpleChat] Advisory errors detected:', advisoryErrors);
-      // You could track these errors for analytics or debugging
-    }
+    // Advisories are handled through the system messages mechanism
+    // No additional action needed here
   }, [advisoryErrors]);
 
   return {

@@ -91,9 +91,6 @@ export function useRuntimeErrors({
         setImmediateErrors((prev) => {
           // Only add if we have fewer than MAX_ERRORS_PER_CATEGORY
           if (prev.length >= MAX_ERRORS_PER_CATEGORY) {
-            console.log(
-              `[useRuntimeErrors] Ignoring immediate error, already at max (${MAX_ERRORS_PER_CATEGORY})`
-            );
             return prev; // Don't add more errors
           }
           return [...prev, error];
@@ -102,9 +99,6 @@ export function useRuntimeErrors({
         setAdvisoryErrors((prev) => {
           // Only add if we have fewer than MAX_ERRORS_PER_CATEGORY
           if (prev.length >= MAX_ERRORS_PER_CATEGORY) {
-            console.log(
-              `[useRuntimeErrors] Ignoring advisory error, already at max (${MAX_ERRORS_PER_CATEGORY})`
-            );
             return prev; // Don't add more errors
           }
           return [...prev, error];
@@ -127,25 +121,13 @@ export function useRuntimeErrors({
   // Clear errors based on didSendErrors event
   useEffect(() => {
     if (didSendErrors && immediateErrors.length > 0) {
-      console.log('[useRuntimeErrors] Clearing immediate errors after send');
       setImmediateErrors([]);
     }
   }, [didSendErrors, immediateErrors]);
 
   // We don't need separate adder functions as categorization is handled by addError
 
-  // Log errors when they change
-  useEffect(() => {
-    if (immediateErrors.length > 0) {
-      console.log('[useRuntimeErrors] Immediate errors:', immediateErrors);
-    }
-  }, [immediateErrors]);
-
-  useEffect(() => {
-    if (advisoryErrors.length > 0) {
-      console.log('[useRuntimeErrors] Advisory errors:', advisoryErrors);
-    }
-  }, [advisoryErrors]);
+  // We don't need to log errors when they change - they're handled through the system messages
 
   return {
     immediateErrors,

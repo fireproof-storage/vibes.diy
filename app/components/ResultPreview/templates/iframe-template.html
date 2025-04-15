@@ -70,7 +70,6 @@
       function captureScreenshot() {
         // Check if html2canvas is loaded
         if (typeof html2canvas === 'undefined') {
-          console.warn('html2canvas-pro is not loaded, trying to load it dynamically');
           // Try to load html2canvas-pro dynamically
           const script = document.createElement('script');
           script.src = 'https://unpkg.com/html2canvas-pro@1.5.8/dist/html2canvas-pro.js';
@@ -104,7 +103,6 @@
               window.parent.postMessage({ type: 'screenshot', data: dataURI }, '*');
             })
             .catch((err) => {
-              console.error('html2canvas-pro error:', err);
               window.parent.postMessage(
                 {
                   type: 'screenshot-error',
@@ -114,7 +112,6 @@
               );
             });
         } catch (err) {
-          console.error('Unexpected html2canvas-pro error:', err);
           window.parent.postMessage(
             {
               type: 'screenshot-error',
@@ -191,7 +188,6 @@
           stack: event.reason?.stack || 'No stack trace available',
           timestamp: new Date().toISOString(),
         };
-        console.error('Unhandled promise rejection:', errorDetails);
         // Send rejection to parent window
         window.parent.postMessage({ type: 'iframe-error', error: errorDetails }, '*');
       });
@@ -326,7 +322,6 @@
               timestamp: new Date().toISOString(),
               errorType: 'SyntaxError',
             };
-            console.error('Babel transform error:', errorDetails);
             // Report error to parent
             window.parent.postMessage({ type: 'iframe-error', error: errorDetails }, '*');
             window.babelTransformError = errorDetails;
