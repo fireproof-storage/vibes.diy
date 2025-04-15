@@ -111,7 +111,7 @@ export interface ChatState {
   isStreaming: boolean;
   codeReady: boolean;
   inputRef: React.RefObject<HTMLTextAreaElement | null>;
-  sendMessage: () => Promise<void>;
+  sendMessage: (text?: string) => Promise<void>;
   title: string;
   addScreenshot: (screenshot: string | null) => Promise<void>;
   sessionId?: string | null;

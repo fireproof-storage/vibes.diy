@@ -197,14 +197,23 @@ export function useSimpleChat(sessionId: string | undefined): ChatState {
 
   /**
    * Send a message and process the AI response
+   * @param textOverride Optional text to use instead of the current userMessage
    */
-  const sendMessage = useCallback(async (): Promise<void> => {
-    if (!userMessage.text.trim()) return;
+  const sendMessage = useCallback(async (textOverride?: string): Promise<void> => {
+    // Use provided text or fall back to userMessage.text
+    const promptText = textOverride || userMessage.text;
+    
+    if (!promptText.trim()) return;
     if (!apiKey) {
       console.error('API key not available yet');
       return;
     }
-    const promptText = userMessage.text;
+    
+    // Update user message with the text we're about to send if using an override
+    if (textOverride) {
+      mergeUserMessage({ text: textOverride });
+    }
+    
     // Ensure we have a system prompt
     const currentSystemPrompt = await ensureSystemPrompt();
 
@@ -340,25 +349,34 @@ export function useSimpleChat(sessionId: string | undefined): ChatState {
 
   // Handle immediate errors with debounced auto-send
   useEffect(() => {
-    if (immediateErrors.length > 0 && !isStreaming) {
+    if (immediateErrors.length > 0) {
       console.log('[useSimpleChat] Immediate errors detected:', immediateErrors);
+      
+      // Determine if this is a syntax error
+      const hasSyntaxErrors = immediateErrors.some(
+        error => error.errorType === 'SyntaxError'
+      );
+      
+      // Cancel any streaming if there are syntax errors
+      if (isStreaming && hasSyntaxErrors) {
+        console.log('[useSimpleChat] Stopping stream for syntax error');
+        setIsStreaming(false);
+      }
 
+      // Process all errors regardless of streaming state
       // Only start a debounce timer if one isn't already running
-      // This ensures we don't indefinitely postpone sending in a rapid error scenario
       if (!debouncedSendRef.current) {
         console.log('[useSimpleChat] Starting debounce timer for error report');
 
-        // Set a timeout for auto-sending
+        // Use a consistent debounce time to collect all related errors
         debouncedSendRef.current = setTimeout(async () => {
           try {
             // Simple prompt message - errors have already been saved as system messages
             const promptText = `Please help me fix the errors shown above. Simplify the code if necessary.`;
 
-            // Set the user message text to the prompt
-            mergeUserMessage({ text: promptText });
-
-            // Send the message (will be picked up by the sendMessage function)
-            await sendMessage();
+            // Send the message with the prompt text directly
+            // No need to separately set message text first
+            await sendMessage(promptText);
 
             // Signal that errors were sent to trigger clearing
             setDidSendErrors(true);
@@ -369,7 +387,7 @@ export function useSimpleChat(sessionId: string | undefined): ChatState {
           } finally {
             debouncedSendRef.current = null;
           }
-        }, 500); // 500ms debounce
+        }, 500); // Use consistent 500ms debounce for all errors
       }
     }
 
@@ -380,7 +398,7 @@ export function useSimpleChat(sessionId: string | undefined): ChatState {
         debouncedSendRef.current = null;
       }
     };
-  }, [immediateErrors, isStreaming, userMessage, sendMessage, setDidSendErrors]);
+  }, [immediateErrors, isStreaming, userMessage, sendMessage, setDidSendErrors, setIsStreaming, mergeUserMessage]);
 
   // Log advisory errors whenever they change (non-critical errors)
   useEffect(() => {
