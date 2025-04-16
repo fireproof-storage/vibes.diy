@@ -75,19 +75,12 @@ export function useViewState(props: {
     }
 
     // As soon as previewReady becomes true, jump to preview view (app), UNLESS user is explicitly in data or code view
-    // Remove mobile check to allow consistent behavior across all devices
+    // Removed mobile check to allow consistent behavior across all devices
     if (props.previewReady && !wasPreviewReadyRef.current) {
-      console.log('[ViewState] 🚀 previewReady triggered! Checking if we should navigate to /app');
       const isInDataView = location.pathname.endsWith('/data');
       const isInCodeView = location.pathname.endsWith('/code');
       if (!isInDataView && !isInCodeView) {
-        console.log('[ViewState] ✅ Navigating to /app view');
         navigate(`/chat/${sessionId}/${encodedTitle}/app`);
-      } else {
-        console.log('[ViewState] ⏸️ Not navigating - user already in specific view:', {
-          isInDataView,
-          isInCodeView,
-        });
       }
     }
 

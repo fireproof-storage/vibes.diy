@@ -38,19 +38,19 @@ describe('ViewState Coverage Tests', () => {
     });
   });
 
-  test('should navigate to app view when streaming ends and preview is ready', () => {
+  test('should navigate to app view when previewReady becomes true and user is not in data or code view', () => {
     // Mock location to base path
     vi.mocked(useLocation).mockReturnValue({
       pathname: `/chat/${mockSessionId}/${mockTitle}`, // Not in data or code view
     } as any);
 
-    // Setup initial props
+    // Initialize with props
     const initialProps = {
       sessionId: mockSessionId,
       title: mockTitle,
       code: 'console.log("test")',
       isStreaming: true,
-      previewReady: true,
+      previewReady: false, // Start with previewReady=false to test the transition
     };
 
     let hookResult: any;
@@ -178,7 +178,7 @@ describe('ViewState Coverage Tests', () => {
           title: mockTitle,
           code: 'console.log("test")',
           isStreaming: true, // Initially streaming
-          previewReady: true, // Preview is already ready
+          previewReady: false, // Start with previewReady=false to test the transition
         },
       }
     );
@@ -198,7 +198,7 @@ describe('ViewState Coverage Tests', () => {
           title: mockTitle,
           code: 'console.log("test")',
           isStreaming: true, // Still streaming
-          previewReady: true, // Preview is ready
+          previewReady: false, // Start with previewReady=false to test the transition
         },
       }
     );

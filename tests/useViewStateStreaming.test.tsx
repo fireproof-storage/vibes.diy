@@ -146,12 +146,11 @@ describe('useViewState during streaming', () => {
       previewReady: true, // Preview is ready
     });
 
-    // Should NOT navigate to app view when preview is ready during streaming
-    // Our improved behavior prevents navigation during streaming
-    expect(mockNavigate).not.toHaveBeenCalled();
+    // UPDATED BEHAVIOR: Navigate to app view whenever preview is ready, even during streaming
+    expect(mockNavigate).toHaveBeenCalledWith(`/chat/${mockSessionId}/${mockTitle}/app`);
 
-    // But displayView should be 'code' (UI should show code during streaming)
-    expect(hookResult.displayView).toBe('code');
+    // UPDATED BEHAVIOR: displayView should be 'preview' when previewReady is true, even during streaming
+    expect(hookResult.displayView).toBe('preview');
 
     // Now end streaming and verify navigation happens
     rerender({
@@ -363,8 +362,8 @@ describe('useViewState during streaming', () => {
       previewReady: true,
     } as any); // Type assertion to bypass type checking for test
 
-    // Should NOT navigate to app view while still streaming
-    expect(mockNavigate).not.toHaveBeenCalled();
+    // UPDATED BEHAVIOR: Navigate to app view whenever preview is ready, even during streaming
+    expect(mockNavigate).toHaveBeenCalledWith(`/chat/${mockSessionId}/${mockTitle}/app`);
 
     // End streaming and verify navigation happens
     rerender({
@@ -509,11 +508,11 @@ describe('useViewState during streaming', () => {
       previewReady: true, // THIS IS THE BUG - preview marked ready too early
     } as any);
 
-    // FIXED BEHAVIOR: The hook now correctly stays in code view during streaming
-    expect(mockNavigate).not.toHaveBeenCalled();
+    // UPDATED BEHAVIOR: Navigate to app view whenever preview is ready, even during streaming
+    expect(mockNavigate).toHaveBeenCalledWith(`/chat/${mockSessionId}/${mockTitle}/app`);
 
-    // The UI will show code view based on displayView
-    expect(hookResult.displayView).toBe('code');
+    // UPDATED BEHAVIOR: displayView should be 'preview' when previewReady is true, even during streaming
+    expect(hookResult.displayView).toBe('preview');
 
     // Only after streaming ends will it navigate to app view
     rerender({

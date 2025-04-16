@@ -123,18 +123,7 @@
       }
 
       function pageIsLoaded() {
-        console.log('[iframe] 🏁 Iframe content ready, sending preview-ready message');
-        performance.mark('iframe-ready');
-        window.parent.postMessage(
-          {
-            type: 'preview-ready',
-            timestamp: Date.now(),
-            performanceData: {
-              readyTime: performance.now(),
-            },
-          },
-          '*'
-        );
+        window.parent.postMessage({ type: 'preview-ready' }, '*');
         setTimeout(captureScreenshot, 2000);
       }
 
