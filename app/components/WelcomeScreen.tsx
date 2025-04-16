@@ -4,8 +4,8 @@ import VibesDIYLogo from './VibesDIYLogo';
 // Welcome screen component shown when no messages are present
 const WelcomeScreen = () => {
   return (
-    <div className="text-accent-01 mx-auto max-w-2xl space-y-4 px-12 flex flex-col items-center">
-      <div className="flex justify-center w-full">
+    <div className="text-accent-01 mx-auto flex max-w-2xl flex-col items-center space-y-4 px-12">
+      <div className="flex w-full justify-center">
         <div className="hidden md:block">
           <VibesDIYLogo width={600} />
         </div>
@@ -13,7 +13,7 @@ const WelcomeScreen = () => {
           <VibesDIYLogo width={300} />
         </div>
       </div>
-      <p className="italic text-center">Generate shareable apps in seconds.</p>
+      <p className="text-center italic">Generate shareable apps in seconds.</p>
     </div>
   );
 };
