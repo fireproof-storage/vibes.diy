@@ -27,8 +27,6 @@ const VibesDIYLogo: React.FC<VibesDIYLogoProps> = ({
   animateHue = true,
   width,
   height,
-  maxHeight,
-  overflow = 'visible',
   ...props
 }) => {
   // Control light/dark mode detection with a hook if we need to
@@ -83,12 +81,15 @@ const VibesDIYLogo: React.FC<VibesDIYLogoProps> = ({
     <>
       {animateHue && <style dangerouslySetInnerHTML={{ __html: animationStyles }} />}
       <div
-        className={`inline-block ${className || ''}`}
+        className={`${className || ''}`}
         style={{
           width: width ? `${width}px` : 'auto',
           height: height ? `${height}px` : 'auto',
-          maxHeight: maxHeight ? `${maxHeight}px` : undefined,
-          overflow,
+          overflow: 'visible',
+          backgroundColor: '#0f0',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center'
         }}
         {...props}
       >
