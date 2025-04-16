@@ -76,18 +76,24 @@ export default function UnifiedSession() {
 
   // Handle preview loaded event
   const handlePreviewLoaded = useCallback(() => {
+    console.log('[home] 🌟 handlePreviewLoaded called', { 
+      currentlyStreaming: chatState.isStreaming,
+      codeReady: chatState.codeReady, 
+      time: new Date().toISOString() 
+    });
+    
     setPreviewReady(true);
 
-    // Don't automatically show preview on mobile until streaming is complete
-    // and only do this on mobile devices
-    if (!chatState.isStreaming && isMobileViewport()) {
+    // Always show preview on mobile devices when it's ready, regardless of streaming status
+    if (isMobileViewport()) {
+      console.log('[home] 📱 Setting mobilePreviewShown=true for mobile device');
       setMobilePreviewShown(true);
     }
 
     // Update the active view locally, but don't force navigation
     // Let the user stay on their current tab
     setActiveView('preview');
-  }, []);
+  }, [chatState.isStreaming, chatState.codeReady]);
 
   useEffect(() => {
     if (chatState.title) {
@@ -170,8 +176,21 @@ export default function UnifiedSession() {
 
   // Handle the case when preview becomes ready and streaming ends
   useEffect(() => {
-    // Only switch to preview view when preview becomes ready AND streaming is complete
-    if (previewReady && !chatState.isStreaming) {
+    console.log('[home] 📣 previewReady effect triggered', { 
+      previewReady, 
+      isStreaming: chatState.isStreaming,
+      codeReady: chatState.codeReady,
+      time: new Date().toISOString()
+    });
+    
+    // Switch to preview view as soon as preview becomes ready, regardless of streaming status
+    if (previewReady) {
+      console.log('[home] 🔄 Auto-switching to preview view', { 
+        userClickedBack,
+        isStreaming: chatState.isStreaming,
+        time: new Date().toISOString()
+      });
+      
       // Reset user preference so future code content will auto-show preview
       setUserClickedBack(false);
 
@@ -180,7 +199,7 @@ export default function UnifiedSession() {
         setMobilePreviewShown(true);
       }
     }
-  }, [previewReady, userClickedBack, chatState.isStreaming]);
+  }, [previewReady, userClickedBack, chatState.isStreaming, chatState.codeReady]);
 
   // Update mobilePreviewShown when selectedCode changes
   useEffect(() => {

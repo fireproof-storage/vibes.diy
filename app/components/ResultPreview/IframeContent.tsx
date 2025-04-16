@@ -87,8 +87,19 @@ const IframeContent: React.FC<IframeContentProps> = ({
   useEffect(() => {
     // Update iframe ONLY if code is ready AND the appCode has actually changed from the last rendered version
     if (codeReady && iframeRef.current) {
+      console.log('[IframeContent] 🚀 codeReady=true, updating iframe content', { 
+        isStreaming, 
+        time: new Date().toISOString(),
+        appCodeLength: appCode.length
+      });
+      
+      // Force iframe update regardless of previous content when codeReady first becomes true
+      // to avoid delayed renders from memoization issues
+      const forceUpdate = true;
+      
       // Compare with the ref holding the last rendered code
-      if (contentLoadedRef.current && appCode === lastContentRef.current) {
+      if (!forceUpdate && contentLoadedRef.current && appCode === lastContentRef.current) {
+        console.log('[IframeContent] 📈 Skipping iframe update - content already loaded with same code');
         return;
       }
 

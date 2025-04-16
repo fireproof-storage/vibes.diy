@@ -32,6 +32,7 @@ function ResultPreview({
 
   // Calculate filesContent directly based on code prop
   const filesContent = useMemo<IframeFiles>(() => {
+    console.log('[ResultPreview] 📝 Calculating filesContent', { codeReady, isStreaming, codeLength: code?.length || 0 });
     // Always return the expected structure, defaulting code to empty string
     return {
       '/App.jsx': {
@@ -39,7 +40,7 @@ function ResultPreview({
         active: true,
       },
     };
-  }, [code, showWelcome]);
+  }, [code, showWelcome, codeReady, isStreaming]); // Include codeReady to ensure updates
 
   // Track streaming state changes to reset key generation only when streaming starts/stops
   useEffect(() => {
@@ -105,6 +106,13 @@ function ResultPreview({
     const handleMessage = ({ data }: MessageEvent) => {
       if (data) {
         if (data.type === 'preview-ready' || data.type === 'preview-loaded') {
+      console.log('[ResultPreview] 📥 Received preview-ready message', {
+        timestamp: Date.now(),
+        iframeTimestamp: data.timestamp,
+        performanceData: data.performanceData,
+        timeSinceMount: window.performance.now() - performance.getEntriesByName('resultpreview-mounted')[0]?.startTime || 0,
+        isStreaming
+      });
           // respond with the API key
           // Use CALLAI_API_KEY if available (dev mode), otherwise check localStorage
           let apiKey = CALLAI_API_KEY;
@@ -140,7 +148,13 @@ function ResultPreview({
           }
 
           // Notify parent component that preview is loaded
+          console.log('[ResultPreview] 🔔 About to call onPreviewLoaded (which sets previewReady=true)');
+          performance.mark('before-preview-loaded');
           onPreviewLoaded();
+          performance.mark('after-preview-loaded');
+          performance.measure('preview-loaded-duration', 'before-preview-loaded', 'after-preview-loaded');
+          console.log('[ResultPreview] ✅ onPreviewLoaded completed in', 
+            performance.getEntriesByName('preview-loaded-duration')[0]?.duration || 0, 'ms');
         } else if (data.type === 'streaming' && data.state !== undefined) {
           if (setIsIframeFetching) {
             setIsIframeFetching(data.state);
@@ -167,6 +181,8 @@ function ResultPreview({
     };
 
     window.addEventListener('message', handleMessage);
+    window.performance.mark('resultpreview-mounted');
+    console.log('[ResultPreview] 🔄 Component mounted and listening for messages');
     return () => {
       window.removeEventListener('message', handleMessage);
     };
