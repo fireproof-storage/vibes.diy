@@ -25,8 +25,10 @@ export default function About() {
       }
     >
       <div className="h-full">
-        <div className="flex items-center justify-center pb-20">
-          <VibesDIYLogo className="scale-[3] font-bold text-[rgb(86,86,86)] sm:scale-[6] dark:text-[rgb(212,212,212)]" />
+        <div className="flex items-center justify-center pb-2 mw-10">
+          <div className="mt-36 mb-10 w-[150px] font-bold text-[rgb(86,86,86)] sm:scale-[4] dark:text-[rgb(212,212,212)]">
+            <VibesDIYLogo className="font-bold text-[rgb(86,86,86)] dark:text-[rgb(212,212,212)]" />
+          </div>
         </div>
         <div className="mx-auto max-w-3xl px-4 py-8 sm:px-6 lg:px-8">
           <h1 className="pb-4 text-2xl font-bold">About</h1>
