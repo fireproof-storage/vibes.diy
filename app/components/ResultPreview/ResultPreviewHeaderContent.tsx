@@ -146,12 +146,6 @@ const ResultPreviewHeaderContent: React.FC<ResultPreviewHeaderContentProps> = ({
   };
 
   const handlePublish = async () => {
-    // Track publish event
-    trackPublishClick({
-      sessionId,
-      userId: userInfo?.userId,
-      codeLength: code?.length,
-    });
     try {
       const appUrl = await publishApp({
         sessionId,

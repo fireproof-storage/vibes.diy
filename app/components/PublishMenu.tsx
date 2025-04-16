@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { createPortal } from 'react-dom';
+import { trackPublishClick } from '../utils/analytics';
 
 interface PublishMenuProps {
   isOpen: boolean;
@@ -55,6 +56,7 @@ export function PublishMenu({
       navigator.clipboard.writeText(publishedAppUrl);
       setShowCopySuccess(true);
       setTimeout(() => setShowCopySuccess(false), 2000);
+      trackPublishClick({ publishedAppUrl });
     }
   };
 
