@@ -74,6 +74,9 @@ const VibesDIYLogo: React.FC<VibesDIYLogoProps> = ({
     }
   `;
 
+  // Original SVG has an aspect ratio of 302:154, but adjust to better match the actual content
+  const aspectRatio = 302/140; // Slightly adjusted to ensure text isn't cropped
+
   return (
     <>
       {animateHue && <style dangerouslySetInnerHTML={{ __html: animationStyles }} />}
@@ -81,13 +84,12 @@ const VibesDIYLogo: React.FC<VibesDIYLogoProps> = ({
         className={`${className || ''}`}
         style={{
           width: width ? `${width}px` : '302px',
-          height: height ? `${height}px` : 'auto',
+          height: height ? `${height}px` : (width ? `${width / aspectRatio}px` : '154px'),
           overflow: 'visible',
           backgroundColor: '#0f0',
           display: 'flex',
           alignItems: 'center',
-          justifyContent: 'center',
-          
+          justifyContent: 'center'
         }}
         {...props}
       >
@@ -100,12 +102,12 @@ const VibesDIYLogo: React.FC<VibesDIYLogoProps> = ({
                 : 'rotateHue 300s linear infinite'
               : 'none',
             transition: 'filter 0.3s ease',
-            display: 'flex', 
+            display: 'flex',
             width: '100%',
-            height: 'auto',
+            height: (width && width < 200) ? 'auto' : '100%', // Auto height for small logos, fixed for large
             transform: 'scale(1)',
             transformOrigin: 'center center',
-            
+            minHeight: 0 // Prevent excess space in button context
           }}
         >
           <DIYLogo />
