@@ -87,7 +87,10 @@ export const trackPublishClick = (additionalParams?: Record<string, any>): void 
  * @param messageLength - Length of the message being sent
  * @param additionalParams - Optional additional parameters
  */
-export const trackChatInputClick = (messageLength: number, additionalParams?: Record<string, any>): void => {
+export const trackChatInputClick = (
+  messageLength: number,
+  additionalParams?: Record<string, any>
+): void => {
   trackEvent('chat', {
     send_to: GA_TRACKING_ID,
     message_length: messageLength,
@@ -101,7 +104,11 @@ export const trackChatInputClick = (messageLength: number, additionalParams?: Re
  * @param message - Error message
  * @param details - Optional additional details (object)
  */
-export const trackErrorEvent = (errorType: string, message: string, details?: Record<string, any>): void => {
+export const trackErrorEvent = (
+  errorType: string,
+  message: string,
+  details?: Record<string, any>
+): void => {
   trackEvent('error', {
     send_to: GA_TRACKING_ID,
     error_type: errorType,
