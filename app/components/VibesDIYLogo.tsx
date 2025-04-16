@@ -1,9 +1,12 @@
 import React from 'react';
+import DIYLogo from './diyLogo-svg';
 
 interface VibesDIYLogoProps extends React.HTMLAttributes<HTMLDivElement> {
   height?: number;
   width?: number;
   animateHue?: boolean;
+  maxHeight?: number;
+  overflow?: 'visible' | 'hidden' | 'auto' | 'scroll';
 }
 
 // Regular text-based logo
@@ -18,10 +21,16 @@ const VibesDIYLogoTXT: React.FC<VibesDIYLogoProps> = ({ className, ...props }) =
   );
 };
 
-// We'll generate the animation styles dynamically with the random initial hue
-
-// Image-based logo using the provided PNG file
-const VibesDIYLogo: React.FC<VibesDIYLogoProps> = ({ className, animateHue = true, ...props }) => {
+// SVG-based logo using the imported SVG component
+const VibesDIYLogo: React.FC<VibesDIYLogoProps> = ({
+  className,
+  animateHue = true,
+  width,
+  height,
+  maxHeight,
+  overflow = 'visible',
+  ...props
+}) => {
   // Control light/dark mode detection with a hook if we need to
   const [isDarkMode, setIsDarkMode] = React.useState(false);
 
@@ -67,15 +76,23 @@ const VibesDIYLogo: React.FC<VibesDIYLogoProps> = ({ className, animateHue = tru
     }
   `;
 
+  // SVG has an aspect ratio of 302:169 (approximately 1.79:1)
+  const aspectRatio = 302/169;
+
   return (
     <>
       {animateHue && <style dangerouslySetInnerHTML={{ __html: animationStyles }} />}
-      <div className={`inline-block ${className || ''}`} {...props}>
-        <img
-          src="/vibes-diy-alpha.png"
-          alt="Vibes DIY Logo"
-          width="1272"
-          height="666"
+      <div
+        className={`inline-block ${className || ''}`}
+        style={{
+          width: width ? `${width}px` : 'auto',
+          height: height ? `${height}px` : 'auto',
+          maxHeight: maxHeight ? `${maxHeight}px` : undefined,
+          overflow,
+        }}
+        {...props}
+      >
+        <div
           className={animateHue ? undefined : 'dark:invert'}
           style={{
             animation: animateHue
@@ -84,8 +101,14 @@ const VibesDIYLogo: React.FC<VibesDIYLogoProps> = ({ className, animateHue = tru
                 : 'rotateHue 300s linear infinite'
               : 'none',
             transition: 'filter 0.3s ease',
+            display: 'flex',
+            width: '100%',
+            height: 'auto',
+            aspectRatio: `${aspectRatio}`,
           }}
-        />
+        >
+          <DIYLogo />
+        </div>
       </div>
     </>
   );
