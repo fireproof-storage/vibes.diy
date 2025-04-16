@@ -1,4 +1,5 @@
 import { useState, useCallback, useEffect } from 'react';
+import { trackErrorEvent } from '../utils/analytics';
 
 export interface RuntimeError {
   type: string; // 'error' or 'unhandledrejection'
@@ -63,6 +64,23 @@ export function useRuntimeErrors({
         error.errorType = 'DatabaseError';
       } else {
         error.errorType = 'Other';
+      }
+      // Track error event with processed info
+      try {
+        // Only send minimal stack for privacy and size
+        const details: Record<string, any> = {};
+        if (error.stack) {
+          details.stack = error.stack.slice(0, 300);
+        }
+        if (error.reason) {
+          details.reason = error.reason;
+        }
+        // @ts-ignore
+        if (typeof trackErrorEvent === 'function') {
+          trackErrorEvent(error.errorType, error.message, details);
+        }
+      } catch (e) {
+        // Don't let analytics crash error handling
       }
     }
 

@@ -81,3 +81,31 @@ export const trackPublishClick = (additionalParams?: Record<string, any>): void 
     ...additionalParams,
   });
 };
+
+/**
+ * Track ChatInput button click
+ * @param messageLength - Length of the message being sent
+ * @param additionalParams - Optional additional parameters
+ */
+export const trackChatInputClick = (messageLength: number, additionalParams?: Record<string, any>): void => {
+  trackEvent('chat', {
+    send_to: GA_TRACKING_ID,
+    message_length: messageLength,
+    ...additionalParams,
+  });
+};
+
+/**
+ * Track error event
+ * @param errorType - Type of the error
+ * @param message - Error message
+ * @param details - Optional additional details (object)
+ */
+export const trackErrorEvent = (errorType: string, message: string, details?: Record<string, any>): void => {
+  trackEvent('error', {
+    send_to: GA_TRACKING_ID,
+    error_type: errorType,
+    error_message: message,
+    ...details,
+  });
+};
