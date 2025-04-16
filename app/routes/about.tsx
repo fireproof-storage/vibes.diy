@@ -25,7 +25,7 @@ export default function About() {
       }
     >
       <div className="h-full">
-        <div className="flex items-center justify-center pb-2 mw-10">
+        <div className="mw-10 flex items-center justify-center pb-2">
           <div className="mt-36 mb-10 w-[150px] font-bold text-[rgb(86,86,86)] sm:scale-[4] dark:text-[rgb(212,212,212)]">
             <VibesDIYLogo className="font-bold text-[rgb(86,86,86)] dark:text-[rgb(212,212,212)]" />
           </div>
