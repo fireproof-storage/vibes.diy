@@ -32,7 +32,7 @@ export default function About() {
           <h1 className="pb-4 text-2xl font-bold">About</h1>
 
           <div className="space-y-6">
-            <div className="rounded-sm border border-light-decorative-01 p-5 dark:border-dark-decorative-01">
+            <div className="border-light-decorative-01 dark:border-dark-decorative-01 rounded-sm border p-5">
               <h2 className="mb-3 text-xl font-medium text-gray-900 dark:text-white">
                 What is Vibes DIY?
               </h2>
@@ -42,7 +42,7 @@ export default function About() {
               </p>
             </div>
 
-            <div className="rounded-sm border border-light-decorative-01 p-5 dark:border-dark-decorative-01">
+            <div className="border-light-decorative-01 dark:border-dark-decorative-01 rounded-sm border p-5">
               <h2 className="mb-3 text-xl font-medium text-gray-900 dark:text-white">
                 Open source
               </h2>
@@ -69,7 +69,7 @@ export default function About() {
               </p>
             </div>
 
-            <div className="rounded-sm border border-light-decorative-01 p-5 dark:border-dark-decorative-01">
+            <div className="border-light-decorative-01 dark:border-dark-decorative-01 rounded-sm border p-5">
               <h2 className="mb-3 text-xl font-medium text-gray-900 dark:text-white">
                 Key Features
               </h2>

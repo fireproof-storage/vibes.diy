@@ -55,7 +55,7 @@ function ChatInput({
           type="button"
           onClick={onSend}
           disabled={disabled}
-          className={`light-gradient border-glimmer absolute flex items-center justify-center overflow-hidden rounded-xl border shadow-sm transition-all duration-300 hover:border-light-decorative-01 hover:shadow-md active:shadow-inner dark:hover:border-dark-decorative-01 ${
+          className={`light-gradient border-glimmer hover:border-light-decorative-01 dark:hover:border-dark-decorative-01 absolute flex items-center justify-center overflow-hidden rounded-xl border shadow-sm transition-all duration-300 hover:shadow-md active:shadow-inner ${
             disabled
               ? 'border-light-decorative-01 dark:border-dark-decorative-01'
               : 'border-light-decorative-01 dark:border-dark-decorative-00'

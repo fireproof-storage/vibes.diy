@@ -39,7 +39,7 @@ function ChatHeaderContent({
             <span className="sr-only">New Vibe</span>
             <EditIcon />
           </a>
-          <span className="pointer-events-none absolute top-full right-0 z-100 mt-1 rounded-sm bg-dark-background-01 px-2 py-1 text-sm whitespace-nowrap text-white opacity-0 transition-opacity peer-hover:opacity-100">
+          <span className="bg-dark-background-01 pointer-events-none absolute top-full right-0 z-100 mt-1 rounded-sm px-2 py-1 text-sm whitespace-nowrap text-white opacity-0 transition-opacity peer-hover:opacity-100">
             New Vibe
           </span>
         </div>

@@ -64,18 +64,18 @@ function MessageList({
               </svg>
             </div>
           </div>
-          <div className="max-w-[85%] rounded-xl bg-white px-5 py-3 text-light-primary shadow-md dark:bg-dark-background-01 dark:text-dark-primary">
+          <div className="text-light-primary dark:bg-dark-background-01 dark:text-dark-primary max-w-[85%] rounded-xl bg-white px-5 py-3 shadow-md">
             <div className="flex items-center space-x-1">
               <div
-                className="h-2 w-2 animate-pulse rounded-full accent-01 opacity-75"
+                className="accent-01 h-2 w-2 animate-pulse rounded-full opacity-75"
                 style={{ animationDelay: '0ms' }}
               ></div>
               <div
-                className="h-2 w-2 animate-pulse rounded-full accent-01 opacity-75"
+                className="accent-01 h-2 w-2 animate-pulse rounded-full opacity-75"
                 style={{ animationDelay: '300ms' }}
               ></div>
               <div
-                className="h-2 w-2 animate-pulse rounded-full accent-01 opacity-75"
+                className="accent-01 h-2 w-2 animate-pulse rounded-full opacity-75"
                 style={{ animationDelay: '600ms' }}
               ></div>
             </div>

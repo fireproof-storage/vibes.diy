@@ -76,7 +76,7 @@ function SessionSidebar({ isVisible, onClose }: SessionSidebarProps) {
       return (
         <li
           key={session._id}
-          className="cursor-pointer border-b border-light-decorative-01 p-3 hover:bg-light-background-01 dark:border-dark-decorative-00 dark:hover:bg-dark-background-01"
+          className="border-light-decorative-01 hover:bg-light-background-01 dark:border-dark-decorative-00 dark:hover:bg-dark-background-01 cursor-pointer border-b p-3"
         >
           <a
             href={`/chat/${session._id}/${encodedTitle}`}
@@ -84,7 +84,9 @@ function SessionSidebar({ isVisible, onClose }: SessionSidebarProps) {
             onClick={() => onClose()}
           >
             <div className="flex items-center justify-between">
-              <div className="text-sm font-semibold text-light-primary dark:text-white">{title}</div>
+              <div className="text-light-primary text-sm font-semibold dark:text-white">
+                {title}
+              </div>
               <button
                 onClick={(e) => toggleFavorite(session, e)}
                 className="ml-2 text-gray-400 hover:text-yellow-500 focus:outline-none"
@@ -122,7 +124,7 @@ function SessionSidebar({ isVisible, onClose }: SessionSidebarProps) {
       }`}
     >
       <div className="flex h-full flex-col overflow-scroll">
-        <div className="flex items-center justify-between border-b border-light-decorative-01 p-4 dark:border-dark-decorative-00">
+        <div className="border-light-decorative-01 dark:border-dark-decorative-00 flex items-center justify-between border-b p-4">
           <h2
             className="text-light-primary dark:text-dark-primary cursor-pointer text-lg font-semibold"
             onClick={() => {

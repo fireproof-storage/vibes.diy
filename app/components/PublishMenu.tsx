@@ -72,7 +72,7 @@ export function PublishMenu({
     >
       <div
         style={menuStyle}
-        className="ring-opacity-5 w-80 rounded bg-white p-4 shadow-lg ring-1 ring-black dark:bg-dark-background-01"
+        className="ring-opacity-5 dark:bg-dark-background-01 w-80 rounded bg-white p-4 shadow-lg ring-1 ring-black"
       >
         <div
           className="py-1"
@@ -85,7 +85,7 @@ export function PublishMenu({
             multi-user sync coming soon.
           </p>
           {publishedAppUrl ? (
-            <div className="rounded bg-light-background-01 px-2 py-2 text-sm text-light-secondary dark:bg-dark-decorative-00 dark:text-dark-secondary">
+            <div className="bg-light-background-01 text-light-secondary dark:bg-dark-decorative-00 dark:text-dark-secondary rounded px-2 py-2 text-sm">
               <div className="mb-2 text-center font-medium">
                 <strong>Published</strong>
               </div>
@@ -94,7 +94,7 @@ export function PublishMenu({
                   type="text"
                   readOnly
                   value={publishedAppUrl}
-                  className="flex-1 truncate rounded-sm bg-light-background-01 px-1 py-1 text-xs dark:bg-dark-decorative-01"
+                  className="bg-light-background-01 dark:bg-dark-decorative-01 flex-1 truncate rounded-sm px-1 py-1 text-xs"
                 />
                 <button
                   type="button"
@@ -142,7 +142,7 @@ export function PublishMenu({
                 type="button"
                 onClick={handlePublish}
                 disabled={isPublishing || showUpdateSuccess}
-                className="mt-2 flex w-full items-center justify-center px-3 py-1 text-sm text-gray-500 transition-colors hover:text-light-secondary disabled:cursor-not-allowed disabled:opacity-50 dark:text-gray-400 dark:hover:text-dark-secondary"
+                className="hover:text-light-secondary dark:hover:text-dark-secondary mt-2 flex w-full items-center justify-center px-3 py-1 text-sm text-gray-500 transition-colors disabled:cursor-not-allowed disabled:opacity-50 dark:text-gray-400"
                 role="menuitem"
               >
                 <div className="flex items-center gap-2">
@@ -215,7 +215,7 @@ export function PublishMenu({
               type="button"
               onClick={handlePublish}
               disabled={isPublishing}
-              className="block w-full rounded accent-00 px-4 py-2 text-center text-sm text-light-secondary hover:bg-light-background-01 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-dark-decorative-01 dark:text-dark-secondary dark:hover:bg-dark-decorative-00"
+              className="accent-00 text-light-secondary hover:bg-light-background-01 dark:bg-dark-decorative-01 dark:text-dark-secondary dark:hover:bg-dark-decorative-00 block w-full rounded px-4 py-2 text-center text-sm disabled:cursor-not-allowed disabled:opacity-50"
               role="menuitem"
             >
               <div className="flex items-center justify-between">
