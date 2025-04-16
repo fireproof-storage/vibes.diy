@@ -90,6 +90,14 @@ export default function CookieBanner() {
       windowWithDataLayer.gtag = gtag;
       gtag('js', new Date());
       gtag('config', GA_TRACKING_ID);
+
+      if (window.history && window.history.replaceState) {
+        const url = new URL(window.location.href);
+        url.searchParams.delete('utm_source');
+        url.searchParams.delete('utm_medium');
+        url.searchParams.delete('utm_campaign');
+        window.history.replaceState({}, document.title, url.pathname + url.hash);
+      }
     }
   }, [hasConsent, GA_TRACKING_ID]);
 
