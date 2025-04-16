@@ -151,7 +151,7 @@ const CodeSegment = ({
         top: '8px',
         zIndex: 10,
       }}
-      className={`relative my-4 cursor-pointer rounded-md border border-gray-200 bg-gray-50 p-4 shadow-sm transition-all hover:bg-gray-100 dark:border-gray-700 dark:bg-gray-700 dark:hover:bg-gray-600 ${
+      className={`relative my-4 cursor-pointer rounded-md border border-gray-200 bg-light-background-01 p-4 shadow-sm transition-all hover:bg-light-background-01 dark:border-gray-700 dark:bg-dark-decorative-00 dark:hover:bg-dark-decorative-01 ${
         isSticky ? 'sticky-active' : ''
       }`}
       onClick={handleCodeClick}
@@ -178,7 +178,7 @@ const CodeSegment = ({
             const textToCopy = e.shiftKey && rawText ? rawText : content;
             navigator.clipboard.writeText(textToCopy);
           }}
-          className="rounded-sm bg-gray-200 px-2 py-1 text-sm text-gray-500 transition-colors hover:bg-gray-300 hover:text-gray-600 active:bg-orange-400 active:text-orange-800 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-gray-300 dark:active:bg-orange-600 dark:active:text-orange-200"
+          className="rounded-sm bg-light-background-02 px-2 py-1 text-sm text-gray-500 transition-colors hover:accent-00 hover:text-gray-600 active:bg-orange-400 active:text-orange-800 dark:bg-dark-background-01 dark:text-gray-400 dark:hover:bg-dark-decorative-00 dark:hover:text-gray-300 dark:active:bg-orange-600 dark:active:text-orange-200"
         >
           <code className="font-mono">
             <span className="mr-3">App.jsx</span>
@@ -206,7 +206,7 @@ const CodeSegment = ({
 
       {/* Code preview with height transition instead of conditional rendering */}
       <div
-        className={`overflow-hidden rounded-sm bg-gray-100 font-mono text-sm shadow-inner transition-all dark:bg-gray-800 ${
+        className={`overflow-hidden rounded-sm bg-light-background-01 font-mono text-sm shadow-inner transition-all dark:bg-dark-background-01 ${
           isSticky ? 'm-0 h-0 max-h-0 min-h-0 border-0 p-0 opacity-0' : 'mt-2 max-h-24 p-2'
         }`}
       >
@@ -214,7 +214,7 @@ const CodeSegment = ({
           .split('\n')
           .slice(0, 3)
           .map((line, i) => (
-            <div key={i} className="truncate text-gray-800 dark:text-gray-300">
+            <div key={i} className="truncate text-light-primary dark:text-gray-300">
               {line || ' '}
             </div>
           ))}

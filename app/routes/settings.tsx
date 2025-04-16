@@ -131,22 +131,22 @@ export default function Settings() {
         className="flex min-h-full flex-col items-center justify-start p-6"
         style={{ height: 'auto', minHeight: '100%', paddingBottom: '150px' }}
       >
-        <div className="w-full max-w-2xl rounded-md border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-700 dark:bg-gray-800">
+        <div className="w-full max-w-2xl rounded-md border border-light-decorative-01 bg-white p-6 shadow-sm dark:border-dark-decorative-00 dark:bg-dark-background-01">
           <div className="mb-6 flex items-center justify-between">
             <h2 className="text-xl font-semibold">User Preferences</h2>
             <button
               onClick={handleSubmit}
               disabled={!hasUnsavedChanges}
-              className={`rounded px-4 py-2 text-sm text-white transition-colors focus:ring-2 focus:ring-offset-2 focus:outline-none ${hasUnsavedChanges ? 'bg-blue-500 hover:bg-blue-600 focus:ring-blue-500' : 'cursor-not-allowed bg-gray-400 dark:bg-gray-600'}`}
+              className={`rounded px-4 py-2 text-sm text-white transition-colors focus:ring-2 focus:ring-offset-2 focus:outline-none ${hasUnsavedChanges ? 'bg-blue-500 hover:bg-blue-600 focus:ring-blue-500' : 'cursor-not-allowed accent-01 dark:bg-dark-decorative-01'}`}
             >
               Save
             </button>
           </div>
-          <p className="mb-4 text-gray-600 dark:text-gray-300">
+          <p className="mb-4 text-accent-01 dark:text-dark-secondary">
             Configure your application settings to customize the AI experience.
           </p>
           <div className="space-y-6">
-            <div className="rounded border border-gray-200 p-4 dark:border-gray-600">
+            <div className="rounded border border-light-decorative-01 p-4 dark:border-dark-decorative-01">
               <div className="flex items-start justify-between">
                 <h3 className="mb-2 text-lg font-medium">AI Model</h3>
                 <a
@@ -158,7 +158,7 @@ export default function Settings() {
                   Browse all models ↗
                 </a>
               </div>
-              <p className="mb-3 text-sm text-gray-600 dark:text-gray-400">
+              <p className="mb-3 text-sm text-accent-01 dark:text-accent-01">
                 Enter or select an AI model to use for code generation
               </p>
 
@@ -169,12 +169,12 @@ export default function Settings() {
                   value={settings.model || ''}
                   onChange={handleModelChange}
                   placeholder="Enter or select model ID..."
-                  className="w-full rounded border border-gray-300 p-2 font-mono text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100"
+                  className="w-full rounded border border-light-decorative-01 p-2 font-mono text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none dark:border-dark-decorative-01 dark:bg-dark-decorative-00 dark:text-dark-primary"
                 />
               </div>
 
               <div className="mb-2">
-                <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                <label className="mb-1 block text-sm font-medium text-light-secondary dark:text-dark-secondary">
                   Recommended models (click to select):
                 </label>
                 <div className="flex flex-wrap gap-2">
@@ -186,7 +186,7 @@ export default function Settings() {
                       className={`cursor-pointer rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
                         settings.model === model.id
                           ? 'bg-blue-500 text-white'
-                          : 'bg-gray-100 text-gray-800 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600'
+                          : 'bg-light-background-01 text-light-primary hover:bg-light-background-02 dark:bg-dark-decorative-00 dark:text-dark-secondary dark:hover:bg-dark-decorative-01'
                       }`}
                       title={model.description}
                     >
@@ -197,9 +197,9 @@ export default function Settings() {
               </div>
             </div>
 
-            <div className="rounded border border-gray-200 p-4 dark:border-gray-600">
+            <div className="rounded border border-light-decorative-01 p-4 dark:border-dark-decorative-01">
               <h3 className="mb-2 text-lg font-medium">Style Prompt</h3>
-              <p className="mb-3 text-sm text-gray-600 dark:text-gray-400">
+              <p className="mb-3 text-sm text-accent-01 dark:text-accent-01">
                 Choose a style for your AI-generated content
               </p>
 
@@ -210,12 +210,12 @@ export default function Settings() {
                   value={settings.stylePrompt || ''}
                   onChange={handleStylePromptChange}
                   placeholder="Enter or select style prompt..."
-                  className="w-full rounded border border-gray-300 p-2 font-mono text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100"
+                  className="w-full rounded border border-light-decorative-01 p-2 font-mono text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none dark:border-dark-decorative-01 dark:bg-dark-decorative-00 dark:text-dark-primary"
                 />
               </div>
 
               <div className="mb-2">
-                <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                <label className="mb-1 block text-sm font-medium text-light-secondary dark:text-dark-secondary">
                   Suggestions (click to add):
                 </label>
                 <div className="flex flex-wrap gap-2">
@@ -227,7 +227,7 @@ export default function Settings() {
                       className={`cursor-pointer rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
                         settings.stylePrompt && settings.stylePrompt.startsWith(suggestion.name)
                           ? 'bg-blue-500 text-white'
-                          : 'bg-gray-100 text-gray-800 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600'
+                          : 'bg-light-background-01 text-light-primary hover:bg-light-background-02 dark:bg-dark-decorative-00 dark:text-dark-secondary dark:hover:bg-dark-decorative-01'
                       }`}
                       title={suggestion.description}
                     >
@@ -238,9 +238,9 @@ export default function Settings() {
               </div>
             </div>
 
-            <div className="rounded border border-gray-200 p-4 dark:border-gray-600">
+            <div className="rounded border border-light-decorative-01 p-4 dark:border-dark-decorative-01">
               <h3 className="mb-2 text-lg font-medium">User Prompt</h3>
-              <p className="mb-3 text-sm text-gray-600 dark:text-gray-400">
+              <p className="mb-3 text-sm text-accent-01 dark:text-accent-01">
                 Custom instructions to append to the system prompt
               </p>
 
@@ -249,7 +249,7 @@ export default function Settings() {
                   value={settings.userPrompt}
                   onChange={handleUserPromptChange}
                   placeholder="Enter custom instructions for the AI..."
-                  className="min-h-[100px] w-full rounded border border-gray-300 p-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100"
+                  className="min-h-[100px] w-full rounded border border-light-decorative-01 p-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none dark:border-dark-decorative-01 dark:bg-dark-decorative-00 dark:text-dark-primary"
                 />
               </div>
             </div>

@@ -76,7 +76,7 @@ function SessionSidebar({ isVisible, onClose }: SessionSidebarProps) {
       return (
         <li
           key={session._id}
-          className="cursor-pointer border-b border-gray-200 p-3 hover:bg-gray-100 dark:border-gray-700 dark:hover:bg-gray-800"
+          className="cursor-pointer border-b border-gray-200 p-3 hover:bg-light-background-01 dark:border-gray-700 dark:hover:bg-dark-background-01"
         >
           <a
             href={`/chat/${session._id}/${encodedTitle}`}
@@ -84,7 +84,7 @@ function SessionSidebar({ isVisible, onClose }: SessionSidebarProps) {
             onClick={() => onClose()}
           >
             <div className="flex items-center justify-between">
-              <div className="text-sm font-semibold text-gray-900 dark:text-white">{title}</div>
+              <div className="text-sm font-semibold text-light-primary dark:text-white">{title}</div>
               <button
                 onClick={(e) => toggleFavorite(session, e)}
                 className="ml-2 text-gray-400 hover:text-yellow-500 focus:outline-none"

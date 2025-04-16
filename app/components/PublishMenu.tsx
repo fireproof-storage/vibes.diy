@@ -72,7 +72,7 @@ export function PublishMenu({
     >
       <div
         style={menuStyle}
-        className="ring-opacity-5 w-80 rounded bg-white p-4 shadow-lg ring-1 ring-black dark:bg-gray-800"
+        className="ring-opacity-5 w-80 rounded bg-white p-4 shadow-lg ring-1 ring-black dark:bg-dark-background-01"
       >
         <div
           className="py-1"
@@ -85,7 +85,7 @@ export function PublishMenu({
             multi-user sync coming soon.
           </p>
           {publishedAppUrl ? (
-            <div className="rounded bg-gray-50 px-2 py-2 text-sm text-gray-700 dark:bg-gray-700 dark:text-gray-200">
+            <div className="rounded bg-light-background-01 px-2 py-2 text-sm text-light-secondary dark:bg-dark-decorative-00 dark:text-dark-secondary">
               <div className="mb-2 text-center font-medium">
                 <strong>Published</strong>
               </div>
@@ -94,7 +94,7 @@ export function PublishMenu({
                   type="text"
                   readOnly
                   value={publishedAppUrl}
-                  className="flex-1 truncate rounded-sm bg-gray-100 px-1 py-1 text-xs dark:bg-gray-600"
+                  className="flex-1 truncate rounded-sm bg-light-background-01 px-1 py-1 text-xs dark:bg-dark-decorative-01"
                 />
                 <button
                   type="button"
@@ -142,7 +142,7 @@ export function PublishMenu({
                 type="button"
                 onClick={handlePublish}
                 disabled={isPublishing || showUpdateSuccess}
-                className="mt-2 flex w-full items-center justify-center px-3 py-1 text-sm text-gray-500 transition-colors hover:text-gray-700 disabled:cursor-not-allowed disabled:opacity-50 dark:text-gray-400 dark:hover:text-gray-200"
+                className="mt-2 flex w-full items-center justify-center px-3 py-1 text-sm text-gray-500 transition-colors hover:text-light-secondary disabled:cursor-not-allowed disabled:opacity-50 dark:text-gray-400 dark:hover:text-dark-secondary"
                 role="menuitem"
               >
                 <div className="flex items-center gap-2">
@@ -215,7 +215,7 @@ export function PublishMenu({
               type="button"
               onClick={handlePublish}
               disabled={isPublishing}
-              className="block w-full rounded bg-gray-300 px-4 py-2 text-center text-sm text-gray-700 hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-gray-600 dark:text-gray-200 dark:hover:bg-gray-700"
+              className="block w-full rounded accent-00 px-4 py-2 text-center text-sm text-light-secondary hover:bg-light-background-01 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-dark-decorative-01 dark:text-dark-secondary dark:hover:bg-dark-decorative-00"
               role="menuitem"
             >
               <div className="flex items-center justify-between">
