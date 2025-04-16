@@ -142,7 +142,7 @@ export function PublishMenu({
                 type="button"
                 onClick={handlePublish}
                 disabled={isPublishing || showUpdateSuccess}
-                className="hover:text-light-secondary dark:hover:text-dark-secondary mt-2 flex w-full items-center justify-center px-3 py-1 text-sm text-accent-01 transition-colors disabled:cursor-not-allowed disabled:opacity-50 dark:text-accent-01"
+                className="hover:text-light-secondary dark:hover:text-dark-secondary text-accent-01 dark:text-accent-01 mt-2 flex w-full items-center justify-center px-3 py-1 text-sm transition-colors disabled:cursor-not-allowed disabled:opacity-50"
                 role="menuitem"
               >
                 <div className="flex items-center gap-2">
@@ -183,7 +183,7 @@ export function PublishMenu({
                       <span className="text-xs">Update Code</span>
                       {isPublishing && (
                         <svg
-                          className="h-3.5 w-3.5 animate-spin text-accent-01"
+                          className="text-accent-01 h-3.5 w-3.5 animate-spin"
                           xmlns="http://www.w3.org/2000/svg"
                           fill="none"
                           viewBox="0 0 24 24"
@@ -222,7 +222,7 @@ export function PublishMenu({
                 <span className="w-full text-center font-bold">Publish App</span>
                 {isPublishing && (
                   <svg
-                    className="h-4 w-4 animate-spin text-accent-01"
+                    className="text-accent-01 h-4 w-4 animate-spin"
                     xmlns="http://www.w3.org/2000/svg"
                     fill="none"
                     viewBox="0 0 24 24"

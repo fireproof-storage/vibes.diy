@@ -86,7 +86,7 @@ const DatabaseData: React.FC<{ dbName: string; sessionId: string }> = ({ dbName,
           >
             Refresh DB List
           </button>
-          <span className="text-xs text-accent-02">(Filtered by session ID: {sessionId})</span>
+          <span className="text-accent-02 text-xs">(Filtered by session ID: {sessionId})</span>
           <ul className="mt-1 list-disc pl-4">
             {availableDbs.map((name, idx) => (
               <li key={idx} className={name === namespacedDbName ? 'font-bold text-green-600' : ''}>

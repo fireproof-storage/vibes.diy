@@ -168,7 +168,7 @@ const CodeSegment = ({
         •
       </div>
       <div className="flex items-center justify-between rounded-sm p-2">
-        <span className="font-mono text-sm text-accent-01 dark:text-accent-01">
+        <span className="text-accent-01 dark:text-accent-01 font-mono text-sm">
           {`${codeLines} line${codeLines !== 1 ? 's' : ''}`}
         </span>
         <button
@@ -178,7 +178,7 @@ const CodeSegment = ({
             const textToCopy = e.shiftKey && rawText ? rawText : content;
             navigator.clipboard.writeText(textToCopy);
           }}
-          className="bg-light-background-02 hover:accent-00 dark:bg-dark-background-01 dark:hover:bg-dark-decorative-00 rounded-sm px-2 py-1 text-sm text-accent-01 transition-colors hover:text-accent-02 active:bg-orange-400 active:text-orange-800 dark:text-accent-01 dark:hover:text-dark-secondary dark:active:bg-orange-600 dark:active:text-orange-200"
+          className="bg-light-background-02 hover:accent-00 dark:bg-dark-background-01 dark:hover:bg-dark-decorative-00 text-accent-01 hover:text-accent-02 dark:text-accent-01 dark:hover:text-dark-secondary rounded-sm px-2 py-1 text-sm transition-colors active:bg-orange-400 active:text-orange-800 dark:active:bg-orange-600 dark:active:text-orange-200"
         >
           <code className="font-mono">
             <span className="mr-3">App.jsx</span>
@@ -214,7 +214,7 @@ const CodeSegment = ({
           .split('\n')
           .slice(0, 3)
           .map((line, i) => (
-            <div key={i} className="text-light-primary truncate dark:text-dark-secondary">
+            <div key={i} className="text-light-primary dark:text-dark-secondary truncate">
               {line || ' '}
             </div>
           ))}

@@ -18,7 +18,7 @@ export default function DynamicTable({
               <th
                 key={header}
                 scope="col"
-                className="text-11 px-[15px] py-[8px] text-accent-01 dark:text-accent-01"
+                className="text-11 text-accent-01 dark:text-accent-01 px-[15px] py-[8px]"
               >
                 {header === '_id' ? 'doc id' : header}
               </th>

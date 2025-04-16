@@ -89,13 +89,13 @@ function SessionSidebar({ isVisible, onClose }: SessionSidebarProps) {
               </div>
               <button
                 onClick={(e) => toggleFavorite(session, e)}
-                className="ml-2 text-accent-01 hover:text-yellow-500 focus:outline-none"
+                className="text-accent-01 ml-2 hover:text-yellow-500 focus:outline-none"
                 aria-label={session.favorite ? 'Remove from favorites' : 'Add to favorites'}
               >
                 <StarIcon filled={session.favorite} />
               </button>
             </div>
-            <div className="mt-1 text-xs text-accent-01 dark:text-accent-01">
+            <div className="text-accent-01 dark:text-accent-01 mt-1 text-xs">
               {new Date(session.created_at).toLocaleString()}
             </div>
             {shownScreenshots.map(

@@ -41,7 +41,7 @@ const AIMessage = memo(
       <div className="mb-4 flex flex-row justify-start px-4">
         <div className="mr-2 flex-shrink-0">
           <div
-            className="bg-accent-02-light dark:bg-accent-02-dark flex h-8 w-8 items-center justify-center rounded-full shadow-sm"
+            className="bg-light-decorative-02 dark:bg-dark-decorative-02 flex h-8 w-8 items-center justify-center rounded-full shadow-sm"
             title={model || undefined}
           >
             <svg
@@ -104,7 +104,7 @@ const AIMessage = memo(
 const UserMessage = memo(({ message }: { message: ChatMessageDocument }) => {
   return (
     <div className="mb-4 flex flex-row justify-end px-4">
-      <div className="accent-00 dark:accent-01 text-primary max-w-[85%] rounded-xl px-5 py-3 shadow-md dark:text-black">
+      <div className="bg-light-background-02 dark:bg-dark-decorative-00 text-light-primary dark:text-dark-primary max-w-[85%] rounded-xl px-5 py-3 shadow-md">
         <div className="prose prose-sm dark:prose-invert prose-ul:pl-5 prose-ul:list-disc prose-ol:pl-5 prose-ol:list-decimal prose-li:my-0 max-w-none">
           <ReactMarkdown>{message.text}</ReactMarkdown>
         </div>
