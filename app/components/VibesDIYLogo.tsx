@@ -21,26 +21,22 @@ const VibesDIYLogoTXT: React.FC<VibesDIYLogoProps> = ({ className, ...props }) =
 // We'll generate the animation styles dynamically with the random initial hue
 
 // Image-based logo using the provided PNG file
-const VibesDIYLogo: React.FC<VibesDIYLogoProps> = ({ 
-  className,  
-  animateHue = true,
-  ...props 
-}) => {
+const VibesDIYLogo: React.FC<VibesDIYLogoProps> = ({ className, animateHue = true, ...props }) => {
   // Control light/dark mode detection with a hook if we need to
   const [isDarkMode, setIsDarkMode] = React.useState(false);
-  
+
   // Generate a random starting hue value (0-360)
   const [initialHue, setInitialHue] = React.useState(0);
-  
+
   // Generate random initial hue and check dark mode on mount
   React.useEffect(() => {
     if (typeof window !== 'undefined') {
       // Set a random initial hue value
       setInitialHue(Math.floor(Math.random() * 360));
-      
+
       // Initial dark mode check
       setIsDarkMode(document.documentElement.classList.contains('dark'));
-      
+
       // Create an observer to detect dark mode changes
       const observer = new MutationObserver((mutations) => {
         mutations.forEach((mutation) => {
@@ -49,15 +45,15 @@ const VibesDIYLogo: React.FC<VibesDIYLogoProps> = ({
           }
         });
       });
-      
+
       // Start observing
       observer.observe(document.documentElement, { attributes: true });
-      
+
       // Cleanup
       return () => observer.disconnect();
     }
   }, []);
-  
+
   // Generate the animation styles with the random initial hue
   const animationStyles = `
     @keyframes rotateHue {
@@ -73,26 +69,21 @@ const VibesDIYLogo: React.FC<VibesDIYLogoProps> = ({
 
   return (
     <>
-      {animateHue && (
-        <style dangerouslySetInnerHTML={{ __html: animationStyles }} />
-      )}
-      <div 
-        className={`inline-block ${className || ''}`} 
-        {...props}
-      >
+      {animateHue && <style dangerouslySetInnerHTML={{ __html: animationStyles }} />}
+      <div className={`inline-block ${className || ''}`} {...props}>
         <img
           src="/vibes-diy-alpha.png"
           alt="Vibes DIY Logo"
-          width="1272" 
+          width="1272"
           height="666"
           className={animateHue ? undefined : 'dark:invert'}
           style={{
-            animation: animateHue 
-              ? isDarkMode 
-                ? 'rotateHueDark 300s linear infinite' 
+            animation: animateHue
+              ? isDarkMode
+                ? 'rotateHueDark 300s linear infinite'
                 : 'rotateHue 300s linear infinite'
               : 'none',
-            transition: 'filter 0.3s ease'
+            transition: 'filter 0.3s ease',
           }}
         />
       </div>
