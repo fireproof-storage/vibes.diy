@@ -100,7 +100,6 @@ const AIMessage = memo(
   }
 );
 
-// User Message component (simplified without animation handling)
 const UserMessage = memo(({ message }: { message: ChatMessageDocument }) => {
   return (
     <div className="mb-4 flex flex-row justify-end px-4">
