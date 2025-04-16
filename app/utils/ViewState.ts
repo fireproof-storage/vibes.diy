@@ -74,26 +74,11 @@ export function useViewState(props: {
       }
     }
 
-    // When preview becomes ready, auto jump to preview view, but respect explicit navigation
-    // AND don't redirect to app during active streaming
-    if (props.previewReady && !wasPreviewReadyRef.current) {
-      // Don't redirect to app if user is explicitly in data or code view OR if still streaming
-      // Also don't redirect on mobile devices
+    // As soon as previewReady becomes true, jump to preview view (app), UNLESS user is explicitly in data or code view
+    if (props.previewReady && !wasPreviewReadyRef.current && !isMobileViewport()) {
       const isInDataView = location.pathname.endsWith('/data');
       const isInCodeView = location.pathname.endsWith('/code');
-      if (!isInDataView && !isInCodeView && !props.isStreaming && !isMobileViewport()) {
-        navigate(`/chat/${sessionId}/${encodedTitle}/app`);
-      }
-    }
-
-    // Handle the state when streaming ENDS and preview is ready
-    // This ensures we navigate to the app view after streaming completes
-    if (!props.isStreaming && wasStreamingRef.current && props.previewReady) {
-      // Don't redirect to app if user is explicitly in data or code view
-      // Also don't redirect on mobile devices
-      const isInDataView = location.pathname.endsWith('/data');
-      const isInCodeView = location.pathname.endsWith('/code');
-      if (!isInDataView && !isInCodeView && !isMobileViewport()) {
+      if (!isInDataView && !isInCodeView) {
         navigate(`/chat/${sessionId}/${encodedTitle}/app`);
       }
     }
