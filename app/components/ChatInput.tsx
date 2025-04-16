@@ -55,10 +55,10 @@ function ChatInput({
           type="button"
           onClick={onSend}
           disabled={disabled}
-          className={`light-gradient border-glimmer absolute flex items-center justify-center overflow-hidden rounded-xl border shadow-sm transition-all duration-300 hover:border-gray-300 hover:shadow-md active:shadow-inner dark:hover:border-gray-600 ${
+          className={`light-gradient border-glimmer absolute flex items-center justify-center overflow-hidden rounded-xl border shadow-sm transition-all duration-300 hover:border-light-decorative-01 hover:shadow-md active:shadow-inner dark:hover:border-dark-decorative-01 ${
             disabled
-              ? 'border-gray-300 dark:border-gray-500'
-              : 'border-gray-200 dark:border-gray-700'
+              ? 'border-light-decorative-01 dark:border-dark-decorative-01'
+              : 'border-light-decorative-01 dark:border-dark-decorative-00'
           } right-0 bottom-0 -mr-2 -mb-1 w-[110px] px-1 py-2`}
           style={{
             backdropFilter: 'blur(1px)',

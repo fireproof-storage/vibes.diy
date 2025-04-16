@@ -25,11 +25,11 @@ export default function DynamicTable({
             ))}
           </tr>
         </thead>
-        <tbody className="text-14 border border-gray-200 bg-white dark:border-gray-700 dark:bg-dark-background-01">
+        <tbody className="text-14 border border-light-decorative-01 bg-white dark:border-dark-decorative-00 dark:bg-dark-background-01">
           {rows.map((fields: any) => (
             <tr
               key={fields._id}
-              className="cursor-pointer border-b border-gray-200 hover:bg-light-background-01 dark:border-gray-700 dark:hover:bg-dark-decorative-00"
+              className="cursor-pointer border-b border-light-decorative-01 hover:bg-light-background-01 dark:border-dark-decorative-00 dark:hover:bg-dark-decorative-00"
               onClick={() => {
                 onRowClick(fields._id, dbName);
               }}

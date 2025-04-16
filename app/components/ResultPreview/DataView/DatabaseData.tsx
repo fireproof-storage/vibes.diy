@@ -63,7 +63,7 @@ const DatabaseData: React.FC<{ dbName: string; sessionId: string }> = ({ dbName,
       <summary className="cursor-pointer text-blue-500 hover:text-blue-700">
         Database Inspection Details
       </summary>
-      <div className="mt-1 border-l-2 border-gray-300 pl-2">
+      <div className="mt-1 border-l-2 border-light-decorative-01 pl-2">
         <p>
           <strong>Original DB Name:</strong> {dbName}
         </p>

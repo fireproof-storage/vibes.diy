@@ -76,7 +76,7 @@ function SessionSidebar({ isVisible, onClose }: SessionSidebarProps) {
       return (
         <li
           key={session._id}
-          className="cursor-pointer border-b border-gray-200 p-3 hover:bg-light-background-01 dark:border-gray-700 dark:hover:bg-dark-background-01"
+          className="cursor-pointer border-b border-light-decorative-01 p-3 hover:bg-light-background-01 dark:border-dark-decorative-00 dark:hover:bg-dark-background-01"
         >
           <a
             href={`/chat/${session._id}/${encodedTitle}`}
@@ -122,7 +122,7 @@ function SessionSidebar({ isVisible, onClose }: SessionSidebarProps) {
       }`}
     >
       <div className="flex h-full flex-col overflow-scroll">
-        <div className="flex items-center justify-between border-b border-gray-200 p-4 dark:border-gray-700">
+        <div className="flex items-center justify-between border-b border-light-decorative-01 p-4 dark:border-dark-decorative-00">
           <h2
             className="text-light-primary dark:text-dark-primary cursor-pointer text-lg font-semibold"
             onClick={() => {

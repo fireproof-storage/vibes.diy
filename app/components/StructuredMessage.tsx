@@ -151,7 +151,7 @@ const CodeSegment = ({
         top: '8px',
         zIndex: 10,
       }}
-      className={`relative my-4 cursor-pointer rounded-md border border-gray-200 bg-light-background-01 p-4 shadow-sm transition-all hover:bg-light-background-01 dark:border-gray-700 dark:bg-dark-decorative-00 dark:hover:bg-dark-decorative-01 ${
+      className={`relative my-4 cursor-pointer rounded-md border border-light-decorative-01 bg-light-background-01 p-4 shadow-sm transition-all hover:bg-light-background-01 dark:border-dark-decorative-00 dark:bg-dark-decorative-00 dark:hover:bg-dark-decorative-01 ${
         isSticky ? 'sticky-active' : ''
       }`}
       onClick={handleCodeClick}
@@ -206,7 +206,7 @@ const CodeSegment = ({
 
       {/* Code preview with height transition instead of conditional rendering */}
       <div
-        className={`overflow-hidden rounded-sm bg-light-background-01 font-mono text-sm shadow-inner transition-all dark:bg-dark-background-01 ${
+        className={`overflow-hidden rounded-sm bg-light-background-02 font-mono text-sm shadow-inner transition-all dark:bg-dark-background-01 ${
           isSticky ? 'm-0 h-0 max-h-0 min-h-0 border-0 p-0 opacity-0' : 'mt-2 max-h-24 p-2'
         }`}
       >
