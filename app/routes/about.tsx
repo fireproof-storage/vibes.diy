@@ -51,7 +51,7 @@ export default function About() {
               <p className="text-light-secondary dark:text-dark-secondary">
                 Share your apps with the{' '}
                 <a
-                  href="https://discord.gg/DbSXGqvxFc"
+                  href="https://discord.gg/vnpWycj4Ta"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-blue-600 hover:underline dark:text-blue-400"

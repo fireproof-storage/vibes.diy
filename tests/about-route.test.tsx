@@ -73,7 +73,7 @@ describe('About Route', () => {
     // Check for the community link
     const communityLink = screen.getByText('community');
     expect(communityLink).toBeInTheDocument();
-    expect(communityLink.getAttribute('href')).toBe('https://discord.gg/DbSXGqvxFc');
+    expect(communityLink.getAttribute('href')).toBe('https://discord.gg/vnpWycj4Ta');
     expect(communityLink.getAttribute('target')).toBe('_blank');
 
     // Check for the repo link
