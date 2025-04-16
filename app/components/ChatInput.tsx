@@ -66,7 +66,7 @@ function ChatInput({
           aria-label={disabled ? 'Generating' : 'Send message'}
         >
           <div className="relative z-10">
-            <VibesDIYLogo className="pl-1.5" width={150} height={28} />
+            <VibesDIYLogo className="pl-1.5 pt-6 pb-2 ml-2 mr-2 mb-0.5" width={100} height={18} />
           </div>
         </button>
       </div>
