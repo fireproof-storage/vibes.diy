@@ -19,6 +19,10 @@ function ChatInterface({
   // State for UI transitions and sharing
   const messagesContainerRef = useRef<HTMLDivElement>(null);
 
+  useEffect(() => {
+    console.log('messages', messages);
+  }, [messages]);
+
   // Scroll to bottom when message count changes or when streaming starts/stops
   useEffect(() => {
     if (messagesContainerRef.current && messages.length > 0) {

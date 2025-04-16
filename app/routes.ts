@@ -11,4 +11,5 @@ export default [
   route('settings', './routes/settings.tsx', { id: 'settings' }),
   route('about', './routes/about.tsx', { id: 'about' }),
   route('auth/callback', './routes/auth-callback.tsx', { id: 'auth-callback' }),
+  route('remix/:vibeSlug?', './routes/remix.tsx', { id: 'remix' }),
 ] satisfies RouteConfig;
