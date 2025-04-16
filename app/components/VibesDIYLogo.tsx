@@ -18,18 +18,7 @@ const VibesDIYLogoTXT: React.FC<VibesDIYLogoProps> = ({ className, ...props }) =
   );
 };
 
-// Define the keyframe animations for both light and dark modes
-const animationStyles = `
-@keyframes rotateHue {
-  0% { filter: hue-rotate(0deg); }
-  100% { filter: hue-rotate(360deg); }
-}
-
-@keyframes rotateHueDark {
-  0% { filter: invert(100%) hue-rotate(0deg); }
-  100% { filter: invert(100%) hue-rotate(360deg); }
-}
-`;
+// We'll generate the animation styles dynamically with the random initial hue
 
 // Image-based logo using the provided PNG file
 const VibesDIYLogo: React.FC<VibesDIYLogoProps> = ({ 
@@ -40,10 +29,16 @@ const VibesDIYLogo: React.FC<VibesDIYLogoProps> = ({
   // Control light/dark mode detection with a hook if we need to
   const [isDarkMode, setIsDarkMode] = React.useState(false);
   
-  // Check for dark mode on mount and when it changes
+  // Generate a random starting hue value (0-360)
+  const [initialHue, setInitialHue] = React.useState(0);
+  
+  // Generate random initial hue and check dark mode on mount
   React.useEffect(() => {
     if (typeof window !== 'undefined') {
-      // Initial check
+      // Set a random initial hue value
+      setInitialHue(Math.floor(Math.random() * 360));
+      
+      // Initial dark mode check
       setIsDarkMode(document.documentElement.classList.contains('dark'));
       
       // Create an observer to detect dark mode changes
@@ -63,6 +58,19 @@ const VibesDIYLogo: React.FC<VibesDIYLogoProps> = ({
     }
   }, []);
   
+  // Generate the animation styles with the random initial hue
+  const animationStyles = `
+    @keyframes rotateHue {
+      0% { filter: hue-rotate(${initialHue}deg); }
+      100% { filter: hue-rotate(${initialHue + 360}deg); }
+    }
+
+    @keyframes rotateHueDark {
+      0% { filter: invert(100%) hue-rotate(${initialHue}deg); }
+      100% { filter: invert(100%) hue-rotate(${initialHue + 360}deg); }
+    }
+  `;
+
   return (
     <>
       {animateHue && (
@@ -81,8 +89,8 @@ const VibesDIYLogo: React.FC<VibesDIYLogoProps> = ({
           style={{
             animation: animateHue 
               ? isDarkMode 
-                ? 'rotateHueDark 30s linear infinite' 
-                : 'rotateHue 30s linear infinite'
+                ? 'rotateHueDark 300s linear infinite' 
+                : 'rotateHue 300s linear infinite'
               : 'none',
             transition: 'filter 0.3s ease'
           }}
