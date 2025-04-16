@@ -84,7 +84,10 @@ export function useViewState(props: {
         console.log('[ViewState] ✅ Navigating to /app view');
         navigate(`/chat/${sessionId}/${encodedTitle}/app`);
       } else {
-        console.log('[ViewState] ⏸️ Not navigating - user already in specific view:', { isInDataView, isInCodeView });
+        console.log('[ViewState] ⏸️ Not navigating - user already in specific view:', {
+          isInDataView,
+          isInCodeView,
+        });
       }
     }
 
@@ -140,10 +143,11 @@ export function useViewState(props: {
   // Determine what view should be displayed (may differ from URL-based currentView)
   // If preview is ready, we prioritize showing it, even during streaming
   // Otherwise, during streaming on desktop, we show code view
-  const displayView = 
-    props.previewReady ? 'preview' :
-    (props.isStreaming && !isMobileViewport()) ? 'code' : 
-    currentView;
+  const displayView = props.previewReady
+    ? 'preview'
+    : props.isStreaming && !isMobileViewport()
+      ? 'code'
+      : currentView;
 
   return {
     currentView, // The view based on URL (for navigation)

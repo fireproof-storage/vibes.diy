@@ -76,12 +76,12 @@ export default function UnifiedSession() {
 
   // Handle preview loaded event
   const handlePreviewLoaded = useCallback(() => {
-    console.log('[home] 🌟 handlePreviewLoaded called', { 
+    console.log('[home] 🌟 handlePreviewLoaded called', {
       currentlyStreaming: chatState.isStreaming,
-      codeReady: chatState.codeReady, 
-      time: new Date().toISOString() 
+      codeReady: chatState.codeReady,
+      time: new Date().toISOString(),
     });
-    
+
     setPreviewReady(true);
 
     // Always show preview on mobile devices when it's ready, regardless of streaming status
@@ -176,21 +176,21 @@ export default function UnifiedSession() {
 
   // Handle the case when preview becomes ready and streaming ends
   useEffect(() => {
-    console.log('[home] 📣 previewReady effect triggered', { 
-      previewReady, 
+    console.log('[home] 📣 previewReady effect triggered', {
+      previewReady,
       isStreaming: chatState.isStreaming,
       codeReady: chatState.codeReady,
-      time: new Date().toISOString()
+      time: new Date().toISOString(),
     });
-    
+
     // Switch to preview view as soon as preview becomes ready, regardless of streaming status
     if (previewReady) {
-      console.log('[home] 🔄 Auto-switching to preview view', { 
+      console.log('[home] 🔄 Auto-switching to preview view', {
         userClickedBack,
         isStreaming: chatState.isStreaming,
-        time: new Date().toISOString()
+        time: new Date().toISOString(),
       });
-      
+
       // Reset user preference so future code content will auto-show preview
       setUserClickedBack(false);
 
