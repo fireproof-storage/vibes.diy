@@ -74,8 +74,7 @@ const VibesDIYLogo: React.FC<VibesDIYLogoProps> = ({
     }
   `;
 
-  // SVG has an aspect ratio of 302:169 (approximately 1.79:1)
-  const aspectRatio = 302/169;
+  // Let the SVG handle its own aspect ratio
 
   return (
     <>
@@ -105,7 +104,6 @@ const VibesDIYLogo: React.FC<VibesDIYLogoProps> = ({
             display: 'flex',
             width: '100%',
             height: 'auto',
-            aspectRatio: `${aspectRatio}`,
           }}
         >
           <DIYLogo />
