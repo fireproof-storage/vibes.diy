@@ -104,7 +104,7 @@ const VibesDIYLogo: React.FC<VibesDIYLogoProps> = ({
             display: 'flex',
             width: '100%',
             transformOrigin: 'center center',
-            minHeight: 0
+            minHeight: 0,
           }}
         >
           <DIYLogo />
