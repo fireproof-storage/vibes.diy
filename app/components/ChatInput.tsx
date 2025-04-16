@@ -56,7 +56,7 @@ function ChatInput({ value, onChange, onSend, onKeyDown, disabled, inputRef }: C
           aria-label={disabled ? 'Generating' : 'Send message'}
         >
           <div className="relative z-10">
-            <VibesDIYLogo />
+            <VibesDIYLogo className="h-[28px] pl-1.5" />
           </div>
         </button>
       </div>

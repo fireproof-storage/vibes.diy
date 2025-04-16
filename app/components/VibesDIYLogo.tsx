@@ -1,9 +1,12 @@
 import React from 'react';
 
-interface VibesDIYLogoProps extends React.HTMLAttributes<HTMLSpanElement> {}
+interface VibesDIYLogoProps extends React.HTMLAttributes<HTMLDivElement> {
+  height?: number;
+  width?: number;
+}
 
 // Regular text-based logo
-const VibesDIYLogo: React.FC<VibesDIYLogoProps> = ({ className, ...props }) => {
+const VibesDIYLogoTXT: React.FC<VibesDIYLogoProps> = ({ className, ...props }) => {
   return (
     <span className={`inline-block ${className || ''}`} {...props}>
       Vibes{' '}
@@ -14,44 +17,25 @@ const VibesDIYLogo: React.FC<VibesDIYLogoProps> = ({ className, ...props }) => {
   );
 };
 
-// SVG-based logo with solid colors
-const AnimatedVibesDIYLogo: React.FC<VibesDIYLogoProps> = ({ className, ...props }) => {
+// Image-based logo using the provided PNG file
+const VibesDIYLogo: React.FC<VibesDIYLogoProps> = ({ 
+  className,  
+  ...props 
+}) => {
   return (
-    <span className={`inline-block ${className || ''}`} {...props}>
-      <svg
-        xmlns="http://www.w3.org/2000/svg"
-        viewBox="0 0 140 40"
-        className="svg-logo"
-        style={{
-          width: '100%',
-          height: '100%',
-        }}
-      >
-        <text
-          x="20"
-          y="26"
-          fontFamily="Inter, sans-serif"
-          fontSize="24"
-          fontWeight="bold"
-          fill="currentColor"
-        >
-          Vibes
-        </text>
-        <text
-          x="90"
-          y="28"
-          fontFamily="Inter, sans-serif"
-          fontSize="16"
-          fontWeight="bold"
-          fill="currentColor"
-          transform="rotate(-8, 93, 28)"
-        >
-          DIY
-        </text>
-      </svg>
-    </span>
+    <div 
+      className={`inline-block ${className || ''}`} 
+      {...props}
+    >
+      <img
+        src="/vibes-diy-alpha.png"
+        alt="Vibes DIY Logo"
+        width="1272" 
+        height="666"
+      />
+    </div>
   );
 };
 
-export { AnimatedVibesDIYLogo };
+export { VibesDIYLogoTXT };
 export default VibesDIYLogo;
