@@ -75,7 +75,6 @@ export function useRuntimeErrors({
         if (error.reason) {
           details.reason = error.reason;
         }
-        // @ts-ignore
         if (typeof trackErrorEvent === 'function') {
           trackErrorEvent(error.errorType, error.message, details);
         }

@@ -14,7 +14,7 @@ import {
 import { PublishMenu } from '../PublishMenu';
 import { UserMenu } from '../UserMenu';
 import { publishApp } from '../../utils/publishUtils';
-import { trackAuthClick, trackPublishClick } from '../../utils/analytics';
+import { trackAuthClick } from '../../utils/analytics';
 
 interface ResultPreviewHeaderContentProps {
   previewReady: boolean;
