@@ -33,20 +33,20 @@ export default function About() {
 
           <div className="space-y-6">
             <div className="border-light-decorative-01 dark:border-dark-decorative-01 rounded-sm border p-5">
-              <h2 className="mb-3 text-xl font-medium text-gray-900 dark:text-white">
+              <h2 className="mb-3 text-xl font-medium text-light-primary dark:text-white">
                 What is Vibes DIY?
               </h2>
-              <p className="text-gray-700 dark:text-gray-300">
+              <p className="text-light-secondary dark:text-dark-secondary">
                 An AI-powered app builder that lets you create custom applications with your
                 preferred style and functionality. No extensive coding knowledge required.
               </p>
             </div>
 
             <div className="border-light-decorative-01 dark:border-dark-decorative-01 rounded-sm border p-5">
-              <h2 className="mb-3 text-xl font-medium text-gray-900 dark:text-white">
+              <h2 className="mb-3 text-xl font-medium text-light-primary dark:text-white">
                 Open source
               </h2>
-              <p className="text-gray-700 dark:text-gray-300">
+              <p className="text-light-secondary dark:text-dark-secondary">
                 Share your apps with the{' '}
                 <a
                   href="https://discord.gg/DbSXGqvxFc"
@@ -70,10 +70,10 @@ export default function About() {
             </div>
 
             <div className="border-light-decorative-01 dark:border-dark-decorative-01 rounded-sm border p-5">
-              <h2 className="mb-3 text-xl font-medium text-gray-900 dark:text-white">
+              <h2 className="mb-3 text-xl font-medium text-light-primary dark:text-white">
                 Key Features
               </h2>
-              <ul className="ml-5 list-disc space-y-2 text-gray-700 dark:text-gray-300">
+              <ul className="ml-5 list-disc space-y-2 text-light-secondary dark:text-dark-secondary">
                 <li>
                   <span className="font-medium">AI-Powered Generation</span> - Create applications
                   using natural language prompts
@@ -114,7 +114,7 @@ export default function About() {
             </div>
           </div>
         </div>
-        <p className="text-center text-xs text-gray-700 dark:text-gray-300">
+        <p className="text-center text-xs text-light-secondary dark:text-dark-secondary">
           Copyright © 2025{' '}
           <a
             href="https://fireproof.storage"

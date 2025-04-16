@@ -162,13 +162,13 @@ const CodeSegment = ({
             ? 'text-orange-500 dark:text-orange-400'
             : isSelected
               ? 'text-green-500 dark:text-green-400'
-              : 'text-gray-400 dark:text-gray-600'
+              : 'text-accent-01 dark:text-accent-02'
         }`}
       >
         •
       </div>
       <div className="flex items-center justify-between rounded-sm p-2">
-        <span className="font-mono text-sm text-gray-500 dark:text-gray-400">
+        <span className="font-mono text-sm text-accent-01 dark:text-accent-01">
           {`${codeLines} line${codeLines !== 1 ? 's' : ''}`}
         </span>
         <button
@@ -178,7 +178,7 @@ const CodeSegment = ({
             const textToCopy = e.shiftKey && rawText ? rawText : content;
             navigator.clipboard.writeText(textToCopy);
           }}
-          className="bg-light-background-02 hover:accent-00 dark:bg-dark-background-01 dark:hover:bg-dark-decorative-00 rounded-sm px-2 py-1 text-sm text-gray-500 transition-colors hover:text-gray-600 active:bg-orange-400 active:text-orange-800 dark:text-gray-400 dark:hover:text-gray-300 dark:active:bg-orange-600 dark:active:text-orange-200"
+          className="bg-light-background-02 hover:accent-00 dark:bg-dark-background-01 dark:hover:bg-dark-decorative-00 rounded-sm px-2 py-1 text-sm text-accent-01 transition-colors hover:text-accent-02 active:bg-orange-400 active:text-orange-800 dark:text-accent-01 dark:hover:text-dark-secondary dark:active:bg-orange-600 dark:active:text-orange-200"
         >
           <code className="font-mono">
             <span className="mr-3">App.jsx</span>
@@ -214,12 +214,12 @@ const CodeSegment = ({
           .split('\n')
           .slice(0, 3)
           .map((line, i) => (
-            <div key={i} className="text-light-primary truncate dark:text-gray-300">
+            <div key={i} className="text-light-primary truncate dark:text-dark-secondary">
               {line || ' '}
             </div>
           ))}
         {content.split('\n').length > 3 && (
-          <div className="text-gray-500 dark:text-gray-400">...</div>
+          <div className="text-accent-01 dark:text-accent-01">...</div>
         )}
       </div>
     </div>

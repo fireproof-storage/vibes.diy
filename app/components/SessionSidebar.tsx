@@ -89,13 +89,13 @@ function SessionSidebar({ isVisible, onClose }: SessionSidebarProps) {
               </div>
               <button
                 onClick={(e) => toggleFavorite(session, e)}
-                className="ml-2 text-gray-400 hover:text-yellow-500 focus:outline-none"
+                className="ml-2 text-accent-01 hover:text-yellow-500 focus:outline-none"
                 aria-label={session.favorite ? 'Remove from favorites' : 'Add to favorites'}
               >
                 <StarIcon filled={session.favorite} />
               </button>
             </div>
-            <div className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+            <div className="mt-1 text-xs text-accent-01 dark:text-accent-01">
               {new Date(session.created_at).toLocaleString()}
             </div>
             {shownScreenshots.map(
@@ -163,13 +163,13 @@ function SessionSidebar({ isVisible, onClose }: SessionSidebarProps) {
             >
               <StarIcon
                 filled={justFavorites}
-                className={`h-5 w-5 transition-colors duration-300 ${justFavorites ? 'text-yellow-500' : 'text-gray-400'} hover:text-yellow-400`}
+                className={`h-5 w-5 transition-colors duration-300 ${justFavorites ? 'text-yellow-500' : 'text-accent-01'} hover:text-yellow-400`}
               />
             </button>
             <a
               href="/settings"
               onClick={() => onClose()}
-              className="text-gray-400 hover:text-gray-500 focus:outline-none"
+              className="text-accent-01 hover:text-accent-01 focus:outline-none"
               title="Settings"
               aria-label="Settings"
             >
@@ -178,7 +178,7 @@ function SessionSidebar({ isVisible, onClose }: SessionSidebarProps) {
             <a
               href="/about"
               onClick={() => onClose()}
-              className="text-gray-400 hover:text-gray-500 focus:outline-none"
+              className="text-accent-01 hover:text-accent-01 focus:outline-none"
               title="About"
               aria-label="About"
             >
