@@ -106,7 +106,7 @@ const ResultPreviewHeaderContent: React.FC<ResultPreviewHeaderContentProps> = ({
         }
 
         // Token is missing, invalid, or expired - show Connect button
-        console.log('No valid token found or token expired');
+
         localStorage.removeItem('auth_token');
         setIsUserAuthenticated(false);
       } catch (error) {

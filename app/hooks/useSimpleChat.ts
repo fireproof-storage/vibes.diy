@@ -63,7 +63,6 @@ export function useSimpleChat(sessionId: string | undefined): ChatState {
       .get<VibeDocument>('vibe')
       .then((doc) => {
         if (doc) {
-          console.log('Vibe document found:', doc);
           setVibeDoc(doc);
         }
       })

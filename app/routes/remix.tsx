@@ -62,19 +62,14 @@ export default function Remix() {
 
         const codeContent = await response.text();
 
-        // Create a new session
-        console.log('Session created:', session);
-
         // We'll generate a better title soon, but start with something sensible
         const initialTitle = `Remix of ${appName}`;
         await updateTitle(initialTitle);
         // get the vibe doc from session database
         const vibeDoc = await sessionDatabase.get<VibeDocument>('vibe').catch(() => null);
         if (!vibeDoc) {
-          console.log('No vibe doc found');
           return;
         }
-        console.log('Vibe doc:', vibeDoc);
         vibeDoc.remixOf = appName;
         await sessionDatabase.put(vibeDoc);
 
@@ -86,8 +81,7 @@ export default function Remix() {
           text: `Please help me remix ${appName}.vibecode.garden`,
           created_at: Date.now(),
         };
-        const userResult = await sessionDatabase.put(userMessage);
-        console.log('User message saved:', userResult);
+        await sessionDatabase.put(userMessage);
 
         // Clean the code - remove esm.sh references from import statements
         const cleanedCode = codeContent.replace(
@@ -103,8 +97,7 @@ export default function Remix() {
           text: `Certainly, here is the code:\n\n\`\`\`jsx\n${cleanedCode}\n\`\`\`\n\nPlease let me know what you'd like to change.`,
           created_at: Date.now(),
         };
-        const aiResult = await sessionDatabase.put(aiMessage);
-        console.log('AI message saved:', aiResult);
+        await sessionDatabase.put(aiMessage);
 
         // Generate a better title based on the code content
         try {
@@ -125,28 +118,10 @@ export default function Remix() {
           // Prefix with 'Remix of' to make it clear this is a remix
           // const finalTitle = `Remix: ${generatedTitle} (from ${appName})`;
           await updateTitle(generatedTitle);
-          console.log('Generated title:', generatedTitle);
         } catch (titleError) {
           console.error('Error generating title:', titleError);
           // Keep the initial title if generation fails
         }
-
-        // Query to verify data was saved correctly
-        const allDocs = await sessionDatabase.query('_id', { includeDocs: true });
-        console.log(
-          'All docs in session database:',
-          allDocs.rows.map((row) => row.doc)
-        );
-
-        // Query specifically for documents with our session_id
-        const sessionDocs = await sessionDatabase.query('session_id', {
-          key: session._id,
-          includeDocs: true,
-        });
-        console.log(
-          'Documents with this session_id:',
-          sessionDocs.rows.map((row) => row.doc)
-        );
 
         // Navigate to the chat session URL
         navigate(`/chat/${session._id}/${encodeTitle(session.title || initialTitle)}`);

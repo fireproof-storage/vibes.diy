@@ -30,7 +30,6 @@ export async function getAuthToken(): Promise<string | null> {
   const token = urlParams.get('fpToken');
 
   if (token) {
-    console.log('Token found in URL, storing and returning');
     // Store the token in localStorage for future use
     localStorage.setItem('auth_token', token);
 
@@ -49,16 +48,13 @@ export async function getAuthToken(): Promise<string | null> {
   // Check if we have a token in localStorage
   const storedToken = localStorage.getItem('auth_token');
   if (storedToken) {
-    console.log('Token found in localStorage, verifying');
     // Verify the stored token is still valid
     const isValid = await verifyToken(storedToken);
     if (isValid) {
-      console.log('Stored token is valid');
       return storedToken;
     }
 
     // Token is invalid or expired, remove it
-    console.log('Stored token is invalid, removing');
     localStorage.removeItem('auth_token');
   }
 
@@ -80,26 +76,21 @@ export function initiateAuthFlow(): void {
 
   // Check for redirect prevention flag to avoid redirect loops
   if (sessionStorage.getItem('auth_redirect_prevention')) {
-    console.log('Preventing auth redirect loop - prevention flag is set');
     return;
   }
 
   // Save the current URL to redirect back after authentication
   const returnUrl = window.location.pathname + window.location.search;
-  console.log('Saving return URL:', returnUrl);
   sessionStorage.setItem('auth_return_url', returnUrl);
 
   // Set redirect prevention flag before redirecting
   sessionStorage.setItem('auth_redirect_prevention', 'true');
-  console.log('Setting redirect prevention flag');
 
   // Calculate the callback URL (absolute URL to our auth/callback route)
   const callbackUrl = new URL('/auth/callback', window.location.origin).toString();
-  console.log('Calculated callback URL:', callbackUrl);
 
   // Redirect to get a token, using our auth/callback route as the back_url
   const authUrl = `https://connect.fireproof.direct/fp/cloud/api/token?back_url=${encodeURIComponent(callbackUrl)}`;
-  console.log('Redirecting to auth provider:', authUrl);
   window.location.href = authUrl;
 }
 

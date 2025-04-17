@@ -16,7 +16,6 @@ function ChatHeaderContent({
   codeReady,
   remixOf,
 }: ChatHeaderContentProps) {
-  console.log('ChatHeaderContent props:', { remixOf });
   return (
     <div className="flex h-full w-full items-center justify-between p-2 py-4">
       <div className="flex items-center">
@@ -32,7 +31,6 @@ function ChatHeaderContent({
       <div className="text-light-primary dark:text-dark-primary text-center text-sm">
         {remixOf ? (
           <>
-            
             <a
               href={`https://${remixOf}.vibecode.garden/`}
               target="_blank"
@@ -40,8 +38,8 @@ function ChatHeaderContent({
               className="text-accent-02-light dark:text-accent-02-dark hover:underline"
             >
               🔀
-            </a>
-            {" "}  {title}
+            </a>{' '}
+            {title}
           </>
         ) : (
           title

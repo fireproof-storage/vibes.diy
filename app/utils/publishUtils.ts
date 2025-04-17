@@ -50,7 +50,7 @@ export async function publishApp({
 
     // Get the session database to retrieve screenshot
     const sessionDb = fireproof(getSessionDatabaseName(sessionId));
-    
+
     // Query for the most recent screenshot document
     const result = await sessionDb.query('type', {
       key: 'screenshot',
@@ -61,18 +61,17 @@ export async function publishApp({
 
     // Prepare screenshot data for inclusion in the payload
     let screenshotBase64 = null;
-    
+
     // Check if we have a screenshot document
     if (result.rows.length > 0) {
       const screenshotDoc = result.rows[0].doc as any; // Cast to any to handle Fireproof types
-      console.log('Found screenshot document:', screenshotDoc);
-      
+
       // Check if the screenshot document has a file in _files.screenshot
       if (screenshotDoc._files && screenshotDoc._files.screenshot) {
         try {
           // Get the File object using the file() method - Fireproof specific API
           const screenshotFile = await (screenshotDoc._files.screenshot as any).file();
-          
+
           // Read the file as a buffer using FileReader
           const buffer = await new Promise<string>((resolve, reject) => {
             const reader = new FileReader();
@@ -80,10 +79,9 @@ export async function publishApp({
             reader.onerror = reject;
             reader.readAsDataURL(screenshotFile); // Read as base64 data URL
           });
-          
+
           // Extract the base64 part of the data URL
           screenshotBase64 = buffer.split(',')[1];
-          console.log('Successfully converted screenshot to base64');
         } catch (err) {
           console.error('Error processing screenshot file:', err);
         }
@@ -126,7 +124,6 @@ export async function publishApp({
         await updatePublishedUrl(appUrl);
       }
 
-      console.log('App published successfully');
       return appUrl;
     }
 
