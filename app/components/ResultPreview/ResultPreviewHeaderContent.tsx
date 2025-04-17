@@ -150,6 +150,7 @@ const ResultPreviewHeaderContent: React.FC<ResultPreviewHeaderContentProps> = ({
       const appUrl = await publishApp({
         sessionId,
         code,
+        title,
         updatePublishedUrl,
       });
 

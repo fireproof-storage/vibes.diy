@@ -32,10 +32,12 @@ function transformImports(code: string): string {
 export async function publishApp({
   sessionId,
   code,
+  title,
   updatePublishedUrl,
 }: {
   sessionId?: string;
   code: string;
+  title?: string;
   updatePublishedUrl?: (url: string) => Promise<void>;
 }): Promise<string | undefined> {
   try {
@@ -60,6 +62,7 @@ export async function publishApp({
       body: JSON.stringify({
         chatId: sessionId,
         code: transformedCode,
+        title,
       }),
     });
 
