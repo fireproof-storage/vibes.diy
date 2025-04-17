@@ -48,8 +48,19 @@ export async function publishApp({
       return undefined;
     }
 
-    // Get the session database to retrieve screenshot
+    // Get the session database to retrieve screenshot and metadata
     const sessionDb = fireproof(getSessionDatabaseName(sessionId));
+
+    // Try to get the vibe document which might contain remixOf information
+    let remixOf = null;
+    try {
+      const vibeDoc = (await sessionDb.get('vibe')) as any;
+      if (vibeDoc && vibeDoc.remixOf) {
+        remixOf = vibeDoc.remixOf;
+      }
+    } catch (error) {
+      // No vibe doc or no remixOf property, which is fine
+    }
 
     // Query for the most recent screenshot document
     const result = await sessionDb.query('type', {
@@ -106,6 +117,7 @@ export async function publishApp({
         raw: code,
         code: transformedCode,
         title,
+        remixOf, // Include information about the original app if this is a remix
         screenshot: screenshotBase64, // Include the base64 screenshot if available
       }),
     });
