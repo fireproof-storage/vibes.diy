@@ -16,13 +16,13 @@ export default function Remix() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [appDomain, setAppDomain] = useState<string | null>(null);
-  
+
   // Get database instances from hooks
-  const { 
+  const {
     session,
     // mainDatabase,
     sessionDatabase,
-    updateTitle
+    updateTitle,
   } = useSession();
 
   // Effect to get vibe slug from path parameter and fetch code
@@ -52,7 +52,7 @@ export default function Remix() {
 
         // Create a new session with this code
         const sessionTitle = `Remix of ${appName}`;
-        
+
         // Update the session title
         await updateTitle(sessionTitle);
         console.log('Session created:', session);
@@ -63,13 +63,16 @@ export default function Remix() {
           type: 'user',
           session_id: session._id,
           text: `Please help me remix ${appName}.vibecode.garden`,
-          created_at: Date.now()
+          created_at: Date.now(),
         };
         const userResult = await sessionDatabase.put(userMessage);
         console.log('User message saved:', userResult);
 
         // Clean the code - remove esm.sh references from import statements
-        const cleanedCode = codeContent.replace(/import\s+(.+)\s+from\s+['"]https:\/\/esm\.sh\/([^'"]+)['"];?/g, "import $1 from '$2';");
+        const cleanedCode = codeContent.replace(
+          /import\s+(.+)\s+from\s+['"]https:\/\/esm\.sh\/([^'"]+)['"];?/g,
+          "import $1 from '$2';"
+        );
 
         // Create and save AI response directly with deterministic ID
         const aiMessage = {
@@ -77,21 +80,27 @@ export default function Remix() {
           type: 'ai',
           session_id: session._id,
           text: `Certainly, here is the code:\n\n\`\`\`jsx\n${cleanedCode}\n\`\`\`\n\nPlease let me know what you'd like to change.`,
-          created_at: Date.now()
+          created_at: Date.now(),
         };
         const aiResult = await sessionDatabase.put(aiMessage);
         console.log('AI message saved:', aiResult);
-        
+
         // Query to verify data was saved correctly
         const allDocs = await sessionDatabase.query('_id', { includeDocs: true });
-        console.log('All docs in session database:', allDocs.rows.map(row => row.doc));
-        
+        console.log(
+          'All docs in session database:',
+          allDocs.rows.map((row) => row.doc)
+        );
+
         // Query specifically for documents with our session_id
-        const sessionDocs = await sessionDatabase.query('session_id', { 
+        const sessionDocs = await sessionDatabase.query('session_id', {
           key: session._id,
-          includeDocs: true 
+          includeDocs: true,
         });
-        console.log('Documents with this session_id:', sessionDocs.rows.map(row => row.doc));
+        console.log(
+          'Documents with this session_id:',
+          sessionDocs.rows.map((row) => row.doc)
+        );
 
         // Navigate to the chat session URL
         navigate(`/chat/${session._id}/${encodeTitle(sessionTitle)}`);
