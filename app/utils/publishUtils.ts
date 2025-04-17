@@ -105,6 +105,7 @@ export async function publishApp({
       },
       body: JSON.stringify({
         chatId: sessionId,
+        raw: code,
         code: transformedCode,
         title,
         screenshot: screenshotBase64, // Include the base64 screenshot if available
