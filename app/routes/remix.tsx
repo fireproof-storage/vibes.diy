@@ -65,7 +65,7 @@ export default function Remix() {
 
         const vibeDoc = await sessionDatabase
           .get<VibeDocument>('vibe')
-          .catch(() => ({ _id: 'vibe' }) as VibeDocument);
+          .catch(() => ({ _id: 'vibe', created_at: Date.now() }) as VibeDocument);
 
         vibeDoc.remixOf = appName;
         await sessionDatabase.put(vibeDoc);

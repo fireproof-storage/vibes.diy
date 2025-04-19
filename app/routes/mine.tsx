@@ -119,12 +119,6 @@ export default function MyVibesRoute(): ReactElement {
                   className="border-light-decorative-01 dark:border-dark-decorative-01 cursor-pointer rounded-md border p-4 transition-colors hover:border-blue-500"
                 >
                   <h3 className="mb-1 text-lg font-medium">{vibe.title}</h3>
-                  <p className="text-light-secondary dark:text-dark-secondary mb-1 text-sm">
-                    ID: {vibe.id.substring(0, 8)}...{vibe.id.slice(-4)}
-                  </p>
-                  <p className="text-light-secondary dark:text-dark-secondary mb-3 text-sm">
-                    Created: {new Date(vibe.created).toLocaleDateString()}
-                  </p>
                   {vibe.screenshot && (
                     <ImgFile
                       file={vibe.screenshot}

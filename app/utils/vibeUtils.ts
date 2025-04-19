@@ -46,13 +46,17 @@ export async function listLocalVibes(): Promise<LocalVibe[]> {
         console.log('Retrieved vibe document:', vibeDoc);
 
         if (vibeDoc && vibeDoc._id === 'vibe') {
-          // Query for the most recent screenshot to get creation timestamp and screenshot
-          let createdTimestamp: string;
+          // Get creation timestamp from vibeDoc or fallback to current time
+          // Convert timestamp to ISO string for consistent formatting
+          const createdTimestamp: string = vibeDoc.created_at 
+            ? new Date(vibeDoc.created_at).toISOString()
+            : new Date('2025-02-02T15:17:00Z').toISOString();
+            
           // Variable to store screenshot if found
           let screenshot: { file: () => Promise<File>; type: string } | undefined;
 
           try {
-            // Query for the most recent screenshot document like in publishUtils.ts
+            // Query for the most recent screenshot document
             const result = await db.query('type', {
               key: 'screenshot',
               includeDocs: true,
@@ -62,22 +66,15 @@ export async function listLocalVibes(): Promise<LocalVibe[]> {
 
             if (result.rows.length > 0) {
               const screenshotDoc = result.rows[0].doc as any;
-
-              // Use the screenshot creation time or current time
-              createdTimestamp = screenshotDoc.created_at
-                ? new Date(screenshotDoc.created_at).toISOString()
-                : new Date().toISOString();
-
+              
               // Get the screenshot file if available
               if (screenshotDoc._files && screenshotDoc._files.screenshot) {
                 screenshot = screenshotDoc._files.screenshot;
               }
-            } else {
-              createdTimestamp = new Date().toISOString();
             }
           } catch (error) {
             console.error('Error fetching screenshot:', error);
-            createdTimestamp = new Date().toISOString();
+            // We already have the createdTimestamp from vibeDoc, no need to set it here
           }
 
           return {

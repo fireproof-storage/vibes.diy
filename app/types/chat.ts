@@ -7,6 +7,7 @@ export interface VibeDocument {
   _id: 'vibe';
   title: string;
   remixOf: string;
+  created_at: number;
 }
 
 // ===== Content Segment Types =====

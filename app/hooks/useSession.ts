@@ -85,6 +85,7 @@ export function useSession(routedSessionId?: string) {
         await sessionDatabase.put({
           _id: 'vibe',
           title,
+          created_at: Date.now(),
         });
       }
     },
