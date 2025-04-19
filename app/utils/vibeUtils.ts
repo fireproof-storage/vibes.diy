@@ -24,33 +24,33 @@ export async function listLocalVibes(): Promise<LocalVibe[]> {
   try {
     // Get all available IndexedDB databases
     const databases = await indexedDB.databases();
-    
+
     // Filter for databases that start with 'fp.vibe-'
-    const vibeDbs = databases.filter(db => db.name && db.name.startsWith('fp.vibe-'));
-    
+    const vibeDbs = databases.filter((db) => db.name && db.name.startsWith('fp.vibe-'));
+
     console.log('Found vibe databases:', vibeDbs);
-    
+
     // Create an array of promises to fetch the vibe document from each database
     const vibePromises = vibeDbs.map(async (dbInfo) => {
       if (!dbInfo.name) return null;
-      
+
       // Extract the vibe ID from the database name (remove 'fp.vibe-' prefix)
       const vibeId = dbInfo.name.replace('fp.vibe-', '');
-      
+
       // Open the Fireproof database for this vibe
       const db = fireproof('vibe-' + vibeId);
-      
+
       try {
         // Get the vibe document
-        const vibeDoc = await db.get('vibe') as VibeDocument;
+        const vibeDoc = (await db.get('vibe')) as VibeDocument;
         console.log('Retrieved vibe document:', vibeDoc);
-        
+
         if (vibeDoc && vibeDoc._id === 'vibe') {
           // Query for the most recent screenshot to get creation timestamp and screenshot
           let createdTimestamp: string;
           // Variable to store screenshot if found
           let screenshot: { file: () => Promise<File>; type: string } | undefined;
-          
+
           try {
             // Query for the most recent screenshot document like in publishUtils.ts
             const result = await db.query('type', {
@@ -59,15 +59,15 @@ export async function listLocalVibes(): Promise<LocalVibe[]> {
               descending: true,
               limit: 1,
             });
-            
+
             if (result.rows.length > 0) {
               const screenshotDoc = result.rows[0].doc as any;
-              
+
               // Use the screenshot creation time or current time
-              createdTimestamp = screenshotDoc.created_at ? 
-                new Date(screenshotDoc.created_at).toISOString() : 
-                new Date().toISOString();
-                
+              createdTimestamp = screenshotDoc.created_at
+                ? new Date(screenshotDoc.created_at).toISOString()
+                : new Date().toISOString();
+
               // Get the screenshot file if available
               if (screenshotDoc._files && screenshotDoc._files.screenshot) {
                 screenshot = screenshotDoc._files.screenshot;
@@ -79,22 +79,22 @@ export async function listLocalVibes(): Promise<LocalVibe[]> {
             console.error('Error fetching screenshot:', error);
             createdTimestamp = new Date().toISOString();
           }
-          
+
           return {
             id: vibeId,
             title: vibeDoc.title || 'Unnamed Vibe',
             slug: vibeDoc.remixOf || vibeId, // Use remixOf as the slug
             created: createdTimestamp,
-            screenshot: screenshot
+            screenshot: screenshot,
           };
         }
       } catch (error) {
         console.error(`Error retrieving vibe from database ${dbInfo.name}:`, error);
       }
-      
+
       return null;
     });
-    
+
     // Wait for all promises to resolve and filter out nulls
     const results = await Promise.all(vibePromises);
     // Filter out null values and cast to LocalVibe[] to satisfy TypeScript

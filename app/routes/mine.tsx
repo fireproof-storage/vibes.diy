@@ -41,24 +41,36 @@ export default function MyVibesRoute(): ReactElement {
   const handleDeleteClick = async (vibeId: string, e: React.MouseEvent) => {
     e.stopPropagation();
     e.preventDefault();
-    
+
+    console.log('Delete clicked for vibeId:', vibeId, 'confirmDelete:', confirmDelete);
+
     if (confirmDelete === vibeId) {
+      console.log('Confirming delete for:', vibeId);
       try {
-        await deleteVibeDatabase(vibeId);
-        // Refresh the vibes list
-        await loadVibes();
+        // Immediately set confirmDelete to null to prevent accidental clicks
         setConfirmDelete(null);
+        await deleteVibeDatabase(vibeId);
+        console.log('Database deleted successfully, refreshing list');
+        // Refresh the vibes list
+        await new Promise((resolve) => setTimeout(resolve, 3000)).then(() => loadVibes());
       } catch (error) {
         console.error('Failed to delete vibe:', error);
       }
     } else {
+      console.log('Setting confirmDelete to:', vibeId);
       setConfirmDelete(vibeId);
+
+      // Prevent the global click handler from immediately clearing the confirmation
+      // by stopping the event from bubbling up to the document
+      e.nativeEvent.stopImmediatePropagation();
     }
   };
 
   // Clear confirmation when clicking elsewhere
-  const handlePageClick = () => {
-    if (confirmDelete) {
+  const handlePageClick = (e: MouseEvent) => {
+    // Don't clear if the click originated from a delete button
+    if (confirmDelete && !(e.target as Element).closest('button[data-action="delete"]')) {
+      console.log('Clearing confirmDelete from document click');
       setConfirmDelete(null);
     }
   };
@@ -66,17 +78,18 @@ export default function MyVibesRoute(): ReactElement {
   useEffect(() => {
     loadVibes();
   }, []);
-  
+
   // Log when vibes state changes
   useEffect(() => {
     console.log('Vibes state updated:', vibes);
   }, [vibes]);
-  
-  // Add click handler to body to clear delete confirmation when clicking elsewhere
+
+  // Add click handler to document to clear delete confirmation when clicking elsewhere
   useEffect(() => {
-    document.body.addEventListener('click', handlePageClick);
+    // Use capture phase to handle document clicks before other handlers
+    document.addEventListener('click', handlePageClick, true);
     return () => {
-      document.body.removeEventListener('click', handlePageClick);
+      document.removeEventListener('click', handlePageClick, true);
     };
   }, [confirmDelete]);
 
@@ -141,7 +154,7 @@ export default function MyVibesRoute(): ReactElement {
                     <ImgFile
                       file={vibe.screenshot}
                       alt={`Screenshot from ${vibe.title}`}
-                      className="mt-3 mb-4 rounded-md border border-light-decorative-01 dark:border-dark-decorative-01"
+                      className="border-light-decorative-01 dark:border-dark-decorative-01 mt-3 mb-4 rounded-md border"
                     />
                   )}
                   <div className="flex space-x-2">
@@ -151,6 +164,8 @@ export default function MyVibesRoute(): ReactElement {
                         e.preventDefault();
                         handleDeleteClick(vibe.id, e);
                       }}
+                      data-action="delete"
+                      data-vibe-id={vibe.id}
                       className={`${confirmDelete === vibe.id ? 'bg-red-500 text-white' : 'text-red-500'} rounded-md px-3 py-1 text-sm hover:bg-red-500 hover:text-white`}
                     >
                       {confirmDelete === vibe.id ? 'Are you Sure? No undo for this.' : 'Delete'}
@@ -162,7 +177,7 @@ export default function MyVibesRoute(): ReactElement {
                         e.preventDefault();
                         handleRemixClick(vibe.slug, e);
                       }}
-                      className="text-light-secondary dark:text-dark-secondary rounded-md px-3 py-1 text-sm hover:bg-light-decorative-01 dark:hover:bg-dark-decorative-01"
+                      className="text-light-secondary dark:text-dark-secondary hover:bg-light-decorative-01 dark:hover:bg-dark-decorative-01 rounded-md px-3 py-1 text-sm"
                     >
                       Remix
                     </button>

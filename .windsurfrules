@@ -1,1 +1,3 @@
 I keep a dev server running in the workspace terminal, usually via `pnpm dev` and on port 5173 or 5174. You dont need to restart it unless you install new dependencies.
+
+If npm dev runs netlify, it will be 8888 or 8889. Before you run a new server look at those ports. 
