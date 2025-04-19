@@ -15,12 +15,9 @@ export function useVibes() {
     try {
       setIsLoading(true);
       setError(null);
-      console.log('Fetching vibes...');
       const localVibes = await listLocalVibes();
-      console.log('Retrieved vibes:', localVibes);
       setVibes(localVibes);
     } catch (err) {
-      console.error('Failed to load vibes:', err);
       setError(err instanceof Error ? err : new Error(String(err)));
     } finally {
       setIsLoading(false);
@@ -35,15 +32,12 @@ export function useVibes() {
         setVibes((currentVibes) => currentVibes.filter((vibe) => vibe.id !== vibeId));
 
         // Actually delete the vibe database
-        console.log(`Deleting vibe database: ${vibeId}`);
         await deleteVibeDatabase(vibeId);
-        console.log(`Successfully deleted vibe: ${vibeId}`);
 
         // We don't need to reload vibes since we've already updated the state optimistically
         // But if you want to ensure DB and state are in sync, you could uncomment this:
         // await loadVibes();
       } catch (err) {
-        console.error(`Error deleting vibe ${vibeId}:`, err);
         setError(err instanceof Error ? err : new Error(String(err)));
 
         // If deletion fails, reload vibes to restore correct state

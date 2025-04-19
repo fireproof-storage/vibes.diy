@@ -27,10 +27,7 @@ export default function MyVibesRoute(): ReactElement {
     e.stopPropagation();
     e.preventDefault();
 
-    console.log('Delete clicked for vibeId:', vibeId, 'confirmDelete:', confirmDelete);
-
     if (confirmDelete === vibeId) {
-      console.log('Confirming delete for:', vibeId);
       try {
         // Immediately set confirmDelete to null to prevent accidental clicks
         setConfirmDelete(null);
@@ -38,10 +35,9 @@ export default function MyVibesRoute(): ReactElement {
         // This will handle the optimistic UI update
         await deleteVibe(vibeId);
       } catch (error) {
-        console.error('Failed to delete vibe:', error);
+        // Error handling is managed by the useVibes hook
       }
     } else {
-      console.log('Setting confirmDelete to:', vibeId);
       setConfirmDelete(vibeId);
 
       // Prevent the global click handler from immediately clearing the confirmation
@@ -54,7 +50,6 @@ export default function MyVibesRoute(): ReactElement {
   const handlePageClick = (e: MouseEvent) => {
     // Don't clear if the click originated from a delete button
     if (confirmDelete && !(e.target as Element).closest('button[data-action="delete"]')) {
-      console.log('Clearing confirmDelete from document click');
       setConfirmDelete(null);
     }
   };

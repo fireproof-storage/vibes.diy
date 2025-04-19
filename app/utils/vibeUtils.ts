@@ -28,8 +28,6 @@ export async function listLocalVibes(): Promise<LocalVibe[]> {
     // Filter for databases that start with 'fp.vibe-'
     const vibeDbs = databases.filter((db) => db.name && db.name.startsWith('fp.vibe-'));
 
-    console.log('Found vibe databases:', vibeDbs);
-
     // Create an array of promises to fetch the vibe document from each database
     const vibePromises = vibeDbs.map(async (dbInfo) => {
       if (!dbInfo.name) return null;
@@ -43,7 +41,6 @@ export async function listLocalVibes(): Promise<LocalVibe[]> {
       try {
         // Get the vibe document
         const vibeDoc = (await db.get('vibe')) as VibeDocument;
-        console.log('Retrieved vibe document:', vibeDoc);
 
         if (vibeDoc && vibeDoc._id === 'vibe') {
           // Get creation timestamp from vibeDoc or fallback to current time
@@ -73,7 +70,7 @@ export async function listLocalVibes(): Promise<LocalVibe[]> {
               }
             }
           } catch (error) {
-            console.error('Error fetching screenshot:', error);
+            // Silently continue if screenshot can't be fetched
             // We already have the createdTimestamp from vibeDoc, no need to set it here
           }
 
@@ -86,7 +83,7 @@ export async function listLocalVibes(): Promise<LocalVibe[]> {
           };
         }
       } catch (error) {
-        console.error(`Error retrieving vibe from database ${dbInfo.name}:`, error);
+        // Skip this vibe if we can't retrieve it
       }
 
       return null;
@@ -97,7 +94,7 @@ export async function listLocalVibes(): Promise<LocalVibe[]> {
     // Filter out null values and cast to LocalVibe[] to satisfy TypeScript
     return results.filter((vibe) => vibe !== null) as LocalVibe[];
   } catch (error) {
-    console.error('Error listing local vibes:', error);
+    // Return empty array if there's any error in the process
     return [];
   }
 }
@@ -110,11 +107,8 @@ export async function listLocalVibes(): Promise<LocalVibe[]> {
 export async function deleteVibeDatabase(vibeId: string): Promise<void> {
   try {
     const dbName = `fp.vibe-${vibeId}`;
-    console.log(`Attempting to delete database: ${dbName}`);
     await indexedDB.deleteDatabase(dbName);
-    console.log(`Successfully deleted database: ${dbName}`);
   } catch (error) {
-    console.error(`Error deleting vibe database ${vibeId}:`, error);
     throw error;
   }
 }
