@@ -98,7 +98,7 @@ export default function MyVibesRoute(): ReactElement {
       headerLeft={
         <div className="flex items-center">
           <a href="/" className="flex items-center px-2 py-1 hover:opacity-80" title="Home">
-            <VibesDIYLogo width={100} />
+            <VibesDIYLogo width={100} className="pointer-events-none" />
           </a>
         </div>
       }
@@ -110,7 +110,7 @@ export default function MyVibesRoute(): ReactElement {
             <div>
               <h2 className="mb-4 text-2xl font-bold">My Vibes</h2>
               <p className="text-accent-01 dark:text-accent-01 mb-6">
-                Your published vibes are listed on your{' '}
+                Published and favorited vibes are listed on your{' '}
                 <a
                   href={`/~${userId}`}
                   className="text-light-primary dark:text-dark-primary hover:text-blue-500"
