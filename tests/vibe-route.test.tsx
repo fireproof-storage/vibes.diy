@@ -45,7 +45,7 @@ describe('Vibe Route', () => {
     const remixButton = screen.getByRole('link', { name: /remix/i });
     expect(remixButton).toBeInTheDocument();
     expect(remixButton.getAttribute('href')).toBe('/remix/sound-panda-9086');
-    
+
     // Find the label that indicates we're viewing a published vibe
     const viewingLabel = screen.getByText('Viewing Published Vibe');
     expect(viewingLabel).toBeInTheDocument();
