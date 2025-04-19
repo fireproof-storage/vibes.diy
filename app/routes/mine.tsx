@@ -112,7 +112,7 @@ export default function MyVibesRoute(): ReactElement {
               <p className="text-accent-01 dark:text-accent-01 mb-6">
                 Your published vibes are listed on your{' '}
                 <a
-                  href={`/space/${userId}`}
+                  href={`/~${userId}`}
                   className="text-light-primary dark:text-dark-primary hover:text-blue-500"
                 >
                   vibespace

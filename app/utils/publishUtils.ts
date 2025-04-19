@@ -135,7 +135,7 @@ export async function publishApp({
     const data = await response.json();
     if (data.success && data.app?.slug) {
       // Construct the app URL from the response data
-      const appUrl = data.appUrl || `https://${data.app.slug}.diy.vibe`;
+      const appUrl = data.appUrl || `https://${data.app.slug}.vibecode.garden`;
 
       // Get the user's vibespace database to check for existing data
       const userVibespaceDb = fireproof(`vu-${userId}`);

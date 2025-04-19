@@ -9,7 +9,7 @@ export default [
   route('chat/:sessionId/:title/code', './routes/home.tsx', { id: 'chat-code' }),
   route('chat/:sessionId/:title/data', './routes/home.tsx', { id: 'chat-data' }),
   route('vibes/mine', './routes/mine.tsx', { id: 'my-vibes' }),
-  route('space/:userId', './routes/space.tsx', { id: 'user-space' }),
+
   route('settings', './routes/settings.tsx', { id: 'settings' }),
   route('about', './routes/about.tsx', { id: 'about' }),
   route('auth/callback', './routes/auth-callback.tsx', { id: 'auth-callback' }),
@@ -17,4 +17,6 @@ export default [
   route('vibe/:vibeSlug', './routes/vibe.tsx', { id: 'vibe-iframe' }),
   route('legal/privacy', './routes/legal/privacy.tsx', { id: 'privacy-policy' }),
   route('legal/tos', './routes/legal/tos.tsx', { id: 'terms-of-service' }),
+  // This should be last since it's a catch-all with a prefix
+  route(':prefixUserId', './routes/space.tsx', { id: 'user-space' }),
 ] satisfies RouteConfig;

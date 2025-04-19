@@ -79,7 +79,6 @@ const DatabaseData: React.FC<{ dbName: string; sessionId: string }> = ({ dbName,
 
   // Initial fetch when database is ready
   useEffect(() => {
-    console.log('Database ready effect triggered:', database?.name);
     if (database && database.name) {
       fetchDocs();
     }

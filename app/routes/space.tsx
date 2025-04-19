@@ -11,6 +11,7 @@ interface VibeDocument {
   _id: string;
   title?: string;
   slug?: string;
+  createdAt?: number;
   publishedUrl?: string;
   _attachments?: {
     screenshot?: {
@@ -28,21 +29,29 @@ export function meta() {
 
 export default function SpaceRoute(): ReactElement {
   const navigate = useNavigate();
-  const { userId } = useParams();
+  const { prefixUserId } = useParams();
 
-  // Console log the username parameter
-  console.log('Space dbName:', `vu-${userId}`);
+  // Check if the prefix is a tilde (~) and extract the userId
+  // This handles our custom /~userId route pattern
+  if (!prefixUserId || !prefixUserId.startsWith('~')) {
+    // If this isn't a vibespace URL (doesn't start with ~), redirect to home
+    navigate('/');
+    return <div>Redirecting...</div>;
+  }
+
+  // Extract the actual userId after the tilde
+  const userId = prefixUserId.substring(1);
 
   // Use Fireproof with the user-specific database
   const { useAllDocs } = useFireproof(`vu-${userId}`);
 
   // Query all documents in the database
-  const allDocsResult = useAllDocs();
+  const allDocsResult = useAllDocs() as { docs: VibeDocument[] };
   const docs = allDocsResult.docs || [];
   const isLoading = !allDocsResult.docs; // If docs is undefined, it's still loading
 
   // Type the documents properly
-  const vibes = docs as unknown as VibeDocument[];
+  const vibes = docs.sort((b, a) => (a.createdAt || 0) - (b.createdAt || 0)) as VibeDocument[];
 
   // Log all documents when they change
   useEffect(() => {
@@ -100,7 +109,7 @@ export default function SpaceRoute(): ReactElement {
 
                   {doc.publishedUrl && (
                     <img
-                      src={`${doc.publishedUrl.replace(/\/$/, '')}/screenshot.png`}
+                      src={`${doc.publishedUrl}/screenshot.png`}
                       alt={`Screenshot from ${doc.title || doc._id}`}
                       className="border-light-decorative-01 dark:border-dark-decorative-01 mt-3 mb-4 w-full rounded-md border"
                       loading="lazy"
