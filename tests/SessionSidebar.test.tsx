@@ -52,8 +52,11 @@ describe('SessionSidebar', () => {
       <SessionSidebar isVisible={true} onClose={onClose} {...mockSessionSidebarProps} />
     );
 
-    // Check that the sidebar title is rendered with the correct vibe count
-    expect(screen.getByText('No Vibes Yet')).toBeDefined();
+    // Check that the menu items are rendered
+    expect(screen.getByText('Home')).toBeInTheDocument();
+    expect(screen.getByText('My Vibes')).toBeInTheDocument();
+    expect(screen.getByText('Settings')).toBeInTheDocument();
+    expect(screen.getByText('About')).toBeInTheDocument();
 
     // The sidebar is the first div within the container that has position fixed
     const sidebarContainer = container.querySelector('div > div'); // First div inside the container div
@@ -70,13 +73,21 @@ describe('SessionSidebar', () => {
     expect(onClose).toHaveBeenCalled();
   });
 
-  it('handles sidebar navigation', () => {
+  it('handles sidebar navigation links', () => {
     const onClose = vi.fn();
     render(<SessionSidebar isVisible={true} onClose={onClose} {...mockSessionSidebarProps} />);
 
-    // Check that "No saved sessions yet" message appears when there are no sessions
-    const noSessionsMessage = screen.getByText('No saved sessions yet');
-    expect(noSessionsMessage).toBeInTheDocument();
+    // Find all navigation links
+    const homeLink = screen.getByText('Home').closest('a');
+    const myVibesLink = screen.getByText('My Vibes').closest('a');
+    const settingsLink = screen.getByText('Settings').closest('a');
+    const aboutLink = screen.getByText('About').closest('a');
+
+    // Check that the links have the right URLs
+    expect(homeLink).toHaveAttribute('href', '/');
+    expect(myVibesLink).toHaveAttribute('href', '/vibes/mine');
+    expect(settingsLink).toHaveAttribute('href', '/settings');
+    expect(aboutLink).toHaveAttribute('href', '/about');
   });
 
   it('closes sidebar on mobile when clicking close button', () => {
@@ -122,34 +133,35 @@ describe('SessionSidebar', () => {
     expect(invisibleSidebar?.classList.toString()).toContain('w-0');
   });
 
-  it('handles screenshots correctly', () => {
+  it('has navigation items rendered correctly', () => {
     const onClose = vi.fn();
 
-    // We need to wrap this in act because it causes state updates when file.file() is called
+    // We need to wrap this in act because it might cause state updates
     act(() => {
       render(<SessionSidebar isVisible={true} onClose={onClose} {...mockSessionSidebarProps} />);
     });
 
-    // Verify that the sidebar is rendered
-    const sidebarElement = screen.getByText('No Vibes Yet').closest('div');
-    expect(sidebarElement).toBeInTheDocument();
+    // Verify that the navigation menu is rendered
+    const homeLink = screen.getByText('Home');
+    const myVibesLink = screen.getByText('My Vibes');
+    const settingsLink = screen.getByText('Settings');
+    const aboutLink = screen.getByText('About');
 
-    // Since createObjectURL would be called in a real implementation, verify our mock is in place
-    expect(global.URL.createObjectURL).toBeDefined();
+    expect(homeLink).toBeInTheDocument();
+    expect(myVibesLink).toBeInTheDocument();
+    expect(settingsLink).toBeInTheDocument();
+    expect(aboutLink).toBeInTheDocument();
   });
 
-  it('shows Faves instead of Vibes when filtering favorites', () => {
+  it('has navigation links that call onClose when clicked', () => {
     const onClose = vi.fn();
     render(<SessionSidebar isVisible={true} onClose={onClose} {...mockSessionSidebarProps} />);
 
-    // First check that it shows Vibes initially
-    expect(screen.getByText('No Vibes Yet')).toBeInTheDocument();
+    // Find one of the navigation links
+    const homeLink = screen.getByText('Home').closest('a');
 
-    // Find and click the favorites filter button
-    const favoritesButton = screen.getByTitle('Show favorites only');
-    fireEvent.click(favoritesButton);
-
-    // Now check that it shows Faves
-    expect(screen.getByText('No Faves Yet')).toBeInTheDocument();
+    // Click the link and verify onClose is called
+    fireEvent.click(homeLink!);
+    expect(onClose).toHaveBeenCalled();
   });
 });

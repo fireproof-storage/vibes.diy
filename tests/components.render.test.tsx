@@ -154,17 +154,16 @@ describe('Component Rendering', () => {
       );
       // Check that it doesn't have the hidden class
       expect(container.firstChild).not.toHaveClass('-translate-x-full');
+
+      // Check that navigation menu items are rendered
+      expect(screen.getByText('Home')).toBeInTheDocument();
+      expect(screen.getByText('My Vibes')).toBeInTheDocument();
     });
 
-    it('renders session list', () => {
+    it('shows navigation menu items', () => {
       render(<SessionSidebar isVisible={true} onClose={onClose} {...mockSessionSidebarProps} />);
-      // Check that session elements are rendered
-      expect(screen.getByText('No saved sessions yet')).toBeInTheDocument();
-    });
-
-    it('shows empty state when no sessions', () => {
-      render(<SessionSidebar isVisible={true} onClose={onClose} {...mockSessionSidebarProps} />);
-      expect(screen.getByText('No saved sessions yet')).toBeInTheDocument();
+      expect(screen.getByText('Settings')).toBeInTheDocument();
+      expect(screen.getByText('About')).toBeInTheDocument();
     });
 
     it('has a close button that works', () => {
