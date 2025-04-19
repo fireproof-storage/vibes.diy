@@ -4,6 +4,7 @@ import { InfoIcon } from './SessionSidebar/InfoIcon';
 import { StarIcon } from './SessionSidebar/StarIcon';
 import { HomeIcon } from './SessionSidebar/HomeIcon';
 import type { SessionSidebarProps } from '../types/chat';
+import VibesDIYLogo from './VibesDIYLogo';
 
 /**
  * Component that displays a navigation sidebar with menu items
@@ -30,7 +31,6 @@ function SessionSidebar({ isVisible, onClose }: SessionSidebarProps) {
     };
   }, [isVisible, onClose]);
 
-
   // Conditionally render content but keep animation classes
   return (
     <div
@@ -41,9 +41,8 @@ function SessionSidebar({ isVisible, onClose }: SessionSidebarProps) {
     >
       <div className="flex h-full flex-col overflow-auto">
         <div className="border-light-decorative-01 dark:border-dark-decorative-00 flex items-center justify-between border-b p-4">
-          <h2 className="text-light-primary dark:text-dark-primary text-lg font-semibold">
-            Menu
-          </h2>
+          <VibesDIYLogo width={100} className="pointer-events-none -mt-18 -mb-20 -ml-2" />
+
           <button
             type="button"
             onClick={onClose}
@@ -74,9 +73,9 @@ function SessionSidebar({ isVisible, onClose }: SessionSidebarProps) {
               <a
                 href="/"
                 onClick={() => onClose()}
-                className="flex items-center rounded-md px-4 py-3 text-sm font-medium hover:bg-light-background-01 dark:hover:bg-dark-background-01"
+                className="hover:bg-light-background-01 dark:hover:bg-dark-background-01 flex items-center rounded-md px-4 py-3 text-sm font-medium"
               >
-                <HomeIcon className="mr-3 h-5 w-5 text-accent-01" />
+                <HomeIcon className="text-accent-01 mr-3 h-5 w-5" />
                 <span>Home</span>
               </a>
             </li>
@@ -84,9 +83,9 @@ function SessionSidebar({ isVisible, onClose }: SessionSidebarProps) {
               <a
                 href="/vibes/mine"
                 onClick={() => onClose()}
-                className="flex items-center rounded-md px-4 py-3 text-sm font-medium hover:bg-light-background-01 dark:hover:bg-dark-background-01"
+                className="hover:bg-light-background-01 dark:hover:bg-dark-background-01 flex items-center rounded-md px-4 py-3 text-sm font-medium"
               >
-                <StarIcon className="mr-3 h-5 w-5 text-accent-01" />
+                <StarIcon className="text-accent-01 mr-3 h-5 w-5" />
                 <span>My Vibes</span>
               </a>
             </li>
@@ -94,9 +93,9 @@ function SessionSidebar({ isVisible, onClose }: SessionSidebarProps) {
               <a
                 href="/settings"
                 onClick={() => onClose()}
-                className="flex items-center rounded-md px-4 py-3 text-sm font-medium hover:bg-light-background-01 dark:hover:bg-dark-background-01"
+                className="hover:bg-light-background-01 dark:hover:bg-dark-background-01 flex items-center rounded-md px-4 py-3 text-sm font-medium"
               >
-                <GearIcon className="mr-3 h-5 w-5 text-accent-01" />
+                <GearIcon className="text-accent-01 mr-3 h-5 w-5" />
                 <span>Settings</span>
               </a>
             </li>
@@ -104,9 +103,9 @@ function SessionSidebar({ isVisible, onClose }: SessionSidebarProps) {
               <a
                 href="/about"
                 onClick={() => onClose()}
-                className="flex items-center rounded-md px-4 py-3 text-sm font-medium hover:bg-light-background-01 dark:hover:bg-dark-background-01"
+                className="hover:bg-light-background-01 dark:hover:bg-dark-background-01 flex items-center rounded-md px-4 py-3 text-sm font-medium"
               >
-                <InfoIcon className="mr-3 h-5 w-5 text-accent-01" />
+                <InfoIcon className="text-accent-01 mr-3 h-5 w-5" />
                 <span>About</span>
               </a>
             </li>
