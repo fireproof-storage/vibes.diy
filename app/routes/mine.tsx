@@ -1,10 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import SimpleAppLayout from '../components/SimpleAppLayout';
 import { HomeIcon } from '../components/SessionSidebar/HomeIcon';
 import { ImgFile } from '../components/SessionSidebar/ImgFile';
 import { useSession } from '../hooks/useSession';
-import { listLocalVibes, deleteVibeDatabase, type LocalVibe } from '../utils/vibeUtils';
+import { useVibes } from '../hooks/useVibes';
 import type { ReactElement } from 'react';
 
 export function meta() {
@@ -18,24 +18,9 @@ export default function MyVibesRoute(): ReactElement {
   const navigate = useNavigate();
   // We need to call useSession() to maintain context but don't need its values yet
   useSession();
-  const [vibes, setVibes] = useState<LocalVibe[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  // Use our custom hook for vibes state management
+  const { vibes, isLoading, deleteVibe } = useVibes();
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
-
-  // Function to load vibes
-  const loadVibes = async () => {
-    try {
-      setIsLoading(true);
-      console.log('Fetching vibes...');
-      const localVibes = await listLocalVibes();
-      console.log('Retrieved vibes:', localVibes);
-      setVibes(localVibes);
-    } catch (error) {
-      console.error('Failed to load vibes:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   // Handle deleting a vibe
   const handleDeleteClick = async (vibeId: string, e: React.MouseEvent) => {
@@ -49,10 +34,9 @@ export default function MyVibesRoute(): ReactElement {
       try {
         // Immediately set confirmDelete to null to prevent accidental clicks
         setConfirmDelete(null);
-        await deleteVibeDatabase(vibeId);
-        console.log('Database deleted successfully, refreshing list');
-        // Refresh the vibes list
-        await new Promise((resolve) => setTimeout(resolve, 3000)).then(() => loadVibes());
+        // Use the deleteVibe function from our custom hook
+        // This will handle the optimistic UI update
+        await deleteVibe(vibeId);
       } catch (error) {
         console.error('Failed to delete vibe:', error);
       }
@@ -75,17 +59,8 @@ export default function MyVibesRoute(): ReactElement {
     }
   };
 
-  useEffect(() => {
-    loadVibes();
-  }, []);
-
-  // Log when vibes state changes
-  useEffect(() => {
-    console.log('Vibes state updated:', vibes);
-  }, [vibes]);
-
   // Add click handler to document to clear delete confirmation when clicking elsewhere
-  useEffect(() => {
+  React.useEffect(() => {
     // Use capture phase to handle document clicks before other handlers
     document.addEventListener('click', handlePageClick, true);
     return () => {
