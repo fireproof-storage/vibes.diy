@@ -48,10 +48,10 @@ export async function listLocalVibes(): Promise<LocalVibe[]> {
         if (vibeDoc && vibeDoc._id === 'vibe') {
           // Get creation timestamp from vibeDoc or fallback to current time
           // Convert timestamp to ISO string for consistent formatting
-          const createdTimestamp: string = vibeDoc.created_at 
+          const createdTimestamp: string = vibeDoc.created_at
             ? new Date(vibeDoc.created_at).toISOString()
             : new Date('2025-02-02T15:17:00Z').toISOString();
-            
+
           // Variable to store screenshot if found
           let screenshot: { file: () => Promise<File>; type: string } | undefined;
 
@@ -66,7 +66,7 @@ export async function listLocalVibes(): Promise<LocalVibe[]> {
 
             if (result.rows.length > 0) {
               const screenshotDoc = result.rows[0].doc as any;
-              
+
               // Get the screenshot file if available
               if (screenshotDoc._files && screenshotDoc._files.screenshot) {
                 screenshot = screenshotDoc._files.screenshot;
