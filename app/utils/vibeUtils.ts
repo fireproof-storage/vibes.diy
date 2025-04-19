@@ -1,4 +1,5 @@
 import { fireproof } from 'use-fireproof';
+import { updateUserVibespaceDoc } from './databaseManager';
 import type { VibeDocument } from '../types/chat';
 
 /**
@@ -145,44 +146,13 @@ export async function toggleVibeFavorite(vibeId: string, userId?: string): Promi
     // If userId is provided AND the vibe has been published, update the user's space database
     if (userId && vibeDoc.publishedUrl) {
       try {
-        // Get the user's vibe space database
-        const userVibespaceDb = fireproof(`vu-${userId}`);
-
         // Extract the slug from the publishedUrl if available
         const slug = vibeDoc.publishedUrl.split('/').pop()?.split('.')[0] || '';
 
-        // Try to get the existing document or create a new one
-        // For consistency, use the same pattern as in publishUtils.ts
-        const existingDoc = await userVibespaceDb.get(`app-${slug}`).catch(() => ({
-          _id: `app-${slug}`,
-        }));
+        // No need to fetch screenshots - they can be accessed via publishedUrl + 'screenshot.png'
 
-        // Check if there's a screenshot
-        let screenshot;
-        try {
-          // Query for the most recent screenshot document
-          const result = await db.query('type', {
-            key: 'screenshot',
-            includeDocs: true,
-            descending: true,
-            limit: 1,
-          });
-
-          if (result.rows.length > 0) {
-            const screenshotDoc = result.rows[0].doc as any;
-            // Get the screenshot file if available
-            if (screenshotDoc._files && screenshotDoc._files.screenshot) {
-              screenshot = screenshotDoc._files.screenshot;
-            }
-          }
-        } catch (screenshotError) {
-          // Silently continue if screenshot can't be fetched
-          console.error('Failed to fetch screenshot:', screenshotError);
-        }
-
-        // Update the document in the user's space database
-        await userVibespaceDb.put({
-          ...existingDoc,
+        // Use the shared utility function to update the user's vibespace
+        await updateUserVibespaceDoc(userId, slug, {
           id: vibeId, // Preserve the original vibeId
           favorite: updatedVibeDoc.favorite,
           title: vibeDoc.title,
@@ -190,8 +160,6 @@ export async function toggleVibeFavorite(vibeId: string, userId?: string): Promi
           remixOf: vibeDoc.remixOf, // Include remixOf field
           publishedUrl: vibeDoc.publishedUrl,
           createdAt: vibeDoc.created_at,
-          lastUpdated: Date.now(),
-          _files: screenshot ? { screenshot } : undefined,
         });
 
         console.log(`Updated published vibe ${vibeId} in user ${userId}'s space`, {

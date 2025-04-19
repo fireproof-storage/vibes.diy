@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import SimpleAppLayout from '../components/SimpleAppLayout';
-import { ImgFile } from '../components/SessionSidebar/ImgFile';
+
 import VibesDIYLogo from '../components/VibesDIYLogo';
 import type { ReactElement } from 'react';
 import { useFireproof } from 'use-fireproof';
@@ -31,7 +31,7 @@ export default function SpaceRoute(): ReactElement {
   const { userId } = useParams();
 
   // Console log the username parameter
-  console.log('Space username:', userId);
+  console.log('Space dbName:', `vu-${userId}`);
 
   // Use Fireproof with the user-specific database
   const { useAllDocs } = useFireproof(`vu-${userId}`);
@@ -98,17 +98,12 @@ export default function SpaceRoute(): ReactElement {
                     <h3 className="mb-1 text-lg font-medium">{doc.title || doc._id}</h3>
                   </div>
 
-                  {doc._attachments?.screenshot?.data && (
-                    <ImgFile
-                      file={{
-                        file: async () =>
-                          new File([doc._attachments!.screenshot!.data], 'screenshot.png', {
-                            type: 'image/png',
-                          }),
-                        type: 'image/png',
-                      }}
+                  {doc.publishedUrl && (
+                    <img
+                      src={`${doc.publishedUrl.replace(/\/$/, '')}/screenshot.png`}
                       alt={`Screenshot from ${doc.title || doc._id}`}
-                      className="border-light-decorative-01 dark:border-dark-decorative-01 mt-3 mb-4 rounded-md border"
+                      className="border-light-decorative-01 dark:border-dark-decorative-01 mt-3 mb-4 rounded-md border w-full"
+                      loading="lazy"
                     />
                   )}
 

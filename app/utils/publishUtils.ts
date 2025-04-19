@@ -4,7 +4,7 @@
 
 import { fireproof } from 'use-fireproof';
 import { normalizeComponentExports } from './normalizeComponentExports';
-import { getSessionDatabaseName } from './databaseManager';
+import { getSessionDatabaseName, updateUserVibespaceDoc } from './databaseManager';
 
 /**
  * Transform bare import statements to use esm.sh URLs
@@ -134,20 +134,27 @@ export async function publishApp({
 
     const data = await response.json();
     if (data.success && data.app?.slug) {
-      const url = new URL(API_BASE_URL);
-      const appUrl = `${url.protocol}//${data.app.slug}.${url.hostname}${url.port ? `:${url.port}` : ''}`;
+      // Construct the app URL from the response data
+      const appUrl = data.appUrl || `https://${data.app.slug}.diy.vibe`;
 
+      // Get the user's vibespace database to check for existing data
       const userVibespaceDb = fireproof(`vu-${userId}`);
+      const docId = `app-${data.app.slug}`;
 
-      const appDoc = await userVibespaceDb.get(`app-${data.app.slug}`).catch(() => ({
-        _id: `app-${data.app.slug}`,
-      }));
+      // Try to get the existing document to preserve metadata like favorite status
+      const existingDoc = (await userVibespaceDb.get(docId).catch(() => null)) as any;
 
-      // Update the app document with the new URL
-      await userVibespaceDb.put({
-        ...appDoc,
+      // Use the shared utility function to update the user's vibespace
+      await updateUserVibespaceDoc(userId, data.app.slug, {
         id: sessionId,
+        title: data.app.title || data.app.config?.title || '',
+        slug: data.app.slug,
         app: data.app,
+        publishedUrl: appUrl,
+        // Preserve favorite status if the document already exists
+        favorite: existingDoc?.favorite || false,
+        // Keep remix information
+        remixOf: data.app.remixOf || existingDoc?.remixOf,
       });
 
       // Update the session with the published URL if callback provided

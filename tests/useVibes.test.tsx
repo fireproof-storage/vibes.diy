@@ -13,6 +13,17 @@ vi.mock('../app/utils/vibeUtils', () => {
   };
 });
 
+// Mock the useAuth hook
+vi.mock('../app/hooks/useAuth', () => {
+  return {
+    useAuth: () => ({
+      userId: 'test-user-id',
+      isAuthenticated: true,
+      isLoading: false,
+    }),
+  };
+});
+
 describe('useVibes', () => {
   // Mock data for testing
   const mockVibes: LocalVibe[] = [
@@ -169,7 +180,7 @@ describe('useVibes', () => {
     });
 
     // Assert
-    expect(toggleVibeFavorite).toHaveBeenCalledWith('test-vibe-1');
+    expect(toggleVibeFavorite).toHaveBeenCalledWith('test-vibe-1', 'test-user-id');
 
     // Check optimistic update - first vibe should now be favorited
     expect(result.current.vibes[0].favorite).toBe(true);
@@ -205,7 +216,7 @@ describe('useVibes', () => {
     await waitFor(() => expect(result.current.error).toBeDefined());
 
     // Assert
-    expect(toggleVibeFavorite).toHaveBeenCalledWith('test-vibe-1');
+    expect(toggleVibeFavorite).toHaveBeenCalledWith('test-vibe-1', 'test-user-id');
     expect(result.current.error).toBeDefined();
 
     // Should have called listLocalVibes again to restore the state
