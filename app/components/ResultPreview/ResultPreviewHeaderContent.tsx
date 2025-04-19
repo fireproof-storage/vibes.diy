@@ -161,7 +161,6 @@ const ResultPreviewHeaderContent: React.FC<ResultPreviewHeaderContentProps> = ({
           prompt = userMessages[1].text;
         }
       }
-      console.log('Publishing app with prompt:', prompt, title, messages);
 
       const appUrl = await publishApp({
         sessionId,
