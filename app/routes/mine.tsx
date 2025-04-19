@@ -1,9 +1,10 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import SimpleAppLayout from '../components/SimpleAppLayout';
 import { HomeIcon } from '../components/SessionSidebar/HomeIcon';
+import { ImgFile } from '../components/SessionSidebar/ImgFile';
 import { useSession } from '../hooks/useSession';
-import { listLocalVibes, type LocalVibe } from '../utils/vibeUtils';
+import { listLocalVibes, deleteVibeDatabase, type LocalVibe } from '../utils/vibeUtils';
 import type { ReactElement } from 'react';
 
 export function meta() {
@@ -13,27 +14,71 @@ export function meta() {
   ];
 }
 
-export default function MyVibes(): ReactElement {
+export default function MyVibesRoute(): ReactElement {
   const navigate = useNavigate();
-  // We're including the session hook for potential future use
-  const { mainDatabase: _ } = useSession();
+  // We need to call useSession() to maintain context but don't need its values yet
+  useSession();
   const [vibes, setVibes] = useState<LocalVibe[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
+
+  // Function to load vibes
+  const loadVibes = async () => {
+    try {
+      setIsLoading(true);
+      console.log('Fetching vibes...');
+      const localVibes = await listLocalVibes();
+      console.log('Retrieved vibes:', localVibes);
+      setVibes(localVibes);
+    } catch (error) {
+      console.error('Failed to load vibes:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Handle deleting a vibe
+  const handleDeleteClick = async (vibeId: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    e.preventDefault();
+    
+    if (confirmDelete === vibeId) {
+      try {
+        await deleteVibeDatabase(vibeId);
+        // Refresh the vibes list
+        await loadVibes();
+        setConfirmDelete(null);
+      } catch (error) {
+        console.error('Failed to delete vibe:', error);
+      }
+    } else {
+      setConfirmDelete(vibeId);
+    }
+  };
+
+  // Clear confirmation when clicking elsewhere
+  const handlePageClick = () => {
+    if (confirmDelete) {
+      setConfirmDelete(null);
+    }
+  };
 
   useEffect(() => {
-    async function loadVibes() {
-      try {
-        const localVibes = await listLocalVibes();
-        setVibes(localVibes);
-      } catch (error) {
-        console.error('Failed to load vibes:', error);
-      } finally {
-        setIsLoading(false);
-      }
-    }
-
     loadVibes();
   }, []);
+  
+  // Log when vibes state changes
+  useEffect(() => {
+    console.log('Vibes state updated:', vibes);
+  }, [vibes]);
+  
+  // Add click handler to body to clear delete confirmation when clicking elsewhere
+  useEffect(() => {
+    document.body.addEventListener('click', handlePageClick);
+    return () => {
+      document.body.removeEventListener('click', handlePageClick);
+    };
+  }, [confirmDelete]);
 
   const handleVibeClick = (slug: string) => {
     navigate(`/vibe/${slug}`);
@@ -86,22 +131,48 @@ export default function MyVibes(): ReactElement {
                   className="border-light-decorative-01 dark:border-dark-decorative-01 cursor-pointer rounded-md border p-4 transition-colors hover:border-blue-500"
                 >
                   <h3 className="mb-1 text-lg font-medium">{vibe.title}</h3>
+                  <p className="text-light-secondary dark:text-dark-secondary mb-1 text-sm">
+                    ID: {vibe.id.substring(0, 8)}...{vibe.id.slice(-4)}
+                  </p>
                   <p className="text-light-secondary dark:text-dark-secondary mb-3 text-sm">
                     Created: {new Date(vibe.created).toLocaleDateString()}
                   </p>
-                  <div className="flex gap-2">
+                  {vibe.screenshot && (
+                    <ImgFile
+                      file={vibe.screenshot}
+                      alt={`Screenshot from ${vibe.title}`}
+                      className="mt-3 mb-4 rounded-md border border-light-decorative-01 dark:border-dark-decorative-01"
+                    />
+                  )}
+                  <div className="flex space-x-2">
                     <button
-                      onClick={(e) => handleRemixClick(vibe.slug, e)}
-                      className="rounded-md bg-blue-500 px-3 py-1 text-sm text-white transition-colors hover:bg-blue-600"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        e.preventDefault();
+                        handleDeleteClick(vibe.id, e);
+                      }}
+                      className={`${confirmDelete === vibe.id ? 'bg-red-500 text-white' : 'text-red-500'} rounded-md px-3 py-1 text-sm hover:bg-red-500 hover:text-white`}
+                    >
+                      {confirmDelete === vibe.id ? 'Are you Sure? No undo for this.' : 'Delete'}
+                    </button>
+                    <div className="flex-grow"></div>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        e.preventDefault();
+                        handleRemixClick(vibe.slug, e);
+                      }}
+                      className="text-light-secondary dark:text-dark-secondary rounded-md px-3 py-1 text-sm hover:bg-light-decorative-01 dark:hover:bg-dark-decorative-01"
                     >
                       Remix
                     </button>
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
-                        navigate(`/vibe/${vibe.slug}`);
+                        e.preventDefault();
+                        handleVibeClick(vibe.slug);
                       }}
-                      className="bg-light-background-01 text-light-primary hover:bg-light-background-02 dark:bg-dark-decorative-00 dark:text-dark-secondary dark:hover:bg-dark-decorative-01 rounded-md px-3 py-1 text-sm transition-colors"
+                      className="text-light-primary bg-light-decorative-01 dark:text-dark-primary dark:bg-dark-decorative-01 rounded-md px-3 py-1 text-sm hover:bg-blue-500 hover:text-white dark:hover:bg-blue-500"
                     >
                       View
                     </button>
