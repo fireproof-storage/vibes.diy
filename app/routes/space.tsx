@@ -32,18 +32,18 @@ export default function SpaceRoute(): ReactElement {
 
   // Console log the username parameter
   console.log('Space username:', userId);
-  
+
   // Use Fireproof with the user-specific database
   const { useAllDocs } = useFireproof(`vu-${userId}`);
-  
+
   // Query all documents in the database
   const allDocsResult = useAllDocs();
   const docs = allDocsResult.docs || [];
   const isLoading = !allDocsResult.docs; // If docs is undefined, it's still loading
-  
+
   // Type the documents properly
   const vibes = docs as unknown as VibeDocument[];
-  
+
   // Log all documents when they change
   useEffect(() => {
     if (docs && docs.length > 0) {
@@ -52,7 +52,7 @@ export default function SpaceRoute(): ReactElement {
       console.log('No documents found in the database');
     }
   }, [docs, isLoading]);
-  
+
   // Handle clicking the remix button
   const handleRemixClick = (slug: string | undefined) => {
     if (slug) {
@@ -75,9 +75,7 @@ export default function SpaceRoute(): ReactElement {
           <div className="flex items-center justify-between">
             <div>
               <h2 className="mb-4 text-2xl font-bold">Space: {userId}</h2>
-              <p className="text-accent-01 dark:text-accent-01 mb-6">
-                View vibes in this space
-              </p>
+              <p className="text-accent-01 dark:text-accent-01 mb-6">View vibes in this space</p>
             </div>
           </div>
 
@@ -99,25 +97,24 @@ export default function SpaceRoute(): ReactElement {
                   <div className="flex items-center justify-between">
                     <h3 className="mb-1 text-lg font-medium">{doc.title || doc._id}</h3>
                   </div>
-                  
+
                   {doc._attachments?.screenshot?.data && (
                     <ImgFile
                       file={{
-                        file: async () => new File(
-                          [doc._attachments!.screenshot!.data],
-                          'screenshot.png',
-                          { type: 'image/png' }
-                        ),
-                        type: 'image/png'
+                        file: async () =>
+                          new File([doc._attachments!.screenshot!.data], 'screenshot.png', {
+                            type: 'image/png',
+                          }),
+                        type: 'image/png',
                       }}
                       alt={`Screenshot from ${doc.title || doc._id}`}
                       className="border-light-decorative-01 dark:border-dark-decorative-01 mt-3 mb-4 rounded-md border"
                     />
                   )}
-                  
+
                   <div className="flex space-x-2">
                     <div className="flex-grow"></div>
-                    
+
                     {doc.slug && (
                       <button
                         onClick={() => handleRemixClick(doc.slug)}
@@ -126,7 +123,7 @@ export default function SpaceRoute(): ReactElement {
                         Remix
                       </button>
                     )}
-                    
+
                     {doc.publishedUrl && (
                       <a
                         href={doc.publishedUrl}

@@ -5,6 +5,7 @@ import {
   toggleVibeFavorite,
   type LocalVibe,
 } from '../utils/vibeUtils';
+import { useAuth } from './useAuth';
 
 /**
  * Custom hook for managing vibes state
@@ -14,6 +15,9 @@ export function useVibes() {
   const [vibes, setVibes] = useState<LocalVibe[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
+
+  // Get the current user ID from the auth hook
+  const { userId } = useAuth();
 
   // Function to load vibes
   const loadVibes = useCallback(async () => {
@@ -69,7 +73,8 @@ export function useVibes() {
         );
 
         // Update the favorite status in the database
-        await toggleVibeFavorite(vibeId);
+        // Pass the userId to also update the user's vibe space database
+        await toggleVibeFavorite(vibeId, userId);
 
         // We don't need to reload vibes since we've already updated the state optimistically
         // But if you want to ensure DB and state are in sync, you could uncomment this:
@@ -81,7 +86,7 @@ export function useVibes() {
         await loadVibes();
       }
     },
-    [loadVibes]
+    [loadVibes, userId] // Add userId to dependencies array
   );
 
   return {
