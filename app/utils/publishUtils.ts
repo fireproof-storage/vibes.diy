@@ -137,6 +137,19 @@ export async function publishApp({
       const url = new URL(API_BASE_URL);
       const appUrl = `${url.protocol}//${data.app.slug}.${url.hostname}${url.port ? `:${url.port}` : ''}`;
 
+      const userVibespaceDb = fireproof(`vu-${userId}`);
+
+      const appDoc = await userVibespaceDb.get(`app-${data.app.slug}`).catch(() => ({
+        _id: `app-${data.app.slug}`,
+      }));
+
+      // Update the app document with the new URL
+      await userVibespaceDb.put({
+        ...appDoc,
+        id: sessionId,
+        app: data.app,
+      });
+
       // Update the session with the published URL if callback provided
       if (updatePublishedUrl) {
         await updatePublishedUrl(appUrl);
