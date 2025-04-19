@@ -7,6 +7,7 @@ import { useSession } from '../hooks/useSession';
 import { useVibes } from '../hooks/useVibes';
 import VibesDIYLogo from '../components/VibesDIYLogo';
 import type { ReactElement } from 'react';
+// import { useAuth } from '~/hooks/useAuth';
 
 export function meta() {
   return [
@@ -19,6 +20,9 @@ export default function MyVibesRoute(): ReactElement {
   const navigate = useNavigate();
   // We need to call useSession() to maintain context but don't need its values yet
   useSession();
+
+  // const { userId } = useAuth();
+
   // Use our custom hook for vibes state management
   const { vibes, isLoading, deleteVibe, toggleFavorite } = useVibes();
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
@@ -73,7 +77,7 @@ export default function MyVibesRoute(): ReactElement {
     };
   }, [confirmDelete]);
 
-  const handleVibeClick = (id: string) => {
+  const handleEditClick = (id: string) => {
     navigate(`/chat/${id}/app`);
   };
 
@@ -120,7 +124,7 @@ export default function MyVibesRoute(): ReactElement {
                   filled={showOnlyFavorites}
                   className={`h-5 w-5 transition-colors duration-300 ${showOnlyFavorites ? 'text-yellow-500' : 'text-accent-01'} hover:text-yellow-400`}
                 />
-                <span>{showOnlyFavorites ? 'All Vibes' : 'Favorites Only'}</span>
+                <span>{!showOnlyFavorites ? 'Showing All Vibes' : 'Showing Favorites Only'}</span>
               </button>
             </div>
           </div>
@@ -148,7 +152,6 @@ export default function MyVibesRoute(): ReactElement {
               {filteredVibes.map((vibe) => (
                 <div
                   key={vibe.id}
-                  onClick={() => handleVibeClick(vibe.id)}
                   className="border-light-decorative-01 dark:border-dark-decorative-01 cursor-pointer rounded-md border p-4 transition-colors hover:border-blue-500"
                 >
                   <div className="flex items-center justify-between">
@@ -191,11 +194,13 @@ export default function MyVibesRoute(): ReactElement {
                     </button>
                   </div>
                   {vibe.screenshot && (
-                    <ImgFile
-                      file={vibe.screenshot}
-                      alt={`Screenshot from ${vibe.title}`}
-                      className="border-light-decorative-01 dark:border-dark-decorative-01 mt-3 mb-4 rounded-md border"
-                    />
+                    <div onClick={() => handleEditClick(vibe.id)}>
+                      <ImgFile
+                        file={vibe.screenshot}
+                        alt={`Screenshot from ${vibe.title}`}
+                        className="border-light-decorative-01 dark:border-dark-decorative-01 mt-3 mb-4 rounded-md border"
+                      />
+                    </div>
                   )}
                   <div className="flex space-x-2">
                     <button
@@ -225,7 +230,7 @@ export default function MyVibesRoute(): ReactElement {
                       onClick={(e) => {
                         e.stopPropagation();
                         e.preventDefault();
-                        handleVibeClick(vibe.id);
+                        handleEditClick(vibe.id);
                       }}
                       className="text-light-primary bg-light-decorative-01 dark:text-dark-primary dark:bg-dark-decorative-01 rounded-md px-3 py-1 text-sm hover:bg-blue-500 hover:text-white dark:hover:bg-blue-500"
                     >
