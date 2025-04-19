@@ -1,4 +1,3 @@
-import { useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import SimpleAppLayout from '../components/SimpleAppLayout';
 
@@ -53,14 +52,7 @@ export default function SpaceRoute(): ReactElement {
   // Type the documents properly
   const vibes = docs.sort((b, a) => (a.createdAt || 0) - (b.createdAt || 0)) as VibeDocument[];
 
-  // Log all documents when they change
-  useEffect(() => {
-    if (docs && docs.length > 0) {
-      console.log('All documents in database:', docs);
-    } else if (!isLoading) {
-      console.log('No documents found in the database');
-    }
-  }, [docs, isLoading]);
+  // No need to log database contents
 
   // Handle clicking the remix button
   const handleRemixClick = (slug: string | undefined) => {
