@@ -129,8 +129,6 @@ const DatabaseData: React.FC<{ dbName: string; sessionId: string }> = ({ dbName,
     </details>
   );
 
-  console.log('Render state:', { isLoading, docsLength: docs.length });
-
   // Loading state UI
   if (isLoading) {
     return (
