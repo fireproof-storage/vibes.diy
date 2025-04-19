@@ -102,7 +102,7 @@ export default function SpaceRoute(): ReactElement {
                     <img
                       src={`${doc.publishedUrl.replace(/\/$/, '')}/screenshot.png`}
                       alt={`Screenshot from ${doc.title || doc._id}`}
-                      className="border-light-decorative-01 dark:border-dark-decorative-01 mt-3 mb-4 rounded-md border w-full"
+                      className="border-light-decorative-01 dark:border-dark-decorative-01 mt-3 mb-4 w-full rounded-md border"
                       loading="lazy"
                     />
                   )}

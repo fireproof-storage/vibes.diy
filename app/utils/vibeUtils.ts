@@ -162,16 +162,13 @@ export async function toggleVibeFavorite(vibeId: string, userId?: string): Promi
           createdAt: vibeDoc.created_at,
         });
 
-        console.log(`Updated published vibe ${vibeId} in user ${userId}'s space`, {
-          favorite: updatedVibeDoc.favorite,
-          slug: slug,
-        });
+        // Successfully updated the vibe in user's space
       } catch (spaceError) {
-        // Log error but don't fail the entire operation
-        console.error('Failed to update user vibe space:', spaceError);
+        // Handle error but don't fail the entire operation
+        // Silently continue if update to user space fails
       }
     } else if (userId) {
-      console.log(`Skipping update for unpublished vibe ${vibeId} in user ${userId}'s space`);
+      // Skip updates for unpublished vibes
     }
 
     return updatedVibeDoc;

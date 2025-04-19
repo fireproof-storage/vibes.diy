@@ -47,14 +47,9 @@ export async function updateUserVibespaceDoc(
 
     // Update the document
     const result = await userVibespaceDb.put(updatedDoc);
-    console.log(`Updated document in user ${userId}'s vibespace:`, {
-      slug,
-      id: result.id,
-    });
-
     return result;
   } catch (error) {
-    console.error('Failed to update user vibespace:', error);
+    // Re-throw the error to be handled by the caller
     throw error;
   }
 }
