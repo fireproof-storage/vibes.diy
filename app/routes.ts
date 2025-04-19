@@ -12,6 +12,7 @@ export default [
   route('about', './routes/about.tsx', { id: 'about' }),
   route('auth/callback', './routes/auth-callback.tsx', { id: 'auth-callback' }),
   route('remix/:vibeSlug?', './routes/remix.tsx', { id: 'remix' }),
+  route('vibe/:vibeSlug', './routes/vibe.tsx', { id: 'vibe-iframe' }),
   route('legal/privacy', './routes/legal/privacy.tsx', { id: 'privacy-policy' }),
   route('legal/tos', './routes/legal/tos.tsx', { id: 'terms-of-service' }),
 ] satisfies RouteConfig;
