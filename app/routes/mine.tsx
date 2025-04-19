@@ -152,7 +152,22 @@ export default function MyVibesRoute(): ReactElement {
                   className="border-light-decorative-01 dark:border-dark-decorative-01 cursor-pointer rounded-md border p-4 transition-colors hover:border-blue-500"
                 >
                   <div className="flex items-center justify-between">
-                    <h3 className="mb-1 text-lg font-medium">{vibe.title}</h3>
+                    <div>
+                      <h3 className="mb-1 text-lg font-medium">{vibe.title}</h3>
+                      {vibe.publishedUrl ? (
+                        <a 
+                          href={vibe.publishedUrl} 
+                          className="text-blue-500 hover:text-blue-700 text-xs"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          {vibe.publishedUrl && (vibe.publishedUrl.split('/').pop()?.split('.')[0])}
+                        </a>
+                      ) : (
+                        <span className="text-xs text-accent-03">Not published</span>
+                      )}
+                    </div>
                     <button
                       onClick={(e) => handleToggleFavorite(vibe.id, e)}
                       className="text-accent-01 ml-2 hover:text-yellow-500 focus:outline-none"
@@ -200,7 +215,7 @@ export default function MyVibesRoute(): ReactElement {
                       }}
                       className="text-light-primary bg-light-decorative-01 dark:text-dark-primary dark:bg-dark-decorative-01 rounded-md px-3 py-1 text-sm hover:bg-blue-500 hover:text-white dark:hover:bg-blue-500"
                     >
-                      View
+                      Edit
                     </button>
                   </div>
                 </div>

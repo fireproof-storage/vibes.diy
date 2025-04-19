@@ -10,6 +10,7 @@ export interface LocalVibe {
   slug: string;
   created: string;
   favorite?: boolean;
+  publishedUrl?: string;
   screenshot?: {
     file: () => Promise<File>;
     type: string;
@@ -81,6 +82,7 @@ export async function listLocalVibes(): Promise<LocalVibe[]> {
             slug: vibeDoc.remixOf || vibeId, // Use remixOf as the slug
             created: createdTimestamp,
             favorite: vibeDoc.favorite || false,
+            publishedUrl: vibeDoc.publishedUrl,
             screenshot: screenshot,
           };
         }
