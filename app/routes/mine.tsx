@@ -154,19 +154,33 @@ export default function MyVibesRoute(): ReactElement {
                   <div className="flex items-center justify-between">
                     <div>
                       <h3 className="mb-1 text-lg font-medium">{vibe.title}</h3>
-                      {vibe.publishedUrl ? (
-                        <a 
-                          href={vibe.publishedUrl} 
-                          className="text-blue-500 hover:text-blue-700 text-xs"
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          onClick={(e) => e.stopPropagation()}
-                        >
-                          {vibe.publishedUrl && (vibe.publishedUrl.split('/').pop()?.split('.')[0])}
-                        </a>
-                      ) : (
-                        <span className="text-xs text-accent-03">Not published</span>
-                      )}
+                      <div className="flex items-center space-x-2">
+                        {vibe.slug && vibe.slug !== vibe.id && (
+                          <a
+                            href={`https://${vibe.slug}.vibecode.garden`}
+                            className="text-xs text-gray-500 hover:text-gray-700"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            onClick={(e) => e.stopPropagation()}
+                            title={`View remix source: ${vibe.slug}`}
+                          >
+                            🔀
+                          </a>
+                        )}
+                        {vibe.publishedUrl ? (
+                          <a
+                            href={vibe.publishedUrl}
+                            className="text-xs text-blue-500 hover:text-blue-700"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            {vibe.publishedUrl && vibe.publishedUrl.split('/').pop()?.split('.')[0]}
+                          </a>
+                        ) : (
+                          <span className="text-accent-03 text-xs">Not published</span>
+                        )}
+                      </div>
                     </div>
                     <button
                       onClick={(e) => handleToggleFavorite(vibe.id, e)}
