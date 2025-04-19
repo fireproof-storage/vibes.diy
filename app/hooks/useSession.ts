@@ -69,14 +69,13 @@ export function useSession(routedSessionId?: string) {
     docs: ChatMessageDocument[];
   };
 
-  // Update session title (in main database and session database)
+  // Update session title (in session database only)
   const updateTitle = useCallback(
     async (title: string) => {
-      // Update title in main database
-      session.title = title;
-      await mainDatabase.put(session);
+      // Update local session state for UI
       mergeSession({ title });
 
+      // Store title in the vibe document
       const currentVibeDoc = await sessionDatabase.get<VibeDocument>('vibe').catch(() => null);
       if (currentVibeDoc) {
         currentVibeDoc.title = title;
@@ -89,17 +88,30 @@ export function useSession(routedSessionId?: string) {
         });
       }
     },
-    [mainDatabase, mergeSession, session, sessionDatabase]
+    [mergeSession, sessionDatabase]
   );
 
-  // Update published URL (in main database)
+  // Update published URL (in vibe document in session database only)
   const updatePublishedUrl = useCallback(
     async (publishedUrl: string) => {
-      session.publishedUrl = publishedUrl;
-      await mainDatabase.put(session);
+      // Update local session state for UI
       mergeSession({ publishedUrl });
+
+      // Store the URL in the vibe document in the session database
+      const currentVibeDoc = await sessionDatabase.get<VibeDocument>('vibe').catch(() => null);
+      if (currentVibeDoc) {
+        currentVibeDoc.publishedUrl = publishedUrl;
+        await sessionDatabase.put(currentVibeDoc);
+      } else {
+        await sessionDatabase.put({
+          _id: 'vibe',
+          title: session.title || '',
+          publishedUrl,
+          created_at: Date.now(),
+        });
+      }
     },
-    [mainDatabase, mergeSession, session]
+    [mergeSession, session, sessionDatabase]
   );
 
   // Add a screenshot to the session (in session-specific database)

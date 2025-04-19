@@ -9,6 +9,7 @@ export interface VibeDocument {
   remixOf: string;
   created_at: number;
   favorite?: boolean;
+  publishedUrl?: string;
 }
 
 // ===== Content Segment Types =====
