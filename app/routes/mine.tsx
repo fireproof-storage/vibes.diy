@@ -2,12 +2,12 @@ import React, { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import SimpleAppLayout from '../components/SimpleAppLayout';
 import { StarIcon } from '../components/SessionSidebar/StarIcon';
-import { ImgFile } from '../components/SessionSidebar/ImgFile';
 import { useSession } from '../hooks/useSession';
 import { useVibes } from '../hooks/useVibes';
 import VibesDIYLogo from '../components/VibesDIYLogo';
 import type { ReactElement } from 'react';
 import { useAuth } from '../hooks/useAuth';
+import { VibeCardData } from '../components/VibeCardData';
 
 export function meta() {
   return [
@@ -156,104 +156,15 @@ export default function MyVibesRoute(): ReactElement {
           ) : (
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
               {filteredVibes.map((vibe) => (
-                <div
+                <VibeCardData
                   key={vibe.id}
-                  className="border-light-decorative-01 dark:border-dark-decorative-01 cursor-pointer rounded-md border p-4 transition-colors hover:border-blue-500"
-                >
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h3 className="mb-1 text-lg font-medium">{vibe.title}</h3>
-                      <div className="flex items-center space-x-2">
-                        {vibe.slug && vibe.slug !== vibe.id && (
-                          <a
-                            href={`https://${vibe.slug}.vibecode.garden`}
-                            className="text-xs text-gray-500 hover:text-gray-700"
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            onClick={(e) => e.stopPropagation()}
-                            title={`View remix source: ${vibe.slug}`}
-                          >
-                            🔀
-                          </a>
-                        )}
-                        {vibe.publishedUrl ? (
-                          <a
-                            href={vibe.publishedUrl}
-                            className="text-xs text-blue-500 hover:text-blue-700"
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            onClick={(e) => e.stopPropagation()}
-                          >
-                            {vibe.publishedUrl && vibe.publishedUrl.split('/').pop()?.split('.')[0]}
-                          </a>
-                        ) : (
-                          <span className="text-accent-03 text-xs">Not published</span>
-                        )}
-                      </div>
-                    </div>
-                    <button
-                      onClick={(e) => handleToggleFavorite(vibe.id, e)}
-                      className="text-accent-01 ml-2 hover:text-yellow-500 focus:outline-none"
-                      aria-label={vibe.favorite ? 'Remove from favorites' : 'Add to favorites'}
-                    >
-                      <StarIcon filled={vibe.favorite} />
-                    </button>
-                  </div>
-                  <div 
-                    onClick={() => handleEditClick(vibe.id)}
-                    className="mt-3 mb-4 cursor-pointer"
-                  >
-                    {vibe.screenshot ? (
-                      <ImgFile
-                        file={vibe.screenshot}
-                        alt={`Screenshot from ${vibe.title}`}
-                        className="border-light-decorative-01 dark:border-dark-decorative-01 rounded-md border"
-                      />
-                    ) : (
-                      <div 
-                        className="border-light-decorative-01 dark:border-dark-decorative-01 bg-gray-200 dark:bg-gray-700 rounded-md border h-40 w-full flex items-center justify-center"
-                        aria-label={`Placeholder for ${vibe.title}`}
-                      >
-                        <span className="text-gray-500 dark:text-gray-400 text-sm">Click to edit</span>
-                      </div>
-                    )}
-                  </div>
-                  <div className="flex space-x-2">
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        e.preventDefault();
-                        handleDeleteClick(vibe.id, e);
-                      }}
-                      data-action="delete"
-                      data-vibe-id={vibe.id}
-                      className={`${confirmDelete === vibe.id ? 'bg-red-500 text-white' : 'text-red-500'} rounded-md px-3 py-1 text-sm hover:bg-red-500 hover:text-white`}
-                    >
-                      {confirmDelete === vibe.id ? 'Are you Sure? No undo for this.' : 'Delete'}
-                    </button>
-                    <div className="flex-grow"></div>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        e.preventDefault();
-                        handleRemixClick(vibe.slug, e);
-                      }}
-                      className="text-light-secondary dark:text-dark-secondary hover:bg-light-decorative-01 dark:hover:bg-dark-decorative-01 rounded-md px-3 py-1 text-sm"
-                    >
-                      Remix
-                    </button>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        e.preventDefault();
-                        handleEditClick(vibe.id);
-                      }}
-                      className="text-light-primary bg-light-decorative-01 dark:text-dark-primary dark:bg-dark-decorative-01 rounded-md px-3 py-1 text-sm hover:bg-blue-500 hover:text-white dark:hover:bg-blue-500"
-                    >
-                      Edit
-                    </button>
-                  </div>
-                </div>
+                  vibeId={vibe.id}
+                  confirmDelete={confirmDelete}
+                  onEditClick={handleEditClick}
+                  onToggleFavorite={handleToggleFavorite}
+                  onDeleteClick={handleDeleteClick}
+                  onRemixClick={handleRemixClick}
+                />
               ))}
             </div>
           )}

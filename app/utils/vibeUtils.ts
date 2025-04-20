@@ -53,62 +53,83 @@ export async function loadVibeScreenshot(vibeId: string): Promise<{ file: () => 
 }
 
 /**
+ * Scan IndexedDB for vibe databases and return just the IDs
+ * @returns Array of vibe IDs as strings
+ */
+export async function listLocalVibeIds(): Promise<string[]> {
+  try {
+    // Get all available IndexedDB databases
+    const databases = await indexedDB.databases();
+
+    // Filter for databases that start with 'fp.vibe-' and extract IDs
+    const vibeIds = databases
+      .filter((db) => db.name && db.name.startsWith('fp.vibe-'))
+      .map((db) => db.name?.replace('fp.vibe-', '') || '')
+      .filter((id) => id !== '');
+
+    return vibeIds;
+  } catch (error) {
+    // Return empty array if there's any error in the process
+    return [];
+  }
+}
+
+/**
+ * Load a single vibe document by its ID
+ * @param vibeId The ID of the vibe to load
+ * @returns A LocalVibe object or null if not found/valid
+ */
+export async function loadVibeDocument(vibeId: string): Promise<LocalVibe | null> {
+  try {
+    // Open the Fireproof database for this vibe
+    const db = fireproof('vibe-' + vibeId);
+
+    // Get the vibe document
+    const vibeDoc = (await db.get('vibe')) as VibeDocument;
+
+    if (vibeDoc && vibeDoc._id === 'vibe') {
+      // Get creation timestamp from vibeDoc or fallback to current time
+      // Convert timestamp to ISO string for consistent formatting
+      const createdTimestamp: string = vibeDoc.created_at
+        ? new Date(vibeDoc.created_at).toISOString()
+        : new Date('2025-02-02T15:17:00Z').toISOString();
+
+      return {
+        id: vibeId,
+        title: vibeDoc.title || 'Unnamed Vibe',
+        slug: vibeDoc.remixOf || vibeId, // Use remixOf as the slug
+        created: createdTimestamp,
+        favorite: vibeDoc.favorite || false,
+        publishedUrl: vibeDoc.publishedUrl
+      };
+    }
+    return null;
+  } catch (error) {
+    // Return null if there's any error loading this vibe
+    return null;
+  }
+}
+
+/**
  * Lists all vibes stored locally by querying IndexedDB for databases with names
  * starting with 'fp.vibe-' and retrieving the vibe document from each
  * @returns Array of vibe objects with title, slug, id, and created fields
  */
 export async function listLocalVibes(): Promise<LocalVibe[]> {
   try {
-    // Get all available IndexedDB databases
-    const databases = await indexedDB.databases();
+    // Get all available vibe IDs
+    const vibeIds = await listLocalVibeIds();
+    
+    // Create an array of promises to fetch the vibe document for each ID
+    const vibePromises = vibeIds.map(vibeId => loadVibeDocument(vibeId));
 
-    // Filter for databases that start with 'fp.vibe-'
-    const vibeDbs = databases.filter((db) => db.name && db.name.startsWith('fp.vibe-'));
-
-    // Create an array of promises to fetch the vibe document from each database
-    const vibePromises = vibeDbs.map(async (dbInfo) => {
-      if (!dbInfo.name) return null;
-
-      // Extract the vibe ID from the database name (remove 'fp.vibe-' prefix)
-      const vibeId = dbInfo.name.replace('fp.vibe-', '');
-
-      // Open the Fireproof database for this vibe
-      const db = fireproof('vibe-' + vibeId);
-
-      try {
-        // Get the vibe document
-        const vibeDoc = (await db.get('vibe')) as VibeDocument;
-
-        if (vibeDoc && vibeDoc._id === 'vibe') {
-          // Get creation timestamp from vibeDoc or fallback to current time
-          // Convert timestamp to ISO string for consistent formatting
-          const createdTimestamp: string = vibeDoc.created_at
-            ? new Date(vibeDoc.created_at).toISOString()
-            : new Date('2025-02-02T15:17:00Z').toISOString();
-
-          return {
-            id: vibeId,
-            title: vibeDoc.title || 'Unnamed Vibe',
-            slug: vibeDoc.remixOf || vibeId, // Use remixOf as the slug
-            created: createdTimestamp,
-            favorite: vibeDoc.favorite || false,
-            publishedUrl: vibeDoc.publishedUrl,
-            screenshot: undefined, // We're no longer loading screenshots here
-          };
-        }
-      } catch (error) {
-        // Skip this vibe if we can't retrieve it
-      }
-
-      return null;
-    });
-
-    // Wait for all promises to resolve and filter out nulls
+    // Wait for all promises to resolve
     const results = await Promise.all(vibePromises);
-    // Filter out null values and cast to LocalVibe[] to satisfy TypeScript
+    
+    // Filter out null values and sort by creation date
     return results
-      .filter((vibe) => vibe !== null)
-      .sort((b, a) => new Date(a.created).getTime() - new Date(b.created).getTime()) as LocalVibe[];
+      .filter((vibe): vibe is LocalVibe => vibe !== null)
+      .sort((b, a) => new Date(a.created).getTime() - new Date(b.created).getTime());
   } catch (error) {
     // Return empty array if there's any error in the process
     return [];

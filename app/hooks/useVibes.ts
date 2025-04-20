@@ -1,10 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
-import {
-  listLocalVibes,
-  deleteVibeDatabase,
-  toggleVibeFavorite,
-  type LocalVibe,
-} from '../utils/vibeUtils';
+import { listLocalVibeIds, deleteVibeDatabase, toggleVibeFavorite } from '../utils/vibeUtils';
+import type { LocalVibe } from '../utils/vibeUtils';
 import { useAuth } from './useAuth';
 
 /**
@@ -24,8 +20,8 @@ export function useVibes() {
     try {
       setIsLoading(true);
       setError(null);
-      const localVibes = await listLocalVibes();
-      setVibes(localVibes);
+      const vibeIds = await listLocalVibeIds();
+      setVibes(vibeIds.map(id => ({ id })) as LocalVibe[]);
     } catch (err) {
       setError(err instanceof Error ? err : new Error(String(err)));
     } finally {
