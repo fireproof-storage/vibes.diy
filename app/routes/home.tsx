@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router';
 import { useCookieConsent } from '../context/CookieConsentContext';
+import { useVibes } from '../hooks/useVibes';
 import { encodeTitle } from '~/components/SessionSidebar/utils';
 import AppLayout from '../components/AppLayout';
 import ChatHeaderContent from '../components/ChatHeaderContent';
@@ -28,6 +29,7 @@ export default function UnifiedSession() {
   const location = useLocation();
   const chatState = useSimpleChat(urlSessionId);
   const { setMessageHasBeenSent } = useCookieConsent();
+  const { vibes, toggleFavorite } = useVibes();
 
   // Track message submission events
   const [hasSubmittedMessage, setHasSubmittedMessage] = useState(false);
@@ -223,6 +225,25 @@ export default function UnifiedSession() {
   // Switch to 2-column view immediately when a message is submitted
   const shouldUseFullWidthChat =
     chatState.docs.length === 0 && !urlSessionId && !hasSubmittedMessage;
+    
+  // Determine if current vibe is a favorite
+  const currentVibe = vibes.find(vibe => vibe.id === chatState.sessionId);
+  const isFavorite = currentVibe?.favorite || false;
+  
+  // Handler for toggling favorite status
+  const handleToggleFavorite = useCallback(() => {
+    if (chatState.sessionId) {
+      toggleFavorite(chatState.sessionId);
+    }
+  }, [chatState.sessionId, toggleFavorite]);
+
+  // Log session info for debugging
+  useEffect(() => {
+    console.log('UnifiedSession: initialized with sessionId:', chatState.sessionId);
+    console.log('UnifiedSession: chatState has messages:', chatState.docs.length);
+    console.log('UnifiedSession: isStreaming:', chatState.isStreaming);
+  }, [chatState.sessionId, chatState.docs.length, chatState.isStreaming]);
+
 
   return (
     <>
@@ -235,6 +256,9 @@ export default function UnifiedSession() {
             isStreaming={chatState.isStreaming}
             codeReady={chatState.codeReady}
             title={chatState.title || ''}
+            isFavorite={isFavorite}
+            onToggleFavorite={handleToggleFavorite}
+            canBeFavorited={!!chatState.title}
           />
         }
         headerRight={
