@@ -1,5 +1,6 @@
 import { memo } from 'react';
 import { MenuIcon, EditIcon } from './ChatHeaderIcons';
+import { StarIcon } from './SessionSidebar/StarIcon';
 
 interface ChatHeaderContentProps {
   onOpenSidebar: () => void;
@@ -7,6 +8,9 @@ interface ChatHeaderContentProps {
   isStreaming: boolean;
   codeReady: boolean;
   remixOf?: string;
+  isFavorite?: boolean;
+  onToggleFavorite?: () => void;
+  canBeFavorited?: boolean;
 }
 
 function ChatHeaderContent({
@@ -15,6 +19,9 @@ function ChatHeaderContent({
   isStreaming,
   codeReady,
   remixOf,
+  isFavorite = false,
+  onToggleFavorite,
+  canBeFavorited = false,
 }: ChatHeaderContentProps) {
   return (
     <div className="flex h-full w-full items-center justify-between p-2 py-4">
@@ -44,6 +51,16 @@ function ChatHeaderContent({
         ) : (
           title
         )}
+        {canBeFavorited && onToggleFavorite && (
+          <button
+            onClick={onToggleFavorite}
+            className="ml-2 focus:outline-none"
+            aria-label={isFavorite ? 'Remove from favorites' : 'Add to favorites'}
+            title={isFavorite ? 'Remove from favorites' : 'Add to favorites'}
+          >
+            <StarIcon filled={isFavorite} className="h-4 w-4 inline-block" />
+          </button>
+        )}
       </div>
 
       {(codeReady || isStreaming || title) && (
@@ -69,12 +86,15 @@ function ChatHeaderContent({
 // Use React.memo with a custom comparison function to ensure the component only
 // re-renders when its props actually change
 export default memo(ChatHeaderContent, (prevProps, nextProps) => {
-  // Only re-render if title or onOpenSidebar changes
+  // Only re-render if relevant props change
   return (
     prevProps.remixOf === nextProps.remixOf &&
     prevProps.onOpenSidebar === nextProps.onOpenSidebar &&
     prevProps.title === nextProps.title &&
     prevProps.isStreaming === nextProps.isStreaming &&
-    prevProps.codeReady === nextProps.codeReady
+    prevProps.codeReady === nextProps.codeReady &&
+    prevProps.isFavorite === nextProps.isFavorite &&
+    prevProps.canBeFavorited === nextProps.canBeFavorited &&
+    prevProps.onToggleFavorite === nextProps.onToggleFavorite
   );
 });
