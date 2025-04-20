@@ -199,15 +199,25 @@ export default function MyVibesRoute(): ReactElement {
                       <StarIcon filled={vibe.favorite} />
                     </button>
                   </div>
-                  {vibe.screenshot && (
-                    <div onClick={() => handleEditClick(vibe.id)}>
+                  <div 
+                    onClick={() => handleEditClick(vibe.id)}
+                    className="mt-3 mb-4 cursor-pointer"
+                  >
+                    {vibe.screenshot ? (
                       <ImgFile
                         file={vibe.screenshot}
                         alt={`Screenshot from ${vibe.title}`}
-                        className="border-light-decorative-01 dark:border-dark-decorative-01 mt-3 mb-4 rounded-md border"
+                        className="border-light-decorative-01 dark:border-dark-decorative-01 rounded-md border"
                       />
-                    </div>
-                  )}
+                    ) : (
+                      <div 
+                        className="border-light-decorative-01 dark:border-dark-decorative-01 bg-gray-200 dark:bg-gray-700 rounded-md border h-40 w-full flex items-center justify-center"
+                        aria-label={`Placeholder for ${vibe.title}`}
+                      >
+                        <span className="text-gray-500 dark:text-gray-400 text-sm">Click to edit</span>
+                      </div>
+                    )}
+                  </div>
                   <div className="flex space-x-2">
                     <button
                       onClick={(e) => {
