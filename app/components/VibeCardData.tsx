@@ -48,21 +48,20 @@ export function VibeCardData({
     };
   }, [vibeId]);
 
-  if (isLoading) {
-    return (
-      <div className="border-light-decorative-01 dark:border-dark-decorative-01 rounded-md border p-4 h-64 flex items-center justify-center">
-        <div className="h-8 w-8 animate-spin rounded-full border-t-2 border-b-2 border-blue-500"></div>
-      </div>
-    );
-  }
-
-  if (!vibe) {
-    return null; // Or some fallback UI for failed loading
-  }
+  // Create a default/placeholder vibe with loading state if we're still loading
+  // or if the vibe data failed to load
+  const vibeData = vibe || {
+    id: vibeId,
+    title: isLoading ? 'Loading...' : 'Vibe Not Found',
+    slug: vibeId,
+    created: new Date().toISOString(),
+    favorite: false,
+    publishedUrl: undefined
+  };
 
   return (
     <VibeCard
-      vibe={vibe}
+      vibe={vibeData}
       confirmDelete={confirmDelete}
       onEditClick={onEditClick}
       onToggleFavorite={onToggleFavorite}
