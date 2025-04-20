@@ -309,7 +309,6 @@ export function useSimpleChat(sessionId: string | undefined): ChatState {
             // Generate title if needed
             const { segments } = parseContent(aiMessage.text);
             // if (!session?.title || (vibeDoc && vibeDoc.remixOf && docs.length === 3)) {
-            console.log('Generating title...');
             await generateTitle(segments, TITLE_MODEL, apiKey || '').then(updateTitle);
             // }
           } finally {
