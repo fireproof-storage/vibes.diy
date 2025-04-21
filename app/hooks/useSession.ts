@@ -28,7 +28,7 @@ export function useSession(routedSessionId?: string) {
     useLiveQuery: useSessionLiveQuery,
     open: openSessionDatabase,
   } = useLazyFireproof(sessionDbName);
-  
+
   // Automatically open the database if we have a routed session ID
   // This ensures existing sessions are loaded immediately
   // Use useEffect to ensure this only runs once during initialization

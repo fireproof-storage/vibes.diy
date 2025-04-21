@@ -47,17 +47,17 @@ class LazyDB {
     console.log(`[LazyDB] get ${id} on ${this.name}, initialized: ${this.hasInitialized}`);
     return this.inner.get<T>(id);
   };
-  
+
   allDocs = async <T extends DocTypes>(options?: AllDocsQueryOpts): Promise<AllDocsResponse<T>> => {
     console.log(`[LazyDB] allDocs on ${this.name}, initialized: ${this.hasInitialized}`);
     return this.inner.allDocs<T>(options);
   };
-  
+
   changes = async <T extends DocTypes>(since?: any, options?: any): Promise<any> => {
     console.log(`[LazyDB] changes on ${this.name}, initialized: ${this.hasInitialized}`);
     return this.inner.changes<T>(since, options);
   };
-  
+
   query = async <K extends IndexKeyType, T extends DocTypes, R extends DocFragment = T>(
     field: string,
     options?: any
@@ -132,7 +132,7 @@ export function useLazyFireproof(
   const dbProxy = useMemo(() => {
     if (!ref.current) {
       console.error(`[useLazyFireproof] No ref.current when creating proxy for ${name}`);
-      return null; 
+      return null;
     }
 
     console.log(`[useLazyFireproof] Creating proxy for ${name}`);
