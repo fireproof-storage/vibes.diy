@@ -183,7 +183,7 @@ export default function Cyberpunk({ userId, vibes, isLoading }: CyberpunkProps):
               </h3>
               {doc.publishedUrl && (
                 <div
-                  className="mt-3 mb-4 relative overflow-hidden rounded-xl"
+                  className="relative mt-3 mb-4 overflow-hidden rounded-xl"
                   style={{
                     boxShadow: `0 0 15px 1px ${NEONS[(i + 3) % NEONS.length]}`,
                     border: `1px solid ${NEONS[(i + 4) % NEONS.length]}44`,
@@ -193,7 +193,7 @@ export default function Cyberpunk({ userId, vibes, isLoading }: CyberpunkProps):
                   <div className="absolute inset-0 z-0 overflow-hidden">
                     <img
                       src={`${doc.publishedUrl}/screenshot.png`}
-                      className="w-full h-full object-cover scale-110"
+                      className="h-full w-full scale-110 object-cover"
                       alt=""
                       style={{
                         filter: `blur(10px) contrast(1.5) saturate(2) hue-rotate(${i * 20}deg)`,
@@ -205,7 +205,7 @@ export default function Cyberpunk({ userId, vibes, isLoading }: CyberpunkProps):
                   </div>
 
                   {/* Main cyberpunk image with effects */}
-                  <div className="relative z-10 flex justify-center w-full py-2">
+                  <div className="relative z-10 flex w-full justify-center py-2">
                     <img
                       src={`${doc.publishedUrl}/screenshot.png`}
                       alt={`Screenshot from ${doc.title || doc._id}`}

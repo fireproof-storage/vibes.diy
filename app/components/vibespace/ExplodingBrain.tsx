@@ -342,12 +342,12 @@ export default function ExplodingBrain({
                     <div className="relative mt-3 mb-4 overflow-hidden rounded-lg transition-all duration-500 group-hover:shadow-xl">
                       {/* Blurred background version with animation */}
                       <div className="absolute inset-0 z-0 overflow-hidden rounded-lg">
-                        <img 
+                        <img
                           src={`${doc.publishedUrl}/screenshot.png`}
-                          className="w-full h-full object-cover" 
-                          alt="" 
-                          style={{ 
-                            filter: `blur(10px) hue-rotate(${vibeLevel * 15}deg)`, 
+                          className="h-full w-full object-cover"
+                          alt=""
+                          style={{
+                            filter: `blur(10px) hue-rotate(${vibeLevel * 15}deg)`,
                             opacity: 0.9,
                             borderWidth: '2px',
                             borderStyle: 'solid',
@@ -363,14 +363,14 @@ export default function ExplodingBrain({
                       <div
                         className={`absolute inset-0 bg-gradient-to-b from-transparent to-${brainColor}/30 pointer-events-none z-10 opacity-0 transition-opacity duration-300 group-hover:opacity-100`}
                       ></div>
-                      
+
                       {/* Foreground image with variable height and animation */}
-                      <div className="relative z-10 flex justify-center w-full py-2">
-                        <img 
+                      <div className="relative z-10 flex w-full justify-center py-2">
+                        <img
                           src={`${doc.publishedUrl}/screenshot.png`}
                           alt={`Screenshot from ${doc.title || doc._id}`}
-                          className="max-w-full object-contain rounded-lg transition-transform duration-700 group-hover:scale-105" 
-                          style={{ 
+                          className="max-w-full rounded-lg object-contain transition-transform duration-700 group-hover:scale-105"
+                          style={{
                             maxHeight: '16rem',
                             borderWidth: '2px',
                             borderStyle: 'solid',
@@ -379,7 +379,7 @@ export default function ExplodingBrain({
                             animation: `frontPulse ${3 + vibeLevel * 0.5}s infinite ease-in-out`,
                             animationDelay: '0.5s',
                             transformOrigin: 'center',
-                          }} 
+                          }}
                           loading="lazy"
                         />
                       </div>

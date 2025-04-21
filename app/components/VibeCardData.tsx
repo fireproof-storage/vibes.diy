@@ -21,7 +21,9 @@ export function VibeCardData({
   onRemixClick,
 }: VibeCardDataProps) {
   const [vibe, setVibe] = useState<LocalVibe | null>(null);
-  const [screenshot, setScreenshot] = useState<{ file: () => Promise<File>; type: string } | undefined>(undefined);
+  const [screenshot, setScreenshot] = useState<
+    { file: () => Promise<File>; type: string } | undefined
+  >(undefined);
   const [isLoading, setIsLoading] = useState(true);
 
   // Load the vibe document

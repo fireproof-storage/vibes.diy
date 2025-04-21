@@ -67,7 +67,7 @@ export function VibeCard({
         </button>
       </div>
       <div onClick={() => onEditClick(vibe.id)} className="mt-3 mb-4 cursor-pointer">
-        <div className="border-light-decorative-01 dark:border-dark-decorative-01 rounded-md border w-full overflow-hidden">
+        <div className="border-light-decorative-01 dark:border-dark-decorative-01 w-full overflow-hidden rounded-md border">
           {screenshot ? (
             <ImgFile
               file={screenshot}
