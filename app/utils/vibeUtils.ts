@@ -63,8 +63,6 @@ export async function listLocalVibeIds(): Promise<string[]> {
     // Get all available IndexedDB databases
     const databases = await indexedDB.databases();
 
-    console.log('databases', databases);
-
     // Filter for databases that start with 'fp.vibe-' and extract IDs
     const vibeIds = databases
       .filter((db) => db.name && db.name.startsWith('fp.vibe-'))

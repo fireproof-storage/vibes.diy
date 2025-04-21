@@ -5,6 +5,7 @@ import type { LocalVibe } from '../utils/vibeUtils';
 
 interface VibeCardProps {
   vibe: LocalVibe;
+  screenshot?: { file: () => Promise<File>; type: string };
   confirmDelete: string | null;
   onEditClick: (id: string) => void;
   onToggleFavorite: (vibeId: string, e: React.MouseEvent) => Promise<void>;
@@ -14,6 +15,7 @@ interface VibeCardProps {
 
 export function VibeCard({
   vibe,
+  screenshot,
   confirmDelete,
   onEditClick,
   onToggleFavorite,
@@ -65,9 +67,9 @@ export function VibeCard({
         </button>
       </div>
       <div onClick={() => onEditClick(vibe.id)} className="mt-3 mb-4 cursor-pointer">
-        {vibe.screenshot ? (
+        {screenshot ? (
           <ImgFile
-            file={vibe.screenshot}
+            file={screenshot}
             alt={`Screenshot from ${vibe.title}`}
             className="border-light-decorative-01 dark:border-dark-decorative-01 rounded-md border"
           />

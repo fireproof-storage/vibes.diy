@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { VibeCard } from './VibeCard';
-import { loadVibeDocument } from '../utils/vibeUtils';
+import { loadVibeDocument, loadVibeScreenshot } from '../utils/vibeUtils';
 import type { LocalVibe } from '../utils/vibeUtils';
 
 interface VibeCardDataProps {
@@ -21,8 +21,10 @@ export function VibeCardData({
   onRemixClick,
 }: VibeCardDataProps) {
   const [vibe, setVibe] = useState<LocalVibe | null>(null);
+  const [screenshot, setScreenshot] = useState<{ file: () => Promise<File>; type: string } | undefined>(undefined);
   const [isLoading, setIsLoading] = useState(true);
 
+  // Load the vibe document
   useEffect(() => {
     let isMounted = true;
 
@@ -48,6 +50,29 @@ export function VibeCardData({
     };
   }, [vibeId]);
 
+  // Load the screenshot separately
+  useEffect(() => {
+    let isMounted = true;
+
+    const loadScreenshotData = async () => {
+      try {
+        const screenshotData = await loadVibeScreenshot(vibeId);
+        if (isMounted) {
+          setScreenshot(screenshotData);
+        }
+      } catch (error) {
+        // Silently handle screenshot loading errors
+        // The UI will just show the placeholder
+      }
+    };
+
+    loadScreenshotData();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [vibeId]);
+
   // Create a default/placeholder vibe with loading state if we're still loading
   // or if the vibe data failed to load
   const vibeData = vibe || {
@@ -62,6 +87,7 @@ export function VibeCardData({
   return (
     <VibeCard
       vibe={vibeData}
+      screenshot={screenshot}
       confirmDelete={confirmDelete}
       onEditClick={onEditClick}
       onToggleFavorite={onToggleFavorite}
