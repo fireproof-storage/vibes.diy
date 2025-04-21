@@ -182,19 +182,47 @@ export default function Cyberpunk({ userId, vibes, isLoading }: CyberpunkProps):
                 {doc.title || doc._id}
               </h3>
               {doc.publishedUrl && (
-                <div className="relative mb-4">
-                  <img
-                    src={`${doc.publishedUrl}/screenshot.png`}
-                    alt={doc.title || doc._id}
-                    className="h-32 w-full rounded-lg border border-black/40 object-cover shadow-lg"
-                    style={{
-                      filter: `contrast(1.8) saturate(2.5) blur(1.5px) brightness(1.2) drop-shadow(0 0 15px ${NEONS[(i + 3) % NEONS.length]})`,
-                      opacity: 0.88,
-                      mixBlendMode: 'screen',
-                    }}
-                  />
+                <div
+                  className="mt-3 mb-4 relative overflow-hidden rounded-xl"
+                  style={{
+                    boxShadow: `0 0 15px 1px ${NEONS[(i + 3) % NEONS.length]}`,
+                    border: `1px solid ${NEONS[(i + 4) % NEONS.length]}44`,
+                  }}
+                >
+                  {/* Extremely blurred cyberpunk background */}
+                  <div className="absolute inset-0 z-0 overflow-hidden">
+                    <img
+                      src={`${doc.publishedUrl}/screenshot.png`}
+                      className="w-full h-full object-cover scale-110"
+                      alt=""
+                      style={{
+                        filter: `blur(10px) contrast(1.5) saturate(2) hue-rotate(${i * 20}deg)`,
+                        opacity: 0.7,
+                        mixBlendMode: 'screen',
+                      }}
+                      loading="lazy"
+                    />
+                  </div>
+
+                  {/* Main cyberpunk image with effects */}
+                  <div className="relative z-10 flex justify-center w-full py-2">
+                    <img
+                      src={`${doc.publishedUrl}/screenshot.png`}
+                      alt={`Screenshot from ${doc.title || doc._id}`}
+                      className="max-w-full object-contain"
+                      style={{
+                        maxHeight: '16rem',
+                        filter: `contrast(1.8) saturate(2.5) blur(1.5px) brightness(1.2) drop-shadow(0 0 15px ${NEONS[(i + 3) % NEONS.length]})`,
+                        opacity: 0.88,
+                        mixBlendMode: 'screen',
+                      }}
+                      loading="lazy"
+                    />
+                  </div>
+
+                  {/* Gradient overlay */}
                   <div
-                    className="pointer-events-none absolute inset-0"
+                    className="pointer-events-none absolute inset-0 z-20"
                     style={{
                       background: `linear-gradient(120deg, transparent 60%, ${NEONS[(i + 4) % NEONS.length]}66 100%)`,
                       mixBlendMode: 'screen',

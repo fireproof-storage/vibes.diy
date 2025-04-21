@@ -352,17 +352,38 @@ export default function Wild({ userId, vibes, isLoading }: BasicVibespaceProps):
 
                 {doc.publishedUrl && (
                   <div className="relative mt-3 mb-4 overflow-hidden rounded-lg transition-all duration-500 group-hover:shadow-xl">
+                    {/* Blurred background version */}
+                    <div className="absolute inset-0 z-0 overflow-hidden">
+                      <img 
+                        src={`${doc.publishedUrl}/screenshot.png`}
+                        className="w-full h-full object-cover scale-110" 
+                        alt="" 
+                        style={{ 
+                          filter: 'blur(10px)', 
+                          opacity: 0.9,
+                          border: '2px solid rgba(255,140,0,0.3)',
+                        }}
+                        loading="lazy"
+                      />
+                    </div>
+
+                    {/* Gradient overlay */}
                     <div className="pointer-events-none absolute inset-0 z-10 bg-gradient-to-b from-transparent to-orange-600/30 opacity-0 transition-opacity duration-300 group-hover:opacity-100"></div>
-                    <img
-                      src={`${doc.publishedUrl}/screenshot.png`}
-                      alt={`Screenshot from ${doc.title || doc._id}`}
-                      className="w-full rounded-lg transition-transform duration-700 group-hover:scale-105"
-                      style={{
-                        border: '2px solid rgba(255,140,0,0.3)',
-                        boxShadow: 'inset 0 0 10px rgba(255,140,0,0.2)',
-                      }}
-                      loading="lazy"
-                    />
+                    
+                    {/* Foreground image with variable height */}
+                    <div className="relative z-10 flex justify-center w-full py-2">
+                      <img 
+                        src={`${doc.publishedUrl}/screenshot.png`}
+                        alt={`Screenshot from ${doc.title || doc._id}`}
+                        className="max-w-full object-contain rounded-lg transition-transform duration-700 group-hover:scale-105" 
+                        style={{ 
+                          maxHeight: '16rem',
+                          border: '2px solid rgba(255,140,0,0.3)',
+                          boxShadow: 'inset 0 0 10px rgba(255,140,0,0.2)'
+                        }} 
+                        loading="lazy"
+                      />
+                    </div>
                   </div>
                 )}
 

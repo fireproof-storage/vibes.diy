@@ -78,6 +78,21 @@ export default function ExplodingBrain({
         50% { transform: scale(1.05); }
         100% { transform: scale(1); }
       }
+      
+      @keyframes bgPulse {
+        0% { transform: scale(1.1) rotate(0deg); }
+        33% { transform: scale(1.15) rotate(-1deg); }
+        66% { transform: scale(1.2) rotate(1deg); }
+        100% { transform: scale(1.1) rotate(0deg); }
+      }
+      
+      @keyframes frontPulse {
+        0% { transform: scale(1) rotate(0deg); }
+        25% { transform: scale(1.02) rotate(-0.5deg); }
+        50% { transform: scale(1.05) rotate(0.5deg); }
+        75% { transform: scale(1.02) rotate(0deg); }
+        100% { transform: scale(1) rotate(0deg); }
+      }
     `;
     document.head.appendChild(styleEl);
 
@@ -325,21 +340,49 @@ export default function ExplodingBrain({
 
                   {doc.publishedUrl && (
                     <div className="relative mt-3 mb-4 overflow-hidden rounded-lg transition-all duration-500 group-hover:shadow-xl">
+                      {/* Blurred background version with animation */}
+                      <div className="absolute inset-0 z-0 overflow-hidden rounded-lg">
+                        <img 
+                          src={`${doc.publishedUrl}/screenshot.png`}
+                          className="w-full h-full object-cover" 
+                          alt="" 
+                          style={{ 
+                            filter: `blur(10px) hue-rotate(${vibeLevel * 15}deg)`, 
+                            opacity: 0.9,
+                            borderWidth: '2px',
+                            borderStyle: 'solid',
+                            borderColor: `rgba(${vibeLevel * 50}, ${70 + vibeLevel * 30}, ${200 - vibeLevel * 30}, 0.3)`,
+                            animation: `bgPulse ${4 + vibeLevel}s infinite ease-in-out`,
+                            transformOrigin: 'center',
+                          }}
+                          loading="lazy"
+                        />
+                      </div>
+
+                      {/* Gradient overlay */}
                       <div
                         className={`absolute inset-0 bg-gradient-to-b from-transparent to-${brainColor}/30 pointer-events-none z-10 opacity-0 transition-opacity duration-300 group-hover:opacity-100`}
                       ></div>
-                      <img
-                        src={`${doc.publishedUrl}/screenshot.png`}
-                        alt={`Screenshot from ${doc.title || doc._id}`}
-                        className="w-full rounded-lg transition-transform duration-700 group-hover:scale-105"
-                        style={{
-                          borderWidth: '2px',
-                          borderStyle: 'solid',
-                          borderColor: `rgba(${vibeLevel * 50}, ${70 + vibeLevel * 30}, ${200 - vibeLevel * 30}, 0.3)`,
-                          boxShadow: `inset 0 0 10px rgba(${vibeLevel * 50}, ${70 + vibeLevel * 30}, ${200 - vibeLevel * 30}, 0.2)`,
-                        }}
-                        loading="lazy"
-                      />
+                      
+                      {/* Foreground image with variable height and animation */}
+                      <div className="relative z-10 flex justify-center w-full py-2">
+                        <img 
+                          src={`${doc.publishedUrl}/screenshot.png`}
+                          alt={`Screenshot from ${doc.title || doc._id}`}
+                          className="max-w-full object-contain rounded-lg transition-transform duration-700 group-hover:scale-105" 
+                          style={{ 
+                            maxHeight: '16rem',
+                            borderWidth: '2px',
+                            borderStyle: 'solid',
+                            borderColor: `rgba(${vibeLevel * 50}, ${70 + vibeLevel * 30}, ${200 - vibeLevel * 30}, 0.3)`,
+                            boxShadow: `inset 0 0 10px rgba(${vibeLevel * 50}, ${70 + vibeLevel * 30}, ${200 - vibeLevel * 30}, 0.2)`,
+                            animation: `frontPulse ${3 + vibeLevel * 0.5}s infinite ease-in-out`,
+                            animationDelay: '0.5s',
+                            transformOrigin: 'center',
+                          }} 
+                          loading="lazy"
+                        />
+                      </div>
                     </div>
                   )}
 

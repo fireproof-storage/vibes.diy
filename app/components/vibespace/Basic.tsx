@@ -46,12 +46,29 @@ export default function Basic({ userId, vibes, isLoading }: BasicVibespaceProps)
                 </div>
 
                 {doc.publishedUrl && (
-                  <img
-                    src={`${doc.publishedUrl}/screenshot.png`}
-                    alt={`Screenshot from ${doc.title || doc._id}`}
-                    className="border-light-decorative-01 dark:border-dark-decorative-01 mt-3 mb-4 w-full rounded-md border"
-                    loading="lazy"
-                  />
+                  <div className="relative mt-3 mb-4 overflow-hidden rounded-md border border-light-decorative-01 dark:border-dark-decorative-01 w-full">
+                    {/* Blurred background version */}
+                    <div className="absolute inset-0 z-0 overflow-hidden">
+                      <img 
+                        src={`${doc.publishedUrl}/screenshot.png`}
+                        className="w-full h-full object-cover scale-110" 
+                        alt="" 
+                        style={{ filter: 'blur(10px)', opacity: 0.9 }}
+                        loading="lazy"
+                      />
+                    </div>
+                    
+                    {/* Foreground image with variable height */}
+                    <div className="relative z-10 flex justify-center w-full py-2">
+                      <img 
+                        src={`${doc.publishedUrl}/screenshot.png`}
+                        alt={`Screenshot from ${doc.title || doc._id}`}
+                        className="max-w-full object-contain" 
+                        style={{ maxHeight: '16rem' }} 
+                        loading="lazy"
+                      />
+                    </div>
+                  </div>
                 )}
 
                 <div className="flex space-x-2">

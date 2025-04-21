@@ -109,6 +109,7 @@ export default function SpaceRoute(): ReactElement {
               Cyberpunk
             </a>
           </div>
+          <div className="mr-4 flex italic items-right space-x-2 text-sm">Profiles will be public at the end of the tech preview.</div>
         </div>
       }
     >
