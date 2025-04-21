@@ -1,4 +1,4 @@
-import { useMemo, useCallback } from 'react';
+import { useMemo, useCallback, useState, useEffect } from 'react';
 import type { Segment, ChatMessageDocument } from '../types/chat';
 import { parseContent, parseDependencies } from '../utils/segmentParser';
 
@@ -21,12 +21,48 @@ export function useMessageSelection({
   pendingAiMessage: ChatMessageDocument | null;
 }) {
   // The list of messages for the UI: docs + streaming message if active
+  // Also include the last message that was streaming even after streaming ends
+  // This prevents temporarily losing the message during the transition
+  const [prevStreamingMessage, setPrevStreamingMessage] = useState<ChatMessageDocument | null>(null);
+  
+  // When streaming and we have text, capture the streaming message
+  useEffect(() => {
+    if (isStreaming && aiMessage.text.length > 0) {
+      setPrevStreamingMessage(aiMessage);
+    }
+  }, [isStreaming, aiMessage.text]);
+  
   const messages = useMemo(() => {
+    // First filter the docs to get messages we want to display
     const baseDocs = docs.filter(
       (doc: any) => doc.type === 'ai' || doc.type === 'user' || doc.type === 'system'
     ) as unknown as ChatMessageDocument[];
-    return isStreaming && aiMessage.text.length > 0 ? [...baseDocs, aiMessage] : baseDocs;
-  }, [docs, isStreaming, aiMessage.text]);
+    
+    // If currently streaming, include the streaming message
+    if (isStreaming && aiMessage.text.length > 0) {
+      return [...baseDocs, aiMessage];
+    }
+    
+    // When streaming just ended, check if the last message is in docs
+    if (!isStreaming && prevStreamingMessage) {
+      // Look for the message ID in the docs to see if it's been saved
+      const messageInDocs = baseDocs.some(doc => 
+        prevStreamingMessage._id && doc._id === prevStreamingMessage._id
+      );
+      
+      // If the message has been saved to the database, no need to append it
+      if (messageInDocs) {
+        return baseDocs;
+      }
+      
+      // Otherwise keep showing the message until it appears in the database
+      // This prevents the chat from temporarily resetting during the transition
+      return [...baseDocs, prevStreamingMessage];
+    }
+    
+    // Default case - just use the messages from the database
+    return baseDocs;
+  }, [docs, isStreaming, aiMessage, prevStreamingMessage]);
 
   const selectedResponseDoc = useMemo(() => {
     // Priority 1: Explicit user selection (from confirmed docs)

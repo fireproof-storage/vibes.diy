@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useState, useEffect } from 'react';
 import { useFireproof } from 'use-fireproof';
 import { FIREPROOF_CHAT_HISTORY } from '../config/env';
 import type {
@@ -31,9 +31,12 @@ export function useSession(routedSessionId?: string) {
   
   // Automatically open the database if we have a routed session ID
   // This ensures existing sessions are loaded immediately
-  if (routedSessionId) {
-    openSessionDatabase();
-  }
+  // Use useEffect to ensure this only runs once during initialization
+  useEffect(() => {
+    if (routedSessionId) {
+      openSessionDatabase();
+    }
+  }, [routedSessionId, openSessionDatabase]);
 
   // Session document is stored in the main database
   const { doc: session, merge: mergeSession } = useMainDocument<SessionDocument>(
