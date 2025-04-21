@@ -27,44 +27,30 @@ class LazyDB {
     this.config = config;
     // start with an in-memory / no-op IndexedDB
     this.inner = fireproof('vb.empty', this.config);
-    console.log(`[LazyDB] Created stub for ${name}`);
   }
 
   ensureReal() {
     // on first write, swap to the real store
     if (!this.hasInitialized) {
-      console.log(`[LazyDB] Creating real database for ${this.name}`);
       this.inner = fireproof(this.name, this.config);
       this.hasInitialized = true;
-    } else {
-      console.log(`[LazyDB] ensureReal called but already initialized for ${this.name}`);
     }
     return this.inner;
   }
 
   // Read operations - pass through to inner DB
-  get = async <T extends DocTypes>(id: string): Promise<DocWithId<T>> => {
-    console.log(`[LazyDB] get ${id} on ${this.name}, initialized: ${this.hasInitialized}`);
-    return this.inner.get<T>(id);
-  };
+  get = async <T extends DocTypes>(id: string): Promise<DocWithId<T>> => this.inner.get<T>(id);
 
-  allDocs = async <T extends DocTypes>(options?: AllDocsQueryOpts): Promise<AllDocsResponse<T>> => {
-    console.log(`[LazyDB] allDocs on ${this.name}, initialized: ${this.hasInitialized}`);
-    return this.inner.allDocs<T>(options);
-  };
+  allDocs = async <T extends DocTypes>(options?: AllDocsQueryOpts): Promise<AllDocsResponse<T>> =>
+    this.inner.allDocs<T>(options);
 
-  changes = async <T extends DocTypes>(since?: any, options?: any): Promise<any> => {
-    console.log(`[LazyDB] changes on ${this.name}, initialized: ${this.hasInitialized}`);
-    return this.inner.changes<T>(since, options);
-  };
+  changes = async <T extends DocTypes>(since?: any, options?: any): Promise<any> =>
+    this.inner.changes<T>(since, options);
 
   query = async <K extends IndexKeyType, T extends DocTypes, R extends DocFragment = T>(
     field: string,
     options?: any
-  ): Promise<any> => {
-    console.log(`[LazyDB] query ${field} on ${this.name}, initialized: ${this.hasInitialized}`);
-    return this.inner.query<K, T, R>(field, options);
-  };
+  ): Promise<any> => this.inner.query<K, T, R>(field, options);
 
   // Write operations - ensure real DB before operation
   put = async <T extends DocTypes>(doc: T) => {
@@ -131,21 +117,13 @@ export function useLazyFireproof(
   // Create a proxy to intercept all property access/calls
   const dbProxy = useMemo(() => {
     if (!ref.current) {
-      console.error(`[useLazyFireproof] No ref.current when creating proxy for ${name}`);
       return null;
     }
 
-    console.log(`[useLazyFireproof] Creating proxy for ${name}`);
     return new Proxy(ref.current, {
-      get: (target, prop) => {
-        // Log access to key methods
-        if (typeof prop === 'string' && ['useDocument', 'useLiveQuery'].includes(prop)) {
-          console.log(`[useLazyFireproof] Proxy accessing ${String(prop)} for ${name}`);
-        }
-        return target.proxyHandler(prop);
-      },
+      get: (target, prop) => target.proxyHandler(prop),
     });
-  }, [ref.current, name]);
+  }, [ref.current]);
 
   // Pass this stable reference to useFireproof
   // It will create hooks that call through to our wrapper
@@ -153,24 +131,18 @@ export function useLazyFireproof(
 
   // Expose the open method outside of useMemo to allow immediate initialization
   const open = useCallback(() => {
-    console.log(`[useLazyFireproof] open called for ${name}`);
     if (ref.current) {
       ref.current.ensureReal();
-    } else {
-      console.error(`[useLazyFireproof] open called but ref is null for ${name}`);
     }
-  }, [ref, name]);
+  }, [ref]);
 
   // Use this immediately in useEffect for routed sessions
   useEffect(() => {
-    console.log(`[useLazyFireproof] Hook initialized for ${name}`);
     // This ensures that when hooks subscribe to LiveQuery or document on mount
     // they'll get the right database immediately if open() was called synchronously
-    const timeout = setTimeout(() => {
-      console.log(`[useLazyFireproof] First tick completed for ${name}`);
-    }, 0);
+    const timeout = setTimeout(() => {}, 0);
     return () => clearTimeout(timeout);
-  }, [name]);
+  }, []);
 
   return useMemo(
     () => ({
