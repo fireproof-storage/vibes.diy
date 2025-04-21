@@ -23,11 +23,13 @@ export interface LocalVibe {
  * @param vibeId The ID of the vibe to load the screenshot for
  * @returns Object containing the screenshot file function and type, or undefined if no screenshot
  */
-export async function loadVibeScreenshot(vibeId: string): Promise<{ file: () => Promise<File>; type: string } | undefined> {
+export async function loadVibeScreenshot(
+  vibeId: string
+): Promise<{ file: () => Promise<File>; type: string } | undefined> {
   try {
     // Open the Fireproof database for this vibe
     const db = fireproof('vibe-' + vibeId);
-    
+
     // Query for the most recent screenshot document
     const result = await db.query('type', {
       key: 'screenshot',
@@ -60,6 +62,8 @@ export async function listLocalVibeIds(): Promise<string[]> {
   try {
     // Get all available IndexedDB databases
     const databases = await indexedDB.databases();
+
+    console.log('databases', databases);
 
     // Filter for databases that start with 'fp.vibe-' and extract IDs
     const vibeIds = databases
@@ -100,7 +104,7 @@ export async function loadVibeDocument(vibeId: string): Promise<LocalVibe | null
         slug: vibeDoc.remixOf || vibeId, // Use remixOf as the slug
         created: createdTimestamp,
         favorite: vibeDoc.favorite || false,
-        publishedUrl: vibeDoc.publishedUrl
+        publishedUrl: vibeDoc.publishedUrl,
       };
     }
     return null;
@@ -119,13 +123,13 @@ export async function listLocalVibes(): Promise<LocalVibe[]> {
   try {
     // Get all available vibe IDs
     const vibeIds = await listLocalVibeIds();
-    
+
     // Create an array of promises to fetch the vibe document for each ID
-    const vibePromises = vibeIds.map(vibeId => loadVibeDocument(vibeId));
+    const vibePromises = vibeIds.map((vibeId) => loadVibeDocument(vibeId));
 
     // Wait for all promises to resolve
     const results = await Promise.all(vibePromises);
-    
+
     // Filter out null values and sort by creation date
     return results
       .filter((vibe): vibe is LocalVibe => vibe !== null)

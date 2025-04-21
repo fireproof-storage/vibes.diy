@@ -18,7 +18,7 @@ export function VibeCard({
   onEditClick,
   onToggleFavorite,
   onDeleteClick,
-  onRemixClick
+  onRemixClick,
 }: VibeCardProps) {
   return (
     <div
@@ -64,10 +64,7 @@ export function VibeCard({
           <StarIcon filled={vibe.favorite} />
         </button>
       </div>
-      <div 
-        onClick={() => onEditClick(vibe.id)}
-        className="mt-3 mb-4 cursor-pointer"
-      >
+      <div onClick={() => onEditClick(vibe.id)} className="mt-3 mb-4 cursor-pointer">
         {vibe.screenshot ? (
           <ImgFile
             file={vibe.screenshot}
@@ -75,11 +72,11 @@ export function VibeCard({
             className="border-light-decorative-01 dark:border-dark-decorative-01 rounded-md border"
           />
         ) : (
-          <div 
-            className="border-light-decorative-01 dark:border-dark-decorative-01 bg-gray-200 dark:bg-gray-700 rounded-md border h-40 w-full flex items-center justify-center"
+          <div
+            className="border-light-decorative-01 dark:border-dark-decorative-01 flex h-40 w-full items-center justify-center rounded-md border bg-gray-200 dark:bg-gray-700"
             aria-label={`Placeholder for ${vibe.title}`}
           >
-            <span className="text-gray-500 dark:text-gray-400 text-sm">Click to edit</span>
+            <span className="text-sm text-gray-500 dark:text-gray-400">Click to edit</span>
           </div>
         )}
       </div>

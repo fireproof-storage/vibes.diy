@@ -18,14 +18,14 @@ export function VibeCardData({
   onEditClick,
   onToggleFavorite,
   onDeleteClick,
-  onRemixClick
+  onRemixClick,
 }: VibeCardDataProps) {
   const [vibe, setVibe] = useState<LocalVibe | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     let isMounted = true;
-    
+
     const loadData = async () => {
       try {
         setIsLoading(true);
@@ -40,9 +40,9 @@ export function VibeCardData({
         }
       }
     };
-    
+
     loadData();
-    
+
     return () => {
       isMounted = false;
     };
@@ -56,7 +56,7 @@ export function VibeCardData({
     slug: vibeId,
     created: new Date().toISOString(),
     favorite: false,
-    publishedUrl: undefined
+    publishedUrl: undefined,
   };
 
   return (

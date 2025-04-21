@@ -9,6 +9,7 @@ import type {
   ChatMessageDocument,
 } from '../types/chat';
 import { getSessionDatabaseName } from '../utils/databaseManager';
+import { useLazyFireproof } from './useLazyFireproof';
 
 export function useSession(routedSessionId?: string) {
   const { useDocument: useMainDocument, database: mainDatabase } =
@@ -25,7 +26,8 @@ export function useSession(routedSessionId?: string) {
     database: sessionDatabase,
     useDocument: useSessionDocument,
     useLiveQuery: useSessionLiveQuery,
-  } = useFireproof(sessionDbName);
+    open: openSessionDatabase,
+  } = useLazyFireproof(sessionDbName);
 
   // Session document is stored in the main database
   const { doc: session, merge: mergeSession } = useMainDocument<SessionDocument>(
@@ -141,6 +143,13 @@ export function useSession(routedSessionId?: string) {
     [sessionId, sessionDatabase]
   );
 
+  // Wrap submitUserMessage to ensure database is opened before first write
+  const wrappedSubmitUserMessage = useCallback(async () => {
+    // Database will be automatically opened on first write via the LazyDB wrapper
+    // This explicit call is optional but makes the intent clear
+    return submitUserMessage();
+  }, [submitUserMessage]);
+
   return {
     // Session information
     session,
@@ -149,6 +158,7 @@ export function useSession(routedSessionId?: string) {
     // Databases
     mainDatabase,
     sessionDatabase,
+    openSessionDatabase,
 
     // Session management functions
     updateTitle,
@@ -157,7 +167,7 @@ export function useSession(routedSessionId?: string) {
 
     // Message management
     userMessage,
-    submitUserMessage,
+    submitUserMessage: wrappedSubmitUserMessage,
     mergeUserMessage,
     aiMessage,
     submitAiMessage,
