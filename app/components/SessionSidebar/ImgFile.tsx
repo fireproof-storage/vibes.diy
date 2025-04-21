@@ -24,6 +24,6 @@ export function ImgFile({ file, alt, className }: ImgFileProps) {
   }, [file]);
 
   return imgDataUrl ? (
-    <img className={`${className} max-h-60 max-w-full object-contain`} alt={alt} src={imgDataUrl} />
+    <img className={`${className} w-full h-40 object-cover`} alt={alt} src={imgDataUrl} />
   ) : null;
 }

@@ -66,21 +66,23 @@ export function VibeCard({
           <StarIcon filled={vibe.favorite} />
         </button>
       </div>
-      <div onClick={() => onEditClick(vibe.id)} className="mt-3 mb-4 cursor-pointer">
-        {screenshot ? (
-          <ImgFile
-            file={screenshot}
-            alt={`Screenshot from ${vibe.title}`}
-            className="border-light-decorative-01 dark:border-dark-decorative-01 rounded-md border"
-          />
-        ) : (
-          <div
-            className="border-light-decorative-01 dark:border-dark-decorative-01 flex h-40 w-full items-center justify-center rounded-md border bg-gray-200 dark:bg-gray-700"
-            aria-label={`Placeholder for ${vibe.title}`}
-          >
-            <span className="text-sm text-gray-500 dark:text-gray-400">Click to edit</span>
-          </div>
-        )}
+      <div onClick={() => onEditClick(vibe.id)} className="mt-3 mb-4 cursor-pointer h-40">
+        <div className="border-light-decorative-01 dark:border-dark-decorative-01 rounded-md border h-40 w-full overflow-hidden">
+          {screenshot ? (
+            <ImgFile
+              file={screenshot}
+              alt={`Screenshot from ${vibe.title}`}
+              className="w-full h-full"
+            />
+          ) : (
+            <div
+              className="flex h-full w-full items-center justify-center bg-gray-200 dark:bg-gray-700"
+              aria-label={`Placeholder for ${vibe.title}`}
+            >
+              <span className="text-sm text-gray-500 dark:text-gray-400">Click to edit</span>
+            </div>
+          )}
+        </div>
       </div>
       <div className="flex space-x-2">
         <button
