@@ -28,6 +28,12 @@ export function useSession(routedSessionId?: string) {
     useLiveQuery: useSessionLiveQuery,
     open: openSessionDatabase,
   } = useLazyFireproof(sessionDbName);
+  
+  // Automatically open the database if we have a routed session ID
+  // This ensures existing sessions are loaded immediately
+  if (routedSessionId) {
+    openSessionDatabase();
+  }
 
   // Session document is stored in the main database
   const { doc: session, merge: mergeSession } = useMainDocument<SessionDocument>(
