@@ -9,6 +9,7 @@ import {
   CodeIcon,
   DataIcon,
   PreviewIcon,
+  PublishIcon,
   UserIcon,
 } from '../HeaderContent/SvgIcons';
 import { PublishMenu } from '../PublishMenu';
@@ -147,7 +148,7 @@ const ResultPreviewHeaderContent: React.FC<ResultPreviewHeaderContentProps> = ({
   };
 
   const handlePublish = async () => {
-    if (!userInfo?.userId) return;
+    // if (!userInfo?.userId) return;
     try {
       if (messages.length === 0) {
         return;
@@ -167,7 +168,7 @@ const ResultPreviewHeaderContent: React.FC<ResultPreviewHeaderContentProps> = ({
         code,
         title,
         prompt,
-        userId: userInfo.userId,
+        userId: userInfo?.userId,
         updatePublishedUrl,
       });
 
@@ -322,7 +323,7 @@ const ResultPreviewHeaderContent: React.FC<ResultPreviewHeaderContentProps> = ({
       {/* Right side */}
       <div className="flex w-1/4 justify-end">
         <div className="flex items-center gap-2">
-          {isUserAuthenticated && showViewControls && previewReady && (
+          {showViewControls && previewReady && (
             <div className="relative">
               <button
                 ref={publishButtonRef}
@@ -332,22 +333,8 @@ const ResultPreviewHeaderContent: React.FC<ResultPreviewHeaderContentProps> = ({
                 aria-label="Publish"
                 title="Publish"
               >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="h-5 w-5"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                  aria-labelledby="publishSvgTitle"
-                >
-                  <title id="publishSvgTitle">Publish</title>
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={1.5}
-                    d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"
-                  />
-                </svg>
+                <PublishIcon className="h-5 w-5" />
+                <span className="hidden pr-1 min-[480px]:inline">Publish</span>
               </button>
               <PublishMenu
                 isOpen={isPublishMenuOpen}
@@ -370,18 +357,18 @@ const ResultPreviewHeaderContent: React.FC<ResultPreviewHeaderContentProps> = ({
                 title={
                   isUserAuthenticated
                     ? `Logged in as ${userInfo?.userId}`
-                    : 'Login with Fireproof to Publish'
+                    : 'Login to keep building'
                 }
               >
                 <UserIcon isVerifying={isVerifying} isUserAuthenticated={isUserAuthenticated} />
-                <span className="hidden min-[480px]:inline">
+                <span className="hidden pr-1 min-[480px]:inline">
                   {isVerifying
                     ? 'Verifying...'
                     : isUserAuthenticated
                       ? ''
                       : needsLogin
                         ? 'Get Credits'
-                        : 'Share'}
+                        : 'Get Credits'}
                 </span>
               </button>
             </div>

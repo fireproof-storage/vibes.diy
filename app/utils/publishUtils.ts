@@ -42,7 +42,7 @@ export async function publishApp({
   sessionId?: string;
   code: string;
   title?: string;
-  userId: string;
+  userId?: string;
   prompt?: string;
   updatePublishedUrl?: (url: string) => Promise<void>;
 }): Promise<string | undefined> {
@@ -145,17 +145,19 @@ export async function publishApp({
       const existingDoc = (await userVibespaceDb.get(docId).catch(() => null)) as any;
 
       // Use the shared utility function to update the user's vibespace
-      await updateUserVibespaceDoc(userId, data.app.slug, {
-        id: sessionId,
-        title: data.app.title || data.app.config?.title || '',
-        slug: data.app.slug,
-        app: data.app,
-        publishedUrl: appUrl,
-        // Preserve favorite status if the document already exists
-        favorite: existingDoc?.favorite || false,
-        // Keep remix information
-        remixOf: data.app.remixOf || existingDoc?.remixOf,
-      });
+      if (userId) {
+        await updateUserVibespaceDoc(userId, data.app.slug, {
+          id: sessionId,
+          title: data.app.title || data.app.config?.title || '',
+          slug: data.app.slug,
+          app: data.app,
+          publishedUrl: appUrl,
+          // Preserve favorite status if the document already exists
+          favorite: existingDoc?.favorite || false,
+          // Keep remix information
+          remixOf: data.app.remixOf || existingDoc?.remixOf,
+        });
+      }
 
       // Update the session with the published URL if callback provided
       if (updatePublishedUrl) {
