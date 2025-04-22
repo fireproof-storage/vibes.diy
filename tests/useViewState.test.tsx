@@ -232,7 +232,9 @@ describe('useViewState', () => {
     });
 
     // Should navigate to /app when on base path
-    expect(mockNavigate).toHaveBeenCalledWith(`/chat/${mockSessionId}/${mockTitle}/app`);
+    expect(mockNavigate).toHaveBeenCalledWith(`/chat/${mockSessionId}/${mockTitle}/app`, {
+      replace: true,
+    });
   });
 
   test('should only redirect once when previewReady transitions from false to true', () => {
@@ -292,7 +294,9 @@ describe('useViewState', () => {
 
     // Should navigate to /app once
     expect(mockNavigate).toHaveBeenCalledTimes(1);
-    expect(mockNavigate).toHaveBeenCalledWith(`/chat/${mockSessionId}/${mockTitle}/app`);
+    expect(mockNavigate).toHaveBeenCalledWith(`/chat/${mockSessionId}/${mockTitle}/app`, {
+      replace: true,
+    });
 
     // Reset mock to check if another call happens
     mockNavigate.mockReset();

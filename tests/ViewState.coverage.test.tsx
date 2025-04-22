@@ -91,7 +91,9 @@ describe('ViewState Coverage Tests', () => {
     });
 
     // Verify navigation to app view occurred
-    expect(mockNavigate).toHaveBeenCalledWith(`/chat/${mockSessionId}/${mockTitle}/app`);
+    expect(mockNavigate).toHaveBeenCalledWith(`/chat/${mockSessionId}/${mockTitle}/app`, {
+      replace: true,
+    });
   });
 
   test('should navigate to specified view when navigateToView is called with valid session', () => {
@@ -216,6 +218,8 @@ describe('ViewState Coverage Tests', () => {
     });
 
     // Verify navigation to app view occurred
-    expect(mockNavigate).toHaveBeenCalledWith(`/chat/${mockSessionId}/${mockTitle}/app`);
+    expect(mockNavigate).toHaveBeenCalledWith(`/chat/${mockSessionId}/${mockTitle}/app`, {
+      replace: true,
+    });
   });
 });

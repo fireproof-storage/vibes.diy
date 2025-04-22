@@ -176,28 +176,29 @@ export function useSimpleChat(sessionId: string | undefined): ChatState {
 
   // Keep track of the immediate user message for UI display
   const [pendingUserDoc, setPendingUserDoc] = useState<ChatMessageDocument | null>(null);
-  
+
   // Prepare the full message list with any pending messages
   const allDocs = useMemo(() => {
     // Start with the existing messages from the database
     const result = [...docs];
-    
+
     // If we have a pending user message that's not yet in the docs, add it
     if (pendingUserDoc && pendingUserDoc.text.trim()) {
       // Make sure it's not already in the list (to avoid duplicates)
-      const exists = docs.some(doc => 
-        doc.type === 'user' && 
-        (doc._id === pendingUserDoc._id || doc.text === pendingUserDoc.text)
+      const exists = docs.some(
+        (doc) =>
+          doc.type === 'user' &&
+          (doc._id === pendingUserDoc._id || doc.text === pendingUserDoc.text)
       );
-      
+
       if (!exists) {
         result.push(pendingUserDoc);
       }
     }
-    
+
     return result;
   }, [docs, pendingUserDoc]);
-  
+
   const {
     messages,
     selectedResponseDoc,
@@ -261,12 +262,12 @@ export function useSimpleChat(sessionId: string | undefined): ChatState {
       if (textOverride) {
         mergeUserMessage({ text: textOverride });
       }
-      
+
       // Save a copy of the user message for immediate display
       // This handles the case when the message doesn't appear in docs immediately
       setPendingUserDoc({
         ...userMessage,
-        text: promptText
+        text: promptText,
       });
 
       // Ensure we have a system prompt

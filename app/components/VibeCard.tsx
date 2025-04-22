@@ -67,7 +67,10 @@ export function VibeCard({
           <StarIcon filled={vibe.favorite} />
         </button>
       </div>
-      <div onClick={() => onEditClick(vibe.id, vibe.encodedTitle)} className="mt-3 mb-4 cursor-pointer">
+      <div
+        onClick={() => onEditClick(vibe.id, vibe.encodedTitle)}
+        className="mt-3 mb-4 cursor-pointer"
+      >
         <div className="border-light-decorative-01 dark:border-dark-decorative-01 w-full overflow-hidden rounded-md border">
           {screenshot ? (
             <ImgFile

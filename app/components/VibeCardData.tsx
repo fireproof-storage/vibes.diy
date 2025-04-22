@@ -77,9 +77,11 @@ export function VibeCardData({
 
   // Create a default/placeholder vibe with loading state if we're still loading
   // or if the vibe data failed to load
+  const title = isLoading ? 'Loading...' : 'Vibe Not Found';
   const vibeData = vibe || {
     id: vibeId,
-    title: isLoading ? 'Loading...' : 'Vibe Not Found',
+    title,
+    encodedTitle: title.toLowerCase().replace(/ /g, '-'),
     slug: vibeId,
     created: new Date().toISOString(),
     favorite: false,

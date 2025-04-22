@@ -147,7 +147,9 @@ describe('useViewState during streaming', () => {
     });
 
     // UPDATED BEHAVIOR: Navigate to app view whenever preview is ready, even during streaming
-    expect(mockNavigate).toHaveBeenCalledWith(`/chat/${mockSessionId}/${mockTitle}/app`);
+    expect(mockNavigate).toHaveBeenCalledWith(`/chat/${mockSessionId}/${mockTitle}/app`, {
+      replace: true,
+    });
 
     // UPDATED BEHAVIOR: displayView should be 'preview' when previewReady is true, even during streaming
     expect(hookResult.displayView).toBe('preview');
@@ -162,7 +164,9 @@ describe('useViewState during streaming', () => {
     });
 
     // NOW it should navigate to app view
-    expect(mockNavigate).toHaveBeenCalledWith(`/chat/${mockSessionId}/${mockTitle}/app`);
+    expect(mockNavigate).toHaveBeenCalledWith(`/chat/${mockSessionId}/${mockTitle}/app`, {
+      replace: true,
+    });
   });
 
   test('should not navigate to app view when on code path and preview becomes ready', () => {
@@ -363,7 +367,9 @@ describe('useViewState during streaming', () => {
     } as any); // Type assertion to bypass type checking for test
 
     // UPDATED BEHAVIOR: Navigate to app view whenever preview is ready, even during streaming
-    expect(mockNavigate).toHaveBeenCalledWith(`/chat/${mockSessionId}/${mockTitle}/app`);
+    expect(mockNavigate).toHaveBeenCalledWith(`/chat/${mockSessionId}/${mockTitle}/app`, {
+      replace: true,
+    });
 
     // End streaming and verify navigation happens
     rerender({
@@ -375,7 +381,9 @@ describe('useViewState during streaming', () => {
     } as any); // Type assertion needed for test
 
     // NOW it should navigate to app view
-    expect(mockNavigate).toHaveBeenCalledWith(`/chat/${mockSessionId}/${mockTitle}/app`);
+    expect(mockNavigate).toHaveBeenCalledWith(`/chat/${mockSessionId}/${mockTitle}/app`, {
+      replace: true,
+    });
   });
 
   test('EXPECTED BEHAVIOR: should stay on code view when first code lines arrive during streaming', () => {
@@ -509,7 +517,9 @@ describe('useViewState during streaming', () => {
     } as any);
 
     // UPDATED BEHAVIOR: Navigate to app view whenever preview is ready, even during streaming
-    expect(mockNavigate).toHaveBeenCalledWith(`/chat/${mockSessionId}/${mockTitle}/app`);
+    expect(mockNavigate).toHaveBeenCalledWith(`/chat/${mockSessionId}/${mockTitle}/app`, {
+      replace: true,
+    });
 
     // UPDATED BEHAVIOR: displayView should be 'preview' when previewReady is true, even during streaming
     expect(hookResult.displayView).toBe('preview');
@@ -524,7 +534,9 @@ describe('useViewState during streaming', () => {
     } as any); // Type assertion needed for test
 
     // NOW navigate to app view is expected
-    expect(mockNavigate).toHaveBeenCalledWith(`/chat/${mockSessionId}/${mockTitle}/app`);
+    expect(mockNavigate).toHaveBeenCalledWith(`/chat/${mockSessionId}/${mockTitle}/app`, {
+      replace: true,
+    });
     // (User sees empty app view instead of code being written)
   });
 });
