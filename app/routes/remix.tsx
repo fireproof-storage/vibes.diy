@@ -108,7 +108,7 @@ export default function Remix() {
         await updateTitle(finalTitle);
 
         // Navigate to the chat session URL
-        navigate(`/chat/${session._id}/${encodeTitle(session.title || '')}`);
+        navigate(`/chat/${session._id}/${encodeTitle(session.title || '')}/app`);
       } catch (error) {
         console.error('Error in remix process:', error);
         setError(error instanceof Error ? error.message : 'Unknown error occurred');

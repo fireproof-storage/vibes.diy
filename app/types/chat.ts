@@ -6,6 +6,7 @@ import type { RuntimeError } from '../hooks/useRuntimeErrors';
 export interface VibeDocument {
   _id: 'vibe';
   title: string;
+  encodedTitle: string;
   remixOf: string;
   created_at: number;
   slug?: string;

@@ -77,8 +77,8 @@ export default function MyVibesRoute(): ReactElement {
     };
   }, [confirmDelete]);
 
-  const handleEditClick = (id: string) => {
-    navigate(`/chat/${id}/app`);
+  const handleEditClick = (id: string, encodedTitle: string) => {
+    navigate(`/chat/${id}/${encodedTitle}/app`);
   };
 
   const handleRemixClick = (slug: string, event: React.MouseEvent<HTMLButtonElement>) => {

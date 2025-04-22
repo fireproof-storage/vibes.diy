@@ -80,7 +80,7 @@ export function useViewState(props: {
       const isInDataView = location.pathname.endsWith('/data');
       const isInCodeView = location.pathname.endsWith('/code');
       if (!isInDataView && !isInCodeView) {
-        navigate(`/chat/${sessionId}/${encodedTitle}/app`);
+        navigate(`/chat/${sessionId}/${encodedTitle}/app`, { replace: true });
       }
     }
 

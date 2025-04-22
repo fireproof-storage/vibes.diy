@@ -7,7 +7,7 @@ interface VibeCardProps {
   vibe: LocalVibe;
   screenshot?: { file: () => Promise<File>; type: string };
   confirmDelete: string | null;
-  onEditClick: (id: string) => void;
+  onEditClick: (id: string, encodedTitle: string) => void;
   onToggleFavorite: (vibeId: string, e: React.MouseEvent) => Promise<void>;
   onDeleteClick: (vibeId: string, e: React.MouseEvent) => void;
   onRemixClick: (slug: string, e: React.MouseEvent<HTMLButtonElement>) => void;
@@ -22,6 +22,7 @@ export function VibeCard({
   onDeleteClick,
   onRemixClick,
 }: VibeCardProps) {
+  console.log('VibeCard', { vibe });
   return (
     <div
       key={vibe.id}
@@ -66,7 +67,7 @@ export function VibeCard({
           <StarIcon filled={vibe.favorite} />
         </button>
       </div>
-      <div onClick={() => onEditClick(vibe.id)} className="mt-3 mb-4 cursor-pointer">
+      <div onClick={() => onEditClick(vibe.id, vibe.encodedTitle)} className="mt-3 mb-4 cursor-pointer">
         <div className="border-light-decorative-01 dark:border-dark-decorative-01 w-full overflow-hidden rounded-md border">
           {screenshot ? (
             <ImgFile
@@ -106,7 +107,7 @@ export function VibeCard({
           onClick={(e) => {
             e.stopPropagation();
             e.preventDefault();
-            onEditClick(vibe.id);
+            onEditClick(vibe.id, vibe.encodedTitle);
           }}
           className="text-light-primary bg-light-decorative-01 dark:text-dark-primary dark:bg-dark-decorative-01 rounded-md px-3 py-1 text-sm hover:bg-blue-500 hover:text-white dark:hover:bg-blue-500"
         >

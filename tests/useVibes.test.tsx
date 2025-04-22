@@ -37,6 +37,7 @@ describe('useVibes', () => {
     {
       id: 'test-vibe-1',
       title: 'Test Vibe 1',
+      encodedTitle: 'test-vibe-1',
       slug: 'test-vibe-1',
       created: new Date('2025-04-18').toISOString(),
       favorite: false,
@@ -48,6 +49,7 @@ describe('useVibes', () => {
     {
       id: 'test-vibe-2',
       title: 'Test Vibe 2',
+      encodedTitle: 'test-vibe-2',
       slug: 'test-vibe-2',
       created: new Date('2025-04-19').toISOString(),
       favorite: true,

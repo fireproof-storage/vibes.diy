@@ -1,6 +1,7 @@
 import { fireproof } from 'use-fireproof';
 import { updateUserVibespaceDoc } from './databaseManager';
 import type { VibeDocument } from '../types/chat';
+import { encodeTitle } from '../components/SessionSidebar/utils';
 
 /**
  * Interface for vibe documents stored in the database
@@ -8,6 +9,7 @@ import type { VibeDocument } from '../types/chat';
 export interface LocalVibe {
   id: string;
   title: string;
+  encodedTitle: string;
   slug: string;
   created: string;
   favorite?: boolean;
@@ -96,9 +98,11 @@ export async function loadVibeDocument(vibeId: string): Promise<LocalVibe | null
         ? new Date(vibeDoc.created_at).toISOString()
         : new Date('2025-02-02T15:17:00Z').toISOString();
 
+      const title = vibeDoc.title || 'Unnamed Vibe';
       return {
         id: vibeId,
-        title: vibeDoc.title || 'Unnamed Vibe',
+        title,
+        encodedTitle: vibeDoc.encodedTitle || encodeTitle(title),
         slug: vibeDoc.remixOf || vibeId, // Use remixOf as the slug
         created: createdTimestamp,
         favorite: vibeDoc.favorite || false,

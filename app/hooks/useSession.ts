@@ -10,6 +10,7 @@ import type {
 } from '../types/chat';
 import { getSessionDatabaseName } from '../utils/databaseManager';
 import { useLazyFireproof } from './useLazyFireproof';
+import { encodeTitle } from '../components/SessionSidebar/utils';
 
 export function useSession(routedSessionId?: string) {
   const { useDocument: useMainDocument, database: mainDatabase } =
@@ -86,15 +87,20 @@ export function useSession(routedSessionId?: string) {
       // Update local session state for UI
       mergeSession({ title });
 
+      // Encode the title for URL-friendly slug
+      const encodedTitle = encodeTitle(title);
+
       // Store title in the vibe document
       const currentVibeDoc = await sessionDatabase.get<VibeDocument>('vibe').catch(() => null);
       if (currentVibeDoc) {
         currentVibeDoc.title = title;
+        currentVibeDoc.encodedTitle = encodedTitle;
         await sessionDatabase.put(currentVibeDoc);
       } else {
         await sessionDatabase.put({
           _id: 'vibe',
           title,
+          encodedTitle,
           created_at: Date.now(),
         });
       }

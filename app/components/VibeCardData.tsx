@@ -6,7 +6,7 @@ import type { LocalVibe } from '../utils/vibeUtils';
 interface VibeCardDataProps {
   vibeId: string;
   confirmDelete: string | null;
-  onEditClick: (id: string) => void;
+  onEditClick: (id: string, encodedTitle: string) => void;
   onToggleFavorite: (vibeId: string, e: React.MouseEvent) => Promise<void>;
   onDeleteClick: (vibeId: string, e: React.MouseEvent) => void;
   onRemixClick: (slug: string, e: React.MouseEvent<HTMLButtonElement>) => void;

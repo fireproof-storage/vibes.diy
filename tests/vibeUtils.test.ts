@@ -26,6 +26,7 @@ const mockVibes: LocalVibe[] = [
   {
     id: 'test1',
     title: 'Test Vibe 1',
+    encodedTitle: 'test-vibe-1',
     slug: 'original-vibe',
     created: new Date(1713632400000).toISOString(),
     screenshot: {
@@ -36,6 +37,7 @@ const mockVibes: LocalVibe[] = [
   {
     id: 'test2',
     title: 'Test Vibe 2',
+    encodedTitle: 'test-vibe-2',
     slug: 'original-vibe',
     created: new Date(1713632400000).toISOString(),
     screenshot: {
