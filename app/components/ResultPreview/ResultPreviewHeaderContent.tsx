@@ -322,14 +322,15 @@ const ResultPreviewHeaderContent: React.FC<ResultPreviewHeaderContentProps> = ({
 
       {/* Right side */}
       <div className="flex w-1/4 items-center justify-end">
-        <div className="flex items-center gap-2">
+        <div className="flex items-center">
+          {/* Publish button */}
           {showViewControls && previewReady && (
-            <div className="bg-light-decorative-00 dark:bg-dark-decorative-00 flex justify-center rounded-md p-1 shadow-sm">
+            <div className="mr-2">
               <button
                 ref={publishButtonRef}
                 type="button"
                 onClick={() => setIsPublishMenuOpen(!isPublishMenuOpen)}
-                className="text-light-primary dark:text-dark-primary hover:bg-light-decorative-01 dark:hover:bg-dark-decorative-01 flex items-center gap-1 rounded px-2 py-1.5 text-sm font-medium transition-colors"
+                className="bg-light-decorative-00 bg-glimmer text-light-primary dark:text-dark-primary hover:bg-light-decorative-01 dark:hover:bg-dark-decorative-01 flex items-center gap-1 rounded-md px-3 py-2 text-sm font-medium"
                 aria-label="Publish"
                 title="Publish"
               >
@@ -339,13 +340,14 @@ const ResultPreviewHeaderContent: React.FC<ResultPreviewHeaderContentProps> = ({
             </div>
           )}
           
-          <div className="bg-light-decorative-00 dark:bg-dark-decorative-00 flex justify-center rounded-md p-1 shadow-sm">
+          {/* Credits button */}
+          <div>
             <button
               ref={buttonRef}
               type="button"
               onClick={handleAuthCheck}
               disabled={isVerifying}
-              className={`${needsLogin ? 'text-orange-500' : 'text-light-primary dark:text-dark-primary'} hover:bg-light-decorative-01 dark:hover:bg-dark-decorative-01 flex items-center gap-1 rounded px-2 py-1.5 text-sm font-medium transition-colors ${isVerifying ? 'cursor-wait opacity-50' : ''}`}
+              className={`bg-light-decorative-00 dark:bg-dark-decorative-00 ${needsLogin ? 'text-orange-500' : 'text-light-primary dark:text-dark-primary'} hover:bg-light-decorative-01 dark:hover:bg-dark-decorative-01 flex items-center gap-1 rounded-md px-3 py-2 text-sm font-medium transition-colors ${isVerifying ? 'cursor-wait opacity-50' : ''}`}
               aria-label={isUserAuthenticated ? `User: ${userInfo?.userId}` : 'Connect Account'}
               title={
                 isUserAuthenticated ? `Logged in as ${userInfo?.userId}` : 'Login to keep building'
