@@ -21,7 +21,7 @@ export function useVibes() {
       setIsLoading(true);
       setError(null);
       const vibeIds = await listLocalVibeIds();
-      setVibes(vibeIds.map((id) => ({ id })) as LocalVibe[]);
+      setVibes(vibeIds.map((id) => ({ id })).reverse() as LocalVibe[]);
     } catch (err) {
       setError(err instanceof Error ? err : new Error(String(err)));
     } finally {

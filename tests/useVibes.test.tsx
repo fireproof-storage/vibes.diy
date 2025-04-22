@@ -80,7 +80,8 @@ describe('useVibes', () => {
     // Assert
     expect(listLocalVibeIds).toHaveBeenCalled();
     // The actual vibes will just have IDs since loadVibeDocument is not actually called
-    expect(result.current.vibes).toEqual([{ id: 'test-vibe-1' }, { id: 'test-vibe-2' }]);
+    // Order is reversed now as we're showing newest first
+    expect(result.current.vibes).toEqual([{ id: 'test-vibe-2' }, { id: 'test-vibe-1' }]);
     expect(result.current.isLoading).toBe(false);
     expect(result.current.error).toBe(null);
   });
@@ -104,7 +105,8 @@ describe('useVibes', () => {
 
     // Assert - loading completed
     expect(result.current.isLoading).toBe(false);
-    expect(result.current.vibes).toEqual([{ id: 'test-vibe-1' }, { id: 'test-vibe-2' }]);
+    // Order is reversed now as we're showing newest first
+    expect(result.current.vibes).toEqual([{ id: 'test-vibe-2' }, { id: 'test-vibe-1' }]);
   });
 
   it('should handle errors when loading vibes', async () => {
@@ -139,8 +141,9 @@ describe('useVibes', () => {
     // Assert
     expect(deleteVibeDatabase).toHaveBeenCalledWith('test-vibe-1');
 
-    // Check optimistic update - should only have the second vibe
+    // Check optimistic update - should only have one vibe left
     expect(result.current.vibes.length).toBe(1);
+    // After test-vibe-1 is deleted, only test-vibe-2 remains
     expect(result.current.vibes[0].id).toBe('test-vibe-2');
   });
 
@@ -187,12 +190,13 @@ describe('useVibes', () => {
     await waitFor(() => expect(result.current.isLoading).toBe(false));
 
     // Manually set initial favorites state for the test
+    // With reversed order, vibes[0] is 'test-vibe-2' and vibes[1] is 'test-vibe-1'
     act(() => {
-      result.current.vibes[0] = { ...result.current.vibes[0], favorite: false };
-      result.current.vibes[1] = { ...result.current.vibes[1], favorite: true };
+      result.current.vibes[0] = { ...result.current.vibes[0], favorite: true }; // test-vibe-2
+      result.current.vibes[1] = { ...result.current.vibes[1], favorite: false }; // test-vibe-1
     });
 
-    // Perform toggle favorite for the first vibe (initially false)
+    // Perform toggle favorite for the first vibe (test-vibe-1, now at index 1)
     await act(async () => {
       await result.current.toggleFavorite('test-vibe-1');
     });
@@ -200,11 +204,11 @@ describe('useVibes', () => {
     // Assert
     expect(toggleVibeFavorite).toHaveBeenCalledWith('test-vibe-1', 'test-user-id');
 
-    // Check optimistic update - first vibe should now be favorited
-    expect(result.current.vibes[0].favorite).toBe(true);
-
-    // Second vibe should remain unchanged
+    // Check optimistic update - test-vibe-1 should now be favorited (now at index 1)
     expect(result.current.vibes[1].favorite).toBe(true);
+
+    // test-vibe-2 should remain unchanged
+    expect(result.current.vibes[0].favorite).toBe(true);
   });
 
   it('should reload vibes if toggling favorite fails', async () => {
