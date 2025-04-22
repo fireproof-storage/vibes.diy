@@ -330,16 +330,18 @@ const ResultPreviewHeaderContent: React.FC<ResultPreviewHeaderContentProps> = ({
                 ref={publishButtonRef}
                 type="button"
                 onClick={() => setIsPublishMenuOpen(!isPublishMenuOpen)}
-                className="bg-glimmer text-light-primary dark:text-dark-primary flex items-center justify-center gap-1 rounded-md px-3 py-2 text-sm font-medium border border-gray-200 dark:border-gray-700 min-[768px]:w-auto max-[767px]:aspect-square max-[767px]:p-2"
+                className="bg-glimmer text-light-primary dark:text-dark-primary flex items-center justify-center gap-1 rounded-md border border-gray-200 px-3 py-2 text-sm font-medium max-[767px]:aspect-square max-[767px]:p-2 min-[768px]:w-auto dark:border-gray-700"
                 aria-label="Publish"
-                title="Publish"
+                title="Share with the world"
               >
                 <PublishIcon className="h-5 w-5" />
-                <span className="hidden min-[1024px]:inline whitespace-nowrap text-xs">Publish</span>
+                <span className="hidden text-xs whitespace-nowrap min-[1024px]:inline">
+                  Publish
+                </span>
               </button>
             </div>
           )}
-          
+
           {/* Credits button */}
           <div>
             <button
@@ -347,14 +349,14 @@ const ResultPreviewHeaderContent: React.FC<ResultPreviewHeaderContentProps> = ({
               type="button"
               onClick={handleAuthCheck}
               disabled={isVerifying}
-              className={`bg-light-decorative-00 dark:bg-dark-decorative-00 ${needsLogin ? 'text-orange-500' : 'text-light-primary dark:text-dark-primary'} hover:bg-light-decorative-01 dark:hover:bg-dark-decorative-01 flex items-center justify-center gap-1 rounded-md px-3 py-2 text-sm font-medium transition-colors border border-gray-200 dark:border-gray-700 min-[768px]:w-auto max-[767px]:aspect-square max-[767px]:p-2 ${isVerifying ? 'cursor-wait opacity-50' : ''}`}
+              className={`bg-light-decorative-00 dark:bg-dark-decorative-00 ${needsLogin ? 'text-orange-500' : 'text-light-primary dark:text-dark-primary'} hover:bg-light-decorative-01 dark:hover:bg-dark-decorative-01 flex items-center justify-center gap-1 rounded-md border border-gray-200 px-3 py-2 text-sm font-medium transition-colors max-[767px]:aspect-square max-[767px]:p-2 min-[768px]:w-auto dark:border-gray-700 ${isVerifying ? 'cursor-wait opacity-50' : ''}`}
               aria-label={isUserAuthenticated ? `User: ${userInfo?.userId}` : 'Connect Account'}
               title={
                 isUserAuthenticated ? `Logged in as ${userInfo?.userId}` : 'Login to keep building'
               }
             >
               <UserIcon isVerifying={isVerifying} isUserAuthenticated={isUserAuthenticated} />
-              <span className="text-xs hidden min-[1024px]:inline whitespace-nowrap">
+              <span className="hidden text-xs whitespace-nowrap min-[1024px]:inline">
                 {isVerifying
                   ? 'Verifying...'
                   : isUserAuthenticated
@@ -365,7 +367,7 @@ const ResultPreviewHeaderContent: React.FC<ResultPreviewHeaderContentProps> = ({
               </span>
             </button>
           </div>
-          
+
           {/* Menus rendered at the top level */}
           {isPublishMenuOpen && showViewControls && previewReady && (
             <PublishMenu
@@ -376,7 +378,7 @@ const ResultPreviewHeaderContent: React.FC<ResultPreviewHeaderContentProps> = ({
               publishedAppUrl={publishedAppUrl}
             />
           )}
-          
+
           {isMenuOpen && isUserAuthenticated && (
             <UserMenu
               isOpen={isMenuOpen}
@@ -385,7 +387,6 @@ const ResultPreviewHeaderContent: React.FC<ResultPreviewHeaderContentProps> = ({
               buttonRef={buttonRef}
             />
           )}
-
         </div>
       </div>
     </div>

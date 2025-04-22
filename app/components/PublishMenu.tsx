@@ -61,9 +61,8 @@ export function PublishMenu({
   };
 
   return createPortal(
-    <dialog
-      open
-      className="fixed inset-0 z-[9999] m-0 bg-transparent p-0"
+    <div
+      className="fixed inset-0 z-[9999] m-0 bg-black/25"
       onClick={handleBackdropClick}
       onKeyDown={(e) => {
         if (e.key === 'Escape') {
@@ -74,6 +73,7 @@ export function PublishMenu({
     >
       <div
         style={menuStyle}
+        onClick={(e) => e.stopPropagation()}
         className="ring-opacity-5 dark:bg-dark-background-01 w-80 rounded bg-white p-4 shadow-lg ring-1 ring-black"
       >
         <div
@@ -259,7 +259,7 @@ export function PublishMenu({
           )}
         </div>
       </div>
-    </dialog>,
+    </div>,
     document.body
   );
 }

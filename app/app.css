@@ -239,13 +239,18 @@ a,
   }
 }
 
-/* Simple rotate animation for glimmer */
-@keyframes simpleRotate {
+/* Gradient animation for glimmer */
+@keyframes gradientGlimmer {
   0% {
-    transform: rotate(0deg);
+    background-position: 0% 50%;
   }
+
+  50% {
+    background-position: 100% 50%;
+  }
+
   100% {
-    transform: rotate(360deg);
+    background-position: 0% 50%;
   }
 }
 
@@ -265,14 +270,17 @@ a,
   height: 200%;
   z-index: -1;
   background-image: linear-gradient(
-    90deg,
+    -45deg,
     #f2f2f2 0%,
-    #f7f7f7 20%,
+    #f7f7f7 40%,
+    #e0e0e0 42%,
     #ffffff 50%,
-    #f7f7f7 80%,
+    #e0e0e0 52%,
+    #f7f7f7 60%,
     #f2f2f2 100%
   );
-  animation: simpleRotate 8s infinite linear;
+  background-size: 300% 300%;
+  animation: gradientGlimmer 30s ease infinite;
   transition: filter 0.2s ease;
 }
 
@@ -290,13 +298,16 @@ button:hover .bg-glimmer,
 /* Dark mode variant */
 .dark .bg-glimmer::before {
   background-image: linear-gradient(
-    90deg,
+    -45deg,
     #363636 0%,
-    #404040 20%,
+    #404040 40%,
+    #303030 42%,
     #4a4a4a 50%,
-    #404040 80%,
+    #303030 52%,
+    #404040 60%,
     #363636 100%
   );
+  background-size: 300% 300%;
 }
 
 /* Hover state for dark mode - lighten and pause */
