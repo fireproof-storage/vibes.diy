@@ -22,7 +22,6 @@ export function VibeCard({
   onDeleteClick,
   onRemixClick,
 }: VibeCardProps) {
-  console.log('VibeCard', { vibe });
   return (
     <div
       key={vibe.id}
