@@ -21,7 +21,7 @@ export function VibeCardData({ vibeId }: VibeCardDataProps) {
 
   // Navigation functions
   const handleEditClick = (id: string, encodedTitle: string) => {
-    navigate(`/chat/${id}/${encodedTitle}/app`, { replace: true });
+    navigate(`/chat/${id}/${encodedTitle}/app`);
   };
 
   const handleRemixClick = (slug: string, event: React.MouseEvent<HTMLButtonElement>) => {
