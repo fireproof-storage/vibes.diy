@@ -239,38 +239,75 @@ a,
   }
 }
 
+/* Simple rotate animation for glimmer */
+@keyframes simpleRotate {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
 /* Simple glimmer without positioning for button backgrounds */
 .bg-glimmer {
-  /* Light mode gradient */
+  position: relative;
+  overflow: hidden;
+  z-index: 0;
+}
+
+.bg-glimmer::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  z-index: -1;
   background-image: linear-gradient(
-    120deg,
-    rgba(242, 242, 242, 1) 0%,
-    rgba(242, 242, 242, 1) 10%,
-    rgba(242, 242, 242, 1) 15%,
-    rgba(252, 252, 252, 1) 23%,
-    rgba(255, 255, 255, 1) 32%,
-    rgba(252, 252, 252, 1) 35%,
-    rgba(242, 242, 242, 1) 40%,
-    rgba(242, 242, 242, 1) 70%
+    90deg,
+    #f2f2f2 0%,
+    #f7f7f7 20%,
+    #ffffff 50%,
+    #f7f7f7 80%,
+    #f2f2f2 100%
   );
-  background-size: 200% 100%;
-  background-repeat: no-repeat;
-  animation: buttonGlimmer 8.5s infinite linear;
+  animation: simpleRotate 8s infinite linear;
+  transition: filter 0.2s ease;
+}
+
+/* Hover state for light mode - darken and pause */
+button:hover .bg-glimmer::before,
+.bg-glimmer:hover::before {
+  animation-play-state: paused;
+}
+
+button:hover .bg-glimmer,
+.bg-glimmer:hover {
+  filter: brightness(0.95);
 }
 
 /* Dark mode variant */
-.dark .bg-glimmer {
+.dark .bg-glimmer::before {
   background-image: linear-gradient(
-    120deg,
-    rgba(54, 54, 54, 1) 0%,
-    rgba(54, 54, 54, 1) 10%,
-    rgba(58, 58, 58, 1) 15%,
-    rgba(64, 64, 64, 1) 23%,
-    rgba(70, 70, 70, 1) 32%,
-    rgba(64, 64, 64, 1) 35%,
-    rgba(58, 58, 58, 1) 40%,
-    rgba(54, 54, 54, 1) 70%
+    90deg,
+    #363636 0%,
+    #404040 20%,
+    #4a4a4a 50%,
+    #404040 80%,
+    #363636 100%
   );
+}
+
+/* Hover state for dark mode - lighten and pause */
+.dark button:hover .bg-glimmer::before,
+.dark .bg-glimmer:hover::before {
+  animation-play-state: paused;
+}
+
+.dark button:hover .bg-glimmer,
+.dark .bg-glimmer:hover {
+  filter: brightness(1.1);
 }
 
 /* Monochrome glimmer effect for borders */

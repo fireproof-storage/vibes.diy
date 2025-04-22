@@ -83,14 +83,14 @@ export function PublishMenu({
           aria-labelledby="publish-menu"
         >
           <p className="mb-4 text-xs text-blue-700 italic dark:text-blue-200">
-            Apps are public, data is local, private sharing is coming soon. See app listings in{' '}
+            Publish your app for anyone to share and remix. Selected apps are featured in{' '}
             <a
               href="https://discord.gg/vnpWycj4Ta"
               target="_blank"
               rel="noopener noreferrer"
               className="text-blue-600 hover:underline dark:text-blue-400"
             >
-              Discord
+              our community
             </a>
             .
           </p>

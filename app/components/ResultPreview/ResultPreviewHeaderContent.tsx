@@ -330,12 +330,12 @@ const ResultPreviewHeaderContent: React.FC<ResultPreviewHeaderContentProps> = ({
                 ref={publishButtonRef}
                 type="button"
                 onClick={() => setIsPublishMenuOpen(!isPublishMenuOpen)}
-                className="bg-light-decorative-00 bg-glimmer text-light-primary dark:text-dark-primary hover:bg-light-decorative-01 dark:hover:bg-dark-decorative-01 flex items-center gap-1 rounded-md px-3 py-2 text-sm font-medium"
+                className="bg-glimmer text-light-primary dark:text-dark-primary flex items-center justify-center gap-1 rounded-md px-3 py-2 text-sm font-medium border border-gray-200 dark:border-gray-700 min-[768px]:w-auto max-[767px]:aspect-square max-[767px]:p-2"
                 aria-label="Publish"
                 title="Publish"
               >
                 <PublishIcon className="h-5 w-5" />
-                <span className="hidden min-[480px]:inline">Publish</span>
+                <span className="hidden min-[1024px]:inline whitespace-nowrap text-xs">Publish</span>
               </button>
             </div>
           )}
@@ -347,21 +347,21 @@ const ResultPreviewHeaderContent: React.FC<ResultPreviewHeaderContentProps> = ({
               type="button"
               onClick={handleAuthCheck}
               disabled={isVerifying}
-              className={`bg-light-decorative-00 dark:bg-dark-decorative-00 ${needsLogin ? 'text-orange-500' : 'text-light-primary dark:text-dark-primary'} hover:bg-light-decorative-01 dark:hover:bg-dark-decorative-01 flex items-center gap-1 rounded-md px-3 py-2 text-sm font-medium transition-colors ${isVerifying ? 'cursor-wait opacity-50' : ''}`}
+              className={`bg-light-decorative-00 dark:bg-dark-decorative-00 ${needsLogin ? 'text-orange-500' : 'text-light-primary dark:text-dark-primary'} hover:bg-light-decorative-01 dark:hover:bg-dark-decorative-01 flex items-center justify-center gap-1 rounded-md px-3 py-2 text-sm font-medium transition-colors border border-gray-200 dark:border-gray-700 min-[768px]:w-auto max-[767px]:aspect-square max-[767px]:p-2 ${isVerifying ? 'cursor-wait opacity-50' : ''}`}
               aria-label={isUserAuthenticated ? `User: ${userInfo?.userId}` : 'Connect Account'}
               title={
                 isUserAuthenticated ? `Logged in as ${userInfo?.userId}` : 'Login to keep building'
               }
             >
               <UserIcon isVerifying={isVerifying} isUserAuthenticated={isUserAuthenticated} />
-              <span className="hidden min-[480px]:inline">
+              <span className="text-xs hidden min-[1024px]:inline whitespace-nowrap">
                 {isVerifying
                   ? 'Verifying...'
                   : isUserAuthenticated
                     ? ''
                     : needsLogin
                       ? 'Get Credits'
-                      : 'Get Credits'}
+                      : 'Login'}
               </span>
             </button>
           </div>
