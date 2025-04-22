@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import SimpleAppLayout from '../components/SimpleAppLayout';
 import { StarIcon } from '../components/SessionSidebar/StarIcon';
@@ -24,8 +24,7 @@ export default function MyVibesRoute(): ReactElement {
   const { userId } = useAuth();
 
   // Use our custom hook for vibes state management
-  const { vibes, isLoading, deleteVibe } = useVibes();
-  const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
+  const { vibes, isLoading } = useVibes();
   const [showOnlyFavorites, setShowOnlyFavorites] = useState(false);
 
   // Filter vibes based on the showOnlyFavorites toggle
@@ -35,47 +34,6 @@ export default function MyVibesRoute(): ReactElement {
     }
     return vibes;
   }, [vibes, showOnlyFavorites]);
-
-  // Handle deleting a vibe
-  const handleDeleteClick = async (vibeId: string, e: React.MouseEvent) => {
-    e.stopPropagation();
-    e.preventDefault();
-
-    if (confirmDelete === vibeId) {
-      try {
-        // Immediately set confirmDelete to null to prevent accidental clicks
-        setConfirmDelete(null);
-        // Use the deleteVibe function from our custom hook
-        // This will handle the optimistic UI update
-        await deleteVibe(vibeId);
-      } catch (error) {
-        // Error handling is managed by the useVibes hook
-      }
-    } else {
-      setConfirmDelete(vibeId);
-
-      // Prevent the global click handler from immediately clearing the confirmation
-      // by stopping the event from bubbling up to the document
-      e.nativeEvent.stopImmediatePropagation();
-    }
-  };
-
-  // Clear confirmation when clicking elsewhere
-  const handlePageClick = (e: MouseEvent) => {
-    // Don't clear if the click originated from a delete button
-    if (confirmDelete && !(e.target as Element).closest('button[data-action="delete"]')) {
-      setConfirmDelete(null);
-    }
-  };
-
-  // Add click handler to document to clear delete confirmation when clicking elsewhere
-  React.useEffect(() => {
-    // Use capture phase to handle document clicks before other handlers
-    document.addEventListener('click', handlePageClick, true);
-    return () => {
-      document.removeEventListener('click', handlePageClick, true);
-    };
-  }, [confirmDelete]);
 
   return (
     <SimpleAppLayout
@@ -142,12 +100,7 @@ export default function MyVibesRoute(): ReactElement {
           ) : (
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
               {filteredVibes.map((vibe) => (
-                <VibeCardData
-                  key={vibe.id}
-                  vibeId={vibe.id}
-                  confirmDelete={confirmDelete}
-                  onDeleteClick={handleDeleteClick}
-                />
+                <VibeCardData key={vibe.id} vibeId={vibe.id} />
               ))}
             </div>
           )}
