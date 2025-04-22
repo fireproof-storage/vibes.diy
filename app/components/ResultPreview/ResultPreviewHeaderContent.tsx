@@ -329,12 +329,12 @@ const ResultPreviewHeaderContent: React.FC<ResultPreviewHeaderContentProps> = ({
                 ref={publishButtonRef}
                 type="button"
                 onClick={() => setIsPublishMenuOpen(!isPublishMenuOpen)}
-                className="bg-light-decorative-00 border-glimmer dark:bg-dark-decorative-00 text-light-primary dark:text-dark-primary hover:bg-light-decorative-01 dark:hover:bg-dark-decorative-01 -mt-4.5 -ml-10 flex items-center justify-center rounded-md p-2 transition-colors"
+                className="hover:bg-light-decorative-01 dark:hover:bg-dark-decorative-01 text-light-primary dark:text-dark-primary flex items-center gap-1 rounded px-2 py-1.5 text-sm font-medium transition-colors"
                 aria-label="Publish"
                 title="Publish"
               >
                 <PublishIcon className="h-5 w-5" />
-                <span className="hidden pr-1 min-[480px]:inline">Publish</span>
+                <span className="hidden min-[480px]:inline">Publish</span>
               </button>
               <PublishMenu
                 isOpen={isPublishMenuOpen}
@@ -346,39 +346,36 @@ const ResultPreviewHeaderContent: React.FC<ResultPreviewHeaderContentProps> = ({
             </div>
           )}
           <div className="relative">
-            <div className="bg-light-decorative-00 dark:bg-dark-decorative-00 flex justify-center gap-1 rounded-md p-1 shadow-sm">
-              <button
-                ref={buttonRef}
-                type="button"
-                onClick={handleAuthCheck}
-                disabled={isVerifying}
-                className={`${needsLogin ? 'text-orange-500' : 'text-light-primary dark:text-dark-primary'} hover:bg-light-decorative-01 dark:hover:bg-dark-decorative-01 flex items-center justify-center space-x-1 rounded px-2 py-1.5 text-xs font-medium transition-colors sm:space-x-1.5 sm:px-1.5 sm:text-sm ${isVerifying ? 'cursor-wait opacity-50' : ''}`}
-                aria-label={isUserAuthenticated ? `User: ${userInfo?.userId}` : 'Connect Account'}
-                title={
-                  isUserAuthenticated
-                    ? `Logged in as ${userInfo?.userId}`
-                    : 'Login to keep building'
-                }
-              >
-                <UserIcon isVerifying={isVerifying} isUserAuthenticated={isUserAuthenticated} />
-                <span className="hidden pr-1 min-[480px]:inline">
-                  {isVerifying
-                    ? 'Verifying...'
-                    : isUserAuthenticated
-                      ? ''
-                      : needsLogin
-                        ? 'Get Credits'
-                        : 'Get Credits'}
-                </span>
-              </button>
-            </div>
-
-            <UserMenu
-              isOpen={isMenuOpen && isUserAuthenticated}
-              onLogout={handleLogout}
-              onClose={() => setIsMenuOpen(false)}
-              buttonRef={buttonRef}
-            />
+            <button
+              ref={buttonRef}
+              type="button"
+              onClick={handleAuthCheck}
+              disabled={isVerifying}
+              className={`hover:bg-light-decorative-01 dark:hover:bg-dark-decorative-01 flex items-center gap-1 rounded px-2 py-1.5 text-sm font-medium transition-colors ${needsLogin ? 'text-orange-500' : 'text-light-primary dark:text-dark-primary'} ${isVerifying ? 'cursor-wait opacity-50' : ''}`}
+              aria-label={isUserAuthenticated ? `User: ${userInfo?.userId}` : 'Connect Account'}
+              title={
+                isUserAuthenticated ? `Logged in as ${userInfo?.userId}` : 'Login to keep building'
+              }
+            >
+              <UserIcon isVerifying={isVerifying} isUserAuthenticated={isUserAuthenticated} />
+              <span className="hidden min-[480px]:inline">
+                {isVerifying
+                  ? 'Verifying...'
+                  : isUserAuthenticated
+                    ? ''
+                    : needsLogin
+                      ? 'Get Credits'
+                      : 'Get Credits'}
+              </span>
+            </button>
+            {isMenuOpen && isUserAuthenticated && (
+              <UserMenu
+                isOpen={isMenuOpen}
+                onLogout={handleLogout}
+                onClose={() => setIsMenuOpen(false)}
+                buttonRef={buttonRef}
+              />
+            )}
           </div>
         </div>
       </div>
