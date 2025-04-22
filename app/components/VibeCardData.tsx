@@ -1,30 +1,41 @@
 import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { VibeCard } from './VibeCard';
 import { loadVibeDocument, loadVibeScreenshot } from '../utils/vibeUtils';
 import type { LocalVibe } from '../utils/vibeUtils';
+import { useVibes } from '../hooks/useVibes';
 
 interface VibeCardDataProps {
   vibeId: string;
   confirmDelete: string | null;
-  onEditClick: (id: string, encodedTitle: string) => void;
-  onToggleFavorite: (vibeId: string, e: React.MouseEvent) => Promise<void>;
   onDeleteClick: (vibeId: string, e: React.MouseEvent) => void;
-  onRemixClick: (slug: string, e: React.MouseEvent<HTMLButtonElement>) => void;
 }
 
-export function VibeCardData({
-  vibeId,
-  confirmDelete,
-  onEditClick,
-  onToggleFavorite,
-  onDeleteClick,
-  onRemixClick,
-}: VibeCardDataProps) {
+export function VibeCardData({ vibeId, confirmDelete, onDeleteClick }: VibeCardDataProps) {
   const [vibe, setVibe] = useState<LocalVibe | null>(null);
   const [screenshot, setScreenshot] = useState<
     { file: () => Promise<File>; type: string } | undefined
   >(undefined);
   const [isLoading, setIsLoading] = useState(true);
+  const navigate = useNavigate();
+  const { toggleFavorite } = useVibes();
+
+  // Navigation functions
+  const handleEditClick = (id: string, encodedTitle: string) => {
+    navigate(`/chat/${id}/${encodedTitle}/app`, { replace: true });
+  };
+
+  const handleRemixClick = (slug: string, event: React.MouseEvent<HTMLButtonElement>) => {
+    event.stopPropagation();
+    navigate(`/remix/${slug}`);
+  };
+
+  // Handle toggling the favorite status
+  const handleToggleFavorite = async (vibeId: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    e.preventDefault();
+    await toggleFavorite(vibeId);
+  };
 
   // Load the vibe document
   useEffect(() => {
@@ -93,10 +104,10 @@ export function VibeCardData({
       vibe={vibeData}
       screenshot={screenshot}
       confirmDelete={confirmDelete}
-      onEditClick={onEditClick}
-      onToggleFavorite={onToggleFavorite}
+      onEditClick={handleEditClick}
+      onToggleFavorite={handleToggleFavorite}
       onDeleteClick={onDeleteClick}
-      onRemixClick={onRemixClick}
+      onRemixClick={handleRemixClick}
     />
   );
 }

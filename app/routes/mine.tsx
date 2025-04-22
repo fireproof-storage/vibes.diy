@@ -24,7 +24,7 @@ export default function MyVibesRoute(): ReactElement {
   const { userId } = useAuth();
 
   // Use our custom hook for vibes state management
-  const { vibes, isLoading, deleteVibe, toggleFavorite } = useVibes();
+  const { vibes, isLoading, deleteVibe } = useVibes();
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
   const [showOnlyFavorites, setShowOnlyFavorites] = useState(false);
 
@@ -76,22 +76,6 @@ export default function MyVibesRoute(): ReactElement {
       document.removeEventListener('click', handlePageClick, true);
     };
   }, [confirmDelete]);
-
-  const handleEditClick = (id: string, encodedTitle: string) => {
-    navigate(`/chat/${id}/${encodedTitle}/app`);
-  };
-
-  const handleRemixClick = (slug: string, event: React.MouseEvent<HTMLButtonElement>) => {
-    event.stopPropagation();
-    navigate(`/remix/${slug}`);
-  };
-
-  // Handle toggling the favorite status
-  const handleToggleFavorite = async (vibeId: string, e: React.MouseEvent) => {
-    e.stopPropagation();
-    e.preventDefault();
-    await toggleFavorite(vibeId);
-  };
 
   return (
     <SimpleAppLayout
@@ -162,10 +146,7 @@ export default function MyVibesRoute(): ReactElement {
                   key={vibe.id}
                   vibeId={vibe.id}
                   confirmDelete={confirmDelete}
-                  onEditClick={handleEditClick}
-                  onToggleFavorite={handleToggleFavorite}
                   onDeleteClick={handleDeleteClick}
-                  onRemixClick={handleRemixClick}
                 />
               ))}
             </div>
