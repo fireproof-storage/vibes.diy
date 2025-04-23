@@ -12,10 +12,9 @@ import {
   PublishIcon,
   UserIcon,
 } from '../HeaderContent/SvgIcons';
-import { PublishMenu } from '../PublishMenu';
 import { UserMenu } from '../UserMenu';
 import { publishApp } from '../../utils/publishUtils';
-import { trackAuthClick } from '../../utils/analytics';
+import { trackAuthClick, trackPublishClick } from '../../utils/analytics';
 
 interface ResultPreviewHeaderContentProps {
   previewReady: boolean;
@@ -49,7 +48,8 @@ const ResultPreviewHeaderContent: React.FC<ResultPreviewHeaderContentProps> = ({
   const [isUserAuthenticated, setIsUserAuthenticated] = useState(false);
   const [isVerifying, setIsVerifying] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [isPublishMenuOpen, setIsPublishMenuOpen] = useState(false);
+  const [isPublishing, setIsPublishing] = useState(false);
+  const [urlCopied, setUrlCopied] = useState(false);
 
   const buttonRef = useRef<HTMLButtonElement>(null);
   const publishButtonRef = useRef<HTMLButtonElement>(null);
@@ -62,6 +62,7 @@ const ResultPreviewHeaderContent: React.FC<ResultPreviewHeaderContentProps> = ({
   const { session, docs: messages, updatePublishedUrl } = useSession(sessionId);
 
   // Initialize publishedAppUrl from session data if available
+  // This is used in handlePublish for copying to clipboard and analytics
   const [publishedAppUrl, setPublishedAppUrl] = useState<string | undefined>(session.publishedUrl);
 
   // Update publishedAppUrl when session data changes
@@ -70,6 +71,13 @@ const ResultPreviewHeaderContent: React.FC<ResultPreviewHeaderContentProps> = ({
       setPublishedAppUrl(session.publishedUrl);
     }
   }, [session.publishedUrl]);
+  
+  // Use for debugging - can be removed if not needed
+  useEffect(() => {
+    if (publishedAppUrl) {
+      console.debug('Published URL updated:', publishedAppUrl);
+    }
+  }, [publishedAppUrl]);
 
   // Use the new ViewState hook to manage all view-related state and navigation
   const { currentView, displayView, navigateToView, viewControls, showViewControls, encodedTitle } =
@@ -148,9 +156,12 @@ const ResultPreviewHeaderContent: React.FC<ResultPreviewHeaderContentProps> = ({
   };
 
   const handlePublish = async () => {
+    setIsPublishing(true);
+    setUrlCopied(false);
     // if (!userInfo?.userId) return;
     try {
       if (messages.length === 0) {
+        setIsPublishing(false);
         return;
       }
       let prompt = messages[0].text;
@@ -174,9 +185,21 @@ const ResultPreviewHeaderContent: React.FC<ResultPreviewHeaderContentProps> = ({
 
       if (appUrl) {
         setPublishedAppUrl(appUrl);
+        // Copy the URL to clipboard
+        await navigator.clipboard.writeText(appUrl);
+        setUrlCopied(true);
+        // Trigger analytics
+        trackPublishClick({ publishedAppUrl: appUrl });
+        
+        // Reset the button state after 3 seconds
+        setTimeout(() => {
+          setUrlCopied(false);
+        }, 3000);
       }
     } catch (error) {
       console.error('Error in handlePublish:', error);
+    } finally {
+      setIsPublishing(false);
     }
   };
 
@@ -329,14 +352,53 @@ const ResultPreviewHeaderContent: React.FC<ResultPreviewHeaderContentProps> = ({
               <button
                 ref={publishButtonRef}
                 type="button"
-                onClick={() => setIsPublishMenuOpen(!isPublishMenuOpen)}
-                className="bg-glimmer text-light-primary dark:text-dark-primary flex items-center justify-center gap-1 rounded-md border border-gray-200 px-3 py-2 text-sm font-medium max-[767px]:aspect-square max-[767px]:p-2 min-[768px]:w-auto dark:border-gray-700"
-                aria-label="Publish"
-                title="Share with the world"
+                onClick={handlePublish}
+                disabled={isPublishing}
+                className="bg-glimmer text-light-primary dark:text-dark-primary flex items-center justify-center gap-1 rounded-md border border-gray-200 px-3 py-2 text-sm font-medium max-[767px]:aspect-square max-[767px]:p-2 min-[768px]:w-auto dark:border-gray-700 disabled:opacity-50 disabled:cursor-wait"
+                aria-label={urlCopied ? "URL copied to clipboard" : "Publish"}
+                title={urlCopied ? "URL copied to clipboard" : "Share with the world"}
               >
-                <PublishIcon className="h-5 w-5" />
+                {isPublishing ? (
+                  <svg
+                    className="h-5 w-5 animate-spin text-light-primary dark:text-dark-primary"
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    aria-label="Publishing in progress"
+                  >
+                    <circle
+                      className="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      strokeWidth="4"
+                    />
+                    <path
+                      className="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                    />
+                  </svg>
+                ) : urlCopied ? (
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-5 w-5 text-green-500"
+                    viewBox="0 0 20 20"
+                    fill="currentColor"
+                    aria-label="URL copied to clipboard"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                ) : (
+                  <PublishIcon className="h-5 w-5" />
+                )}
                 <span className="hidden text-xs whitespace-nowrap min-[1024px]:inline">
-                  Publish
+                  {urlCopied ? "URL copied" : "Publish"}
                 </span>
               </button>
             </div>
@@ -372,15 +434,6 @@ const ResultPreviewHeaderContent: React.FC<ResultPreviewHeaderContentProps> = ({
             </div>
           )}
           {/* Menus rendered at the top level */}
-          {isPublishMenuOpen && showViewControls && previewReady && (
-            <PublishMenu
-              isOpen={isPublishMenuOpen}
-              onPublish={handlePublish}
-              onClose={() => setIsPublishMenuOpen(false)}
-              buttonRef={publishButtonRef}
-              publishedAppUrl={publishedAppUrl}
-            />
-          )}
 
           {isMenuOpen && isUserAuthenticated && (
             <UserMenu
