@@ -71,7 +71,7 @@ const ResultPreviewHeaderContent: React.FC<ResultPreviewHeaderContentProps> = ({
       setPublishedAppUrl(session.publishedUrl);
     }
   }, [session.publishedUrl]);
-  
+
   // Use for debugging - can be removed if not needed
   useEffect(() => {
     if (publishedAppUrl) {
@@ -190,7 +190,7 @@ const ResultPreviewHeaderContent: React.FC<ResultPreviewHeaderContentProps> = ({
         setUrlCopied(true);
         // Trigger analytics
         trackPublishClick({ publishedAppUrl: appUrl });
-        
+
         // Reset the button state after 3 seconds
         setTimeout(() => {
           setUrlCopied(false);
@@ -354,13 +354,13 @@ const ResultPreviewHeaderContent: React.FC<ResultPreviewHeaderContentProps> = ({
                 type="button"
                 onClick={handlePublish}
                 disabled={isPublishing}
-                className="bg-glimmer text-light-primary dark:text-dark-primary flex items-center justify-center gap-1 rounded-md border border-gray-200 px-3 py-2 text-sm font-medium max-[767px]:aspect-square max-[767px]:p-2 min-[768px]:w-auto dark:border-gray-700 disabled:opacity-50 disabled:cursor-wait"
-                aria-label={urlCopied ? "URL copied to clipboard" : "Publish"}
-                title={urlCopied ? "URL copied to clipboard" : "Share with the world"}
+                className="bg-glimmer text-light-primary dark:text-dark-primary flex items-center justify-center gap-1 rounded-md border border-gray-200 px-3 py-2 text-sm font-medium disabled:cursor-wait disabled:opacity-50 max-[767px]:aspect-square max-[767px]:p-2 min-[768px]:w-auto dark:border-gray-700"
+                aria-label={urlCopied ? 'URL copied to clipboard' : 'Publish'}
+                title={urlCopied ? 'URL copied to clipboard' : 'Share with the world'}
               >
                 {isPublishing ? (
                   <svg
-                    className="h-5 w-5 animate-spin text-light-primary dark:text-dark-primary"
+                    className="text-light-primary dark:text-dark-primary h-5 w-5 animate-spin"
                     xmlns="http://www.w3.org/2000/svg"
                     fill="none"
                     viewBox="0 0 24 24"
@@ -398,7 +398,7 @@ const ResultPreviewHeaderContent: React.FC<ResultPreviewHeaderContentProps> = ({
                   <PublishIcon className="h-5 w-5" />
                 )}
                 <span className="hidden text-xs whitespace-nowrap min-[1024px]:inline">
-                  {urlCopied ? "URL copied" : "Publish"}
+                  {urlCopied ? 'URL copied' : 'Publish'}
                 </span>
               </button>
             </div>
