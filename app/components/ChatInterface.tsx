@@ -1,4 +1,4 @@
-import { useMemo, useRef, useEffect } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 import type { ChatState } from '../types/chat';
 import MessageList from './MessageList';
 import WelcomeScreen from './WelcomeScreen';
@@ -53,7 +53,7 @@ function ChatInterface({
   ]);
 
   return (
-    <div className="flex h-full flex-col overflow-scroll">
+    <div className="flex h-full flex-col">
       {messages.length > 0 ? (
         <div ref={messagesContainerRef} className="flex flex-grow flex-col-reverse overflow-y-auto">
           {memoizedMessageList}
