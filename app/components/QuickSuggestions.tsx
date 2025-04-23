@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { quickSuggestions } from '../data/quick-suggestions-data';
+import FeaturedVibes from './FeaturedVibes';
 
 interface QuickSuggestionsProps {
   onSelectSuggestion: (suggestion: string) => void;
@@ -20,6 +21,13 @@ function QuickSuggestions({ onSelectSuggestion }: QuickSuggestionsProps) {
 
   return (
     <div className="px-4 py-1">
+      <h3 className="text-accent-01 mb-2 text-center text-sm font-medium">Remix a featured vibe</h3>
+      <div className="mx-auto w-full max-w-2xl">
+        <FeaturedVibes count={3} />
+      </div>
+      <h3 className="text-accent-01 mb-2 pt-4 text-center text-sm font-medium">
+        or create custom vibes from a prompt
+      </h3>
       <div className="flex flex-wrap gap-2">
         {randomSuggestions.map((suggestion: Suggestion, index: number) => (
           <button
