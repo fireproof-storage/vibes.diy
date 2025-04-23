@@ -19,6 +19,10 @@ export const publishedVibes = [
     name: 'Museum API',
     url: 'https://global-kingfisher-4005.vibecode.garden',
   },
+  {
+    name: 'Ascii Camera',
+    url: 'https://physical-krill-5417.vibecode.garden',
+  },
 ];
 
 interface FeaturedVibesProps {
