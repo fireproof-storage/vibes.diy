@@ -274,7 +274,7 @@ export default function Settings() {
               </p>
               <button
                 onClick={handleLogout}
-                className="bg-red-500 hover:bg-red-600 focus:ring-red-500 rounded px-4 py-2 text-sm text-white transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2"
+                className="rounded bg-red-500 px-4 py-2 text-sm text-white transition-colors hover:bg-red-600 focus:ring-2 focus:ring-red-500 focus:ring-offset-2 focus:outline-none"
               >
                 Logout
               </button>

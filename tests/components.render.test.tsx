@@ -21,6 +21,15 @@ vi.mock('react-markdown', () => {
 // Mock the scrollIntoView method
 window.HTMLElement.prototype.scrollIntoView = vi.fn();
 
+// Mock the useAuth hook for SessionSidebar
+vi.mock('../app/hooks/useAuth', () => ({
+  useAuth: () => ({
+    isAuthenticated: true,
+    userId: 'test-user',
+    isLoading: false,
+  }),
+}));
+
 // Mock the useSessionMessages hook for MessageList
 vi.mock('../app/hooks/useSessionMessages', () => {
   return {

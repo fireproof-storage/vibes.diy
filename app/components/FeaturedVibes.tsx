@@ -25,7 +25,7 @@ export const publishedVibes = [
   },
   {
     name: 'Cosmic Canvas',
-    url: 'https://urban-ant-4026.vibecode.garden/',
+    url: 'https://grand-platypus-4140.vibecode.garden',
   },
 ];
 

@@ -4,6 +4,15 @@ import { render, screen, fireEvent, act } from '@testing-library/react';
 import SessionSidebar from '../app/components/SessionSidebar';
 import { mockSessionSidebarProps } from './mockData';
 
+// Mock the useAuth hook for SessionSidebar
+vi.mock('../app/hooks/useAuth', () => ({
+  useAuth: () => ({
+    isAuthenticated: true,
+    userId: 'test-user',
+    isLoading: false,
+  }),
+}));
+
 // Mock Link component from react-router
 vi.mock('react-router', () => {
   const React = require('react');

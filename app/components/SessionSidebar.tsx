@@ -17,16 +17,16 @@ function SessionSidebar({ isVisible, onClose }: SessionSidebarProps) {
   const sidebarRef = useRef<HTMLDivElement>(null);
   const { isAuthenticated } = useAuth();
   const [needsLogin, setNeedsLogin] = useState(false);
-  
+
   // Listen for the needsLoginTriggered event to update needsLogin state
   useEffect(() => {
     const handleNeedsLoginTriggered = () => {
       setNeedsLogin(true);
     };
-    
+
     // Add event listener
     window.addEventListener('needsLoginTriggered', handleNeedsLoginTriggered);
-    
+
     // Cleanup
     return () => {
       window.removeEventListener('needsLoginTriggered', handleNeedsLoginTriggered);
@@ -128,9 +128,13 @@ function SessionSidebar({ isVisible, onClose }: SessionSidebarProps) {
                     setNeedsLogin(false);
                     onClose();
                   }}
-                  className="hover:bg-orange-600 dark:hover:bg-orange-600 flex w-full items-center rounded-md bg-orange-500 px-4 py-3 text-sm font-bold text-left text-white transition-colors"
+                  className="flex w-full items-center rounded-md bg-orange-500 px-4 py-3 text-left text-sm font-bold text-white transition-colors hover:bg-orange-600 dark:hover:bg-orange-600"
                 >
-                  <UserIcon className="mr-3 h-5 w-5 text-white" isUserAuthenticated={false} isVerifying={false} />
+                  <UserIcon
+                    className="mr-3 h-5 w-5 text-white"
+                    isUserAuthenticated={false}
+                    isVerifying={false}
+                  />
                   <span>Get Credits</span>
                 </button>
               ) : (
@@ -140,9 +144,13 @@ function SessionSidebar({ isVisible, onClose }: SessionSidebarProps) {
                     initiateAuthFlow();
                     onClose();
                   }}
-                  className="hover:bg-light-background-01 dark:hover:bg-dark-background-01 flex w-full items-center rounded-md px-4 py-3 text-sm font-medium text-left"
+                  className="hover:bg-light-background-01 dark:hover:bg-dark-background-01 flex w-full items-center rounded-md px-4 py-3 text-left text-sm font-medium"
                 >
-                  <UserIcon className="text-accent-01 mr-3 h-5 w-5" isUserAuthenticated={false} isVerifying={false} />
+                  <UserIcon
+                    className="text-accent-01 mr-3 h-5 w-5"
+                    isUserAuthenticated={false}
+                    isVerifying={false}
+                  />
                   <span>Login</span>
                 </button>
               )}
