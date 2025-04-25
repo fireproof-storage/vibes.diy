@@ -18,6 +18,8 @@ export const mockChatStateProps = {
 
 export const mockSessionSidebarProps = {
   sessionId: 'test-session-id',
+  isVisible: true,
+  onClose: () => {},
 };
 
 export const createMockChatState = (overrides = {}) => ({

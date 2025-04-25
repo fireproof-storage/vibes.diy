@@ -150,17 +150,25 @@ describe('Component Rendering', () => {
 
   describe('SessionSidebar', () => {
     it('renders in hidden state', () => {
-      const { container } = render(
-        <SessionSidebar isVisible={false} onClose={onClose} {...mockSessionSidebarProps} />
-      );
+      // Override the isVisible prop for this test
+      const props = {
+        ...mockSessionSidebarProps,
+        isVisible: false,
+        onClose: onClose,
+      };
+      const { container } = render(<SessionSidebar {...props} />);
       // Check that it has the hidden class
       expect(container.firstChild).toHaveClass('-translate-x-full');
     });
 
     it('renders in visible state', () => {
-      const { container } = render(
-        <SessionSidebar isVisible={true} onClose={onClose} {...mockSessionSidebarProps} />
-      );
+      // Override the isVisible prop for this test
+      const props = {
+        ...mockSessionSidebarProps,
+        isVisible: true,
+        onClose: onClose,
+      };
+      const { container } = render(<SessionSidebar {...props} />);
       // Check that it doesn't have the hidden class
       expect(container.firstChild).not.toHaveClass('-translate-x-full');
 
@@ -170,7 +178,13 @@ describe('Component Rendering', () => {
     });
 
     it('shows navigation menu items', () => {
-      render(<SessionSidebar isVisible={true} onClose={onClose} {...mockSessionSidebarProps} />);
+      // Override isVisible and onClose for this test
+      const props = {
+        ...mockSessionSidebarProps,
+        isVisible: true,
+        onClose: onClose,
+      };
+      render(<SessionSidebar {...props} />);
       expect(screen.getByText('Settings')).toBeInTheDocument();
       expect(screen.getByText('About')).toBeInTheDocument();
     });
