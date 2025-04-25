@@ -7,6 +7,7 @@ import { useSession } from '../hooks/useSession';
 import { useFireproof } from 'use-fireproof';
 import type { UserSettings } from '../types/settings';
 import modelsList from '../data/models.json';
+import { useAuth } from '../hooks/useAuth';
 
 export function meta() {
   return [
@@ -19,6 +20,7 @@ export default function Settings() {
   const navigate = useNavigate();
   const { mainDatabase } = useSession();
   const { useDocument } = useFireproof(mainDatabase.name);
+  const { isAuthenticated } = useAuth();
 
   const {
     doc: settings,
@@ -112,6 +114,12 @@ export default function Settings() {
     // navigate to /
     navigate('/');
   }, [saveSettings, settings, navigate]);
+
+  const handleLogout = useCallback(() => {
+    // Clear the auth token and navigate to home page
+    localStorage.removeItem('auth_token');
+    navigate('/');
+  }, [navigate]);
 
   return (
     <SimpleAppLayout
@@ -255,6 +263,24 @@ export default function Settings() {
             </div>
           </div>
         </div>
+
+        {/* Logout Button at the bottom */}
+        {isAuthenticated && (
+          <div className="border-light-decorative-01 dark:border-dark-decorative-00 dark:bg-dark-background-01 mt-8 w-full max-w-2xl rounded-md border bg-white p-6 shadow-sm">
+            <h2 className="mb-4 text-xl font-semibold">Account</h2>
+            <div className="flex items-center justify-between">
+              <p className="text-accent-01 dark:text-dark-secondary text-sm">
+                Sign out from your account
+              </p>
+              <button
+                onClick={handleLogout}
+                className="bg-red-500 hover:bg-red-600 focus:ring-red-500 rounded px-4 py-2 text-sm text-white transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2"
+              >
+                Logout
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </SimpleAppLayout>
   );

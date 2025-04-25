@@ -3,19 +3,15 @@ import { useParams } from 'react-router';
 import { useSession } from '../../hooks/useSession';
 import type { ViewType } from '../../utils/ViewState';
 import { useViewState } from '../../utils/ViewState';
-import { type TokenPayload, initiateAuthFlow, parseToken, verifyToken } from '../../utils/auth';
 import {
   BackArrowIcon,
   CodeIcon,
   DataIcon,
   PreviewIcon,
   PublishIcon,
-  UserIcon,
 } from '../HeaderContent/SvgIcons';
-import { UserMenu } from '../UserMenu';
-import { LoginMenu } from '../LoginMenu';
 import { publishApp } from '../../utils/publishUtils';
-import { trackAuthClick, trackPublishClick } from '../../utils/analytics';
+import { trackPublishClick } from '../../utils/analytics';
 
 interface ResultPreviewHeaderContentProps {
   previewReady: boolean;
@@ -45,15 +41,10 @@ const ResultPreviewHeaderContent: React.FC<ResultPreviewHeaderContentProps> = ({
   needsLogin = false,
 }) => {
   const { sessionId: urlSessionId, view: urlView } = useParams();
-  const [userInfo, setUserInfo] = useState<TokenPayload | null>(null);
-  const [isUserAuthenticated, setIsUserAuthenticated] = useState(false);
-  const [isVerifying, setIsVerifying] = useState(false);
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [isLoginMenuOpen, setIsLoginMenuOpen] = useState(false);
+
   const [isPublishing, setIsPublishing] = useState(false);
   const [urlCopied, setUrlCopied] = useState(false);
 
-  const buttonRef = useRef<HTMLButtonElement>(null);
   const publishButtonRef = useRef<HTMLButtonElement>(null);
 
   // Use props if provided, otherwise use params from the URL
@@ -74,35 +65,11 @@ const ResultPreviewHeaderContent: React.FC<ResultPreviewHeaderContentProps> = ({
     }
   }, [session.publishedUrl]);
 
-  // Use for debugging - can be removed if not needed
   useEffect(() => {
     if (publishedAppUrl) {
       console.debug('Published URL updated:', publishedAppUrl);
     }
   }, [publishedAppUrl]);
-
-  // Automatically open the login menu when needsLogin becomes true
-  useEffect(() => {
-    if (needsLogin) {
-      setIsLoginMenuOpen(true);
-    }
-  }, [needsLogin]);
-
-  // Listen for the needsLoginTriggered event to open the login menu even when needsLogin is already true
-  useEffect(() => {
-    const handleNeedsLoginTriggered = () => {
-      // Open the login menu regardless of current state
-      setIsLoginMenuOpen(true);
-    };
-
-    // Add event listener
-    window.addEventListener('needsLoginTriggered', handleNeedsLoginTriggered);
-
-    // Cleanup
-    return () => {
-      window.removeEventListener('needsLoginTriggered', handleNeedsLoginTriggered);
-    };
-  }, []);
 
   // Use the new ViewState hook to manage all view-related state and navigation
   const { currentView, displayView, navigateToView, viewControls, showViewControls, encodedTitle } =
@@ -122,71 +89,9 @@ const ResultPreviewHeaderContent: React.FC<ResultPreviewHeaderContentProps> = ({
     }
   }, [displayView, activeView, setActiveView]);
 
-  useEffect(() => {
-    const checkAuth = async () => {
-      setIsVerifying(true);
-      try {
-        const token = localStorage.getItem('auth_token');
-
-        // If we have a token and it's valid, use it
-        if (token && (await verifyToken(token))) {
-          const payload = parseToken(token);
-          if (payload && payload.exp > Date.now()) {
-            setUserInfo(payload);
-            setIsUserAuthenticated(true);
-            setIsVerifying(false);
-            return;
-          }
-        }
-
-        // Token is missing, invalid, or expired - show Connect button
-
-        localStorage.removeItem('auth_token');
-        setIsUserAuthenticated(false);
-      } catch (error) {
-        console.error('Authentication error:', error);
-        localStorage.removeItem('auth_token');
-        setIsUserAuthenticated(false);
-      } finally {
-        setIsVerifying(false);
-      }
-    };
-
-    checkAuth();
-  }, []);
-
-  const handleAuthCheck = async () => {
-    if (isVerifying) return; // Prevent action while verifying
-
-    // Track Share/Get Credits click
-    trackAuthClick({
-      label: needsLogin ? 'Get Credits' : 'Share',
-      isUserAuthenticated,
-      userId: userInfo?.userId,
-    });
-
-    if (isUserAuthenticated) {
-      setIsMenuOpen((open) => !open);
-    } else if (needsLogin) {
-      // Open the login menu with credit information
-      setIsLoginMenuOpen((open) => !open);
-    } else {
-      // Use the dedicated function to initiate auth flow
-      initiateAuthFlow();
-    }
-  };
-
-  const handleLogout = () => {
-    localStorage.removeItem('auth_token');
-    setIsUserAuthenticated(false);
-    setUserInfo(null);
-    setIsMenuOpen(false);
-  };
-
   const handlePublish = async () => {
     setIsPublishing(true);
     setUrlCopied(false);
-    // if (!userInfo?.userId) return;
     try {
       if (messages.length === 0) {
         setIsPublishing(false);
@@ -207,7 +112,6 @@ const ResultPreviewHeaderContent: React.FC<ResultPreviewHeaderContentProps> = ({
         code,
         title,
         prompt,
-        userId: userInfo?.userId,
         updatePublishedUrl,
       });
 
@@ -430,60 +334,6 @@ const ResultPreviewHeaderContent: React.FC<ResultPreviewHeaderContentProps> = ({
                 </span>
               </button>
             </div>
-          )}
-
-          {/* Credits button - Always show when needsLogin=true */}
-          {(showViewControls && previewReady) || needsLogin ? (
-            <div>
-              <button
-                ref={buttonRef}
-                type="button"
-                onClick={handleAuthCheck}
-                disabled={isVerifying}
-                className={`bg-light-decorative-00 dark:bg-dark-decorative-00 ${needsLogin ? 'font-bold text-orange-500' : 'text-light-primary dark:text-dark-primary'} hover:bg-light-decorative-01 dark:hover:bg-dark-decorative-01 flex items-center justify-center gap-1 rounded-md border border-gray-200 px-3 py-2 text-sm font-medium transition-colors max-[767px]:aspect-square max-[767px]:p-2 min-[768px]:w-auto dark:border-gray-700 ${isVerifying ? 'cursor-wait opacity-50' : ''}`}
-                aria-label={isUserAuthenticated ? `User: ${userInfo?.userId}` : 'Connect Account'}
-                title={
-                  isUserAuthenticated
-                    ? `Logged in as ${userInfo?.userId}`
-                    : needsLogin
-                      ? 'Get more API credits'
-                      : 'Login to keep building'
-                }
-              >
-                <UserIcon isVerifying={isVerifying} isUserAuthenticated={isUserAuthenticated} />
-                <span className="hidden text-xs whitespace-nowrap min-[1024px]:inline">
-                  {isVerifying
-                    ? 'Verifying...'
-                    : isUserAuthenticated
-                      ? ''
-                      : needsLogin
-                        ? 'Get Credits'
-                        : 'Login'}
-                </span>
-              </button>
-            </div>
-          ) : null}
-          {/* Menus rendered at the top level */}
-
-          {isMenuOpen && isUserAuthenticated && (
-            <UserMenu
-              isOpen={isMenuOpen}
-              onLogout={handleLogout}
-              onClose={() => setIsMenuOpen(false)}
-              buttonRef={buttonRef}
-            />
-          )}
-
-          {isLoginMenuOpen && needsLogin && (
-            <LoginMenu
-              isOpen={isLoginMenuOpen}
-              onLogin={() => {
-                setIsLoginMenuOpen(false);
-                initiateAuthFlow();
-              }}
-              onClose={() => setIsLoginMenuOpen(false)}
-              buttonRef={buttonRef}
-            />
           )}
         </div>
       </div>
