@@ -109,6 +109,46 @@ function SearchResults({ searches }) {
     expect(result.segments[1].content).toContain('function SearchResults');
   });
 
+  it('correctly parses JSX/React code in the longest code block', () => {
+    const text = `
+Here is a React component with a short code block before it:
+
+\`\`\`jsx
+for (let i = 0; i < 10; i++) {
+  console.log(i);
+}
+\`\`\`
+
+\`\`\`jsx
+function SearchResults({ searches }) {
+  return (
+    <div>
+      {searches.map((search) => (
+        <span>{search.term}</span>
+      ))}
+    </div>
+  );
+}
+\`\`\`
+`;
+
+    console.log('Testing with code block JSX content:');
+    console.log(text);
+
+    const result = parseContent(text);
+
+    console.log('Resulting segments:', result.segments);
+
+    // The text should be split into:
+    // 1. Markdown before the code
+    // 2. Code block
+    // 3. Empty markdown after the code
+    expect(result.segments.length).toBe(2);
+    expect(result.segments[0].type).toBe('markdown');
+    expect(result.segments[1].type).toBe('code');
+    expect(result.segments[1].content).toContain('function SearchResults');
+  });
+
   it('verifies segment types for all fixture files', () => {
     // make subset files for partial parse
     const fixtureExpectations = {
