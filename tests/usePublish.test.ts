@@ -1,0 +1,261 @@
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { renderHook, act, waitFor } from '@testing-library/react';
+import { usePublish } from '../app/components/ResultPreview/usePublish';
+import { publishApp } from '../app/utils/publishUtils';
+import { trackPublishClick } from '../app/utils/analytics';
+import type { ChatMessageDocument, UserChatMessage, AiChatMessage } from '../app/types/chat';
+
+// Mock dependencies
+vi.mock('../app/utils/publishUtils', () => ({
+  publishApp: vi.fn(),
+}));
+
+vi.mock('../app/utils/analytics', () => ({
+  trackPublishClick: vi.fn(),
+}));
+
+// Mock navigation clipboard API
+Object.defineProperty(navigator, 'clipboard', {
+  value: {
+    writeText: vi.fn().mockImplementation(() => Promise.resolve()),
+  },
+  writable: true,
+});
+
+describe('usePublish Hook', () => {
+  const mockSessionId = 'test-session-id';
+  const mockCode = 'const App = () => <div>Test App</div>; export default App;';
+  const mockTitle = 'Test App';
+  const mockMessages: ChatMessageDocument[] = [
+    {
+      type: 'user',
+      text: 'Create a test app',
+      _id: 'user-1',
+      session_id: 'test-session-id',
+      created_at: Date.now(),
+    } as UserChatMessage,
+    {
+      type: 'ai',
+      text: 'Here is your app',
+      _id: 'ai-1',
+      session_id: 'test-session-id',
+      created_at: Date.now(),
+    } as AiChatMessage,
+  ];
+  const mockUpdatePublishedUrl = vi.fn().mockResolvedValue(undefined);
+
+  beforeEach(() => {
+    vi.resetAllMocks();
+
+    // Default implementation for publishApp
+    (publishApp as any).mockResolvedValue('https://test-app.vibecode.garden');
+  });
+
+  it('initializes with correct default values', () => {
+    const { result } = renderHook(() =>
+      usePublish({
+        sessionId: mockSessionId,
+        code: mockCode,
+        title: mockTitle,
+        messages: mockMessages,
+        updatePublishedUrl: mockUpdatePublishedUrl,
+      })
+    );
+
+    expect(result.current.isPublishing).toBe(false);
+    expect(result.current.urlCopied).toBe(false);
+    expect(result.current.publishedAppUrl).toBeUndefined();
+    expect(result.current.isShareModalOpen).toBe(false);
+    expect(typeof result.current.handlePublish).toBe('function');
+    expect(typeof result.current.toggleShareModal).toBe('function');
+  });
+
+  it('initializes with provided publishedUrl', () => {
+    const initialUrl = 'https://initial-app.vibecode.garden';
+
+    const { result } = renderHook(() =>
+      usePublish({
+        sessionId: mockSessionId,
+        code: mockCode,
+        title: mockTitle,
+        messages: mockMessages,
+        updatePublishedUrl: mockUpdatePublishedUrl,
+        publishedUrl: initialUrl,
+      })
+    );
+
+    expect(result.current.publishedAppUrl).toBe(initialUrl);
+  });
+
+  it('toggles the share modal', () => {
+    const { result } = renderHook(() =>
+      usePublish({
+        sessionId: mockSessionId,
+        code: mockCode,
+        title: mockTitle,
+        messages: mockMessages,
+        updatePublishedUrl: mockUpdatePublishedUrl,
+      })
+    );
+
+    // Initial state should be closed
+    expect(result.current.isShareModalOpen).toBe(false);
+
+    // Open the modal
+    act(() => {
+      result.current.toggleShareModal();
+    });
+    expect(result.current.isShareModalOpen).toBe(true);
+
+    // Close the modal
+    act(() => {
+      result.current.toggleShareModal();
+    });
+    expect(result.current.isShareModalOpen).toBe(false);
+  });
+
+  it('publishes the app and updates state correctly', async () => {
+    const mockAppUrl = 'https://published-app.vibecode.garden';
+    (publishApp as any).mockResolvedValue(mockAppUrl);
+
+    const { result } = renderHook(() =>
+      usePublish({
+        sessionId: mockSessionId,
+        code: mockCode,
+        title: mockTitle,
+        messages: mockMessages,
+        updatePublishedUrl: mockUpdatePublishedUrl,
+      })
+    );
+
+    // Call handlePublish
+    await act(async () => {
+      await result.current.handlePublish();
+    });
+
+    // Verify publishApp was called with correct args
+    expect(publishApp).toHaveBeenCalledWith({
+      sessionId: mockSessionId,
+      code: mockCode,
+      title: mockTitle,
+      prompt: 'Create a test app', // First user message
+      updatePublishedUrl: mockUpdatePublishedUrl,
+    });
+
+    // Verify state updates
+    expect(result.current.publishedAppUrl).toBe(mockAppUrl);
+    expect(navigator.clipboard.writeText).toHaveBeenCalledWith(mockAppUrl);
+    expect(trackPublishClick).toHaveBeenCalledWith({ publishedAppUrl: mockAppUrl });
+
+    // Verify urlCopied state is set to true initially
+    expect(result.current.urlCopied).toBe(true);
+
+    // Wait for urlCopied to be reset after timeout
+    await waitFor(
+      () => {
+        expect(result.current.urlCopied).toBe(false);
+      },
+      { timeout: 4000 }
+    ); // Increased timeout since we're waiting for 3 seconds
+  });
+
+  it('handles failure to publish gracefully', async () => {
+    // Mock a failure in publishApp
+    (publishApp as any).mockRejectedValue(new Error('Failed to publish'));
+
+    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+    const { result } = renderHook(() =>
+      usePublish({
+        sessionId: mockSessionId,
+        code: mockCode,
+        title: mockTitle,
+        messages: mockMessages,
+        updatePublishedUrl: mockUpdatePublishedUrl,
+      })
+    );
+
+    // Call handlePublish
+    await act(async () => {
+      await result.current.handlePublish();
+    });
+
+    // Verify error was logged
+    expect(consoleSpy).toHaveBeenCalledWith('Error in handlePublish:', expect.any(Error));
+
+    // Verify state resets
+    expect(result.current.isPublishing).toBe(false);
+
+    // Clean up
+    consoleSpy.mockRestore();
+  });
+
+  it('handles special case for first message as prompt', async () => {
+    const specialMessages: ChatMessageDocument[] = [
+      {
+        type: 'user',
+        text: 'System prompt',
+        _id: '0001-user-first',
+        session_id: 'test-session-id',
+        created_at: Date.now(),
+      } as UserChatMessage,
+      {
+        type: 'user',
+        text: 'Actual user prompt',
+        _id: 'user-2',
+        session_id: 'test-session-id',
+        created_at: Date.now(),
+      } as UserChatMessage,
+      {
+        type: 'ai',
+        text: 'Response',
+        _id: 'ai-1',
+        session_id: 'test-session-id',
+        created_at: Date.now(),
+      } as AiChatMessage,
+    ];
+
+    const { result } = renderHook(() =>
+      usePublish({
+        sessionId: mockSessionId,
+        code: mockCode,
+        title: mockTitle,
+        messages: specialMessages,
+        updatePublishedUrl: mockUpdatePublishedUrl,
+      })
+    );
+
+    // Call handlePublish
+    await act(async () => {
+      await result.current.handlePublish();
+    });
+
+    // Verify publishApp was called with second message as prompt
+    expect(publishApp).toHaveBeenCalledWith(
+      expect.objectContaining({
+        prompt: 'Actual user prompt',
+      })
+    );
+  });
+
+  it('does nothing when no messages to publish', async () => {
+    const { result } = renderHook(() =>
+      usePublish({
+        sessionId: mockSessionId,
+        code: mockCode,
+        title: mockTitle,
+        messages: [] as ChatMessageDocument[],
+        updatePublishedUrl: mockUpdatePublishedUrl,
+      })
+    );
+
+    // Call handlePublish
+    await act(async () => {
+      await result.current.handlePublish();
+    });
+
+    // Verify publishApp was not called
+    expect(publishApp).not.toHaveBeenCalled();
+    expect(result.current.isPublishing).toBe(false);
+  });
+});
