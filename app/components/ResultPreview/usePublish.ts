@@ -69,7 +69,7 @@ export const usePublish = ({
         // Copy the URL to clipboard after publishing
         await navigator.clipboard.writeText(appUrl);
         setUrlCopied(true);
-        
+
         // Trigger analytics
         trackPublishClick({ publishedAppUrl: appUrl });
 

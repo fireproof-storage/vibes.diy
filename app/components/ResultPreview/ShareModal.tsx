@@ -112,7 +112,7 @@ export function ShareModal({
                 <button
                   type="button"
                   onClick={handleCopyUrl}
-                  className="text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 ml-1 p-1"
+                  className="ml-1 p-1 text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300"
                   title="Copy URL"
                 >
                   {showCopySuccess ? (
@@ -154,7 +154,7 @@ export function ShareModal({
                   type="button"
                   onClick={handlePublish}
                   disabled={isPublishing}
-                  className="flex w-full items-center justify-between rounded border border-blue-500 bg-transparent px-3 py-1.5 text-xs text-blue-600 hover:bg-blue-50 dark:border-blue-400 dark:text-blue-400 dark:hover:bg-blue-900/20 disabled:cursor-not-allowed disabled:opacity-50"
+                  className="flex w-full items-center justify-between rounded border border-blue-500 bg-transparent px-3 py-1.5 text-xs text-blue-600 hover:bg-blue-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-blue-400 dark:text-blue-400 dark:hover:bg-blue-900/20"
                 >
                   <div className="flex items-center">
                     {showUpdateSuccess ? (
@@ -226,7 +226,7 @@ export function ShareModal({
               type="button"
               onClick={handlePublish}
               disabled={isPublishing}
-              className="accent-00 text-light-secondary hover:bg-light-background-01 dark:bg-dark-decorative-01 dark:text-dark-secondary dark:hover:bg-dark-decorative-00 block w-full rounded px-4 py-2 text-center text-sm disabled:cursor-not-allowed disabled:opacity-50 mt-4"
+              className="accent-00 text-light-secondary hover:bg-light-background-01 dark:bg-dark-decorative-01 dark:text-dark-secondary dark:hover:bg-dark-decorative-00 mt-4 block w-full rounded px-4 py-2 text-center text-sm disabled:cursor-not-allowed disabled:opacity-50"
               role="menuitem"
             >
               <div className="flex items-center justify-between">
