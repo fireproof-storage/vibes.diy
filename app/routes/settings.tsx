@@ -270,7 +270,7 @@ export default function Settings() {
             <h2 className="mb-4 text-xl font-semibold">Account</h2>
             <div className="flex items-center justify-between">
               <p className="text-accent-01 dark:text-dark-secondary text-sm">
-                Sign out from your account
+                Sign out from your account. Your vibes will continue to be available via browser storage.
               </p>
               <button
                 onClick={handleLogout}
