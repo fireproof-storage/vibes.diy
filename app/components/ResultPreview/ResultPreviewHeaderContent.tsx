@@ -7,6 +7,7 @@ import { BackButton } from './BackButton';
 import { ViewControls } from './ViewControls';
 import { PublishButton } from './PublishButton';
 import { usePublish } from './usePublish';
+import { ShareModal } from './ShareModal';
 
 interface ResultPreviewHeaderContentProps {
   previewReady: boolean;
@@ -63,7 +64,14 @@ const ResultPreviewHeaderContent: React.FC<ResultPreviewHeaderContentProps> = ({
   }, [displayView, activeView, setActiveView]);
 
   // Use the custom hook for publish functionality
-  const { isPublishing, urlCopied, handlePublish } = usePublish({
+  const {
+    isPublishing,
+    urlCopied,
+    publishedAppUrl,
+    toggleShareModal,
+    isShareModalOpen,
+    setIsShareModalOpen,
+  } = usePublish({
     sessionId,
     code,
     title,
@@ -100,14 +108,24 @@ const ResultPreviewHeaderContent: React.FC<ResultPreviewHeaderContentProps> = ({
             <div className="mr-2">
               <PublishButton
                 ref={publishButtonRef}
-                onClick={handlePublish}
+                onClick={toggleShareModal}
                 isPublishing={isPublishing}
                 urlCopied={urlCopied}
+                hasPublishedUrl={!!publishedAppUrl}
               />
             </div>
           )}
         </div>
       </div>
+      {/* Share Modal */}
+      {isShareModalOpen && (
+        <ShareModal
+          isOpen={isShareModalOpen}
+          onClose={() => setIsShareModalOpen(false)}
+          buttonRef={publishButtonRef}
+          publishedAppUrl={publishedAppUrl}
+        />
+      )}
     </div>
   );
 };
