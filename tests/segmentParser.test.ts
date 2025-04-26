@@ -119,6 +119,8 @@ for (let i = 0; i < 10; i++) {
 }
 \`\`\`
 
+More markdown
+
 \`\`\`jsx
 function SearchResults({ searches }) {
   return (
@@ -130,6 +132,8 @@ function SearchResults({ searches }) {
   );
 }
 \`\`\`
+
+Final markdown
 `;
 
     console.log('Testing with code block JSX content:');
@@ -143,9 +147,11 @@ function SearchResults({ searches }) {
     // 1. Markdown before the code
     // 2. Code block
     // 3. Empty markdown after the code
-    expect(result.segments.length).toBe(2);
+    expect(result.segments.length).toBe(3);
     expect(result.segments[0].type).toBe('markdown');
     expect(result.segments[1].type).toBe('code');
+    expect(result.segments[2].type).toBe('markdown');
+    expect(result.segments[0].content).toContain('console');
     expect(result.segments[1].content).toContain('function SearchResults');
   });
 
