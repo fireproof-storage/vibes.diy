@@ -1,4 +1,4 @@
-import { useRef, useEffect, useState } from 'react';
+import { useRef, useEffect } from 'react';
 import ReactMarkdown from 'react-markdown';
 import type { Segment } from '../types/chat';
 
@@ -25,7 +25,6 @@ interface CodeSegmentProps {
   setMobilePreviewShown: (shown: boolean) => void;
   codeLines: number;
   rawText?: string; // Raw message text to be copied on shift+click
-  isStreaming?: boolean; // Add isStreaming to determine how to handle navigation
   setActiveView?: (view: 'preview' | 'code' | 'data') => void; // Add ability to set active view
 }
 
@@ -39,93 +38,10 @@ const CodeSegment = ({
   setMobilePreviewShown,
   codeLines,
   rawText,
-  isStreaming,
   setActiveView,
 }: CodeSegmentProps) => {
   const content = segment.content || '';
   const codeSegmentRef = useRef<HTMLDivElement>(null);
-  const [isSticky, setIsSticky] = useState(true);
-
-  // Utility function to check if parents are scrollable
-  useEffect(() => {
-    if (!codeSegmentRef.current) return;
-
-    // Check if any parent is scrollable
-    let el = codeSegmentRef.current.parentElement;
-    while (el) {
-      const style = window.getComputedStyle(el);
-      const overflow = style.getPropertyValue('overflow');
-      const overflowY = style.getPropertyValue('overflow-y');
-
-      if (
-        overflow === 'auto' ||
-        overflow === 'scroll' ||
-        overflowY === 'auto' ||
-        overflowY === 'scroll'
-      ) {
-        // Parent is scrollable
-      }
-
-      el = el.parentElement;
-    }
-  }, []);
-
-  // Set up intersection observer to detect when element becomes sticky
-  useEffect(() => {
-    if (!codeSegmentRef.current) return;
-
-    // Create a sentinel element that will be placed above the sticky element
-    const sentinel = document.createElement('div');
-    sentinel.style.height = '1px';
-    sentinel.style.width = '100%';
-    sentinel.style.position = 'absolute';
-    // Position the sentinel element at an extremely far distance for testing
-    sentinel.style.top = '200px';
-    sentinel.style.left = '0';
-    sentinel.style.zIndex = '1000'; // Ensure it's on top
-
-    if (codeSegmentRef.current.parentElement) {
-      codeSegmentRef.current.parentElement.insertBefore(sentinel, codeSegmentRef.current);
-    }
-
-    // Check if IntersectionObserver is available (for tests and older browsers)
-    if (typeof IntersectionObserver === 'undefined') {
-      // Simple fallback for test environment
-      const handleScroll = () => {
-        if (codeSegmentRef.current) {
-          const rect = codeSegmentRef.current.getBoundingClientRect();
-          // Extremely large threshold for dramatic testing
-          setIsSticky(rect.top <= 200); // 200px threshold for testing
-        }
-      };
-
-      window.addEventListener('scroll', handleScroll);
-      return () => {
-        window.removeEventListener('scroll', handleScroll);
-        sentinel.remove();
-      };
-    }
-
-    // Create observer for the sentinel
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        // When sentinel is not intersecting, the element is sticky
-        const isNowSticky = !entry.isIntersecting;
-        setIsSticky(isNowSticky);
-      },
-      {
-        threshold: 0,
-        rootMargin: '0px 0px -200px 0px', // Extremely large margin for dramatic testing
-      }
-    );
-
-    observer.observe(sentinel);
-
-    return () => {
-      observer.disconnect();
-      sentinel.remove();
-    };
-  }, []);
 
   // Handle click on code segments to select the response
   const handleCodeClick = () => {
@@ -152,9 +68,7 @@ const CodeSegment = ({
         top: '8px',
         zIndex: 10,
       }}
-      className={`border-light-decorative-01 bg-light-background-01 hover:bg-light-background-01 dark:border-dark-decorative-00 dark:bg-dark-decorative-00 dark:hover:bg-dark-decorative-01 relative my-4 cursor-pointer rounded-md border p-4 shadow-sm transition-all ${
-        isSticky ? 'sticky-active' : ''
-      }`}
+      className="border-light-decorative-01 bg-light-background-01 hover:bg-light-background-01 dark:border-dark-decorative-00 dark:bg-dark-decorative-00 dark:hover:bg-dark-decorative-01 sticky-active relative my-4 cursor-pointer rounded-md border p-4 shadow-sm transition-all"
       onClick={handleCodeClick}
     >
       <div
@@ -207,9 +121,7 @@ const CodeSegment = ({
 
       {/* Code preview with height transition instead of conditional rendering */}
       <div
-        className={`bg-light-background-02 dark:bg-dark-background-01 overflow-hidden rounded-sm font-mono text-sm shadow-inner transition-all ${
-          isSticky ? 'm-0 h-0 max-h-0 min-h-0 border-0 p-0 opacity-0' : 'mt-2 max-h-24 p-2'
-        }`}
+        className={`bg-light-background-02 dark:bg-dark-background-01 m-0 h-0 max-h-0 min-h-0 overflow-hidden rounded-sm border-0 p-0 font-mono text-sm opacity-0 shadow-inner transition-all`}
       >
         {content
           .split('\n')
@@ -325,7 +237,6 @@ const StructuredMessage = ({
                   setMobilePreviewShown={setMobilePreviewShown}
                   codeLines={codeLines}
                   rawText={rawText}
-                  isStreaming={isStreaming}
                   setActiveView={setActiveView}
                 />
               );
