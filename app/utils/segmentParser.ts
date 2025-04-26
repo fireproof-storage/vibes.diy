@@ -40,70 +40,156 @@ export function parseContent(text: string): {
     text = text.substring(text.indexOf(depsFormat4[1]) + depsFormat4[1].length).trim();
   }
 
-  // First look for complete code blocks delimited by ```js or ```jsx and a closing ```
-  // In proper markdown, delimiters need to be at the start of a line (with optional whitespace)
-  const completeCodeBlockMatch = text.match(
-    /([\s\S]*?)(?:^|\n)[ \t]*```(?:js|jsx|javascript|)[ \t]*\n([\s\S]*?)(?:^|\n)[ \t]*```[ \t]*(?:\n|$)([\s\S]*)/
-  );
-
-  // Then check for incomplete code blocks with just the opening delimiter
-  const incompleteCodeBlockMatch = text.match(
-    /([\s\S]*?)(?:^|\n)[ \t]*```(?:js|jsx|javascript|)[ \t]*\n([\s\S]*?)$/s
-  );
-
-  if (completeCodeBlockMatch) {
-    const beforeCode = completeCodeBlockMatch[1]?.trim();
-    const codeContent = completeCodeBlockMatch[2]?.trim();
-    const afterCode = completeCodeBlockMatch[3]?.trim();
-
-    // Add the markdown content before the code block if it exists
-    if (beforeCode) {
-      segments.push({
-        type: 'markdown',
-        content: beforeCode,
-      });
-    }
-
-    // Add the code block
-    if (codeContent) {
-      segments.push({
-        type: 'code',
+  // Find all complete code blocks
+  const codeBlockRegex = /(?:^|\n)[ \t]*```(?:js|jsx|javascript|)[ \t]*\n([\s\S]*?)(?:^|\n)[ \t]*```[ \t]*(?:\n|$)/g;
+  const codeBlocks = [];
+  
+  // Get all matches
+  let match;
+  
+  // Find all code blocks and their positions
+  while ((match = codeBlockRegex.exec(text)) !== null) {
+    const fullMatch = match[0];
+    const codeContent = match[1]?.trim() || '';
+    const startIdx = match.index;
+    const endIdx = startIdx + fullMatch.length;
+    
+    codeBlocks.push({
+      fullBlock: fullMatch,
+      content: codeContent,
+      startIdx,
+      endIdx,
+      length: codeContent.length
+    });
+  }
+  
+  // Now check for incomplete code blocks at the end of the file
+  const incompleteCodeBlockMatch = text.match(/(?:^|\n)[ \t]*```(?:js|jsx|javascript|)[ \t]*\n([\s\S]*)$/s);
+  if (incompleteCodeBlockMatch && incompleteCodeBlockMatch.index !== undefined) {
+    // Check that this isn't just a duplicate of an already found block
+    const startIdx = incompleteCodeBlockMatch.index;
+    const isDuplicate = codeBlocks.some(block => block.startIdx === startIdx);
+    
+    if (!isDuplicate) {
+      const fullMatch = incompleteCodeBlockMatch[0];
+      const codeContent = incompleteCodeBlockMatch[1]?.trim() || '';
+      const endIdx = text.length;
+      
+      codeBlocks.push({
+        fullBlock: fullMatch,
         content: codeContent,
+        startIdx,
+        endIdx,
+        length: codeContent.length,
+        incomplete: true
       });
     }
-
-    // Add the markdown content after the code block if it exists
-    if (afterCode) {
-      segments.push({
-        type: 'markdown',
-        content: afterCode,
-      });
-    }
-  } else if (incompleteCodeBlockMatch) {
-    // Handle incomplete code blocks (missing closing delimiter)
-    const beforeCode = incompleteCodeBlockMatch[1]?.trim();
-    const codeContent = incompleteCodeBlockMatch[2]?.trim();
-
-    // Add the markdown content before the code block if it exists
-    if (beforeCode) {
-      segments.push({
-        type: 'markdown',
-        content: beforeCode,
-      });
-    }
-
-    // Add the incomplete code block
-    if (codeContent) {
-      segments.push({
-        type: 'code',
-        content: codeContent,
-      });
-    }
-  } else {
-    // If no code blocks are found, treat the whole content as markdown
+  }
+  
+  // If there are no code blocks, treat the whole content as markdown
+  if (codeBlocks.length === 0) {
     segments.push({
       type: 'markdown',
       content: text,
+    });
+    return { segments, dependenciesString };
+  }
+  
+  // Find the longest code block
+  let longestBlockIndex = 0;
+  let maxLength = 0;
+  
+  for (let i = 0; i < codeBlocks.length; i++) {
+    if (codeBlocks[i].length > maxLength) {
+      maxLength = codeBlocks[i].length;
+      longestBlockIndex = i;
+    }
+  }
+  
+  // Sort code blocks by start index
+  codeBlocks.sort((a, b) => a.startIdx - b.startIdx);
+  
+  // Get the longest block
+  const longestBlock = codeBlocks[longestBlockIndex];
+  
+  // First markdown segment: text before the longest code block
+  let beforeContent = '';
+  if (longestBlock.startIdx > 0) {
+    // Include any other code blocks that appear before the longest one
+    let currentPos = 0;
+    
+    for (const block of codeBlocks) {
+      if (block === longestBlock) {
+        // Add any text between the previous position and the longest block
+        beforeContent += text.substring(currentPos, block.startIdx);
+        break;
+      } else if (block.startIdx >= currentPos && block.endIdx <= longestBlock.startIdx) {
+        // Add text between the current position and this block
+        beforeContent += text.substring(currentPos, block.startIdx);
+        // Add the code block itself to the markdown
+        beforeContent += block.fullBlock;
+        // Update current position
+        currentPos = block.endIdx;
+      }
+    }
+    
+    // If no blocks were processed, just include all text before the longest block
+    if (beforeContent === '') {
+      beforeContent = text.substring(0, longestBlock.startIdx);
+    }
+  }
+  
+  // Add the first markdown segment
+  if (beforeContent.trim().length > 0) {
+    segments.push({
+      type: 'markdown',
+      content: beforeContent.trim(),
+    });
+  }
+  
+  // Add the longest code block as its own segment
+  segments.push({
+    type: 'code',
+    content: longestBlock.content
+  });
+  
+  // No special cases - just proceed with normal processing
+  
+  // Last markdown segment: text after the longest code block
+  let afterContent = '';
+  if (longestBlock.endIdx < text.length) {
+    // Include any other code blocks that appear after the longest one
+    let currentPos = longestBlock.endIdx;
+    let processedBlocks = false;
+    
+    for (const block of codeBlocks) {
+      if (block !== longestBlock && block.startIdx >= longestBlock.endIdx) {
+        // Add text between the current position and this block
+        afterContent += text.substring(currentPos, block.startIdx);
+        // Add the code block itself to the markdown
+        afterContent += block.fullBlock;
+        // Update current position
+        currentPos = block.endIdx;
+        processedBlocks = true;
+      }
+    }
+    
+    // Add any remaining text
+    if (currentPos < text.length) {
+      afterContent += text.substring(currentPos);
+    }
+    
+    // If no blocks were processed, include all text after the longest block
+    if (!processedBlocks) {
+      afterContent = text.substring(longestBlock.endIdx);
+    }
+  }
+  
+  // Add the final markdown segment only if there is remaining content
+  if (afterContent.trim().length > 0) {
+    segments.push({
+      type: 'markdown',
+      content: afterContent.trim(),
     });
   }
 
