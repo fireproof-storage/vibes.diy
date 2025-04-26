@@ -7,7 +7,6 @@ import { BackButton } from './BackButton';
 import { ViewControls } from './ViewControls';
 import { PublishButton } from './PublishButton';
 import { usePublish } from './usePublish';
-import { BackArrowIcon } from '../HeaderContent/SvgIcons';
 
 interface ResultPreviewHeaderContentProps {
   previewReady: boolean;
@@ -47,7 +46,7 @@ const ResultPreviewHeaderContent: React.FC<ResultPreviewHeaderContentProps> = ({
   const { session, docs: messages, updatePublishedUrl } = useSession(sessionId);
 
   // Use the new ViewState hook to manage all view-related state and navigation
-  const { currentView, displayView, viewControls, showViewControls, encodedTitle } = useViewState({
+  const { currentView, displayView, viewControls, showViewControls } = useViewState({
     sessionId,
     title,
     code,
@@ -75,38 +74,19 @@ const ResultPreviewHeaderContent: React.FC<ResultPreviewHeaderContentProps> = ({
 
   return (
     <div className="flex h-full w-full items-center px-2 py-4">
-      {/* Left side - Back button */}
       <div className="flex w-1/4 items-center justify-start">
-        {/* Mobile back button */}
-        <button
-          type="button"
-          onClick={() => {
-            setMobilePreviewShown(false);
-            if (setUserClickedBack) {
+        <BackButton
+          onBackClick={() => {
+            // Tell parent component user explicitly clicked back
+            if (isStreaming && setUserClickedBack) {
               setUserClickedBack(true);
             }
+            // Force showing the chat panel immediately
+            setMobilePreviewShown(false);
           }}
-          className="bg-light-decorative-00 dark:bg-dark-decorative-00 text-light-primary dark:text-dark-primary hover:bg-light-decorative-01 dark:hover:bg-dark-decorative-01 flex items-center justify-center rounded-md p-2 transition-colors md:hidden"
-          aria-label="Back to chat"
-        >
-          <BackArrowIcon />
-        </button>
+        />
 
-        {/* Desktop back button */}
-        {showViewControls && (
-          <BackButton
-            onBackClick={() => {
-              setMobilePreviewShown(false);
-              if (setUserClickedBack) {
-                setUserClickedBack(true);
-              }
-              // Navigate back to chat interface without using navigateToView
-              const basePath = `/chat/${sessionId}/${encodedTitle || ''}`;
-              window.location.href = basePath;
-            }}
-            encodedTitle={encodedTitle || ''}
-          />
-        )}
+        {showViewControls ? null : <div className="h-10" />}
       </div>
 
       {/* Center - View controls */}
