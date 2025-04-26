@@ -68,6 +68,7 @@ const ResultPreviewHeaderContent: React.FC<ResultPreviewHeaderContentProps> = ({
     isPublishing,
     urlCopied,
     publishedAppUrl,
+    handlePublish,
     toggleShareModal,
     isShareModalOpen,
     setIsShareModalOpen,
@@ -124,6 +125,8 @@ const ResultPreviewHeaderContent: React.FC<ResultPreviewHeaderContentProps> = ({
           onClose={() => setIsShareModalOpen(false)}
           buttonRef={publishButtonRef}
           publishedAppUrl={publishedAppUrl}
+          onPublish={handlePublish}
+          isPublishing={isPublishing}
         />
       )}
     </div>

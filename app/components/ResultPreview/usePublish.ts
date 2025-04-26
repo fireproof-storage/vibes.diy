@@ -66,14 +66,14 @@ export const usePublish = ({
 
       if (appUrl) {
         setPublishedAppUrl(appUrl);
-        // We now open the share modal instead of just copying
-        setIsShareModalOpen(true);
+        // Copy the URL to clipboard after publishing
+        await navigator.clipboard.writeText(appUrl);
         setUrlCopied(true);
-
+        
         // Trigger analytics
         trackPublishClick({ publishedAppUrl: appUrl });
 
-        // Reset the copied state after 3 seconds but keep modal open
+        // Reset the copied state after 3 seconds
         setTimeout(() => {
           setUrlCopied(false);
         }, 3000);
@@ -86,13 +86,8 @@ export const usePublish = ({
   };
 
   const toggleShareModal = () => {
-    // If we already have a published URL, just toggle the modal
-    if (publishedAppUrl) {
-      setIsShareModalOpen(!isShareModalOpen);
-    } else {
-      // Otherwise, we need to publish first
-      handlePublish();
-    }
+    // Simply toggle the modal visibility, don't publish automatically
+    setIsShareModalOpen(!isShareModalOpen);
   };
 
   return {
