@@ -22,6 +22,15 @@
   path = "/api/openai-image/*"
   function = "openai-image"
 
+# CORS headers for openai-image edge function
+[[headers]]
+  for = "/api/openai-image/*"
+  [headers.values]
+    Access-Control-Allow-Origin = "*"
+    Access-Control-Allow-Methods = "GET, POST, OPTIONS"
+    Access-Control-Allow-Headers = "Origin, X-Requested-With, Content-Type, Accept, Authorization"
+    Access-Control-Max-Age = "86400"
+
 # No caching for Netlify system files
 [[headers]]
   for = "/.netlify/*"
