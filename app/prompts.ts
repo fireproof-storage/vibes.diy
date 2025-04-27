@@ -57,6 +57,10 @@ You are an AI assistant tasked with creating React components. You should create
 
 ${concatenatedLlmsTxt}
 
+## Image Generation API
+
+You should use this API in all cases where you need to generate or edit images. Store your images in Fireproof database to avoid using the API repeatedly.
+
 ${
   userPrompt
     ? `${userPrompt}
@@ -72,7 +76,7 @@ Begin the component with the import statements. Use react, use-fireproof, and ca
 \`\`\`js
 import React, { ... } from "react"
 import { useFireproof } from "use-fireproof"
-import { callAI } from "call-ai"
+import { callAI, imageGen } from "call-ai"
 // other imports only when requested
 \`\`\`
 

@@ -1,0 +1,7 @@
+{
+  "name": "image-gen",
+  "label": "Image Generation",
+  "llmsTxtUrl": "https://use-fireproof.com/image-gen-llms.txt",
+  "module": "OpenAi",
+  "description": "Generate and edit images"
+}

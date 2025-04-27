@@ -1,7 +1,0 @@
-# Environment Variables for AI App Builder
-# Copy this file to .env and add your OpenRouter API key
-
-VITE_CALLAI_API_KEY=your_openai_or_openrouter_key_here
-
-# Fireproof database name
-VITE_VIBES_CHAT_HISTORY=fireproof-chat-history

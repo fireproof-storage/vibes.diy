@@ -1,7 +1,0 @@
-{
-  "name": "picsum",
-  "label": "Picsum",
-  "llmsTxtUrl": "https://use-fireproof.com/picsum-llms.txt",
-  "module": "Fastly",
-  "description": "embed random images"
-}

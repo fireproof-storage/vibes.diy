@@ -18,6 +18,10 @@
   path = "/api/callai/*"
   function = "callai"
 
+[[edge_functions]]
+  path = "/api/openai-image/*"
+  function = "openai-image"
+
 # No caching for Netlify system files
 [[headers]]
   for = "/.netlify/*"
