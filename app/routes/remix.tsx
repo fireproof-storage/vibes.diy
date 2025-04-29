@@ -30,15 +30,19 @@ export default function Remix() {
 
   // Effect to get vibe slug from path parameter and fetch code
   useEffect(() => {
+    console.log('Remix effect running, apiKey available:', !!apiKey);
     // Log API key status for debugging
     if (!apiKey) {
+      console.log('No API key available, exiting effect');
       return;
     }
 
     async function processVibeSlug(apiKey: string) {
       try {
+        console.log('Processing vibe slug:', vibeSlug);
         // Check if we have a vibe slug in the URL path
         if (!vibeSlug) {
+          console.log('No vibe slug found in URL');
           setError('No vibe slug provided. Use /remix/your-app-slug');
           setIsLoading(false);
           return;
@@ -46,23 +50,32 @@ export default function Remix() {
 
         // Use the slug directly
         const appName = vibeSlug;
+        console.log('Setting app domain to:', appName);
         setAppDomain(appName);
 
         // Fetch the app code
         const appUrl = `https://${appName}.vibecode.garden/App.jsx`;
+        console.log('Fetching app code from:', appUrl);
         const response = await fetch(appUrl);
 
         if (!response.ok) {
+          console.error('Fetch response not OK:', response.status);
           throw new Error(`Error fetching app code: ${response.status}`);
         }
 
         const codeContent = await response.text();
+        console.log('Received code content, length:', codeContent.length);
 
+        console.log('Getting vibe document from database');
         const vibeDoc = await sessionDatabase
           .get<VibeDocument>('vibe')
-          .catch(() => ({ _id: 'vibe', created_at: Date.now() }) as VibeDocument);
+          .catch(() => {
+            console.log('Creating new vibe document');
+            return ({ _id: 'vibe', created_at: Date.now() }) as VibeDocument;
+          });
 
         vibeDoc.remixOf = appName;
+        console.log('Saving vibe document with remixOf:', appName, vibeDoc);
         await sessionDatabase.put(vibeDoc);
 
         // Create and save user message directly with deterministic ID
@@ -73,9 +86,11 @@ export default function Remix() {
           text: `Please help me remix ${appName}.vibecode.garden`,
           created_at: Date.now(),
         };
+        console.log('Saving user message:', userMessage._id);
         await sessionDatabase.put(userMessage);
 
         // Clean the code - remove esm.sh references from import statements
+        console.log('Cleaning code by replacing esm.sh references');
         const cleanedCode = codeContent.replace(
           /import\s+(.+)\s+from\s+['"]https:\/\/esm\.sh\/([^'"]+)['"];?/g,
           "import $1 from '$2';"
@@ -89,10 +104,12 @@ export default function Remix() {
           text: `Certainly, here is the code:\n\n\`\`\`jsx\n${cleanedCode}\n\`\`\`\n\nPlease let me know what you'd like to change.`,
           created_at: Date.now(),
         };
+        console.log('Saving AI message:', aiMessage._id);
         await sessionDatabase.put(aiMessage);
 
         // Generate a better title based on the code content
         let finalTitle = `Remix of ${appName}`;
+        console.log('Using simple title:', finalTitle);
         // try {
         //   // Parse the content to get segments
         //   const { segments } = parseContent(aiMessage.text);
@@ -105,10 +122,13 @@ export default function Remix() {
         //   console.error('Error generating title:', titleError);
         //   // Keep the initial title if generation fails
         // }
+        console.log('Updating session title to:', finalTitle);
         await updateTitle(finalTitle);
 
         // Navigate to the chat session URL
-        navigate(`/chat/${session._id}/${encodeTitle(session.title || '')}/app`);
+        const targetUrl = `/chat/${session._id}/${encodeTitle(finalTitle)}/app`;
+        console.log('Navigating to:', targetUrl);
+        navigate(targetUrl);
       } catch (error) {
         console.error('Error in remix process:', error);
         setError(error instanceof Error ? error.message : 'Unknown error occurred');
@@ -117,7 +137,7 @@ export default function Remix() {
     }
 
     // Run the process
-    console.log('Running processVibeSlug', apiKey);
+    console.log('Running processVibeSlug with apiKey:', apiKey.substring(0, 4) + '...');
     processVibeSlug(apiKey);
   }, [apiKey]); // Add apiKey to dependency array so effect re-runs if key becomes available
 

@@ -1,9 +1,6 @@
 import { useCallback, useState, useEffect } from 'react';
-import { useFireproof } from 'use-fireproof';
-import { FIREPROOF_CHAT_HISTORY } from '../config/env';
 import type {
   AiChatMessageDocument,
-  SessionDocument,
   UserChatMessageDocument,
   VibeDocument,
   ChatMessageDocument,
@@ -13,8 +10,6 @@ import { useLazyFireproof } from './useLazyFireproof';
 import { encodeTitle } from '../components/SessionSidebar/utils';
 
 export function useSession(routedSessionId?: string) {
-  const { useDocument: useMainDocument, database: mainDatabase } =
-    useFireproof(FIREPROOF_CHAT_HISTORY);
 
   const [generatedSessionId] = useState(
     () =>
@@ -54,17 +49,23 @@ export function useSession(routedSessionId?: string) {
     }
   }, [routedSessionId, openSessionDatabase]);
 
-  // Session document is stored in the main database
-  const { doc: session, merge: mergeSession } = useMainDocument<SessionDocument>(
-    (routedSessionId
-      ? { _id: routedSessionId }
-      : {
-          _id: sessionId,
-          type: 'session',
-          title: '',
-          created_at: Date.now(),
-        }) as SessionDocument
-  );
+  // Define a strictly typed session state
+  interface SessionState {
+    _id: string;
+    title: string;
+    created_at: number;
+    type?: string;
+    favorite?: boolean;
+    publishedUrl?: string;
+  }
+
+  // Initialize session state with required properties
+  const [session, setSession] = useState<SessionState>({
+    _id: routedSessionId || sessionId,
+    title: '',
+    created_at: Date.now(),
+    type: 'session'
+  });
 
   // User message is stored in the session-specific database
   const {
@@ -99,19 +100,23 @@ export function useSession(routedSessionId?: string) {
   // Update session title (in session database only)
   const updateTitle = useCallback(
     async (title: string) => {
+      console.log('updateTitle session title:', title);
       // Update local session state for UI
-      mergeSession({ title });
+      setSession(prev => ({ ...prev, title }));
 
       // Encode the title for URL-friendly slug
       const encodedTitle = encodeTitle(title);
+      console.log('Encoded title slug:', encodedTitle);
 
       // Store title in the vibe document
       const currentVibeDoc = await sessionDatabase.get<VibeDocument>('vibe').catch(() => null);
       if (currentVibeDoc) {
         currentVibeDoc.title = title;
         currentVibeDoc.encodedTitle = encodedTitle;
+        console.log('Updating existing vibe document', currentVibeDoc);
         await sessionDatabase.put(currentVibeDoc);
       } else {
+        console.log('Creating new vibe document with title');
         await sessionDatabase.put({
           _id: 'vibe',
           title,
@@ -119,15 +124,16 @@ export function useSession(routedSessionId?: string) {
           created_at: Date.now(),
         });
       }
+      console.log('Title update completed');
     },
-    [mergeSession, sessionDatabase]
+    [sessionDatabase, setSession]
   );
 
   // Update published URL (in vibe document in session database only)
   const updatePublishedUrl = useCallback(
     async (publishedUrl: string) => {
       // Update local session state for UI
-      mergeSession({ publishedUrl });
+      setSession(prev => ({ ...prev, publishedUrl }));
 
       // Store the URL in the vibe document in the session database
       const currentVibeDoc = await sessionDatabase.get<VibeDocument>('vibe').catch(() => null);
@@ -143,7 +149,7 @@ export function useSession(routedSessionId?: string) {
         });
       }
     },
-    [mergeSession, session, sessionDatabase]
+    [session, sessionDatabase, setSession]
   );
 
   // Add a screenshot to the session (in session-specific database)
@@ -186,7 +192,6 @@ export function useSession(routedSessionId?: string) {
     docs,
 
     // Databases
-    mainDatabase,
     sessionDatabase,
     openSessionDatabase,
 
@@ -194,7 +199,6 @@ export function useSession(routedSessionId?: string) {
     updateTitle,
     updatePublishedUrl,
     addScreenshot,
-
     // Message management
     userMessage,
     submitUserMessage: wrappedSubmitUserMessage,

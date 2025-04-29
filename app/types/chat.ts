@@ -1,5 +1,4 @@
 import type { DocTypes } from 'use-fireproof';
-import type { GroupedSession } from '../hooks/sidebar/useSessionList';
 import type { RuntimeError } from '../hooks/useRuntimeErrors';
 
 // ===== Vibe Document Type =====
@@ -157,5 +156,3 @@ export interface SessionSidebarProps {
   onClose: () => void;
   sessionId: string;
 }
-
-export type { GroupedSession };

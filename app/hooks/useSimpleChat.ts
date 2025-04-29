@@ -11,6 +11,7 @@ import { streamAI } from '../utils/streamHandler';
 import { useApiKey } from './useApiKey';
 import { useAuth } from './useAuth';
 import { getCredits } from '../config/provisioning';
+import { FIREPROOF_CHAT_HISTORY } from '../config/env';
 
 // Import our custom hooks
 import { useSystemPromptManager } from './useSystemPromptManager';
@@ -50,9 +51,11 @@ export function useSimpleChat(sessionId: string | undefined): ChatState {
     mergeAiMessage,
     addScreenshot,
     sessionDatabase,
-    mainDatabase,
     aiMessage,
   } = useSession(sessionId);
+  
+  // Get main database directly for settings document
+  const { useDocument } = useFireproof(FIREPROOF_CHAT_HISTORY);
 
   const [vibeDoc, setVibeDoc] = useState<VibeDocument | undefined>(undefined);
 
@@ -130,7 +133,6 @@ export function useSimpleChat(sessionId: string | undefined): ChatState {
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
   // Get settings document
-  const { useDocument } = useFireproof(mainDatabase);
   const { doc: settingsDoc } = useDocument<UserSettings>({ _id: 'user_settings' });
 
   // State hooks
@@ -508,6 +510,8 @@ export function useSimpleChat(sessionId: string | undefined): ChatState {
     // No additional action needed here
   }, [advisoryErrors]);
 
+  console.log('useSimpleChat title:', session.title);
+
   return {
     sessionId: session._id,
     vibeDoc,
@@ -524,7 +528,7 @@ export function useSimpleChat(sessionId: string | undefined): ChatState {
     codeReady,
     sendMessage,
     inputRef,
-    title: session?.title || '',
+    title: session.title,
     needsNewKey,
     setNeedsNewKey,
     needsLogin,

@@ -6,7 +6,8 @@
  * @returns Encoded URL-friendly string
  */
 export function encodeTitle(title: string): string {
-  return encodeURIComponent(title || 'untitled-chat')
-    .toLowerCase()
-    .replace(/%20/g, '-');
+  title = title || 'untitled-chat';
+  return encodeURIComponent(title.toLowerCase()
+    .replace(/\W+/g, '-')
+  );
 }

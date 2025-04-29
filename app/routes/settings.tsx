@@ -3,11 +3,11 @@ import type { ChangeEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import SimpleAppLayout from '../components/SimpleAppLayout';
 import { HomeIcon } from '../components/SessionSidebar/HomeIcon';
-import { useSession } from '../hooks/useSession';
 import { useFireproof } from 'use-fireproof';
 import type { UserSettings } from '../types/settings';
 import modelsList from '../data/models.json';
 import { useAuth } from '../hooks/useAuth';
+import { FIREPROOF_CHAT_HISTORY } from '../config/env';
 
 export function meta() {
   return [
@@ -18,8 +18,8 @@ export function meta() {
 
 export default function Settings() {
   const navigate = useNavigate();
-  const { mainDatabase } = useSession();
-  const { useDocument } = useFireproof(mainDatabase.name);
+  // Use the main database directly instead of through useSession
+  const { useDocument } = useFireproof(FIREPROOF_CHAT_HISTORY);
   const { isAuthenticated } = useAuth();
 
   const {
