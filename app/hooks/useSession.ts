@@ -10,7 +10,6 @@ import { useLazyFireproof } from './useLazyFireproof';
 import { encodeTitle } from '../components/SessionSidebar/utils';
 
 export function useSession(routedSessionId?: string) {
-
   const [generatedSessionId] = useState(
     () =>
       `${Date.now().toString(36).padStart(9, 'f')}${Math.random().toString(36).slice(2, 11).padEnd(9, '0')}`
@@ -64,7 +63,7 @@ export function useSession(routedSessionId?: string) {
     _id: routedSessionId || sessionId,
     title: '',
     created_at: Date.now(),
-    type: 'session'
+    type: 'session',
   });
 
   // User message is stored in the session-specific database
@@ -102,7 +101,7 @@ export function useSession(routedSessionId?: string) {
     async (title: string) => {
       console.log('updateTitle session title:', title);
       // Update local session state for UI
-      setSession(prev => ({ ...prev, title }));
+      setSession((prev) => ({ ...prev, title }));
 
       // Encode the title for URL-friendly slug
       const encodedTitle = encodeTitle(title);
@@ -133,7 +132,7 @@ export function useSession(routedSessionId?: string) {
   const updatePublishedUrl = useCallback(
     async (publishedUrl: string) => {
       // Update local session state for UI
-      setSession(prev => ({ ...prev, publishedUrl }));
+      setSession((prev) => ({ ...prev, publishedUrl }));
 
       // Store the URL in the vibe document in the session database
       const currentVibeDoc = await sessionDatabase.get<VibeDocument>('vibe').catch(() => null);

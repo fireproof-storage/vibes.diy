@@ -53,7 +53,7 @@ export function useSimpleChat(sessionId: string | undefined): ChatState {
     sessionDatabase,
     aiMessage,
   } = useSession(sessionId);
-  
+
   // Get main database directly for settings document
   const { useDocument } = useFireproof(FIREPROOF_CHAT_HISTORY);
 

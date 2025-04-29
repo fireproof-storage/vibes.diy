@@ -22,10 +22,22 @@ import { createKeyViaEdgeFunction } from '../app/services/apiKeyService';
 // Mock the env module
 vi.mock('../app/config/env', () => ({
   CALLAI_API_KEY: 'mock-callai-api-key-for-testing',
+  FIREPROOF_CHAT_HISTORY: 'test-chat-history',
 }));
 
 // Define shared state and reset function *outside* the mock factory
-type MockDoc = { _id: string; type: string; text: string; session_id: string; timestamp: number };
+type MockDoc = {
+  _id?: string;
+  type: string;
+  text: string;
+  session_id: string;
+  timestamp?: number;
+  created_at?: number;
+  segments?: any[];
+  dependenciesString?: string;
+  isStreaming?: boolean;
+  model?: string;
+};
 let mockDocs: MockDoc[] = [];
 const initialMockDocs: MockDoc[] = [
   {
@@ -89,27 +101,37 @@ vi.mock('../app/hooks/useSession', () => {
       return {
         session: {
           _id: 'test-session-id',
-          title: undefined,
+          title: '',
           type: 'session' as const,
           created_at: Date.now(),
         },
         docs: mockDocs,
         updateTitle: vi.fn().mockImplementation(async (title) => Promise.resolve()),
-        loadSession: vi.fn().mockImplementation(async () => Promise.resolve()),
-        createSession: vi.fn().mockImplementation(async () => Promise.resolve('new-session-id')),
-        updateMetadata: vi.fn().mockImplementation(async (metadata) => Promise.resolve()),
-        loading: false,
-        error: null,
         addScreenshot: vi.fn(),
-        // Mock database with a put method
         // Keep database mock simple
-        database: {
+        sessionDatabase: {
           // Mock put to resolve with an ID. We can spy or override this per test.
           put: vi.fn(async (doc: any) => {
-            const generatedId = doc._id || `ai-message-${Date.now()}`;
-            return Promise.resolve({ id: generatedId });
+            const id = doc._id || `doc-${Date.now()}`;
+            return Promise.resolve({ id: id });
+          }),
+          get: vi.fn(async (id: string) => {
+            const found = mockDocs.find((doc) => doc._id === id);
+            if (found) return Promise.resolve(found);
+            return Promise.reject(new Error('Not found'));
+          }),
+          query: vi.fn(async (field: string, options: any) => {
+            const key = options?.key;
+            const filtered = mockDocs.filter((doc) => {
+              // @ts-ignore - we know the field exists
+              return doc[field] === key;
+            });
+            return Promise.resolve({
+              rows: filtered.map((doc) => ({ id: doc._id, doc })),
+            });
           }),
         },
+        openSessionDatabase: vi.fn(),
         aiMessage: currentAiMessage,
         userMessage: currentUserMessage,
         mergeUserMessage: mockMergeUserMessage,
@@ -120,6 +142,10 @@ vi.mock('../app/hooks/useSession', () => {
           }
         }),
         submitAiMessage: vi.fn().mockImplementation(() => Promise.resolve()),
+        saveAiMessage: vi.fn().mockImplementation(async (existingDoc: any) => {
+          const id = existingDoc?._id || `ai-message-${Date.now()}`;
+          return Promise.resolve({ id });
+        }),
       };
     },
   };

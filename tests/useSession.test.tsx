@@ -23,6 +23,11 @@ vi.mock('../app/utils/databaseManager', () => {
   };
 });
 
+// Mock the env module
+vi.mock('../app/config/env', () => ({
+  FIREPROOF_CHAT_HISTORY: 'test-chat-history',
+}));
+
 // Now mock use-fireproof
 vi.mock('use-fireproof', () => {
   const mockMergeSession = vi.fn();
@@ -95,7 +100,7 @@ describe('useSession', () => {
     // Check initial state
     expect(result.current.session).toBeDefined();
     expect(result.current.session?._id).toBe('test-session-id');
-    expect(result.current.session?.title).toBe('Test Session');
+    expect(result.current.session?.title).toBe('');
     expect(result.current.docs).toBeDefined();
     expect(result.current.docs.length).toBe(2);
   });

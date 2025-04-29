@@ -7,7 +7,5 @@
  */
 export function encodeTitle(title: string): string {
   title = title || 'untitled-chat';
-  return encodeURIComponent(title.toLowerCase()
-    .replace(/\W+/g, '-')
-  );
+  return encodeURIComponent(title.toLowerCase().replace(/\W+/g, '-'));
 }

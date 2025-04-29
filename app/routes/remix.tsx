@@ -67,12 +67,10 @@ export default function Remix() {
         console.log('Received code content, length:', codeContent.length);
 
         console.log('Getting vibe document from database');
-        const vibeDoc = await sessionDatabase
-          .get<VibeDocument>('vibe')
-          .catch(() => {
-            console.log('Creating new vibe document');
-            return ({ _id: 'vibe', created_at: Date.now() }) as VibeDocument;
-          });
+        const vibeDoc = await sessionDatabase.get<VibeDocument>('vibe').catch(() => {
+          console.log('Creating new vibe document');
+          return { _id: 'vibe', created_at: Date.now() } as VibeDocument;
+        });
 
         vibeDoc.remixOf = appName;
         console.log('Saving vibe document with remixOf:', appName, vibeDoc);
