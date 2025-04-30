@@ -363,9 +363,7 @@ export function useSimpleChat(sessionId: string | undefined): ChatState {
 
             // Generate title if needed
             const { segments } = parseContent(aiMessage.text);
-            // if (!session?.title || (vibeDoc && vibeDoc.remixOf && docs.length === 3)) {
             await generateTitle(segments, TITLE_MODEL, apiKey || '').then(updateTitle);
-            // }
           } finally {
             isProcessingRef.current = false;
           }
@@ -400,7 +398,6 @@ export function useSimpleChat(sessionId: string | undefined): ChatState {
       sessionDatabase,
       setPendingAiMessage,
       setSelectedResponseId,
-      session?.title,
       updateTitle,
       checkCredits,
       apiKey,
@@ -478,7 +475,6 @@ export function useSimpleChat(sessionId: string | undefined): ChatState {
           // Signal that errors were sent to trigger clearing
           setDidSendErrors(true);
         } catch (error) {
-          console.error('[useSimpleChat] Failed to auto-send error report:', error);
           // Remove from sent errors if there was a failure
           sentErrorsRef.current.delete(errorFingerprint);
         } finally {
@@ -509,10 +505,6 @@ export function useSimpleChat(sessionId: string | undefined): ChatState {
     // Advisories are handled through the system messages mechanism
     // No additional action needed here
   }, [advisoryErrors]);
-
-  useEffect(() => {
-    console.log('useSimpleChat title:', session.title);
-  }, [session.title]);
 
   return {
     sessionId: session._id,
