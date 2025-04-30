@@ -46,7 +46,7 @@ export function useSession(routedSessionId?: string) {
     if (routedSessionId) {
       openSessionDatabase();
     }
-  }, [routedSessionId, openSessionDatabase]);  
+  }, [routedSessionId, openSessionDatabase]);
 
   // User message is stored in the session-specific database
   const {
@@ -105,7 +105,7 @@ export function useSession(routedSessionId?: string) {
         title,
         encodedTitle,
       });
-      
+
       // Save the changes
       await saveVibeDoc();
       console.log('Title update completed');
@@ -120,7 +120,7 @@ export function useSession(routedSessionId?: string) {
       await mergeVibeDoc({
         publishedUrl,
       });
-      
+
       // Save the changes
       await saveVibeDoc();
     },

@@ -100,7 +100,7 @@ describe('useSession', () => {
     // Check initial state
     expect(result.current.session).toBeDefined();
     expect(result.current.session?._id).toBe('test-session-id');
-    expect(result.current.session?.title).toBe('');
+    expect(result.current.session.title).toBe('Test Session');
     expect(result.current.docs).toBeDefined();
     expect(result.current.docs.length).toBe(2);
   });
