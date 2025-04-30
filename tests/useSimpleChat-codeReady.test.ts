@@ -25,6 +25,26 @@ vi.mock('../app/config/env', () => ({
   FIREPROOF_CHAT_HISTORY: 'test-chat-history',
 }));
 
+// Mock Fireproof to prevent CRDT errors
+vi.mock('use-fireproof', () => ({
+  useFireproof: () => ({
+    useDocument: () => [{ _id: 'mock-doc' }, vi.fn()],
+    useLiveQuery: () => [[]],
+    useFind: () => [[]],
+    useLiveFind: () => [[]],
+    useIndex: () => [[]],
+    useSubscribe: () => {},
+    database: {
+      put: vi.fn().mockResolvedValue({ id: 'test-id' }),
+      get: vi.fn().mockResolvedValue({ _id: 'test-id', title: 'Test Document' }),
+      query: vi.fn().mockResolvedValue({
+        rows: [{ id: 'session1', key: 'session1', value: { title: 'Test Session' } }],
+      }),
+      delete: vi.fn().mockResolvedValue({ ok: true }),
+    },
+  }),
+}));
+
 // Define shared state and reset function *outside* the mock factory
 type MockDoc = {
   _id?: string;

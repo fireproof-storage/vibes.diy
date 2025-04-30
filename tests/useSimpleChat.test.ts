@@ -67,7 +67,7 @@ vi.mock('use-fireproof', () => ({
         rows: [{ id: 'session1', key: 'session1', value: { title: 'Test Session' } }],
       }),
       delete: vi.fn().mockResolvedValue({ ok: true }),
-    }
+    },
   }),
 }));
 
