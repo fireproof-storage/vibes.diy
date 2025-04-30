@@ -14,6 +14,7 @@ vi.mock('react-router', () => ({
   ),
   isRouteErrorResponse: vi.fn(),
   useLocation: () => ({ pathname: '/', search: '' }),
+  Outlet: () => <div data-testid="outlet" />,
 }));
 
 // Mock the cookie consent library
@@ -25,6 +26,11 @@ vi.mock('react-cookie-consent', () => ({
     </div>
   ),
   getCookieConsentValue: vi.fn().mockReturnValue(null),
+  Cookies: {
+    get: vi.fn(),
+    set: vi.fn(),
+    remove: vi.fn(),
+  },
 }));
 
 // Mock the CookieConsentContext
@@ -32,8 +38,49 @@ vi.mock('../app/context/CookieConsentContext', () => ({
   useCookieConsent: () => ({
     messageHasBeenSent: false,
     setMessageHasBeenSent: vi.fn(),
+    cookieConsent: true,
+    setCookieConsent: vi.fn(),
   }),
   CookieConsentProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+}));
+
+// Mock the useFireproof hook
+vi.mock('use-fireproof', () => ({
+  useFireproof: () => ({
+    useDocument: () => [{ _id: 'mock-doc' }, vi.fn()],
+    useLiveQuery: () => [[]],
+  }),
+}));
+
+// Mock the useSimpleChat hook
+vi.mock('../app/hooks/useSimpleChat', () => ({
+  useSimpleChat: () => ({
+    needsLogin: false,
+    docs: [],
+    isStreaming: false,
+    codeReady: false,
+    sendMessage: vi.fn(),
+    setInput: vi.fn(),
+    input: '',
+    selectedSegments: [],
+    selectedCode: '',
+    selectedDependencies: [],
+    setSelectedResponseId: vi.fn(),
+    immediateErrors: [],
+    advisoryErrors: [],
+    needsLoginTriggered: false,
+    setNeedsLoginTriggered: vi.fn(),
+  }),
+}));
+
+// Mock the useAuth hook
+vi.mock('../app/hooks/useAuth', () => ({
+  useAuth: () => ({
+    userId: 'mock-user-id',
+    isAuthenticated: true,
+    login: vi.fn(),
+    logout: vi.fn(),
+  }),
 }));
 
 describe('Root Component', () => {
