@@ -23,6 +23,9 @@ jobs:
       - name: Run typecheck
         run: pnpm typecheck
 
+      - name: Why use-fireproof
+        run: pnpm why use-fireproof
+
       - name: Build
         run: pnpm build
 
