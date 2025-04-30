@@ -46,25 +46,7 @@ export function useSession(routedSessionId?: string) {
     if (routedSessionId) {
       openSessionDatabase();
     }
-  }, [routedSessionId, openSessionDatabase]);
-
-  // Define a strictly typed session state
-  interface SessionState {
-    _id: string;
-    title: string;
-    created_at: number;
-    type?: string;
-    favorite?: boolean;
-    publishedUrl?: string;
-  }
-
-  // Initialize session state with required properties
-  const [session, setSession] = useState<SessionState>({
-    _id: routedSessionId || sessionId,
-    title: '',
-    created_at: Date.now(),
-    type: 'session',
-  });
+  }, [routedSessionId, openSessionDatabase]);  
 
   // User message is stored in the session-specific database
   const {
@@ -91,64 +73,58 @@ export function useSession(routedSessionId?: string) {
     created_at: Date.now(),
   });
 
+  // Vibe document is stored in the session-specific database
+  const {
+    doc: vibeDoc,
+    merge: mergeVibeDoc,
+    save: saveVibeDoc,
+    submit: submitVibeDoc,
+  } = useSessionDocument<VibeDocument>({
+    _id: 'vibe',
+    title: '',
+    encodedTitle: '',
+    created_at: Date.now(),
+    remixOf: '',
+  });
+
   // Query messages from the session-specific database
-  const { docs } = useSessionLiveQuery('session_id', { key: session._id }) as {
+  const { docs } = useSessionLiveQuery('session_id', { key: sessionId }) as {
     docs: ChatMessageDocument[];
   };
 
-  // Update session title (in session database only)
+  // Update session title using the vibe document
   const updateTitle = useCallback(
     async (title: string) => {
       console.log('updateTitle session title:', title);
-      // Update local session state for UI
-      setSession((prev) => ({ ...prev, title }));
-
       // Encode the title for URL-friendly slug
       const encodedTitle = encodeTitle(title);
       console.log('Encoded title slug:', encodedTitle);
 
-      // Store title in the vibe document
-      const currentVibeDoc = await sessionDatabase.get<VibeDocument>('vibe').catch(() => null);
-      if (currentVibeDoc) {
-        currentVibeDoc.title = title;
-        currentVibeDoc.encodedTitle = encodedTitle;
-        console.log('Updating existing vibe document', currentVibeDoc);
-        await sessionDatabase.put(currentVibeDoc);
-      } else {
-        console.log('Creating new vibe document with title');
-        await sessionDatabase.put({
-          _id: 'vibe',
-          title,
-          encodedTitle,
-          created_at: Date.now(),
-        });
-      }
+      // Update the vibe document using the merge function
+      await mergeVibeDoc({
+        title,
+        encodedTitle,
+      });
+      
+      // Save the changes
+      await saveVibeDoc();
       console.log('Title update completed');
     },
-    [sessionDatabase, setSession]
+    [mergeVibeDoc, saveVibeDoc]
   );
 
-  // Update published URL (in vibe document in session database only)
+  // Update published URL using the vibe document
   const updatePublishedUrl = useCallback(
     async (publishedUrl: string) => {
-      // Update local session state for UI
-      setSession((prev) => ({ ...prev, publishedUrl }));
-
-      // Store the URL in the vibe document in the session database
-      const currentVibeDoc = await sessionDatabase.get<VibeDocument>('vibe').catch(() => null);
-      if (currentVibeDoc) {
-        currentVibeDoc.publishedUrl = publishedUrl;
-        await sessionDatabase.put(currentVibeDoc);
-      } else {
-        await sessionDatabase.put({
-          _id: 'vibe',
-          title: session.title || '',
-          publishedUrl,
-          created_at: Date.now(),
-        });
-      }
+      // Update the vibe document using the merge function
+      await mergeVibeDoc({
+        publishedUrl,
+      });
+      
+      // Save the changes
+      await saveVibeDoc();
     },
-    [session, sessionDatabase, setSession]
+    [mergeVibeDoc, saveVibeDoc]
   );
 
   // Add a screenshot to the session (in session-specific database)
@@ -185,6 +161,18 @@ export function useSession(routedSessionId?: string) {
     return submitUserMessage();
   }, [submitUserMessage]);
 
+  interface SessionView {
+    _id: string;
+    title: string;
+    publishedUrl?: string;
+  }
+
+  const session: SessionView = {
+    _id: sessionId,
+    title: vibeDoc?.title || '',
+    publishedUrl: vibeDoc?.publishedUrl || '',
+  };
+
   return {
     // Session information
     session,
@@ -206,5 +194,10 @@ export function useSession(routedSessionId?: string) {
     submitAiMessage,
     mergeAiMessage,
     saveAiMessage,
+    // Vibe document management
+    vibeDoc,
+    mergeVibeDoc,
+    saveVibeDoc,
+    submitVibeDoc,
   };
 }
