@@ -77,7 +77,9 @@ export function useSession(routedSessionId?: string) {
   const renderCountRef = useRef(0);
   useEffect(() => {
     renderCountRef.current += 1;
-    console.log(`[RENDER ${renderCountRef.current}] useSession render with sessionId: ${sessionId}`);
+    console.log(
+      `[RENDER ${renderCountRef.current}] useSession render with sessionId: ${sessionId}`
+    );
   });
 
   // Vibe document is managed directly with useState and database operations
@@ -93,15 +95,17 @@ export function useSession(routedSessionId?: string) {
       remixOf: '',
     };
   });
-  
+
   // Load vibe document from database when session database is available
   useEffect(() => {
     // Skip if we've already initialized or don't have necessary dependencies
     if (!sessionDatabase || vibeDocInitializedRef.current) {
-      console.log(`[LOAD] Skipping vibe doc load - initialized: ${vibeDocInitializedRef.current}, hasDB: ${!!sessionDatabase}`);
+      console.log(
+        `[LOAD] Skipping vibe doc load - initialized: ${vibeDocInitializedRef.current}, hasDB: ${!!sessionDatabase}`
+      );
       return;
     }
-    
+
     const loadVibeDoc = async () => {
       console.log(`[LOAD] Attempting to load vibe doc for session: ${sessionId}`);
       try {
@@ -119,88 +123,87 @@ export function useSession(routedSessionId?: string) {
         vibeDocInitializedRef.current = true;
       }
     };
-    
+
     loadVibeDoc();
   }, [sessionDatabase, sessionId]);
-  
+
   // Functions to update the vibe document
   // Use a ref to track the latest updates that need to be saved
   const pendingUpdatesRef = useRef<Partial<VibeDocument> | null>(null);
-  
-  const mergeVibeDoc = useCallback(
-    async (updates: Partial<VibeDocument>) => {
-      console.log('[MERGE] Updating vibeDoc with:', JSON.stringify(updates));
-      // Store the updates in the ref for the next save operation
-      pendingUpdatesRef.current = updates;
-      // Update the state
-      setVibeDoc(prevDoc => {
-        const newDoc = { ...prevDoc, ...updates };
-        console.log('[MERGE] New vibeDoc state:', JSON.stringify(newDoc));
-        return newDoc;
-      });
-    },
-    []
-  );
-  
-  const saveVibeDoc = useCallback(
-    async () => {
-      if (sessionDatabase) {
+
+  const mergeVibeDoc = useCallback(async (updates: Partial<VibeDocument>) => {
+    console.log('[MERGE] Updating vibeDoc with:', JSON.stringify(updates));
+    // Store the updates in the ref for the next save operation
+    pendingUpdatesRef.current = updates;
+    // Update the state
+    setVibeDoc((prevDoc) => {
+      const newDoc = { ...prevDoc, ...updates };
+      console.log('[MERGE] New vibeDoc state:', JSON.stringify(newDoc));
+      return newDoc;
+    });
+  }, []);
+
+  const saveVibeDoc = useCallback(async () => {
+    if (sessionDatabase) {
+      try {
+        // Get the current state directly to avoid closure issues
+        const currentVibeDoc = { ...vibeDoc };
+        console.log('[SAVE] Current vibeDoc from state:', JSON.stringify(currentVibeDoc));
+        console.log('[SAVE] Pending updates:', JSON.stringify(pendingUpdatesRef.current));
+
+        // Check if there's an existing document first
+        let existingDoc: VibeDocument | null = null;
         try {
-          // Get the current state directly to avoid closure issues
-          const currentVibeDoc = { ...vibeDoc };
-          console.log('[SAVE] Current vibeDoc from state:', JSON.stringify(currentVibeDoc));
-          console.log('[SAVE] Pending updates:', JSON.stringify(pendingUpdatesRef.current));
-          
-          // Check if there's an existing document first
-          let existingDoc: VibeDocument | null = null;
-          try {
-            const doc = await sessionDatabase.get('vibe');
-            existingDoc = doc as VibeDocument;
-            console.log('[SAVE] Found existing vibe doc:', JSON.stringify(existingDoc));
-          } catch (e) {
-            console.log('[SAVE] No existing vibe doc found, will create new one');
-          }
-          
-          // Determine what to save based on all available information
-          let docToSave = currentVibeDoc;
-          
-          // If we have pending updates with a title, make sure those are included
-          if (pendingUpdatesRef.current?.title) {
-            docToSave = { ...docToSave, ...pendingUpdatesRef.current };
-            console.log('[SAVE] Applied pending updates with title:', JSON.stringify(docToSave));
-          }
-          // If we have an existing doc with a title but our current doc has no title,
-          // preserve the existing title
-          else if (existingDoc?.title && !docToSave.title) {
-            docToSave = { 
-              ...docToSave, 
-              title: existingDoc.title, 
-              encodedTitle: existingDoc.encodedTitle 
-            };
-            console.log('[SAVE] Preserved existing title:', JSON.stringify(docToSave));
-          }
-            
-          // Save the document
-          const result = await sessionDatabase.put(docToSave);
-          console.log('[SAVE] Saved vibe document to database:', JSON.stringify(docToSave), 'Result:', result);
-          
-          // Clear pending updates after successful save
-          pendingUpdatesRef.current = null;
-          
-          // Update our state if the saved doc differs from current state
-          if (JSON.stringify(docToSave) !== JSON.stringify(currentVibeDoc)) {
-            console.log('[SAVE] Updating state to match saved document');
-            setVibeDoc(docToSave);
-          }
-        } catch (error) {
-          console.error('[SAVE] Error saving vibe document:', error);
+          const doc = await sessionDatabase.get('vibe');
+          existingDoc = doc as VibeDocument;
+          console.log('[SAVE] Found existing vibe doc:', JSON.stringify(existingDoc));
+        } catch (e) {
+          console.log('[SAVE] No existing vibe doc found, will create new one');
         }
-      } else {
-        console.log('[SAVE] Cannot save vibe doc - no sessionDatabase available');
+
+        // Determine what to save based on all available information
+        let docToSave = currentVibeDoc;
+
+        // If we have pending updates with a title, make sure those are included
+        if (pendingUpdatesRef.current?.title) {
+          docToSave = { ...docToSave, ...pendingUpdatesRef.current };
+          console.log('[SAVE] Applied pending updates with title:', JSON.stringify(docToSave));
+        }
+        // If we have an existing doc with a title but our current doc has no title,
+        // preserve the existing title
+        else if (existingDoc?.title && !docToSave.title) {
+          docToSave = {
+            ...docToSave,
+            title: existingDoc.title,
+            encodedTitle: existingDoc.encodedTitle,
+          };
+          console.log('[SAVE] Preserved existing title:', JSON.stringify(docToSave));
+        }
+
+        // Save the document
+        const result = await sessionDatabase.put(docToSave);
+        console.log(
+          '[SAVE] Saved vibe document to database:',
+          JSON.stringify(docToSave),
+          'Result:',
+          result
+        );
+
+        // Clear pending updates after successful save
+        pendingUpdatesRef.current = null;
+
+        // Update our state if the saved doc differs from current state
+        if (JSON.stringify(docToSave) !== JSON.stringify(currentVibeDoc)) {
+          console.log('[SAVE] Updating state to match saved document');
+          setVibeDoc(docToSave);
+        }
+      } catch (error) {
+        console.error('[SAVE] Error saving vibe document:', error);
       }
-    },
-    [sessionDatabase, vibeDoc]
-  );
+    } else {
+      console.log('[SAVE] Cannot save vibe doc - no sessionDatabase available');
+    }
+  }, [sessionDatabase, vibeDoc]);
 
   // Query messages from the session-specific database
   const { docs } = useSessionLiveQuery('session_id', { key: sessionId }) as {
@@ -212,7 +215,7 @@ export function useSession(routedSessionId?: string) {
     async (title: string) => {
       console.log(`[TITLE] Updating title to "${title}" for session ${sessionId}`);
       console.log(`[TITLE] Current vibeDoc before update:`, JSON.stringify(vibeDoc));
-      
+
       // Encode the title for URL-friendly slug
       const encodedTitle = encodeTitle(title);
       console.log(`[TITLE] Encoded title slug: ${encodedTitle}`);
@@ -220,13 +223,13 @@ export function useSession(routedSessionId?: string) {
       // Create the updates object
       const updates = { title, encodedTitle };
       console.log('[TITLE] Title updates to apply:', JSON.stringify(updates));
-      
+
       // Update the vibe document in state
       console.log('[TITLE] Merging title into vibeDoc state');
       await mergeVibeDoc(updates);
-      
+
       // Wait a moment to ensure state update has processed
-      await new Promise(resolve => setTimeout(resolve, 0));
+      await new Promise((resolve) => setTimeout(resolve, 0));
       console.log(`[TITLE] vibeDoc state after merge:`, JSON.stringify(vibeDoc));
 
       // Save the changes to the database
@@ -236,18 +239,20 @@ export function useSession(routedSessionId?: string) {
       // Verify the update in the database
       try {
         console.log('[TITLE] Verifying database update');
-        const savedDoc = await sessionDatabase.get('vibe') as VibeDocument;
+        const savedDoc = (await sessionDatabase.get('vibe')) as VibeDocument;
         console.log('[TITLE] Vibe document from database after update:', JSON.stringify(savedDoc));
-        
+
         // Final verification to ensure title was saved correctly
         if (savedDoc.title !== title) {
-          console.log(`[TITLE] WARNING: Title mismatch after save. Expected "${title}" but got "${savedDoc.title}". Forcing update.`);
-          
+          console.log(
+            `[TITLE] WARNING: Title mismatch after save. Expected "${title}" but got "${savedDoc.title}". Forcing update.`
+          );
+
           // Force a direct database update as a last resort
           const forcedUpdate = { ...savedDoc, title, encodedTitle };
           await sessionDatabase.put(forcedUpdate);
           console.log('[TITLE] Forced title update completed');
-          
+
           // Update state to match
           setVibeDoc(forcedUpdate);
         }
@@ -268,7 +273,7 @@ export function useSession(routedSessionId?: string) {
 
       // Save the changes to the database
       await saveVibeDoc();
-      
+
       // Verify the update in the database
       try {
         const savedDoc = await sessionDatabase.get('vibe');

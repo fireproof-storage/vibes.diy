@@ -114,7 +114,7 @@ export function useLazyFireproof(
   const ref = useRef<LazyDB | null>(null);
   if (!ref.current) {
     ref.current = new LazyDB(name, config);
-    
+
     // Initialize immediately if requested
     if (initializeImmediately) {
       ref.current.ensureReal();
