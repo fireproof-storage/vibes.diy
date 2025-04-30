@@ -101,17 +101,24 @@ class LazyDB {
  * Only creates the actual IndexedDB database on first write operation
  *
  * @param name Database name
+ * @param initializeImmediately When true, initializes the real database immediately instead of waiting for first write
  * @param config Configuration options
  * @returns Fireproof hook API with added `open` method to force initialization
  */
 export function useLazyFireproof(
   name: string,
+  initializeImmediately: boolean = false,
   config: ConfigOpts = {}
 ): UseFireproof & { open: () => void } {
   // Create a single LazyDB instance and never re-create it
   const ref = useRef<LazyDB | null>(null);
   if (!ref.current) {
     ref.current = new LazyDB(name, config);
+    
+    // Initialize immediately if requested
+    if (initializeImmediately) {
+      ref.current.ensureReal();
+    }
   }
 
   // Create a proxy to intercept all property access/calls

@@ -35,7 +35,7 @@ export function useSession(routedSessionId?: string) {
     useDocument: useSessionDocument,
     useLiveQuery: useSessionLiveQuery,
     open: openSessionDatabase,
-  } = useLazyFireproof(sessionDbName);
+  } = useLazyFireproof(sessionDbName, !!routedSessionId);
 
   useEffect(() => {
     // @ts-expect-error using lazy fireproof
@@ -43,17 +43,10 @@ export function useSession(routedSessionId?: string) {
     // @ts-expect-error using lazy fireproof
   }, [sessionDatabase.inner.name]);
 
-  // Automatically open the database if we have a routed session ID
-  // This ensures existing sessions are loaded immediately
-  // But prevents creating empty databases unnecessarily
-  useEffect(() => {
-    // Only open the database if we have a session from the URL
-    // or if this is the result of a user action (not just page load)
-    if (routedSessionId) {
-      console.log('xxx Opening session database for session ID:', sessionId);
-      openSessionDatabase();
-    }
-  }, [routedSessionId, openSessionDatabase]);
+  // The database is now automatically initialized when routedSessionId is present
+  // via the second parameter to useLazyFireproof
+  // We keep the openSessionDatabase function available for manual initialization
+  // when needed for other scenarios
 
   // User message is stored in the session-specific database
   const {
@@ -188,6 +181,10 @@ export function useSession(routedSessionId?: string) {
   useEffect(() => {
     console.log('Session:', session, vibeDoc);
   }, [vibeDoc.title, session.title]);
+
+  useEffect(() => {
+    console.log('vibe doc:', vibeDoc);
+  }, [vibeDoc]);
 
   return {
     // Session information
