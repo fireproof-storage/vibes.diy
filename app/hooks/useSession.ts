@@ -37,6 +37,12 @@ export function useSession(routedSessionId?: string) {
     open: openSessionDatabase,
   } = useLazyFireproof(sessionDbName);
 
+  useEffect(() => {
+    // @ts-expect-error using lazy fireproof
+    console.log('Session database name:', sessionDatabase.inner?.name, sessionDatabase.name);
+    // @ts-expect-error using lazy fireproof
+  }, [sessionDatabase.inner.name]);
+
   // Automatically open the database if we have a routed session ID
   // This ensures existing sessions are loaded immediately
   // But prevents creating empty databases unnecessarily
@@ -44,6 +50,7 @@ export function useSession(routedSessionId?: string) {
     // Only open the database if we have a session from the URL
     // or if this is the result of a user action (not just page load)
     if (routedSessionId) {
+      console.log('xxx Opening session database for session ID:', sessionId);
       openSessionDatabase();
     }
   }, [routedSessionId, openSessionDatabase]);
@@ -78,7 +85,6 @@ export function useSession(routedSessionId?: string) {
     doc: vibeDoc,
     merge: mergeVibeDoc,
     save: saveVibeDoc,
-    submit: submitVibeDoc,
   } = useSessionDocument<VibeDocument>({
     _id: 'vibe',
     title: '',
@@ -108,7 +114,13 @@ export function useSession(routedSessionId?: string) {
 
       // Save the changes
       await saveVibeDoc();
+
+      // @ts-expect-error using lazy fireproof
+      console.log('Vibe document before database:', vibeDoc, sessionDatabase.inner.name);
       console.log('Title update completed');
+      sessionDatabase.get('vibe').then((doc) => {
+        console.log('Vibe document from database:', doc);
+      });
     },
     [mergeVibeDoc, saveVibeDoc]
   );
@@ -169,9 +181,13 @@ export function useSession(routedSessionId?: string) {
 
   const session: SessionView = {
     _id: sessionId,
-    title: vibeDoc?.title || '',
-    publishedUrl: vibeDoc?.publishedUrl || '',
+    title: vibeDoc.title,
+    publishedUrl: vibeDoc.publishedUrl,
   };
+
+  useEffect(() => {
+    console.log('Session:', session, vibeDoc);
+  }, [vibeDoc.title, session.title]);
 
   return {
     // Session information
@@ -192,12 +208,11 @@ export function useSession(routedSessionId?: string) {
     mergeUserMessage,
     aiMessage,
     submitAiMessage,
-    mergeAiMessage,
+    mergeAiMessage, // used
     saveAiMessage,
     // Vibe document management
     vibeDoc,
     mergeVibeDoc,
     saveVibeDoc,
-    submitVibeDoc,
   };
 }

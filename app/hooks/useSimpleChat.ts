@@ -510,7 +510,9 @@ export function useSimpleChat(sessionId: string | undefined): ChatState {
     // No additional action needed here
   }, [advisoryErrors]);
 
-  console.log('useSimpleChat title:', session.title);
+  useEffect(() => {
+    console.log('useSimpleChat title:', session.title);
+  }, [session.title]);
 
   return {
     sessionId: session._id,

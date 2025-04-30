@@ -53,7 +53,7 @@ export async function generateTitle(
     },
   };
 
-  console.log('Generating title with titleContent:', titleContent);
+  // console.log('Generating title with titleContent:', titleContent);
 
   try {
     // Use callAI to get the title
