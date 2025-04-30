@@ -23,6 +23,9 @@ jobs:
       - name: Run typecheck
         run: pnpm typecheck
 
+      - name: Why @adviser/cement
+        run: pnpm why @adviser/cement
+
       - name: Why use-fireproof
         run: pnpm why use-fireproof
 
