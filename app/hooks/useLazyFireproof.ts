@@ -1,4 +1,4 @@
-import { useRef, useMemo, useCallback, useEffect } from 'react';
+import { useRef, useMemo, useCallback, useEffect, useState } from 'react';
 import { useFireproof, fireproof } from 'use-fireproof';
 import type {
   ConfigOpts,
@@ -10,17 +10,51 @@ import type {
   DocWithId,
   IndexKeyType,
   DocFragment,
+  UseLiveQuery,
+  LiveQueryResult,
+  MapFn,
 } from 'use-fireproof';
 
 /**
  * Wrapper database that only creates the real IndexedDB database on first write
  * This allows us to avoid creating empty IndexedDB databases for unused sessions
  */
+// Simple event emitter for browser environment
+type Listener = (db: Database) => void;
+
+class SimpleEventEmitter {
+  private listeners: Listener[] = [];
+
+  on(callback: Listener): void {
+    this.listeners.push(callback);
+  }
+
+  off(callback: Listener): void {
+    this.listeners = this.listeners.filter(listener => listener !== callback);
+  }
+
+  emit(db: Database): void {
+    this.listeners.forEach(listener => {
+      try {
+        listener(db);
+      } catch (error) {
+        console.error('Error in event listener:', error);
+      }
+    });
+  }
+}
+
 class LazyDB {
   private name: string;
   private config: ConfigOpts;
   private inner: Database;
   private hasInitialized = false;
+  private eventEmitter = new SimpleEventEmitter();
+
+  // Public accessor for initialization state
+  isInitialized(): boolean {
+    return this.hasInitialized;
+  }
 
   constructor(name: string, config: ConfigOpts = {}) {
     this.name = name;
@@ -34,8 +68,16 @@ class LazyDB {
     if (!this.hasInitialized) {
       this.inner = fireproof(this.name, this.config);
       this.hasInitialized = true;
+      // Emit an event to notify subscribers that the database has transitioned
+      this.eventEmitter.emit(this.inner);
     }
     return this.inner;
+  }
+
+  // Subscribe to database transition events
+  onTransition(callback: (db: Database) => void) {
+    this.eventEmitter.on(callback);
+    return () => this.eventEmitter.off(callback);
   }
 
   // Read operations - pass through to inner DB
@@ -109,7 +151,10 @@ export function useLazyFireproof(
   name: string,
   initializeImmediately: boolean = false,
   config: ConfigOpts = {}
-): UseFireproof & { open: () => void } {
+): UseFireproof & {
+  open: () => void;
+  onDatabaseTransition: (callback: (db: Database) => void) => () => void;
+} {
   // Create a single LazyDB instance and never re-create it
   const ref = useRef<LazyDB | null>(null);
   if (!ref.current) {
@@ -136,12 +181,75 @@ export function useLazyFireproof(
   // It will create hooks that call through to our wrapper
   const api = useFireproof(dbProxy as any);
 
+  // Create a proxy for the useLiveQuery function that adds transition listeners
+  // We need to match the original useLiveQuery signature exactly
+  const createEnhancedUseLiveQuery = (): UseLiveQuery => {
+    // Original LiveQuery function from the API
+    const originalUseLiveQuery = api.useLiveQuery;
+
+    // Return a function with the same signature as the original
+    const enhancedFunction: UseLiveQuery = function <
+      T extends DocTypes,
+      K extends IndexKeyType = any,
+      R extends DocFragment = T,
+    >(mapFnOrField: string | MapFn<T>, options?: any): LiveQueryResult<T, K, R> {
+      // Use a state counter to trigger refreshes when the database transitions
+      const [refreshCounter, setRefreshCounter] = useState(0);
+
+      // Add a refresh key to options that will change when we need to refresh
+      const optionsWithKey = useMemo(() => {
+        return { ...options, _refreshKey: refreshCounter };
+      }, [options, refreshCounter]);
+
+      // Call the original useLiveQuery with our enhanced options
+      const result = originalUseLiveQuery<T, K, R>(mapFnOrField, optionsWithKey);
+
+      // Set up effect to listen for database transition events
+      useEffect(() => {
+        if (!ref.current) return;
+
+        // If already initialized, no need to listen for transitions
+        if (ref.current.isInitialized()) return;
+
+        // Subscribe to database transition events
+        const unsubscribe = ref.current.onTransition(() => {
+          // Force a refresh by updating the counter
+          setRefreshCounter((prev) => prev + 1);
+        });
+
+        // Return cleanup function that properly removes the event listener
+        return () => {
+          if (unsubscribe) unsubscribe();
+        };
+      }, [mapFnOrField, options]);
+
+      return result;
+    };
+
+    return enhancedFunction;
+  };
+
+  // Create our enhanced version that maintains proper typings
+  const enhancedUseLiveQuery = createEnhancedUseLiveQuery();
+
   // Expose the open method outside of useMemo to allow immediate initialization
   const open = useCallback(() => {
     if (ref.current) {
       ref.current.ensureReal();
     }
   }, [ref]);
+
+  // Expose a method to subscribe to database transition events
+  const onDatabaseTransition = useCallback(
+    (callback: (db: Database) => void) => {
+      if (!ref.current) {
+        console.warn('Cannot subscribe to database transitions: database not initialized');
+        return () => {};
+      }
+      return ref.current.onTransition(callback);
+    },
+    [ref]
+  );
 
   // Use this immediately in useEffect for routed sessions
   useEffect(() => {
@@ -154,8 +262,10 @@ export function useLazyFireproof(
   return useMemo(
     () => ({
       ...api,
+      useLiveQuery: enhancedUseLiveQuery, // Override with our enhanced version
       open,
+      onDatabaseTransition,
     }),
-    [api, open]
+    [api, enhancedUseLiveQuery, open, onDatabaseTransition]
   );
 }
