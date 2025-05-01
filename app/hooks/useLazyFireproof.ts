@@ -181,56 +181,47 @@ export function useLazyFireproof(
   // It will create hooks that call through to our wrapper
   const api = useFireproof(dbProxy as any);
 
-  // Create a proxy for the useLiveQuery function that adds transition listeners
-  // We need to match the original useLiveQuery signature exactly
-  const createEnhancedUseLiveQuery = (): UseLiveQuery => {
-    // Original LiveQuery function from the API
-    const originalUseLiveQuery = api.useLiveQuery;
-
-    // Return a function with the same signature as the original
-    const enhancedFunction: UseLiveQuery = function <
-      T extends DocTypes,
-      K extends IndexKeyType = any,
-      R extends DocFragment = T,
-    >(mapFnOrField: string | MapFn<T>, options?: any): LiveQueryResult<T, K, R> {
-      // Use a state counter to trigger refreshes when the database transitions
-      const [refreshCounter, setRefreshCounter] = useState(0);
-
-      // Add a refresh key to options that will change when we need to refresh
-      const optionsWithKey = useMemo(() => {
-        return { ...options, _refreshKey: refreshCounter };
-      }, [options, refreshCounter]);
-
-      // Call the original useLiveQuery with our enhanced options
-      const result = originalUseLiveQuery<T, K, R>(mapFnOrField, optionsWithKey);
-
-      // Set up effect to listen for database transition events
-      useEffect(() => {
-        if (!ref.current) return;
-
-        // If already initialized, no need to listen for transitions
-        if (ref.current.isInitialized()) return;
-
-        // Subscribe to database transition events
-        const unsubscribe = ref.current.onTransition(() => {
-          // Force a refresh by updating the counter
-          setRefreshCounter((prev) => prev + 1);
-        });
-
-        // Return cleanup function that properly removes the event listener
-        return () => {
-          if (unsubscribe) unsubscribe();
-        };
-      }, [mapFnOrField, options]);
-
-      return result;
-    };
-
-    return enhancedFunction;
-  };
-
-  // Create our enhanced version that maintains proper typings
-  const enhancedUseLiveQuery = createEnhancedUseLiveQuery();
+  // Create a proper custom hook for enhanced live query
+  // This follows the Rules of Hooks by keeping all hook calls at the top level
+  function useEnhancedLiveQuery<T extends DocTypes, K extends IndexKeyType = any, R extends DocFragment = T>(
+    mapFnOrField: string | MapFn<T>,
+    options?: any
+  ): LiveQueryResult<T, K, R> {
+    // Use a state counter to trigger refreshes when the database transitions
+    const [refreshCounter, setRefreshCounter] = useState(0);
+    
+    // Add a refresh key to options that will change when we need to refresh
+    const optionsWithKey = useMemo(() => {
+      return { ...options, _refreshKey: refreshCounter };
+    }, [options, refreshCounter]);
+    
+    // Call the original useLiveQuery with our enhanced options
+    const result = api.useLiveQuery<T, K, R>(mapFnOrField, optionsWithKey);
+    
+    // Set up effect to listen for database transition events
+    useEffect(() => {
+      if (!ref.current) return;
+      
+      // If already initialized, no need to listen for transitions
+      if (ref.current.isInitialized()) return;
+      
+      // Subscribe to database transition events
+      const unsubscribe = ref.current.onTransition(() => {
+        // Force a refresh by updating the counter
+        setRefreshCounter((prev) => prev + 1);
+      });
+      
+      // Return cleanup function that properly removes the event listener
+      return () => {
+        if (unsubscribe) unsubscribe();
+      };
+    }, [mapFnOrField, options]);
+    
+    return result;
+  }
+  
+  // Create a wrapper that maintains the correct typing for the API
+  const enhancedUseLiveQuery = useEnhancedLiveQuery as UseLiveQuery;
 
   // Expose the open method outside of useMemo to allow immediate initialization
   const open = useCallback(() => {
