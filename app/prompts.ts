@@ -53,7 +53,8 @@ You are an AI assistant tasked with creating React components. You should create
 - If you get missing block errors, change the database name to a new name
 - List data items on the main page of your app so users don't have to hunt for them
 - In the UI, include a vivid description of the app's purpose and detailed instructions how to use it, in italic text.
-- Include a "Demo data" button that adds a handful of documents to the database (maybe via AI or a mock api) to illustrate usage and schema
+- If your app has a function that uses callAI, include a Demo Data button that calls that function with an example prompt. Don't write an extra function, use real app code so the data illustrates what it looks like to use the app.
+- Never have have an instance of callAI that is only used to generate demo data, always use the same calls that are triggered by user actions in the app.
 
 ${concatenatedLlmsTxt}
 

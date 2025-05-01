@@ -13,6 +13,12 @@ import type {
   UseLiveQuery,
   LiveQueryResult,
   MapFn,
+  UseDocument,
+  UseAllDocs,
+  UseChanges,
+  UseDocumentResult,
+  AllDocsResult,
+  ChangesResult,
 } from 'use-fireproof';
 
 /**
@@ -181,8 +187,10 @@ export function useLazyFireproof(
   // It will create hooks that call through to our wrapper
   const api = useFireproof(dbProxy as any);
 
-  // Create a proper custom hook for enhanced live query
-  // This follows the Rules of Hooks by keeping all hook calls at the top level
+  // Create hooks that automatically refresh when the database transitions from lazy to real
+  // This ensures data remains consistent even when the underlying DB implementation changes
+
+  // Custom hook that handles database transitions for LiveQuery
   function useEnhancedLiveQuery<
     T extends DocTypes,
     K extends IndexKeyType = any,
@@ -221,8 +229,108 @@ export function useLazyFireproof(
     return result;
   }
 
-  // Create a wrapper that maintains the correct typing for the API
+  // Custom hook that handles database transitions for Document
+  function useEnhancedDocument<T extends DocTypes>(doc: T): UseDocumentResult<T> {
+    // Use a state counter to trigger refreshes when the database transitions
+    const [refreshCounter, setRefreshCounter] = useState(0);
+
+    // Call the original useDocument with our doc and refresh counter as deps
+    const result = api.useDocument<T>(doc);
+
+    // Set up effect to listen for database transition events
+    useEffect(() => {
+      if (!ref.current) return;
+
+      // If already initialized, no need to listen for transitions
+      if (ref.current.isInitialized()) return;
+
+      // Subscribe to database transition events
+      const unsubscribe = ref.current.onTransition(() => {
+        // Force a refresh by updating the counter
+        setRefreshCounter((prev) => prev + 1);
+      });
+
+      // Return cleanup function that properly removes the event listener
+      return () => {
+        if (unsubscribe) unsubscribe();
+      };
+    }, [refreshCounter, doc]);
+
+    return result;
+  }
+
+  // Custom hook that handles database transitions for AllDocs
+  function useEnhancedAllDocs<T extends DocTypes>(options?: AllDocsQueryOpts): AllDocsResult<T> {
+    // Use a state counter to trigger refreshes when the database transitions
+    const [refreshCounter, setRefreshCounter] = useState(0);
+
+    // Add a refresh key to options that will change when we need to refresh
+    const optionsWithKey = useMemo(() => {
+      return { ...options, _refreshKey: refreshCounter };
+    }, [options, refreshCounter]);
+
+    // Call the original useAllDocs with our enhanced options
+    const result = api.useAllDocs<T>(optionsWithKey);
+
+    // Set up effect to listen for database transition events
+    useEffect(() => {
+      if (!ref.current) return;
+
+      // If already initialized, no need to listen for transitions
+      if (ref.current.isInitialized()) return;
+
+      // Subscribe to database transition events
+      const unsubscribe = ref.current.onTransition(() => {
+        // Force a refresh by updating the counter
+        setRefreshCounter((prev) => prev + 1);
+      });
+
+      // Return cleanup function that properly removes the event listener
+      return () => {
+        if (unsubscribe) unsubscribe();
+      };
+    }, [options]);
+
+    return result;
+  }
+
+  // Custom hook that handles database transitions for Changes
+  function useEnhancedChanges<T extends DocTypes>(since?: any, options?: any): ChangesResult<T> {
+    // Use a state counter to trigger refreshes when the database transitions
+    const [refreshCounter, setRefreshCounter] = useState(0);
+
+    // Call the original useChanges with our params and refresh counter as deps
+    const result = useMemo(() => {
+      return api.useChanges<T>(since, { ...options, _refreshKey: refreshCounter });
+    }, [since, options, refreshCounter]);
+
+    // Set up effect to listen for database transition events
+    useEffect(() => {
+      if (!ref.current) return;
+
+      // If already initialized, no need to listen for transitions
+      if (ref.current.isInitialized()) return;
+
+      // Subscribe to database transition events
+      const unsubscribe = ref.current.onTransition(() => {
+        // Force a refresh by updating the counter
+        setRefreshCounter((prev) => prev + 1);
+      });
+
+      // Return cleanup function that properly removes the event listener
+      return () => {
+        if (unsubscribe) unsubscribe();
+      };
+    }, [since, options]);
+
+    return result;
+  }
+
+  // Create wrappers that maintain the correct typing for the API
   const enhancedUseLiveQuery = useEnhancedLiveQuery as UseLiveQuery;
+  const enhancedUseDocument = useEnhancedDocument as UseDocument;
+  const enhancedUseAllDocs = useEnhancedAllDocs as UseAllDocs;
+  const enhancedUseChanges = useEnhancedChanges as UseChanges;
 
   // Expose the open method outside of useMemo to allow immediate initialization
   const open = useCallback(() => {
@@ -254,10 +362,23 @@ export function useLazyFireproof(
   return useMemo(
     () => ({
       ...api,
-      useLiveQuery: enhancedUseLiveQuery, // Override with our enhanced version
+      // Override with our enhanced versions that handle database transitions
+      useLiveQuery: enhancedUseLiveQuery,
+      useDocument: enhancedUseDocument,
+      useAllDocs: enhancedUseAllDocs,
+      useChanges: enhancedUseChanges,
+      // Additional methods for working with the database
       open,
       onDatabaseTransition,
     }),
-    [api, enhancedUseLiveQuery, open, onDatabaseTransition]
+    [
+      api,
+      enhancedUseLiveQuery,
+      enhancedUseDocument,
+      enhancedUseAllDocs,
+      enhancedUseChanges,
+      open,
+      onDatabaseTransition,
+    ]
   );
 }
