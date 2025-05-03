@@ -1,13 +1,13 @@
-import { useState, useMemo, useRef, useEffect } from 'react';
+import type { ReactElement } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import SimpleAppLayout from '../components/SimpleAppLayout';
 import { StarIcon } from '../components/SessionSidebar/StarIcon';
+import SimpleAppLayout from '../components/SimpleAppLayout';
+import { VibeCardData } from '../components/VibeCardData';
+import VibesDIYLogo from '../components/VibesDIYLogo';
+import { useAuth } from '../contexts/AuthContext';
 import { useSession } from '../hooks/useSession';
 import { useVibes } from '../hooks/useVibes';
-import VibesDIYLogo from '../components/VibesDIYLogo';
-import type { ReactElement } from 'react';
-import { useAuth } from '../hooks/useAuth';
-import { VibeCardData } from '../components/VibeCardData';
 
 export function meta() {
   return [
@@ -21,10 +21,13 @@ export default function MyVibesRoute(): ReactElement {
   // We need to call useSession() to maintain context but don't need its values yet
   useSession();
 
-  const { userId } = useAuth();
+  // Use the new hook and get userId from payload
+  const { userPayload } = useAuth();
+  const userId = userPayload?.userId;
 
   // Use our custom hook for vibes state management
   const { vibes, isLoading } = useVibes();
+  console.log('vibes', vibes);
   const [showOnlyFavorites, setShowOnlyFavorites] = useState(false);
 
   // Filter vibes based on the showOnlyFavorites toggle

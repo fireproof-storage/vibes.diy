@@ -1,7 +1,7 @@
-import { useState, useEffect, useCallback } from 'react';
-import { listLocalVibeIds, deleteVibeDatabase, toggleVibeFavorite } from '../utils/vibeUtils';
+import { useCallback, useEffect, useState } from 'react';
+import { useAuth } from '../contexts/AuthContext';
 import type { LocalVibe } from '../utils/vibeUtils';
-import { useAuth } from './useAuth';
+import { deleteVibeDatabase, listLocalVibeIds, toggleVibeFavorite } from '../utils/vibeUtils';
 
 /**
  * Custom hook for managing vibes state
@@ -13,7 +13,8 @@ export function useVibes() {
   const [error, setError] = useState<Error | null>(null);
 
   // Get the current user ID from the auth hook
-  const { userId } = useAuth();
+  const { userPayload } = useAuth();
+  const userId = userPayload?.userId;
 
   // Function to load vibes
   const loadVibes = useCallback(async () => {

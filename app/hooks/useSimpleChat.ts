@@ -1,7 +1,11 @@
-import { useState, useRef, useCallback, useEffect, useMemo } from 'react';
-import { trackChatInputClick } from '../utils/analytics';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useFireproof } from 'use-fireproof';
+import { FIREPROOF_CHAT_HISTORY } from '../config/env';
+import { getCredits } from '../config/provisioning';
+import { useAuth } from '../contexts/AuthContext';
 import type { ChatMessageDocument, ChatState } from '../types/chat';
 import type { UserSettings } from '../types/settings';
+import { trackChatInputClick } from '../utils/analytics';
 import { parseContent } from '../utils/segmentParser';
 
 import { useRuntimeErrors, type RuntimeError, type ErrorCategory } from './useRuntimeErrors';
@@ -9,14 +13,14 @@ import { useSession } from './useSession';
 import { useFireproof } from 'use-fireproof';
 import { generateTitle } from '../utils/titleGenerator';
 import { streamAI } from '../utils/streamHandler';
+import { generateTitle } from '../utils/titleGenerator';
 import { useApiKey } from './useApiKey';
-import { useAuth } from './useAuth';
-import { getCredits } from '../config/provisioning';
-import { FIREPROOF_CHAT_HISTORY } from '../config/env';
+import { type ErrorCategory, type RuntimeError, useRuntimeErrors } from './useRuntimeErrors';
+import { useSession } from './useSession';
 
+import { useMessageSelection } from './useMessageSelection';
 // Import our custom hooks
 import { useSystemPromptManager } from './useSystemPromptManager';
-import { useMessageSelection } from './useMessageSelection';
 import { useThrottledUpdates } from './useThrottledUpdates';
 
 // Constants
@@ -33,7 +37,8 @@ let pendingCreditsCheck: Promise<any> | null = null;
  */
 export function useSimpleChat(sessionId: string | undefined): ChatState {
   // Get userId from auth system
-  const { userId, isAuthenticated } = useAuth();
+  const { userPayload, isAuthenticated } = useAuth();
+  const userId = userPayload?.userId;
 
   // Get API key
   // For anonymous users: uses the sessionId (chat ID) as an identifier
@@ -291,20 +296,16 @@ export function useSimpleChat(sessionId: string | undefined): ChatState {
         .then(() => {
           const messageHistory = buildMessageHistory();
 
-          try {
-            return streamAI(
-              modelToUse,
-              currentSystemPrompt,
-              messageHistory,
-              promptText,
-              (content) => throttledMergeAiMessage(content),
-              apiKey || '',
-              userId,
-              setNeedsLogin
-            );
-          } catch (error) {
-            throw error; // Re-throw to maintain existing error handling flow
-          }
+          return streamAI(
+            modelToUse,
+            currentSystemPrompt,
+            messageHistory,
+            promptText,
+            (content) => throttledMergeAiMessage(content),
+            apiKey || '',
+            userId,
+            setNeedsLogin
+          );
         })
         .then(async (finalContent) => {
           // Set processing flag to prevent infinite updates
@@ -348,7 +349,7 @@ export function useSimpleChat(sessionId: string | undefined): ChatState {
             }
 
             // Only do a final update if the current state doesn't match our final content
-            if (aiMessage.text !== finalContent) {
+            if (aiMessage?.text !== finalContent) {
               aiMessage.text = finalContent;
             }
 
@@ -360,7 +361,7 @@ export function useSimpleChat(sessionId: string | undefined): ChatState {
             setSelectedResponseId(id);
 
             // Generate title if needed
-            const { segments } = parseContent(aiMessage.text);
+            const { segments } = parseContent(aiMessage?.text || '');
             await generateTitle(segments, TITLE_MODEL, apiKey || '').then(updateTitle);
           } finally {
             isProcessingRef.current = false;

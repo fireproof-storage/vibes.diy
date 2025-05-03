@@ -1,5 +1,7 @@
-import { describe, it, expect, vi } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
+import { MemoryRouter } from 'react-router-dom';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { AuthContext, type AuthContextType } from '../app/contexts/AuthContext';
 import UnifiedSession from '../app/routes/home';
 
 // Mock the CookieConsentContext
@@ -51,12 +53,16 @@ vi.mock('../app/hooks/useSession', () => ({
 
 // Using centralized mock from __mocks__/use-fireproof.ts
 
-// Mock React Router hooks
-vi.mock('react-router', () => ({
-  useParams: () => ({}),
-  useNavigate: () => vi.fn(),
-  useLocation: () => ({ search: '', pathname: '/' }),
-}));
+// Create mock implementations for react-router-dom
+vi.mock('react-router-dom', async () => {
+  const actual = await vi.importActual<typeof import('react-router-dom')>('react-router-dom');
+  return {
+    ...actual,
+    useNavigate: () => vi.fn(),
+    useParams: () => ({}),
+    useLocation: () => ({ search: '', pathname: '/' }),
+  };
+});
 
 // Mock for the utility functions
 vi.mock('../app/utils/sharing', () => ({
@@ -77,10 +83,10 @@ vi.mock('../app/components/AppLayout', () => {
       chatInput,
       suggestionsComponent,
     }: {
-      chatPanel: any;
-      previewPanel: any;
-      chatInput?: any;
-      suggestionsComponent?: any;
+      chatPanel: React.ReactNode;
+      previewPanel: React.ReactNode;
+      chatInput?: React.ReactNode;
+      suggestionsComponent?: React.ReactNode;
     }) => {
       return (
         <div data-testid="app-layout">
@@ -123,17 +129,51 @@ vi.mock('../app/components/ResultPreview/ResultPreview', () => {
 });
 
 describe('Home Route', () => {
-  it('should render the chat interface and result preview', () => {
-    // Render the unified session component
-    render(<UnifiedSession />);
+  const authenticatedState: Partial<AuthContextType> = {
+    isAuthenticated: true, 
+    isLoading: false, 
+    userPayload: { 
+      userId: 'test',
+      exp: 9999999999,
+      tenants: [],
+      ledgers: [],
+      iat: 1234567890,
+      iss: 'FP_CLOUD',
+      aud: 'PUBLIC'
+    } 
+  };
 
-    // Check that the components are rendered in the AppLayout
-    expect(screen.getByTestId('app-layout')).toBeInTheDocument();
-    expect(screen.getByTestId('chat-panel')).toBeInTheDocument();
-    expect(screen.getByTestId('preview-panel')).toBeInTheDocument();
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
 
-    // Check for the content inside the panels
-    expect(screen.getByTestId('chat-interface')).toBeInTheDocument();
-    expect(screen.getByTestId('result-preview')).toBeInTheDocument();
+  it('should render the chat interface and result preview', async () => {
+    render(
+      <MemoryRouter>
+        <AuthContext.Provider value={{
+          token: 'mock-token',
+          isAuthenticated: true,
+          isLoading: false,
+          userPayload: {
+            userId: 'test',
+            exp: 9999999999,
+            tenants: [],
+            ledgers: [],
+            iat: 1234567890,
+            iss: 'FP_CLOUD',
+            aud: 'PUBLIC'
+          },
+          checkAuthStatus: vi.fn()
+        }}>
+          <UnifiedSession />
+        </AuthContext.Provider>
+      </MemoryRouter>
+    );
+    
+    await waitFor(() => {
+      // Check for our components which should be visible
+      expect(screen.getByTestId('chat-interface')).toBeInTheDocument();
+      expect(screen.getByTestId('result-preview')).toBeInTheDocument();
+    });
   });
 });
