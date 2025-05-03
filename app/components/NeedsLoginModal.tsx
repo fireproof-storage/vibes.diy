@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { initiateAuthFlow } from '../utils/auth';
-import { trackAuthClick } from '../utils/analytics';
 import { useSimpleChat } from '../hooks/useSimpleChat';
+import { trackAuthClick } from '../utils/analytics';
+import { initiateAuthFlow } from '../utils/auth';
 
 /**
  * A modal that appears when the user needs to login to get more credits
@@ -49,8 +49,25 @@ export function NeedsLoginModal() {
       label: 'Get Credits Modal',
       isUserAuthenticated: false,
     });
-    initiateAuthFlow();
-    setIsOpen(false);
+    // Get the auth URL instead of redirecting immediately
+    const authUrl = initiateAuthFlow();
+
+    if (authUrl) {
+      // Open the authentication flow in a popup window
+      const popupWidth = 600;
+      const popupHeight = 700;
+      const left = window.screenX + (window.outerWidth - popupWidth) / 2;
+      const top = window.screenY + (window.outerHeight - popupHeight) / 2;
+      const popupFeatures = `width=${popupWidth},height=${popupHeight},left=${left},top=${top},scrollbars=yes`;
+
+      window.open(authUrl, 'authPopup', popupFeatures);
+    } else {
+      // Handle cases where the auth flow shouldn't start (e.g., already on callback page)
+      // Optional: Provide user feedback if needed
+      console.log('Authentication flow could not be initiated.');
+    }
+
+    setIsOpen(false); // Close the modal after attempting to open the popup
   };
 
   if (!isOpen) return null;

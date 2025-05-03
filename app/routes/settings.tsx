@@ -1,13 +1,13 @@
-import { useState, useCallback, useRef } from 'react';
 import type { ChangeEvent } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import SimpleAppLayout from '../components/SimpleAppLayout';
-import { HomeIcon } from '../components/SessionSidebar/HomeIcon';
 import { useFireproof } from 'use-fireproof';
-import type { UserSettings } from '../types/settings';
-import modelsList from '../data/models.json';
-import { useAuth } from '../hooks/useAuth';
+import { HomeIcon } from '../components/SessionSidebar/HomeIcon';
+import SimpleAppLayout from '../components/SimpleAppLayout';
 import { FIREPROOF_CHAT_HISTORY } from '../config/env';
+import { useAuth } from '../contexts/AuthContext';
+import modelsList from '../data/models.json';
+import type { UserSettings } from '../types/settings';
 
 export function meta() {
   return [

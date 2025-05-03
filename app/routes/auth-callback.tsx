@@ -15,21 +15,26 @@ export async function clientLoader({ request }: LoaderFunctionArgs) {
   }
 
   try {
-    // Store token in localStorage
-    localStorage.setItem('auth_token', token);
+    // Send the token to the opener window
+    if (window.opener) {
+      window.opener.postMessage({ type: 'authSuccess', token }, window.location.origin);
+      window.close(); // Close the popup
+    } else {
+      // Fallback or error handling if not opened as a popup
+      console.error('Auth callback was not opened by a popup.');
+      // Optionally redirect here as a fallback
+      return redirect('/');
+    }
 
-    // Clear the redirect prevention flag
-    sessionStorage.removeItem('auth_redirect_prevention');
-
-    // Get the return URL and clear it
-    const returnUrl = sessionStorage.getItem('auth_return_url') || '/';
-    sessionStorage.removeItem('auth_return_url');
-
-    // Redirect to the return URL
-    return redirect(returnUrl);
+    // No longer setting localStorage or redirecting here
+    return null; // Indicate success without redirecting
   } catch (error) {
     console.error('Error processing token:', error);
-    return redirect('/');
+    // Attempt to close even on error if possible, or redirect fallback
+    if (window.opener) {
+      window.close();
+    }
+    return redirect('/'); // Fallback redirect on error
   }
 }
 
