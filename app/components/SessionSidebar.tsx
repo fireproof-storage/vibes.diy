@@ -1,21 +1,21 @@
-import { useEffect, useRef, useState, memo } from 'react';
+import { memo, useEffect, useRef, useState } from 'react';
+import { useAuth } from '../contexts/AuthContext';
+import type { SessionSidebarProps } from '../types/chat';
+import { trackAuthClick } from '../utils/analytics';
+import { initiateAuthFlow } from '../utils/auth';
+import { UserIcon } from './HeaderContent/SvgIcons';
 import { GearIcon } from './SessionSidebar/GearIcon';
+import { HomeIcon } from './SessionSidebar/HomeIcon';
 import { InfoIcon } from './SessionSidebar/InfoIcon';
 import { StarIcon } from './SessionSidebar/StarIcon';
-import { HomeIcon } from './SessionSidebar/HomeIcon';
-import { UserIcon } from './HeaderContent/SvgIcons';
-import type { SessionSidebarProps } from '../types/chat';
 import VibesDIYLogo from './VibesDIYLogo';
-import { useAuth } from '../hooks/useAuth';
-import { initiateAuthFlow } from '../utils/auth';
-import { trackAuthClick } from '../utils/analytics';
 
 /**
  * Component that displays a navigation sidebar with menu items
  */
 function SessionSidebar({ isVisible, onClose }: SessionSidebarProps) {
   const sidebarRef = useRef<HTMLDivElement>(null);
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, isLoading, userPayload } = useAuth();
   const [needsLogin, setNeedsLogin] = useState(false);
 
   // Listen for the needsLoginTriggered event to update needsLogin state
@@ -56,6 +56,7 @@ function SessionSidebar({ isVisible, onClose }: SessionSidebarProps) {
   return (
     <div
       ref={sidebarRef}
+      data-testid="session-sidebar"
       className={`bg-light-background-00 dark:bg-dark-background-00 fixed top-0 left-0 z-10 h-full shadow-lg transition-all duration-300 ${
         isVisible ? 'w-64 translate-x-0' : 'w-0 -translate-x-full'
       }`}
@@ -111,7 +112,12 @@ function SessionSidebar({ isVisible, onClose }: SessionSidebarProps) {
               </a>
             </li>
             <li>
-              {isAuthenticated ? (
+              {isLoading ? (
+                <div className="flex items-center rounded-md px-4 py-3 text-sm font-medium text-gray-400">
+                  <UserIcon className="text-accent-01 mr-3 h-5 w-5 animate-pulse" isUserAuthenticated={false} isVerifying={true} />
+                  <span className="animate-pulse">Loading...</span>
+                </div>
+              ) : isAuthenticated ? (
                 <a
                   href="/settings"
                   onClick={() => onClose()}
@@ -122,6 +128,7 @@ function SessionSidebar({ isVisible, onClose }: SessionSidebarProps) {
                 </a>
               ) : needsLogin ? (
                 <button
+                  type="button"
                   onClick={() => {
                     trackAuthClick({ label: 'Get Credits' });
                     initiateAuthFlow();
@@ -139,9 +146,22 @@ function SessionSidebar({ isVisible, onClose }: SessionSidebarProps) {
                 </button>
               ) : (
                 <button
+                  type="button"
                   onClick={() => {
                     trackAuthClick();
-                    initiateAuthFlow();
+                    const authUrl = initiateAuthFlow();
+
+                    if (authUrl) {
+                      const popupWidth = 600;
+                      const popupHeight = 700;
+                      const left = window.screenX + (window.outerWidth - popupWidth) / 2;
+                      const top = window.screenY + (window.outerHeight - popupHeight) / 2;
+                      const popupFeatures = `width=${popupWidth},height=${popupHeight},left=${left},top=${top},scrollbars=yes`;
+
+                      window.open(authUrl, 'authPopup', popupFeatures);
+                    } else {
+                      console.log('Authentication flow could not be initiated from sidebar.');
+                    }
                     onClose();
                   }}
                   className="hover:bg-light-background-01 dark:hover:bg-dark-background-01 flex w-full items-center rounded-md px-4 py-3 text-left text-sm font-medium"
@@ -167,6 +187,31 @@ function SessionSidebar({ isVisible, onClose }: SessionSidebarProps) {
             </li>
           </ul>
         </nav>
+
+        {/* Login Status Indicator */}
+        <div className="mt-auto border-t border-light-decorative-01 p-4 dark:border-dark-decorative-00">
+          {isLoading ? (
+            <div className="flex items-center text-sm text-gray-500">
+              <span className="mr-2 h-2 w-2 animate-pulse rounded-full bg-gray-400" />
+              Loading status...
+            </div>
+          ) : isAuthenticated && userPayload ? (
+            <div className="flex flex-col text-sm">
+              <div className="mb-1 flex items-center text-green-600 dark:text-green-400">
+                <span className="mr-2 h-2 w-2 flex-shrink-0 rounded-full bg-green-500" />
+                Logged In
+              </div>
+              <span className="truncate text-xs text-gray-500 dark:text-gray-400" title={userPayload.userId}>
+                User ID: {userPayload.userId} {JSON.stringify(userPayload)}
+              </span>
+            </div>
+          ) : (
+            <div className="flex items-center text-sm text-red-600 dark:text-red-400">
+              <span className="mr-2 h-2 w-2 rounded-full bg-red-500" />
+              Logged Out
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

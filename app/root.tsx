@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import type { MetaFunction } from 'react-router';
 import {
   Links,
   Meta,
@@ -7,7 +8,6 @@ import {
   ScrollRestoration,
   isRouteErrorResponse,
 } from 'react-router';
-import type { MetaFunction } from 'react-router';
 
 import type { Route } from './+types/root';
 import './app.css';
@@ -15,6 +15,7 @@ import ClientOnly from './components/ClientOnly';
 import CookieBanner from './components/CookieBanner';
 import { NeedsLoginModal } from './components/NeedsLoginModal';
 import { CookieConsentProvider } from './context/CookieConsentContext';
+import { AuthProvider } from './contexts/AuthContext';
 
 export const links: Route.LinksFunction = () => [
   { rel: 'icon', type: 'image/svg+xml', href: '/favicon.svg' },
@@ -88,13 +89,15 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <Links />
       </head>
       <body>
-        <CookieConsentProvider>
-          {children}
-          <ClientOnly>
-            <CookieBanner />
-            <NeedsLoginModal />
-          </ClientOnly>
-        </CookieConsentProvider>
+        <AuthProvider>
+          <CookieConsentProvider>
+            {children}
+            <ClientOnly>
+              <CookieBanner />
+              <NeedsLoginModal />
+            </ClientOnly>
+          </CookieConsentProvider>
+        </AuthProvider>
         <ScrollRestoration data-testid="scroll-restoration" />
         <Scripts data-testid="scripts" />
       </body>

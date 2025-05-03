@@ -1,10 +1,12 @@
 // Vitest will automatically use mocks from __mocks__ directory
-import { render, screen, fireEvent } from '@testing-library/react';
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { fireEvent, render, screen } from '@testing-library/react';
+import type { ReactNode } from 'react';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import ChatHeader from '../app/components/ChatHeaderContent';
-import SessionSidebar from '../app/components/SessionSidebar';
 import MessageList from '../app/components/MessageList';
-import type { UserChatMessage, AiChatMessage, ChatMessageDocument } from '../app/types/chat';
+import SessionSidebar from '../app/components/SessionSidebar';
+import { AuthContext, type AuthContextType } from '../app/contexts/AuthContext';
+import type { AiChatMessage, ChatMessageDocument, UserChatMessage } from '../app/types/chat';
 import { mockSessionSidebarProps } from './mockData';
 
 // Mock dependencies
@@ -97,6 +99,22 @@ vi.mock('../app/hooks/useSessionMessages', () => {
 const onOpenSidebar = vi.fn();
 const onClose = vi.fn();
 
+// Wrapper providing controlled context value
+const createWrapper = (contextValue: Partial<AuthContextType> = {}) => {
+  const defaultContextValue: AuthContextType = {
+    token: null,
+    isAuthenticated: false,
+    isLoading: false,
+    userPayload: null,
+    checkAuthStatus: vi.fn(),
+  };
+  const valueToProvide = { ...defaultContextValue, ...contextValue };
+
+  return ({ children }: { children: ReactNode }) => (
+    <AuthContext.Provider value={valueToProvide}>{children}</AuthContext.Provider>
+  );
+};
+
 describe('Component Rendering', () => {
   beforeEach(() => {
     vi.resetAllMocks();
@@ -149,56 +167,62 @@ describe('Component Rendering', () => {
   });
 
   describe('SessionSidebar', () => {
-    it('renders in hidden state', () => {
-      // Override the isVisible prop for this test
-      const props = {
-        ...mockSessionSidebarProps,
-        isVisible: false,
-        onClose: onClose,
-      };
-      const { container } = render(<SessionSidebar {...props} />);
-      // Check that it has the hidden class
-      expect(container.firstChild).toHaveClass('-translate-x-full');
+    const authenticatedState: Partial<AuthContextType> = {
+      isAuthenticated: true,
+      isLoading: false,
+      userPayload: { userId: 'test-user', exp: 9999, tenants: [], ledgers: [] }
+    };
+    const unauthenticatedState: Partial<AuthContextType> = {
+      isAuthenticated: false,
+      isLoading: false,
+      userPayload: null
+    };
+
+    it('renders in hidden state', async () => { 
+      const props = { ...mockSessionSidebarProps, isVisible: false };
+      // Provide a default state (e.g., authenticated) for basic rendering
+      const wrapper = createWrapper(authenticatedState); 
+      render(<SessionSidebar {...props} />, { wrapper });
+      const sidebarElement = await screen.findByTestId('session-sidebar'); 
+      expect(sidebarElement).toHaveClass('-translate-x-full');
     });
 
-    it('renders in visible state', () => {
-      // Override the isVisible prop for this test
-      const props = {
-        ...mockSessionSidebarProps,
-        isVisible: true,
-        onClose: onClose,
-      };
-      const { container } = render(<SessionSidebar {...props} />);
-      // Check that it doesn't have the hidden class
-      expect(container.firstChild).not.toHaveClass('-translate-x-full');
+    it('renders in visible state', async () => { 
+      const props = { ...mockSessionSidebarProps, isVisible: true };
+      const wrapper = createWrapper(authenticatedState);
+      render(<SessionSidebar {...props} />, { wrapper });
+      const sidebarElement = await screen.findByTestId('session-sidebar');
+      expect(sidebarElement).not.toHaveClass('-translate-x-full');
+    });
 
-      // Check that navigation menu items are rendered
+    it('shows navigation menu items when authenticated', async () => { 
+      const props = { ...mockSessionSidebarProps, isVisible: true };
+      const wrapper = createWrapper(authenticatedState);
+      render(<SessionSidebar {...props} />, { wrapper });
+      expect(await screen.findByText('Settings')).toBeInTheDocument(); 
       expect(screen.getByText('Home')).toBeInTheDocument();
       expect(screen.getByText('My Vibes')).toBeInTheDocument();
-    });
-
-    it('shows navigation menu items', () => {
-      // Override isVisible and onClose for this test
-      const props = {
-        ...mockSessionSidebarProps,
-        isVisible: true,
-        onClose: onClose,
-      };
-      render(<SessionSidebar {...props} />);
-      expect(screen.getByText('Settings')).toBeInTheDocument();
+      expect(screen.queryByText('Login')).not.toBeInTheDocument();
       expect(screen.getByText('About')).toBeInTheDocument();
+      expect(screen.getByText('Logged In')).toBeInTheDocument(); 
+    });
+    
+    it('shows Login button when not authenticated', async () => { 
+      const props = { ...mockSessionSidebarProps, isVisible: true };
+      const wrapper = createWrapper(unauthenticatedState); // Provide unauthenticated state
+      render(<SessionSidebar {...props} />, { wrapper });
+      expect(await screen.findByText('Login')).toBeInTheDocument(); 
+      expect(screen.queryByText('Settings')).not.toBeInTheDocument(); 
+      expect(screen.getByText('Logged Out')).toBeInTheDocument(); 
     });
 
     it('has a close button that works', () => {
-      const onClose = vi.fn();
-      render(<SessionSidebar {...mockSessionSidebarProps} isVisible={true} onClose={onClose} />);
-
-      // Find and click the close button
-      const closeButton = screen.getByLabelText('Close sidebar');
-      fireEvent.click(closeButton);
-
-      // Verify that onClose was called
-      expect(onClose).toHaveBeenCalled();
+      const onCloseMock = vi.fn();
+      const props = { ...mockSessionSidebarProps, isVisible: true, onClose: onCloseMock };
+      const wrapper = createWrapper(authenticatedState);
+      render(<SessionSidebar {...props} />, { wrapper });
+      fireEvent.click(screen.getByLabelText('Close sidebar'));
+      expect(onCloseMock).toHaveBeenCalled();
     });
   });
 
