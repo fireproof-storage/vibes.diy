@@ -3,6 +3,7 @@ import { trackChatInputClick } from '../utils/analytics';
 import type { ChatMessageDocument, ChatState } from '../types/chat';
 import type { UserSettings } from '../types/settings';
 import { parseContent } from '../utils/segmentParser';
+
 import { useRuntimeErrors, type RuntimeError, type ErrorCategory } from './useRuntimeErrors';
 import { useSession } from './useSession';
 import { useFireproof } from 'use-fireproof';
@@ -21,6 +22,9 @@ import { useThrottledUpdates } from './useThrottledUpdates';
 // Constants
 const CODING_MODEL = 'anthropic/claude-3.7-sonnet';
 const TITLE_MODEL = 'meta-llama/llama-3.1-8b-instruct';
+
+// Global request tracking to prevent duplicate credit check calls
+let pendingCreditsCheck: Promise<any> | null = null;
 
 /**
  * Simplified chat hook that focuses on data-driven state management
@@ -221,13 +225,25 @@ export function useSimpleChat(sessionId: string | undefined): ChatState {
     if (!apiKey) return;
 
     try {
-      const credits = await getCredits(apiKey);
+      // Deduplicate credits check requests across components
+      if (!pendingCreditsCheck) {
+        pendingCreditsCheck = getCredits(apiKey);
+      }
+
+      // Wait for the existing or new request to complete
+      const credits = await pendingCreditsCheck;
       console.log('💳 Credits:', credits);
+
+      // Reset the pending request after completion
+      pendingCreditsCheck = null;
 
       if (credits && credits.available <= 0.9) {
         setNeedsNewKey(true);
       }
     } catch (error) {
+      // Reset the pending request on error
+      pendingCreditsCheck = null;
+
       // If we can't check credits, we might need a new key
       console.error('Error checking credits:', error);
       setNeedsNewKey(true);

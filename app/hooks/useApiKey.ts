@@ -2,6 +2,9 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { CALLAI_API_KEY } from '../config/env';
 import { createKeyViaEdgeFunction } from '../services/apiKeyService';
 
+// Global request tracking to prevent duplicate API calls
+let pendingKeyRequest: Promise<any> | null = null;
+
 /**
  * Hook for API key management that uses dynamic key provisioning
  * @param userId - Optional user ID for associating keys with specific users
@@ -119,11 +122,19 @@ export function useApiKey(userId?: string) {
           // Set the attempt timestamp before making the request
           localStorage.setItem('vibes-key-backoff', Date.now().toString());
 
-          // Make the actual API call
-          const apiResponse = await createKeyViaEdgeFunction(userId);
+          // Deduplicate API key requests across components
+          if (!pendingKeyRequest) {
+            pendingKeyRequest = createKeyViaEdgeFunction(userId);
+          }
 
-          // If we got here, we succeeded - clear the backoff timer
+          // Wait for the existing or new request to complete
+          const apiResponse = await pendingKeyRequest;
+
+          // Success - clear the backoff timer
           localStorage.removeItem('vibes-key-backoff');
+
+          // Reset the pending request after successful fetch
+          pendingKeyRequest = null;
 
           // Ensure we have the correct key structure
           if (apiResponse && typeof apiResponse === 'object') {
@@ -140,6 +151,9 @@ export function useApiKey(userId?: string) {
             }
           }
         } catch (error) {
+          // Reset the pending request on error to allow retries
+          pendingKeyRequest = null;
+
           // Handle rate limiting specifically
           if (error instanceof Error && error.message.includes('Too Many Requests')) {
             // Don't remove the backoff timer on rate limit errors
