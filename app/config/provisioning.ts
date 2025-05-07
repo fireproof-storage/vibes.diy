@@ -13,17 +13,37 @@ export async function getCredits(apiKey: string): Promise<{
   limit: number;
 }> {
   try {
+    // Validate the API key before making the request
+    if (!apiKey || typeof apiKey !== 'string' || apiKey.trim() === '') {
+      console.error('Invalid API key provided to getCredits:', apiKey ? 'empty string' : typeof apiKey);
+      throw new Error('Invalid or missing API key');
+    }
+
+    console.log('Checking credits with key:', apiKey.substring(0, 5) + '...');
+    
     // Use the auth/key endpoint to get information about the key itself
     const response = await fetch('https://openrouter.ai/api/v1/auth/key', {
       method: 'GET',
-      headers: { Authorization: `Bearer ${apiKey}` },
+      headers: { 
+        Authorization: `Bearer ${apiKey.trim()}`,
+        'Content-Type': 'application/json'
+      },
     });
 
     if (!response.ok) {
-      throw new Error(`Failed to fetch key credits: ${response.status}`);
+      console.error('API key request failed with status:', response.status);
+      // Try to get more detailed error information
+      let errorDetails = '';
+      try {
+        const errorData = await response.text();
+        errorDetails = errorData ? ` - ${errorData}` : '';
+      } catch (e) {}
+      
+      throw new Error(`Failed to fetch key credits: ${response.status}${errorDetails}`);
     }
 
     const responseData = await response.json();
+    console.log('Credits response received:', responseData ? 'success' : 'empty');
 
     // Map the response to the expected format
     const data = responseData.data || responseData;
@@ -38,10 +58,12 @@ export async function getCredits(apiKey: string): Promise<{
 
     // If credits are low, provide a clear message
     if (result.available < 0.2 && result.limit > 0) {
+      console.warn('API credits are running low:', result.available);
     }
 
     return result;
   } catch (error) {
+    console.error('Error checking credits:', error);
     throw error;
   }
 }
