@@ -25,12 +25,12 @@ export async function createKeyViaEdgeFunction(userId: string | undefined): Prom
   console.log('Creating new key for user:', userId);
   // Use the API_ORIGIN for cross-origin requests, or relative path for same-origin
   const endpoint = API_ORIGIN ? `${API_ORIGIN}/api/keys` : '/api/keys';
-  
+
   const response = await fetch(endpoint, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      Authorization: 'Bearer temporary-auth-token'
+      Authorization: 'Bearer temporary-auth-token',
     },
     body: JSON.stringify({
       userId,

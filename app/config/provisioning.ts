@@ -17,13 +17,13 @@ export async function getCredits(apiKey: string): Promise<{
     if (!apiKey || typeof apiKey !== 'string' || apiKey.trim() === '') {
       throw new Error('Invalid or missing API key');
     }
-    
+
     // Use the auth/key endpoint to get information about the key itself
     const response = await fetch('https://openrouter.ai/api/v1/auth/key', {
       method: 'GET',
-      headers: { 
+      headers: {
         Authorization: `Bearer ${apiKey.trim()}`,
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
       },
     });
 
@@ -34,7 +34,7 @@ export async function getCredits(apiKey: string): Promise<{
         const errorData = await response.text();
         errorDetails = errorData ? ` - ${errorData}` : '';
       } catch (e) {}
-      
+
       throw new Error(`Failed to fetch key credits: ${response.status}${errorDetails}`);
     }
 

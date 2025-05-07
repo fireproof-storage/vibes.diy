@@ -20,7 +20,7 @@ export function useApiKey(userId?: string) {
   useEffect(() => {
     let isMounted = true; // Track component mount state
     hasFetchStarted.current = false; // Reset on dependency changes
-    
+
     const checkAndLoadKey = async () => {
       // Only proceed if we don't have a key and haven't started fetching
       if (apiKey || isLoading || hasFetchStarted.current) {
@@ -31,12 +31,12 @@ export function useApiKey(userId?: string) {
 
       // Clear any stale backoff timer on load
       localStorage.removeItem('vibes-key-backoff');
-      
+
       const storedKey = localStorage.getItem(storageKey);
       if (storedKey) {
         try {
           const keyData = JSON.parse(storedKey);
-          
+
           // Make sure we have a valid key object
           if (keyData.key && typeof keyData.key === 'string') {
             const creationTime = keyData.createdAt || 0;
@@ -50,7 +50,7 @@ export function useApiKey(userId?: string) {
               return; // Exit early since we found a valid key
             }
           }
-          
+
           // If we got here, the key is invalid or expired
           localStorage.removeItem(storageKey);
         } catch (e) {
@@ -59,13 +59,13 @@ export function useApiKey(userId?: string) {
       }
 
       if (!isMounted) return;
-      
+
       // If we reach here, we need to fetch a new key
       await fetchNewKey();
     };
 
     checkAndLoadKey();
-    
+
     // Cleanup function to prevent state updates after unmount
     return () => {
       isMounted = false;
@@ -101,7 +101,7 @@ export function useApiKey(userId?: string) {
               const lastTime = parseInt(lastAttempt, 10);
               const now = Date.now();
               const elapsedMs = now - lastTime;
-            
+
               // If last attempt was less than 10 seconds ago, wait before trying again
               if (elapsedMs < 10 * 1000) {
                 const waitTime = Math.ceil((10 * 1000 - elapsedMs) / 1000);
@@ -112,23 +112,28 @@ export function useApiKey(userId?: string) {
               }
             }
           }
-          
+
           // Clear any old state that might be causing confusion
           localStorage.removeItem('vibes-key-backoff');
-          
+
           // Set the attempt timestamp before making the request
           localStorage.setItem('vibes-key-backoff', Date.now().toString());
-          
+
           // Make the actual API call
           const apiResponse = await createKeyViaEdgeFunction(userId);
-          
+
           // If we got here, we succeeded - clear the backoff timer
           localStorage.removeItem('vibes-key-backoff');
-          
+
           // Ensure we have the correct key structure
           if (apiResponse && typeof apiResponse === 'object') {
             // Check if the API returned a nested key object (common with some APIs)
-            if ('key' in apiResponse && typeof apiResponse.key === 'object' && apiResponse.key && 'key' in apiResponse.key) {
+            if (
+              'key' in apiResponse &&
+              typeof apiResponse.key === 'object' &&
+              apiResponse.key &&
+              'key' in apiResponse.key
+            ) {
               keyData = apiResponse.key as any; // Cast to any to overcome type issues
             } else {
               keyData = apiResponse as any; // Cast to any to overcome type issues
