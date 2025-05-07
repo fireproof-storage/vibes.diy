@@ -45,7 +45,6 @@ export function useApiKey(userId?: string) {
 
             if (keyAgeInDays < 7) {
               if (isMounted) {
-                console.log('Using existing API key from localStorage');
                 setApiKey(keyData.key);
               }
               return; // Exit early since we found a valid key
@@ -53,10 +52,8 @@ export function useApiKey(userId?: string) {
           }
           
           // If we got here, the key is invalid or expired
-          console.log('Removing invalid or expired key');
           localStorage.removeItem(storageKey);
         } catch (e) {
-          console.log('Error parsing stored key, removing it');
           localStorage.removeItem(storageKey);
         }
       }
@@ -108,8 +105,6 @@ export function useApiKey(userId?: string) {
               // If last attempt was less than 10 seconds ago, wait before trying again
               if (elapsedMs < 10 * 1000) {
                 const waitTime = Math.ceil((10 * 1000 - elapsedMs) / 1000);
-                console.log(`Rate limited, waiting ${waitTime} seconds before trying again`);
-              
                 const tempErr = new Error(`Rate limited. Please try again in ${waitTime} seconds.`);
                 setError(tempErr);
                 setIsLoading(false);
@@ -125,11 +120,9 @@ export function useApiKey(userId?: string) {
           localStorage.setItem('vibes-key-backoff', Date.now().toString());
           
           // Make the actual API call
-          console.log('Creating new API key for userId:', userId || 'anonymous');
           const apiResponse = await createKeyViaEdgeFunction(userId);
           
           // If we got here, we succeeded - clear the backoff timer
-          console.log('Successfully created new API key!');
           localStorage.removeItem('vibes-key-backoff');
           
           // Ensure we have the correct key structure
@@ -137,21 +130,17 @@ export function useApiKey(userId?: string) {
             // Check if the API returned a nested key object (common with some APIs)
             if ('key' in apiResponse && typeof apiResponse.key === 'object' && apiResponse.key && 'key' in apiResponse.key) {
               keyData = apiResponse.key as any; // Cast to any to overcome type issues
-              console.log('Using nested key object from response');
             } else {
               keyData = apiResponse as any; // Cast to any to overcome type issues
-              console.log('Using direct key object from response');
             }
           }
         } catch (error) {
           // Handle rate limiting specifically
           if (error instanceof Error && error.message.includes('Too Many Requests')) {
-            console.warn('Rate limited when creating API key');
             // Don't remove the backoff timer on rate limit errors
           } else {
             // For other errors, clear the backoff timer
             localStorage.removeItem('vibes-key-backoff');
-            console.error('Error creating API key:', error);
           }
           throw error;
         }
@@ -177,7 +166,6 @@ export function useApiKey(userId?: string) {
         try {
           const parsed = JSON.parse(storedData);
           if (!parsed.key || parsed.error) {
-            console.log('Clearing invalid key data from localStorage');
             localStorage.removeItem(storageKey);
           }
         } catch (e) {
