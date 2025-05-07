@@ -54,6 +54,7 @@ export async function getCredits(apiKey: string): Promise<{
     // If credits are low, provide a clear message
     if (result.available < 0.2 && result.limit > 0) {
       // Credits are low - this could be handled via a UI notification
+      console.warn('API credits are running low:', result.available);
     }
 
     return result;
