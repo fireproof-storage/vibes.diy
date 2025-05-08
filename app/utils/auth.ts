@@ -22,6 +22,86 @@ export interface TokenPayload {
   exp: number;
 }
 
+// Base58 alphabet for base58btc
+const BASE58BTC_ALPHABET = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz';
+
+// Define JWK type
+interface JWK {
+  kty: string;
+  crv?: string;
+  x?: string;
+  y?: string;
+  n?: string;
+  e?: string;
+  ext?: boolean;
+  key_ops?: string[];
+}
+
+/**
+ * Decode a base58btc-encoded string to bytes
+ * @param {string} str - The base58btc-encoded string
+ * @returns {Uint8Array} - The decoded bytes
+ */
+function base58btcDecode(str: string): Uint8Array {
+  // Remove the 'z' prefix for base58btc if present
+  let input = str;
+  if (input.startsWith('z')) {
+    input = input.slice(1);
+  }
+  
+  let num = BigInt(0);
+  for (let i = 0; i < input.length; i++) {
+    const char = input[i];
+    const value = BASE58BTC_ALPHABET.indexOf(char);
+    if (value === -1) throw new Error(`Invalid base58 character: ${char}`);
+    num = num * BigInt(58) + BigInt(value);
+  }
+  
+  // Convert to bytes
+  const bytes = [];
+  while (num > 0) {
+    bytes.unshift(Number(num % BigInt(256)));
+    num = num / BigInt(256);
+  }
+  
+  // Account for leading zeros in the input
+  for (let i = 0; i < input.length; i++) {
+    if (input[i] === '1') {
+      bytes.unshift(0);
+    } else {
+      break;
+    }
+  }
+  
+  return new Uint8Array(bytes);
+}
+
+/**
+ * Decode a base58btc-encoded JWK string to a public key JWK
+ * @param {string} encodedString - The base58btc-encoded JWK string
+ * @returns {JWK} - The decoded JWK public key
+ */
+function decodePublicKeyJWK(encodedString: string): JWK {
+  // Decode the base58btc string
+  const decoded = base58btcDecode(encodedString);
+  
+  // Try to parse as JSON
+  try {
+    const rawText = new TextDecoder().decode(decoded);
+    return JSON.parse(rawText);
+  } catch (error) {
+    // If parsing fails, log the error and return a default JWK
+    console.error('Failed to parse JWK from base58btc string:', error);
+    
+    return {
+      kty: 'EC',
+      crv: 'P-256',
+      x: '',
+      y: ''
+    };
+  }
+}
+
 /**
  * Get the authentication token without automatically redirecting
  */
@@ -76,23 +156,24 @@ export function initiateAuthFlow(): string | null {
     return null;
   }
 
-  // Check for redirect prevention flag to avoid redirect loops
-  if (sessionStorage.getItem('auth_redirect_prevention')) {
-    return null;
-  }
+  // // Check for redirect prevention flag to avoid redirect loops
+  // if (sessionStorage.getItem('auth_redirect_prevention')) {
+  //   return null;
+  // }
 
-  // Save the current URL to redirect back after authentication
-  const returnUrl = window.location.pathname + window.location.search;
-  sessionStorage.setItem('auth_return_url', returnUrl);
+  // // Save the current URL to redirect back after authentication
+  // const returnUrl = window.location.pathname + window.location.search;
+  // sessionStorage.setItem('auth_return_url', returnUrl);
 
-  // Set redirect prevention flag before redirecting
-  sessionStorage.setItem('auth_redirect_prevention', 'true');
+  // // Set redirect prevention flag before redirecting
+  // sessionStorage.setItem('auth_redirect_prevention', 'true');
 
   // Calculate the callback URL (absolute URL to our auth/callback route)
   const callbackUrl = new URL('/auth/callback', window.location.origin).toString();
 
   // Redirect to get a token, using our auth/callback route as the back_url
-  const authUrl = `https://connect.fireproof.direct/fp/cloud/api/token?back_url=${encodeURIComponent(callbackUrl)}`;
+  const connectUrl = import.meta.env.VITE_CONNECT_URL || 'https://connect.fireproof.direct/fp/cloud/api/token';
+  const authUrl = `${connectUrl}?back_url=${encodeURIComponent(callbackUrl)}`;
   return authUrl;
 }
 
@@ -103,29 +184,11 @@ export function initiateAuthFlow(): string | null {
  */
 export async function verifyToken(token: string): Promise<TokenPayload | null> {
   try {
-    // In a development environment, skip verification but still decode for payload
-    if (import.meta.env.DEV || import.meta.env.VITE_SKIP_TOKEN_VERIFICATION) {
-      console.warn('Skipping token verification in DEV mode.');
-      // Basic decode for DEV mode (less secure than verify)
-      const payload = JSON.parse(atob(token.split('.')[1]));
-      // Basic expiry check even in DEV
-      if (!payload.exp || typeof payload.exp !== 'number' || payload.exp * 1000 < Date.now()) {
-        console.error('Token expired (DEV check)');
-        return null;
-      }
-      // Cast to unknown first for type safety
-      return payload as unknown as TokenPayload;
-    }
-
-    // JWK public key for ES256
-    const publicKey = {
-      kty: 'EC',
-      crv: 'P-256',
-      x: 'zeWndr5LEoaySgKSo2aZniYqXf5WxWq3WDGYvT4K4gg',
-      y: 'qX2wWPXAc4TXhRFrQAGUgCwkAYHCTZNn8Yqz62DzFzs',
-      ext: true,
-      key_ops: ['verify'],
-    };
+    // Base58btc-encoded public key (replace with actual key)
+    const encodedPublicKey = import.meta.env.VITE_CLOUD_SESSION_TOKEN_PUBLIC
+    
+    // Decode the base58btc-encoded JWK
+    const publicKey = decodePublicKeyJWK(encodedPublicKey);
 
     // Import the JWK
     const key = await importJWK(publicKey, 'ES256');
@@ -143,15 +206,11 @@ export async function verifyToken(token: string): Promise<TokenPayload | null> {
     }
 
     // Check if token is expired
-    if (payload.exp * 1000 < Date.now()) {
+    if (payload.exp  < Date.now()) {
       // Convert to milliseconds
       console.error('Token has expired');
       return null; // Token expired
     }
-
-    // Add email parsing if needed, assuming it's within a nested object or custom claim
-    // Example: const email = payload.user?.email or payload.email
-    // For now, just ensure the basic structure matches TokenPayload
 
     // Cast to unknown first for type safety
     return payload as unknown as TokenPayload; // Verification successful, return payload
@@ -159,18 +218,4 @@ export async function verifyToken(token: string): Promise<TokenPayload | null> {
     console.error('Error verifying or decoding token:', error);
     return null; // Verification failed
   }
-}
-
-/**
- * Check if the user is authenticated based on a valid, non-expired token.
- */
-export async function isAuthenticated(): Promise<boolean> {
-  const token = localStorage.getItem('auth_token'); // Check localStorage directly
-  if (!token) return false;
-
-  // Verify the token using the updated verifyToken function
-  const payload = await verifyToken(token);
-
-  // If payload is not null, the token is valid and not expired
-  return payload !== null;
 }

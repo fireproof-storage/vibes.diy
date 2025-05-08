@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useLocation } from 'react-router';
-import { initGA, pageview } from '../utils/analytics';
 import { GA_TRACKING_ID } from '../config/analytics';
-import { useCookieConsent } from '../context/CookieConsentContext';
+import { useCookieConsent } from '../contexts/CookieConsentContext';
+import { initGA, pageview } from '../utils/analytics';
 
 // We'll use any type for dynamic imports to avoid TypeScript errors with the cookie consent component
 
