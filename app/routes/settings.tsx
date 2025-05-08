@@ -20,7 +20,7 @@ export default function Settings() {
   const navigate = useNavigate();
   // Use the main database directly instead of through useSession
   const { useDocument } = useFireproof(FIREPROOF_CHAT_HISTORY);
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, checkAuthStatus } = useAuth();
 
   const {
     doc: settings,
@@ -128,8 +128,11 @@ Secretly name this theme “Viridian Pulse”, capturing Sterling’s original p
   const handleLogout = useCallback(() => {
     // Clear the auth token and navigate to home page
     localStorage.removeItem('auth_token');
-    navigate('/');
-  }, [navigate]);
+    // Update the auth context state before navigation
+    checkAuthStatus().then(() => {
+      navigate('/');
+    });
+  }, [navigate, checkAuthStatus]);
 
   return (
     <SimpleAppLayout

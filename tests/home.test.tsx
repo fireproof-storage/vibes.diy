@@ -5,7 +5,7 @@ import { AuthContext, type AuthContextType } from '../app/contexts/AuthContext';
 import UnifiedSession from '../app/routes/home';
 
 // Mock the CookieConsentContext
-vi.mock('../app/context/CookieConsentContext', () => ({
+vi.mock('../app/contexts/CookieConsentContext', () => ({
   useCookieConsent: () => ({
     messageHasBeenSent: false,
     setMessageHasBeenSent: vi.fn(),

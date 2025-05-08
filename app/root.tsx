@@ -15,7 +15,7 @@ import './app.css';
 import ClientOnly from './components/ClientOnly';
 import CookieBanner from './components/CookieBanner';
 import { NeedsLoginModal } from './components/NeedsLoginModal';
-import { CookieConsentProvider } from './context/CookieConsentContext';
+import { CookieConsentProvider } from './contexts/CookieConsentContext';
 import { AuthProvider } from './contexts/AuthContext';
 
 export const links: Route.LinksFunction = () => [

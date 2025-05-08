@@ -1,4 +1,5 @@
 import { memo, useEffect, useRef, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import type { SessionSidebarProps } from '../types/chat';
 import { trackAuthClick } from '../utils/analytics';
@@ -92,24 +93,24 @@ function SessionSidebar({ isVisible, onClose }: SessionSidebarProps) {
         <nav className="flex-grow p-2">
           <ul className="space-y-1">
             <li>
-              <a
-                href="/"
+              <Link
+                to="/"
                 onClick={() => onClose()}
                 className="hover:bg-light-background-01 dark:hover:bg-dark-background-01 flex items-center rounded-md px-4 py-3 text-sm font-medium"
               >
                 <HomeIcon className="text-accent-01 mr-3 h-5 w-5" />
                 <span>Home</span>
-              </a>
+              </Link>
             </li>
             <li>
-              <a
-                href="/vibes/mine"
+              <Link
+                to="/vibes/mine"
                 onClick={() => onClose()}
                 className="hover:bg-light-background-01 dark:hover:bg-dark-background-01 flex items-center rounded-md px-4 py-3 text-sm font-medium"
               >
                 <StarIcon className="text-accent-01 mr-3 h-5 w-5" />
                 <span>My Vibes</span>
-              </a>
+              </Link>
             </li>
             <li>
               {isLoading ? (
@@ -118,14 +119,14 @@ function SessionSidebar({ isVisible, onClose }: SessionSidebarProps) {
                   <span className="animate-pulse">Loading...</span>
                 </div>
               ) : isAuthenticated ? (
-                <a
-                  href="/settings"
+                <Link
+                  to="/settings"
                   onClick={() => onClose()}
                   className="hover:bg-light-background-01 dark:hover:bg-dark-background-01 flex items-center rounded-md px-4 py-3 text-sm font-medium"
                 >
                   <GearIcon className="text-accent-01 mr-3 h-5 w-5" />
                   <span>Settings</span>
-                </a>
+                </Link>
               ) : needsLogin ? (
                 <button
                   type="button"
@@ -176,14 +177,14 @@ function SessionSidebar({ isVisible, onClose }: SessionSidebarProps) {
               )}
             </li>
             <li>
-              <a
-                href="/about"
+              <Link
+                to="/about"
                 onClick={() => onClose()}
                 className="hover:bg-light-background-01 dark:hover:bg-dark-background-01 flex items-center rounded-md px-4 py-3 text-sm font-medium"
               >
                 <InfoIcon className="text-accent-01 mr-3 h-5 w-5" />
                 <span>About</span>
-              </a>
+              </Link>
             </li>
           </ul>
         </nav>
@@ -201,8 +202,8 @@ function SessionSidebar({ isVisible, onClose }: SessionSidebarProps) {
                 <span className="mr-2 h-2 w-2 flex-shrink-0 rounded-full bg-green-500" />
                 Logged In
               </div>
-              <span className="truncate text-xs text-gray-500 dark:text-gray-400" title={userPayload.userId}>
-                User ID: {userPayload.userId} {JSON.stringify(userPayload)}
+              <span className="truncate text-xs text-gray-500 dark:text-gray-400" title={userPayload.email}>
+                {userPayload.email}
               </span>
             </div>
           ) : (

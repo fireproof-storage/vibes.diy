@@ -1,6 +1,5 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router';
-import { useCookieConsent } from '../context/CookieConsentContext';
 import { encodeTitle } from '~/components/SessionSidebar/utils';
 import AppLayout from '../components/AppLayout';
 import ChatHeaderContent from '../components/ChatHeaderContent';
@@ -10,8 +9,10 @@ import QuickSuggestions from '../components/QuickSuggestions';
 import ResultPreview from '../components/ResultPreview/ResultPreview';
 import ResultPreviewHeaderContent from '../components/ResultPreview/ResultPreviewHeaderContent';
 import SessionSidebar from '../components/SessionSidebar';
+import { useCookieConsent } from '../contexts/CookieConsentContext';
 import { useSimpleChat } from '../hooks/useSimpleChat';
 import { isMobileViewport } from '../utils/ViewState';
+import { decodeStateFromUrl } from '../utils/sharing';
 // import { useSession } from '../hooks/useSession';
 
 export function meta() {
