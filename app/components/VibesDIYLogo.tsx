@@ -22,7 +22,7 @@ const VibesDIYLogo: React.FC<VibesDIYLogoProps> = ({
 }) => {
   // Use a simplified approach to detect dark mode based on the existing system
   const [isDarkMode, setIsDarkMode] = React.useState(false);
-  
+
   // Check dark mode on mount and observe changes
   React.useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -30,10 +30,10 @@ const VibesDIYLogo: React.FC<VibesDIYLogoProps> = ({
       const checkDarkMode = () => {
         setIsDarkMode(document.documentElement.classList.contains('dark'));
       };
-      
+
       // Initial check
       checkDarkMode();
-      
+
       // Create observer for theme changes
       const observer = new MutationObserver((mutations) => {
         mutations.forEach((mutation) => {
@@ -42,7 +42,7 @@ const VibesDIYLogo: React.FC<VibesDIYLogoProps> = ({
           }
         });
       });
-      
+
       observer.observe(document.documentElement, { attributes: true });
       return () => observer.disconnect();
     }
