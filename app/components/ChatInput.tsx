@@ -59,14 +59,14 @@ function ChatInput({
             disabled
               ? 'border-light-decorative-01 dark:border-dark-decorative-01'
               : 'border-light-decorative-01 dark:border-dark-decorative-00'
-          } right-0 bottom-0 -mr-2 -mb-1 w-[110px] px-1 py-2`}
+          } right-0 -bottom-1 -mr-0 w-[96px] py-1`}
           style={{
             backdropFilter: 'blur(1px)',
           }}
           aria-label={disabled ? 'Generating' : 'Send message'}
         >
           <div className="relative z-10">
-            <VibesDIYLogo className="mr-2 mb-0.5 ml-2 pt-6 pb-2 pl-1.5" width={100} height={18} />
+            <VibesDIYLogo className="mr-2 mb-0.5 ml-5 pt-6 pb-2 pl-1.5" width={100} height={12} />
           </div>
         </button>
       </div>

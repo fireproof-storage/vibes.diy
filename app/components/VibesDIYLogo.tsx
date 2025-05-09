@@ -48,36 +48,33 @@ const VibesDIYLogo: React.FC<VibesDIYLogoProps> = ({
     }
   }, []);
 
-  const aspectRatio = 302 / 180;
+  const aspectRatio = 372 / 123; // Matches SVG viewBox dimensions
 
   return (
-    <>
+    <div
+      className={className}
+      style={{
+        width: width ? `${width}px` : '372px',
+        height: height ? `${height}px` : width ? `${width / aspectRatio}px` : '123px',
+        overflow: 'visible',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+      }}
+      {...props}
+    >
       <div
-        className={`${className || ''}`}
         style={{
-          width: width ? `${width}px` : '302px',
-          height: height ? `${height}px` : width ? `${width / aspectRatio}px` : '180px',
-          overflow: 'visible',
-
+          transition: 'filter 0.3s ease',
           display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
+          width: '100%',
+          transformOrigin: 'center center',
+          minHeight: 0,
         }}
-        {...props}
       >
-        <div
-          style={{
-            transition: 'filter 0.3s ease',
-            display: 'flex',
-            width: '100%',
-            transformOrigin: 'center center',
-            minHeight: 0,
-          }}
-        >
-          <DIYLogo isDarkMode={isDarkMode} colorway={colorway} />
-        </div>
+        <DIYLogo isDarkMode={isDarkMode} colorway={colorway} />
       </div>
-    </>
+    </div>
   );
 };
 
