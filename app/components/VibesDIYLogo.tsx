@@ -1,84 +1,57 @@
 import React from 'react';
 import DIYLogo from './diyLogo-svg';
+import { dark } from './colorways';
+
+type ColorwayName = keyof typeof dark;
 
 interface VibesDIYLogoProps extends React.HTMLAttributes<HTMLDivElement> {
   height?: number;
   width?: number;
-  animateHue?: boolean;
   maxHeight?: number;
   overflow?: 'visible' | 'hidden' | 'auto' | 'scroll';
+  colorway?: ColorwayName;
 }
-
-// Regular text-based logo
-const VibesDIYLogoTXT: React.FC<VibesDIYLogoProps> = ({ className, ...props }) => {
-  return (
-    <span className={`inline-block ${className || ''}`} {...props}>
-      Vibes{' '}
-      <sub style={{ display: 'inline-block', transform: 'rotate(-8deg)' }}>
-        <strong>DIY</strong>
-      </sub>
-    </span>
-  );
-};
 
 // SVG-based logo using the imported SVG component
 const VibesDIYLogo: React.FC<VibesDIYLogoProps> = ({
   className,
-  animateHue = true,
   width,
   height,
+  colorway,
   ...props
 }) => {
-  // Control light/dark mode detection with a hook if we need to
+  // Use a simplified approach to detect dark mode based on the existing system
   const [isDarkMode, setIsDarkMode] = React.useState(false);
-
-  // Generate a random starting hue value (0-360)
-  const [initialHue, setInitialHue] = React.useState(0);
-
-  // Generate random initial hue and check dark mode on mount
+  
+  // Check dark mode on mount and observe changes
   React.useEffect(() => {
     if (typeof window !== 'undefined') {
-      // Set a random initial hue value
-      setInitialHue(Math.floor(Math.random() * 360));
-
-      // Initial dark mode check
-      setIsDarkMode(document.documentElement.classList.contains('dark'));
-
-      // Create an observer to detect dark mode changes
+      // Function to check dark mode
+      const checkDarkMode = () => {
+        setIsDarkMode(document.documentElement.classList.contains('dark'));
+      };
+      
+      // Initial check
+      checkDarkMode();
+      
+      // Create observer for theme changes
       const observer = new MutationObserver((mutations) => {
         mutations.forEach((mutation) => {
           if (mutation.attributeName === 'class') {
-            setIsDarkMode(document.documentElement.classList.contains('dark'));
+            checkDarkMode();
           }
         });
       });
-
-      // Start observing
+      
       observer.observe(document.documentElement, { attributes: true });
-
-      // Cleanup
       return () => observer.disconnect();
     }
   }, []);
-
-  // Generate the animation styles with the random initial hue
-  const animationStyles = `
-    @keyframes rotateHue {
-      0% { filter: hue-rotate(${initialHue}deg); }
-      100% { filter: hue-rotate(${initialHue + 360}deg); }
-    }
-
-    @keyframes rotateHueDark {
-      0% { filter: invert(100%) hue-rotate(${initialHue}deg); }
-      100% { filter: invert(100%) hue-rotate(${initialHue + 360}deg); }
-    }
-  `;
 
   const aspectRatio = 302 / 180;
 
   return (
     <>
-      {animateHue && <style dangerouslySetInnerHTML={{ __html: animationStyles }} />}
       <div
         className={`${className || ''}`}
         style={{
@@ -93,13 +66,7 @@ const VibesDIYLogo: React.FC<VibesDIYLogoProps> = ({
         {...props}
       >
         <div
-          className={animateHue ? undefined : 'dark:invert'}
           style={{
-            animation: animateHue
-              ? isDarkMode
-                ? 'rotateHueDark 300s linear infinite'
-                : 'rotateHue 300s linear infinite'
-              : 'none',
             transition: 'filter 0.3s ease',
             display: 'flex',
             width: '100%',
@@ -107,12 +74,11 @@ const VibesDIYLogo: React.FC<VibesDIYLogoProps> = ({
             minHeight: 0,
           }}
         >
-          <DIYLogo />
+          <DIYLogo isDarkMode={isDarkMode} colorway={colorway} />
         </div>
       </div>
     </>
   );
 };
 
-export { VibesDIYLogoTXT };
 export default VibesDIYLogo;
