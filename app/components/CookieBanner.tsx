@@ -1,8 +1,9 @@
+import { usePostHog } from 'posthog-js/react';
 import { useEffect, useState } from 'react';
 import { useLocation } from 'react-router';
-import { initGA, pageview } from '../utils/analytics';
 import { GA_TRACKING_ID } from '../config/analytics';
 import { useCookieConsent } from '../context/CookieConsentContext';
+import { initGA, pageview } from '../utils/analytics';
 
 // We'll use any type for dynamic imports to avoid TypeScript errors with the cookie consent component
 
@@ -15,6 +16,8 @@ export default function CookieBanner() {
   // Dynamic import for client-side only
   const [CookieConsent, setCookieConsent] = useState<any>(null);
   const [getCookieConsentValue, setGetCookieConsentValue] = useState<any>(null);
+
+  const posthog = usePostHog();
 
   // Detect dark mode
   useEffect(() => {
@@ -69,6 +72,10 @@ export default function CookieBanner() {
   // Add GA script if consent is given
   useEffect(() => {
     if (GA_TRACKING_ID && hasConsent && typeof document !== 'undefined') {
+      // Opt in to PostHog
+      posthog?.opt_in_capturing();
+
+      // Add GA script
       const script = document.createElement('script');
       script.async = true;
       script.src = `https://www.googletagmanager.com/gtag/js?id=${GA_TRACKING_ID}`;

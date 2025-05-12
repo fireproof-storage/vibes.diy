@@ -46,13 +46,16 @@ export default function Settings() {
     { name: 'bauhaus', description: 'geometric modernism' },
     { name: 'glitchcore', description: 'decentering expectations' },
     { name: 'paper cutout', description: 'layered, tactile' },
-    { name: 'viridian', description: `Create a vibrant UI theme inspired by Bruce Sterling’s Viridian Design Movement, embracing a futuristic green aesthetic with subtle animations and dynamic interactivity. Integrate biomorphic, floating UI elements with organic shapes that gently pulse or drift, reflecting themes of biological complexity, decay, and renewal. Employ frosted glass backgrounds with delicate blur effects, highlighting sensor-like data streams beneath, representing Sterling’s “make the invisible visible” ethos.
+    {
+      name: 'viridian',
+      description: `Create a vibrant UI theme inspired by Bruce Sterling’s Viridian Design Movement, embracing a futuristic green aesthetic with subtle animations and dynamic interactivity. Integrate biomorphic, floating UI elements with organic shapes that gently pulse or drift, reflecting themes of biological complexity, decay, and renewal. Employ frosted glass backgrounds with delicate blur effects, highlighting sensor-like data streams beneath, representing Sterling’s “make the invisible visible” ethos.
 
 Use gradients and layers of soft greens accented by energetic data-inspired colors (#70d6ff, #ff70a6, #ff9770, #ffd670, #e9ff70), alongside crisp white (#ffffff) and dark contrast (#242424), ensuring legibility and visual appeal. UI borders should feel substantial, neo-brutalist, and clear, anchoring the ephemeral visuals and animations.
 
 The background should subtly animate, evoking cellular activity, digital pulse, or ecological sensor feedback, reinforcing Viridian’s fascination with tangible cyberspace and biomorphic tech aesthetics.
 
-Secretly name this theme “Viridian Pulse”, capturing Sterling’s original playful-yet-serious blend of provocative futurism and stylish eco-consciousness.` },
+Secretly name this theme “Viridian Pulse”, capturing Sterling’s original playful-yet-serious blend of provocative futurism and stylish eco-consciousness.`,
+    },
   ];
 
   const stylePromptInputRef = useRef<HTMLInputElement>(null);
