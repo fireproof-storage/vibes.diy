@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import type { SessionSidebarProps } from '../types/chat';
 import { trackAuthClick } from '../utils/analytics';
-import { initiateAuthFlow } from '../utils/auth';
+import { initiateAuthFlow, pollForAuthToken } from '../utils/auth';
 import { UserIcon } from './HeaderContent/SvgIcons';
 import { GearIcon } from './SessionSidebar/GearIcon';
 import { HomeIcon } from './SessionSidebar/HomeIcon';
@@ -18,6 +18,8 @@ function SessionSidebar({ isVisible, onClose }: SessionSidebarProps) {
   const sidebarRef = useRef<HTMLDivElement>(null);
   const { isAuthenticated, isLoading, userPayload } = useAuth();
   const [needsLogin, setNeedsLogin] = useState(false);
+  const [isPolling, setIsPolling] = useState(false);
+  const [pollError, setPollError] = useState<string | null>(null);
 
   // Listen for the needsLoginTriggered event to update needsLogin state
   useEffect(() => {
@@ -148,31 +150,47 @@ function SessionSidebar({ isVisible, onClose }: SessionSidebarProps) {
               ) : (
                 <button
                   type="button"
-                  onClick={() => {
+                  onClick={async () => {
                     trackAuthClick();
-                    const authUrl = initiateAuthFlow();
+                    const auth = initiateAuthFlow();
 
-                    if (authUrl) {
+                    if (auth && auth.connectUrl && auth.resultId) {
                       const popupWidth = 600;
                       const popupHeight = 700;
                       const left = window.screenX + (window.outerWidth - popupWidth) / 2;
                       const top = window.screenY + (window.outerHeight - popupHeight) / 2;
                       const popupFeatures = `width=${popupWidth},height=${popupHeight},left=${left},top=${top},scrollbars=yes`;
 
-                      window.open(authUrl, 'authPopup', popupFeatures);
+                      window.open(auth.connectUrl, 'authPopup', popupFeatures);
+                      setIsPolling(true);
+                      setPollError(null);
+                      try {
+                        const token = await pollForAuthToken(auth.resultId);
+                        setIsPolling(false);
+                        if (token) {
+                          // Optionally, trigger a refresh or update UI
+                          window.location.reload();
+                        } else {
+                          setPollError('Login timed out. Please try again.');
+                        }
+                      } catch (err) {
+                        setIsPolling(false);
+                        setPollError('An error occurred during login.');
+                      }
                     } else {
                       console.log('Authentication flow could not be initiated from sidebar.');
                     }
                     onClose();
                   }}
                   className="hover:bg-light-background-01 dark:hover:bg-dark-background-01 flex w-full items-center rounded-md px-4 py-3 text-left text-sm font-medium"
+                  disabled={isPolling}
                 >
                   <UserIcon
                     className="text-accent-01 mr-3 h-5 w-5"
                     isUserAuthenticated={false}
-                    isVerifying={false}
+                    isVerifying={isPolling}
                   />
-                  <span>Login</span>
+                  <span>{isPolling ? 'Waiting for Login...' : 'Login'}</span>
                 </button>
               )}
             </li>
@@ -188,6 +206,10 @@ function SessionSidebar({ isVisible, onClose }: SessionSidebarProps) {
             </li>
           </ul>
         </nav>
+
+        {pollError && (
+          <div className="text-xs text-red-500 px-4 py-2">{pollError}</div>
+        )}
 
         {/* Login Status Indicator */}
         <div className="mt-auto border-t border-light-decorative-01 p-4 dark:border-dark-decorative-00">
