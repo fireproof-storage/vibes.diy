@@ -145,36 +145,68 @@ export async function getAuthToken(): Promise<string | null> {
 }
 
 /**
- * Calculate the authentication URL for the flow
- * Returns the URL string or null if the flow should not be initiated.
- * This should be called when the user clicks the Connect button or needs to authenticate.
+ * Initiates the authentication flow by generating a resultId and returning the connect URL.
+ * No redirect is performed. The resultId is stored in sessionStorage for later polling.
+ * Returns an object with { connectUrl, resultId }
  */
-export function initiateAuthFlow(): string | null {
-  // Don't redirect if we're already on the auth callback page
+export function initiateAuthFlow(): { connectUrl: string; resultId: string } | null {
+  // Don't initiate if already on the callback page
   if (window.location.pathname.includes('/auth/callback')) {
     console.log('Already on auth callback page');
     return null;
   }
 
-  // // Check for redirect prevention flag to avoid redirect loops
-  // if (sessionStorage.getItem('auth_redirect_prevention')) {
-  //   return null;
-  // }
-
-  // // Save the current URL to redirect back after authentication
-  // const returnUrl = window.location.pathname + window.location.search;
-  // sessionStorage.setItem('auth_return_url', returnUrl);
-
-  // // Set redirect prevention flag before redirecting
-  // sessionStorage.setItem('auth_redirect_prevention', 'true');
+  // Generate a random resultId (base58btc-like, 10 chars)
+  const BASE58BTC_ALPHABET = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz';
+  function randomResultId(length = 10) {
+    let res = 'z';
+    for (let i = 0; i < length; i++) {
+      res += BASE58BTC_ALPHABET[Math.floor(Math.random() * BASE58BTC_ALPHABET.length)];
+    }
+    return res;
+  }
+  const resultId = randomResultId();
+  sessionStorage.setItem('auth_result_id', resultId);
 
   // Calculate the callback URL (absolute URL to our auth/callback route)
   const callbackUrl = new URL('/auth/callback', window.location.origin).toString();
 
-  // Redirect to get a token, using our auth/callback route as the back_url
-  const connectUrl = import.meta.env.VITE_CONNECT_URL || 'https://connect.fireproof.direct/fp/cloud/api/token';
-  const authUrl = `${connectUrl}?back_url=${encodeURIComponent(callbackUrl)}`;
-  return authUrl;
+  // Compose the connect URL (no redirect, just return)
+  const connectUrl = `${import.meta.env.VITE_CONNECT_URL || 'https://connect.fireproof.direct/fp/cloud/api/token'}?back_url=${encodeURIComponent(callbackUrl)}&result_id=${resultId}`;
+  return { connectUrl, resultId };
+}
+
+/**
+ * Polls the Fireproof Connect API for a token using the resultId.
+ * Resolves with the token string when found, or null if timed out.
+ * @param {string} resultId
+ * @param {number} intervalMs
+ * @param {number} timeoutMs
+ */
+export async function pollForAuthToken(resultId: string, intervalMs = 1500, timeoutMs = 60000): Promise<string | null> {
+  const endpoint = `${import.meta.env.VITE_CONNECT_API_URL}` || 'https://dev.connect.fireproof.direct/api';
+  const start = Date.now();
+  while (Date.now() - start < timeoutMs) {
+    console.log(Date.now() - start)
+    try {
+      const res = await fetch(endpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ resultId, type: 'reqTokenByResultId' })
+      });
+      if (!res.ok) throw new Error('Network error');
+      const data = await res.json();
+      if (data && typeof data.token === 'string' && data.token.length > 0) {
+        // Store the token in localStorage for future use
+        localStorage.setItem('auth_token', data.token);
+        return data.token;
+      }
+    } catch (err) {
+      console.error('Polling error:', err);
+    }
+    await new Promise(r => setTimeout(r, intervalMs));
+  }
+  return null; // Timed out
 }
 
 /**
