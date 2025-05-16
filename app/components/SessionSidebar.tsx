@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import type { SessionSidebarProps } from '../types/chat';
 import { trackAuthClick } from '../utils/analytics';
-import { initiateAuthFlow, pollForAuthToken } from '../utils/auth';
+import { useAuthPopup } from '../hooks/useAuthPopup';
 import { UserIcon } from './HeaderContent/SvgIcons';
 import { GearIcon } from './SessionSidebar/GearIcon';
 import { HomeIcon } from './SessionSidebar/HomeIcon';
@@ -16,10 +16,9 @@ import VibesDIYLogo from './VibesDIYLogo';
  */
 function SessionSidebar({ isVisible, onClose }: SessionSidebarProps) {
   const sidebarRef = useRef<HTMLDivElement>(null);
-  const { isAuthenticated, isLoading, userPayload, processToken } = useAuth();
+  const { isAuthenticated, isLoading, userPayload } = useAuth();
   const [needsLogin, setNeedsLogin] = useState(false);
-  const [isPolling, setIsPolling] = useState(false);
-  const [pollError, setPollError] = useState<string | null>(null);
+  const { isPolling, pollError, initiateLogin } = useAuthPopup();
 
   // Listen for the needsLoginTriggered event to update needsLogin state
   useEffect(() => {
@@ -136,9 +135,9 @@ function SessionSidebar({ isVisible, onClose }: SessionSidebarProps) {
               ) : needsLogin ? (
                 <button
                   type="button"
-                  onClick={() => {
+                  onClick={async () => {
                     trackAuthClick({ label: 'Get Credits' });
-                    initiateAuthFlow();
+                    await initiateLogin();
                     setNeedsLogin(false);
                     onClose();
                   }}
@@ -155,36 +154,7 @@ function SessionSidebar({ isVisible, onClose }: SessionSidebarProps) {
                 <button
                   type="button"
                   onClick={async () => {
-                    trackAuthClick();
-                    const auth = initiateAuthFlow();
-
-                    if (auth && auth.connectUrl && auth.resultId) {
-                      const popupWidth = 600;
-                      const popupHeight = 700;
-                      const left = window.screenX + (window.outerWidth - popupWidth) / 2;
-                      const top = window.screenY + (window.outerHeight - popupHeight) / 2;
-                      const popupFeatures = `width=${popupWidth},height=${popupHeight},left=${left},top=${top},scrollbars=yes`;
-
-                      window.open(auth.connectUrl, 'authPopup', popupFeatures);
-                      setIsPolling(true);
-                      setPollError(null);
-                      try {
-                        const token = await pollForAuthToken(auth.resultId);
-                        setIsPolling(false);
-                        if (token) {
-                          // Optionally, trigger a refresh or update UI
-                          // window.location.reload();
-                          processToken(token); // Redirect to home or desired page
-                        } else {
-                          setPollError('Login timed out. Please try again.');
-                        }
-                      } catch (err) {
-                        setIsPolling(false);
-                        setPollError('An error occurred during login.');
-                      }
-                    } else {
-                      console.log('Authentication flow could not be initiated from sidebar.');
-                    }
+                    await initiateLogin();
                     onClose();
                   }}
                   className="hover:bg-light-background-01 dark:hover:bg-dark-background-01 flex w-full items-center rounded-md px-4 py-3 text-left text-sm font-medium"
