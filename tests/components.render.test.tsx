@@ -170,24 +170,24 @@ describe('Component Rendering', () => {
     const authenticatedState: Partial<AuthContextType> = {
       isAuthenticated: true,
       isLoading: false,
-      userPayload: { userId: 'test-user', exp: 9999, tenants: [], ledgers: [] }
+      userPayload: { userId: 'test-user', exp: 9999, tenants: [], ledgers: [] },
     };
     const unauthenticatedState: Partial<AuthContextType> = {
       isAuthenticated: false,
       isLoading: false,
-      userPayload: null
+      userPayload: null,
     };
 
-    it('renders in hidden state', async () => { 
+    it('renders in hidden state', async () => {
       const props = { ...mockSessionSidebarProps, isVisible: false };
       // Provide a default state (e.g., authenticated) for basic rendering
-      const wrapper = createWrapper(authenticatedState); 
+      const wrapper = createWrapper(authenticatedState);
       render(<SessionSidebar {...props} />, { wrapper });
-      const sidebarElement = await screen.findByTestId('session-sidebar'); 
+      const sidebarElement = await screen.findByTestId('session-sidebar');
       expect(sidebarElement).toHaveClass('-translate-x-full');
     });
 
-    it('renders in visible state', async () => { 
+    it('renders in visible state', async () => {
       const props = { ...mockSessionSidebarProps, isVisible: true };
       const wrapper = createWrapper(authenticatedState);
       render(<SessionSidebar {...props} />, { wrapper });
@@ -195,25 +195,25 @@ describe('Component Rendering', () => {
       expect(sidebarElement).not.toHaveClass('-translate-x-full');
     });
 
-    it('shows navigation menu items when authenticated', async () => { 
+    it('shows navigation menu items when authenticated', async () => {
       const props = { ...mockSessionSidebarProps, isVisible: true };
       const wrapper = createWrapper(authenticatedState);
       render(<SessionSidebar {...props} />, { wrapper });
-      expect(await screen.findByText('Settings')).toBeInTheDocument(); 
+      expect(await screen.findByText('Settings')).toBeInTheDocument();
       expect(screen.getByText('Home')).toBeInTheDocument();
       expect(screen.getByText('My Vibes')).toBeInTheDocument();
       expect(screen.queryByText('Login')).not.toBeInTheDocument();
       expect(screen.getByText('About')).toBeInTheDocument();
-      expect(screen.getByText('Logged In')).toBeInTheDocument(); 
+      expect(screen.getByText('Logged In')).toBeInTheDocument();
     });
-    
-    it('shows Login button when not authenticated', async () => { 
+
+    it('shows Login button when not authenticated', async () => {
       const props = { ...mockSessionSidebarProps, isVisible: true };
       const wrapper = createWrapper(unauthenticatedState); // Provide unauthenticated state
       render(<SessionSidebar {...props} />, { wrapper });
-      expect(await screen.findByText('Login')).toBeInTheDocument(); 
-      expect(screen.queryByText('Settings')).not.toBeInTheDocument(); 
-      expect(screen.getByText('Logged Out')).toBeInTheDocument(); 
+      expect(await screen.findByText('Login')).toBeInTheDocument();
+      expect(screen.queryByText('Settings')).not.toBeInTheDocument();
+      expect(screen.getByText('Logged Out')).toBeInTheDocument();
     });
 
     it('has a close button that works', () => {

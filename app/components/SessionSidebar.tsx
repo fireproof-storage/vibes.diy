@@ -16,7 +16,7 @@ import VibesDIYLogo from './VibesDIYLogo';
  */
 function SessionSidebar({ isVisible, onClose }: SessionSidebarProps) {
   const sidebarRef = useRef<HTMLDivElement>(null);
-  const { isAuthenticated, isLoading, userPayload } = useAuth();
+  const { isAuthenticated, isLoading, userPayload, processToken } = useAuth();
   const [needsLogin, setNeedsLogin] = useState(false);
   const [isPolling, setIsPolling] = useState(false);
   const [pollError, setPollError] = useState<string | null>(null);
@@ -117,7 +117,11 @@ function SessionSidebar({ isVisible, onClose }: SessionSidebarProps) {
             <li>
               {isLoading ? (
                 <div className="flex items-center rounded-md px-4 py-3 text-sm font-medium text-gray-400">
-                  <UserIcon className="text-accent-01 mr-3 h-5 w-5 animate-pulse" isUserAuthenticated={false} isVerifying={true} />
+                  <UserIcon
+                    className="text-accent-01 mr-3 h-5 w-5 animate-pulse"
+                    isUserAuthenticated={false}
+                    isVerifying={true}
+                  />
                   <span className="animate-pulse">Loading...</span>
                 </div>
               ) : isAuthenticated ? (
@@ -169,7 +173,8 @@ function SessionSidebar({ isVisible, onClose }: SessionSidebarProps) {
                         setIsPolling(false);
                         if (token) {
                           // Optionally, trigger a refresh or update UI
-                          window.location.reload();
+                          // window.location.reload();
+                          processToken(token); // Redirect to home or desired page
                         } else {
                           setPollError('Login timed out. Please try again.');
                         }
@@ -207,12 +212,10 @@ function SessionSidebar({ isVisible, onClose }: SessionSidebarProps) {
           </ul>
         </nav>
 
-        {pollError && (
-          <div className="text-xs text-red-500 px-4 py-2">{pollError}</div>
-        )}
+        {pollError && <div className="px-4 py-2 text-xs text-red-500">{pollError}</div>}
 
         {/* Login Status Indicator */}
-        <div className="mt-auto border-t border-light-decorative-01 p-4 dark:border-dark-decorative-00">
+        <div className="border-light-decorative-01 dark:border-dark-decorative-00 mt-auto border-t p-4">
           {isLoading ? (
             <div className="flex items-center text-sm text-gray-500">
               <span className="mr-2 h-2 w-2 animate-pulse rounded-full bg-gray-400" />
@@ -224,7 +227,10 @@ function SessionSidebar({ isVisible, onClose }: SessionSidebarProps) {
                 <span className="mr-2 h-2 w-2 flex-shrink-0 rounded-full bg-green-500" />
                 Logged In
               </div>
-              <span className="truncate text-xs text-gray-500 dark:text-gray-400" title={userPayload.email}>
+              <span
+                className="truncate text-xs text-gray-500 dark:text-gray-400"
+                title={userPayload.email}
+              >
                 {userPayload.email}
               </span>
             </div>

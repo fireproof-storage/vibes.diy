@@ -15,7 +15,8 @@ interface AuthContextType {
   isAuthenticated: boolean;
   isLoading: boolean;
   userPayload: TokenPayload | null; // Changed from userEmail
-  checkAuthStatus: () => Promise<void>; // Make async
+  checkAuthStatus: () => Promise<void>;
+  processToken: (token: string | null) => Promise<void>;
 }
 
 // Create the context with a default value
@@ -77,7 +78,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   // Updated listener for messages from the auth popup
   useEffect(() => {
-    const handleMessage = async (event: MessageEvent) => { // Make async
+    const handleMessage = async (event: MessageEvent) => {
+      // Make async
       if (event.origin !== window.location.origin) {
         console.warn('Received message from unexpected origin:', event.origin);
         return;
@@ -114,6 +116,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     isLoading,
     userPayload, // Provide userPayload
     checkAuthStatus,
+    processToken,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
@@ -128,4 +131,4 @@ export const useAuth = (): AuthContextType => {
     throw new Error('useAuth must be used within an AuthProvider');
   }
   return context;
-}; 
+};

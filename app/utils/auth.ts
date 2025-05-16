@@ -2,6 +2,7 @@
  * Authentication utilities for handling token-based auth
  */
 import { importJWK, jwtVerify } from 'jose';
+import toast from 'react-hot-toast';
 
 // Export the interface
 export interface TokenPayload {
@@ -48,7 +49,7 @@ function base58btcDecode(str: string): Uint8Array {
   if (input.startsWith('z')) {
     input = input.slice(1);
   }
-  
+
   let num = BigInt(0);
   for (let i = 0; i < input.length; i++) {
     const char = input[i];
@@ -56,14 +57,14 @@ function base58btcDecode(str: string): Uint8Array {
     if (value === -1) throw new Error(`Invalid base58 character: ${char}`);
     num = num * BigInt(58) + BigInt(value);
   }
-  
+
   // Convert to bytes
   const bytes = [];
   while (num > 0) {
     bytes.unshift(Number(num % BigInt(256)));
     num = num / BigInt(256);
   }
-  
+
   // Account for leading zeros in the input
   for (let i = 0; i < input.length; i++) {
     if (input[i] === '1') {
@@ -72,7 +73,7 @@ function base58btcDecode(str: string): Uint8Array {
       break;
     }
   }
-  
+
   return new Uint8Array(bytes);
 }
 
@@ -84,7 +85,7 @@ function base58btcDecode(str: string): Uint8Array {
 function decodePublicKeyJWK(encodedString: string): JWK {
   // Decode the base58btc string
   const decoded = base58btcDecode(encodedString);
-  
+
   // Try to parse as JSON
   try {
     const rawText = new TextDecoder().decode(decoded);
@@ -92,12 +93,12 @@ function decodePublicKeyJWK(encodedString: string): JWK {
   } catch (error) {
     // If parsing fails, log the error and return a default JWK
     console.error('Failed to parse JWK from base58btc string:', error);
-    
+
     return {
       kty: 'EC',
       crv: 'P-256',
       x: '',
-      y: ''
+      y: '',
     };
   }
 }
@@ -172,7 +173,7 @@ export function initiateAuthFlow(): { connectUrl: string; resultId: string } | n
   const callbackUrl = new URL('/auth/callback', window.location.origin).toString();
 
   // Compose the connect URL (no redirect, just return)
-  const connectUrl = `${import.meta.env.VITE_CONNECT_URL || 'https://connect.fireproof.direct/fp/cloud/api/token'}?back_url=${encodeURIComponent(callbackUrl)}&result_id=${resultId}`;
+  const connectUrl = `${import.meta.env.VITE_CONNECT_URL || 'https://connect.fireproof.direct/fp/cloud/api/token'}?back_url=${encodeURIComponent(callbackUrl)}&result_id=${resultId}&countdownSecs=0`;
   return { connectUrl, resultId };
 }
 
@@ -183,28 +184,34 @@ export function initiateAuthFlow(): { connectUrl: string; resultId: string } | n
  * @param {number} intervalMs
  * @param {number} timeoutMs
  */
-export async function pollForAuthToken(resultId: string, intervalMs = 1500, timeoutMs = 60000): Promise<string | null> {
-  const endpoint = `${import.meta.env.VITE_CONNECT_API_URL}` || 'https://dev.connect.fireproof.direct/api';
+export async function pollForAuthToken(
+  resultId: string,
+  intervalMs = 1500,
+  timeoutMs = 30000
+): Promise<string | null> {
+  const endpoint =
+    `${import.meta.env.VITE_CONNECT_API_URL}` || 'https://dev.connect.fireproof.direct/api';
   const start = Date.now();
   while (Date.now() - start < timeoutMs) {
-    console.log(Date.now() - start)
+    console.log(Date.now() - start);
     try {
       const res = await fetch(endpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ resultId, type: 'reqTokenByResultId' })
+        body: JSON.stringify({ resultId, type: 'reqTokenByResultId' }),
       });
       if (!res.ok) throw new Error('Network error');
       const data = await res.json();
       if (data && typeof data.token === 'string' && data.token.length > 0) {
         // Store the token in localStorage for future use
         localStorage.setItem('auth_token', data.token);
+        toast.success('Logged in successfully!');
         return data.token;
       }
     } catch (err) {
       console.error('Polling error:', err);
     }
-    await new Promise(r => setTimeout(r, intervalMs));
+    await new Promise((r) => setTimeout(r, intervalMs));
   }
   return null; // Timed out
 }
@@ -217,8 +224,8 @@ export async function pollForAuthToken(resultId: string, intervalMs = 1500, time
 export async function verifyToken(token: string): Promise<TokenPayload | null> {
   try {
     // Base58btc-encoded public key (replace with actual key)
-    const encodedPublicKey = import.meta.env.VITE_CLOUD_SESSION_TOKEN_PUBLIC
-    
+    const encodedPublicKey = import.meta.env.VITE_CLOUD_SESSION_TOKEN_PUBLIC;
+
     // Decode the base58btc-encoded JWK
     const publicKey = decodePublicKeyJWK(encodedPublicKey);
 
@@ -238,7 +245,7 @@ export async function verifyToken(token: string): Promise<TokenPayload | null> {
     }
 
     // Check if token is expired
-    if (payload.exp  < Date.now()) {
+    if (payload.exp < Date.now()) {
       // Convert to milliseconds
       console.error('Token has expired');
       return null; // Token expired

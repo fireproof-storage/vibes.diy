@@ -74,31 +74,28 @@ const renderWithAuthContext = (
   ui: React.ReactNode,
   { isAuthenticated = true, userId = 'test-user' } = {}
 ) => {
-  const userPayload: TokenPayload | null = isAuthenticated 
-    ? { 
-        userId, 
-        exp: 9999999999, 
-        tenants: [], 
+  const userPayload: TokenPayload | null = isAuthenticated
+    ? {
+        userId,
+        exp: 9999999999,
+        tenants: [],
         ledgers: [],
         iat: 1234567890,
         iss: 'FP_CLOUD',
-        aud: 'PUBLIC'
-      } 
+        aud: 'PUBLIC',
+      }
     : null;
-  
+
   const authValue = {
     token: isAuthenticated ? 'test-token' : null,
     isAuthenticated,
     isLoading: false,
     userPayload,
-    checkAuthStatus: vi.fn(),
+    checkAuthStatus: vi.fn(() => Promise.resolve()),
+    processToken: vi.fn(),
   };
-  
-  return render(
-    <AuthContext.Provider value={authValue}>
-      {ui}
-    </AuthContext.Provider>
-  );
+
+  return render(<AuthContext.Provider value={authValue}>{ui}</AuthContext.Provider>);
 };
 
 describe('Settings page', () => {
