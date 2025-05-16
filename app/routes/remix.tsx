@@ -1,10 +1,10 @@
-import { useState, useEffect, useRef } from 'react';
-import { useNavigate, useParams, useLocation } from 'react-router';
-import { useSession } from '../hooks/useSession';
+import { useEffect, useRef, useState } from 'react';
+import { useLocation, useNavigate, useParams } from 'react-router';
 import { encodeTitle } from '~/components/SessionSidebar/utils';
-import type { VibeDocument } from '~/types/chat';
 import { useApiKey } from '~/hooks/useApiKey';
-import { useAuth } from '~/hooks/useAuth';
+import type { VibeDocument } from '~/types/chat';
+import { useAuth } from '../contexts/AuthContext';
+import { useSession } from '../hooks/useSession';
 
 export function meta() {
   return [
@@ -24,10 +24,10 @@ export default function Remix() {
   // Get database instances from hooks
   const { session, sessionDatabase, updateTitle } = useSession(undefined);
 
-  const { userId } = useAuth();
+  const { userPayload } = useAuth();
 
   // Get API key for title generation
-  const { apiKey } = useApiKey(userId);
+  const { apiKey } = useApiKey(userPayload?.userId);
 
   // Effect to get vibe slug from path parameter and fetch code
   useEffect(() => {

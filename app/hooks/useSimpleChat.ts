@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { useFireproof } from 'use-fireproof';
 import { FIREPROOF_CHAT_HISTORY } from '../config/env';
 import { getCredits } from '../config/provisioning';
 import { useAuth } from '../contexts/AuthContext';
@@ -7,11 +6,7 @@ import type { ChatMessageDocument, ChatState } from '../types/chat';
 import type { UserSettings } from '../types/settings';
 import { trackChatInputClick } from '../utils/analytics';
 import { parseContent } from '../utils/segmentParser';
-
-import { useRuntimeErrors, type RuntimeError, type ErrorCategory } from './useRuntimeErrors';
-import { useSession } from './useSession';
 import { useFireproof } from 'use-fireproof';
-import { generateTitle } from '../utils/titleGenerator';
 import { streamAI } from '../utils/streamHandler';
 import { generateTitle } from '../utils/titleGenerator';
 import { useApiKey } from './useApiKey';

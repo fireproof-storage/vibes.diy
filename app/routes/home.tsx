@@ -12,7 +12,6 @@ import SessionSidebar from '../components/SessionSidebar';
 import { useCookieConsent } from '../contexts/CookieConsentContext';
 import { useSimpleChat } from '../hooks/useSimpleChat';
 import { isMobileViewport } from '../utils/ViewState';
-import { decodeStateFromUrl } from '../utils/sharing';
 // import { useSession } from '../hooks/useSession';
 
 export function meta() {
