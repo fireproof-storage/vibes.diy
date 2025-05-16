@@ -1,22 +1,24 @@
-import { useEffect, useRef, useState, memo } from 'react';
+import { memo, useEffect, useRef, useState } from 'react';
+import { Link } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
+import type { SessionSidebarProps } from '../types/chat';
+import { trackAuthClick } from '../utils/analytics';
+import { useAuthPopup } from '../hooks/useAuthPopup';
+import { UserIcon } from './HeaderContent/SvgIcons';
 import { GearIcon } from './SessionSidebar/GearIcon';
+import { HomeIcon } from './SessionSidebar/HomeIcon';
 import { InfoIcon } from './SessionSidebar/InfoIcon';
 import { StarIcon } from './SessionSidebar/StarIcon';
-import { HomeIcon } from './SessionSidebar/HomeIcon';
-import { UserIcon } from './HeaderContent/SvgIcons';
-import type { SessionSidebarProps } from '../types/chat';
 import VibesDIYLogo from './VibesDIYLogo';
-import { useAuth } from '../hooks/useAuth';
-import { initiateAuthFlow } from '../utils/auth';
-import { trackAuthClick } from '../utils/analytics';
 
 /**
  * Component that displays a navigation sidebar with menu items
  */
 function SessionSidebar({ isVisible, onClose }: SessionSidebarProps) {
   const sidebarRef = useRef<HTMLDivElement>(null);
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, isLoading, userPayload } = useAuth();
   const [needsLogin, setNeedsLogin] = useState(false);
+  const { isPolling, pollError, initiateLogin } = useAuthPopup();
 
   // Listen for the needsLoginTriggered event to update needsLogin state
   useEffect(() => {
@@ -56,6 +58,7 @@ function SessionSidebar({ isVisible, onClose }: SessionSidebarProps) {
   return (
     <div
       ref={sidebarRef}
+      data-testid="session-sidebar"
       className={`bg-light-background-00 dark:bg-dark-background-00 fixed top-0 left-0 z-10 h-full shadow-lg transition-all duration-300 ${
         isVisible ? 'w-64 translate-x-0' : 'w-0 -translate-x-full'
       }`}
@@ -91,40 +94,50 @@ function SessionSidebar({ isVisible, onClose }: SessionSidebarProps) {
         <nav className="flex-grow p-2">
           <ul className="space-y-1">
             <li>
-              <a
-                href="/"
+              <Link
+                to="/"
                 onClick={() => onClose()}
                 className="hover:bg-light-background-01 dark:hover:bg-dark-background-01 flex items-center rounded-md px-4 py-3 text-sm font-medium"
               >
                 <HomeIcon className="text-accent-01 mr-3 h-5 w-5" />
                 <span>Home</span>
-              </a>
+              </Link>
             </li>
             <li>
-              <a
-                href="/vibes/mine"
+              <Link
+                to="/vibes/mine"
                 onClick={() => onClose()}
                 className="hover:bg-light-background-01 dark:hover:bg-dark-background-01 flex items-center rounded-md px-4 py-3 text-sm font-medium"
               >
                 <StarIcon className="text-accent-01 mr-3 h-5 w-5" />
                 <span>My Vibes</span>
-              </a>
+              </Link>
             </li>
             <li>
-              {isAuthenticated ? (
-                <a
-                  href="/settings"
+              {isLoading ? (
+                <div className="flex items-center rounded-md px-4 py-3 text-sm font-medium text-gray-400">
+                  <UserIcon
+                    className="text-accent-01 mr-3 h-5 w-5 animate-pulse"
+                    isUserAuthenticated={false}
+                    isVerifying={true}
+                  />
+                  <span className="animate-pulse">Loading...</span>
+                </div>
+              ) : isAuthenticated ? (
+                <Link
+                  to="/settings"
                   onClick={() => onClose()}
                   className="hover:bg-light-background-01 dark:hover:bg-dark-background-01 flex items-center rounded-md px-4 py-3 text-sm font-medium"
                 >
                   <GearIcon className="text-accent-01 mr-3 h-5 w-5" />
                   <span>Settings</span>
-                </a>
+                </Link>
               ) : needsLogin ? (
                 <button
-                  onClick={() => {
+                  type="button"
+                  onClick={async () => {
                     trackAuthClick({ label: 'Get Credits' });
-                    initiateAuthFlow();
+                    await initiateLogin();
                     setNeedsLogin(false);
                     onClose();
                   }}
@@ -139,34 +152,65 @@ function SessionSidebar({ isVisible, onClose }: SessionSidebarProps) {
                 </button>
               ) : (
                 <button
-                  onClick={() => {
-                    trackAuthClick();
-                    initiateAuthFlow();
+                  type="button"
+                  onClick={async () => {
+                    await initiateLogin();
                     onClose();
                   }}
                   className="hover:bg-light-background-01 dark:hover:bg-dark-background-01 flex w-full items-center rounded-md px-4 py-3 text-left text-sm font-medium"
+                  disabled={isPolling}
                 >
                   <UserIcon
                     className="text-accent-01 mr-3 h-5 w-5"
                     isUserAuthenticated={false}
-                    isVerifying={false}
+                    isVerifying={isPolling}
                   />
-                  <span>Login</span>
+                  <span>{isPolling ? 'Waiting for Login...' : 'Login'}</span>
                 </button>
               )}
             </li>
             <li>
-              <a
-                href="/about"
+              <Link
+                to="/about"
                 onClick={() => onClose()}
                 className="hover:bg-light-background-01 dark:hover:bg-dark-background-01 flex items-center rounded-md px-4 py-3 text-sm font-medium"
               >
                 <InfoIcon className="text-accent-01 mr-3 h-5 w-5" />
                 <span>About</span>
-              </a>
+              </Link>
             </li>
           </ul>
         </nav>
+
+        {pollError && <div className="px-4 py-2 text-xs text-red-500">{pollError}</div>}
+
+        {/* Login Status Indicator */}
+        <div className="border-light-decorative-01 dark:border-dark-decorative-00 mt-auto border-t p-4">
+          {isLoading ? (
+            <div className="flex items-center text-sm text-gray-500">
+              <span className="mr-2 h-2 w-2 animate-pulse rounded-full bg-gray-400" />
+              Loading status...
+            </div>
+          ) : isAuthenticated && userPayload ? (
+            <div className="flex flex-col text-sm">
+              <div className="mb-1 flex items-center text-green-600 dark:text-green-400">
+                <span className="mr-2 h-2 w-2 flex-shrink-0 rounded-full bg-green-500" />
+                Logged In
+              </div>
+              <span
+                className="truncate text-xs text-gray-500 dark:text-gray-400"
+                title={userPayload.email}
+              >
+                {userPayload.email}
+              </span>
+            </div>
+          ) : (
+            <div className="flex items-center text-sm text-red-600 dark:text-red-400">
+              <span className="mr-2 h-2 w-2 rounded-full bg-red-500" />
+              Logged Out
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

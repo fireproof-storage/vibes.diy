@@ -1,5 +1,7 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { AuthContext } from '~/contexts/AuthContext';
+import type { TokenPayload } from '~/utils/auth';
 import Remix from '../app/routes/remix';
 
 // Mock the Session hooks
@@ -19,12 +21,34 @@ vi.mock('../app/hooks/useSession', () => ({
   }),
 }));
 
-// Mock the Auth hook
-vi.mock('../app/hooks/useAuth', () => ({
-  useAuth: () => ({
-    userId: 'test-user-id',
-  }),
-}));
+// Create a wrapper component with auth context
+const renderWithAuthContext = (
+  ui: React.ReactNode,
+  { isAuthenticated = true, userId = 'test-user-id' } = {}
+) => {
+  const userPayload: TokenPayload | null = isAuthenticated
+    ? {
+        userId,
+        exp: 9999999999,
+        tenants: [],
+        ledgers: [],
+        iat: 1234567890,
+        iss: 'FP_CLOUD',
+        aud: 'PUBLIC',
+      }
+    : null;
+
+  const authValue = {
+    token: isAuthenticated ? 'test-token' : null,
+    isAuthenticated,
+    isLoading: false,
+    userPayload,
+    checkAuthStatus: vi.fn(() => Promise.resolve()),
+    processToken: vi.fn(),
+  };
+
+  return render(<AuthContext.Provider value={authValue}>{ui}</AuthContext.Provider>);
+};
 
 // Mock the API Key hook
 vi.mock('../app/hooks/useApiKey', () => ({
@@ -67,8 +91,7 @@ describe('Remix Route', () => {
     // Set up location with prompt parameter
     locationMock = { search: '?prompt=Make+it+pink', pathname: '/remix/test-app-slug' };
 
-    render(<Remix />);
-
+    renderWithAuthContext(<Remix />);
     // Verify loading screen is displayed
     expect(screen.getByText(/REMIXING TEST-APP-SLUG/i)).toBeInTheDocument();
 
@@ -86,7 +109,7 @@ describe('Remix Route', () => {
     // Set up location without prompt parameter
     locationMock = { search: '', pathname: '/remix/test-app-slug' };
 
-    render(<Remix />);
+    renderWithAuthContext(<Remix />);
 
     // Wait for the navigation to occur without prompt parameter
     await waitFor(() => {
