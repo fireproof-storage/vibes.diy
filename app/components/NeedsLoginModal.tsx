@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useSimpleChat } from '../hooks/useSimpleChat';
 import { trackAuthClick } from '../utils/analytics';
-import { initiateAuthFlow } from '../utils/auth';
+import { useAuthPopup } from '../hooks/useAuthPopup';
 
 /**
  * A modal that appears when the user needs to login to get more credits
@@ -10,11 +10,8 @@ import { initiateAuthFlow } from '../utils/auth';
  */
 export function NeedsLoginModal() {
   const [isOpen, setIsOpen] = useState(false);
-  // We don't need the buttonRef anymore since we're only displaying a single button
-  // without a reference to a trigger button
-  // We get needsLogin from the global app state since this is a global modal
-  // Using undefined sessionId to access the global state
   const { needsLogin } = useSimpleChat(undefined);
+  const { initiateLogin } = useAuthPopup();
 
   // Show the modal when needsLogin becomes true or is already true
   useEffect(() => {
@@ -44,29 +41,12 @@ export function NeedsLoginModal() {
     setIsOpen(false);
   };
 
-  const handleLogin = () => {
+  const handleLogin = async () => {
     trackAuthClick({
       label: 'Get Credits Modal',
       isUserAuthenticated: false,
     });
-    // Get the auth URL instead of redirecting immediately
-    const authUrl = initiateAuthFlow();
-
-    if (authUrl) {
-      // Open the authentication flow in a popup window
-      const popupWidth = 600;
-      const popupHeight = 700;
-      const left = window.screenX + (window.outerWidth - popupWidth) / 2;
-      const top = window.screenY + (window.outerHeight - popupHeight) / 2;
-      const popupFeatures = `width=${popupWidth},height=${popupHeight},left=${left},top=${top},scrollbars=yes`;
-
-      window.open(authUrl.connectUrl, 'authPopup', popupFeatures);
-    } else {
-      // Handle cases where the auth flow shouldn't start (e.g., already on callback page)
-      // Optional: Provide user feedback if needed
-      console.log('Authentication flow could not be initiated.');
-    }
-
+    await initiateLogin();
     setIsOpen(false); // Close the modal after attempting to open the popup
   };
 
