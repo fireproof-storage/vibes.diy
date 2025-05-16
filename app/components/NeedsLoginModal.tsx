@@ -60,7 +60,7 @@ export function NeedsLoginModal() {
       const top = window.screenY + (window.outerHeight - popupHeight) / 2;
       const popupFeatures = `width=${popupWidth},height=${popupHeight},left=${left},top=${top},scrollbars=yes`;
 
-      window.open(authUrl, 'authPopup', popupFeatures);
+      window.open(authUrl.connectUrl, 'authPopup', popupFeatures);
     } else {
       // Handle cases where the auth flow shouldn't start (e.g., already on callback page)
       // Optional: Provide user feedback if needed
