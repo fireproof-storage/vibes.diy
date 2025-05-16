@@ -57,9 +57,7 @@ function TestComponent({ renderCount }: { renderCount: React.MutableRefObject<nu
 
 // Already skipped, but add wrapper for consistency if uncommented
 const createWrapper = () => {
-  return ({ children }: { children: ReactNode }) => (
-    <AuthProvider>{children}</AuthProvider>
-  );
+  return ({ children }: { children: ReactNode }) => <AuthProvider>{children}</AuthProvider>;
 };
 
 describe('Component Memoization', () => {
@@ -139,7 +137,7 @@ describe('Component Memoization', () => {
       const TrackedSidebar = withRenderTracking(SessionSidebar, 'SessionSidebar');
       const wrapper = createWrapper(); // Use wrapper
       const stableOnClose = vi.fn();
-      const props = { ...mockSessionSidebarProps, isVisible: true, onClose: stableOnClose }; 
+      const props = { ...mockSessionSidebarProps, isVisible: true, onClose: stableOnClose };
       const { rerender } = render(<TrackedSidebar {...props} />, { wrapper }); // Pass wrapper
       // ... assertions ...
     });

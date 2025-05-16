@@ -80,33 +80,37 @@ vi.mock('../app/components/SessionSidebar/HomeIcon', () => ({
 // Define a wrapper component with just the AuthContext provider
 const createWrapper = (contextValue?: Partial<AuthContextType>) => {
   const defaultContextValue: AuthContextType = {
-    token: null, isAuthenticated: false, isLoading: false, userPayload: null, checkAuthStatus: vi.fn(),
+    token: null,
+    isAuthenticated: false,
+    isLoading: false,
+    userPayload: null,
+    checkAuthStatus: vi.fn(),
   };
   const valueToProvide = { ...defaultContextValue, ...contextValue };
   return ({ children }: { children: ReactNode }) => (
-    <AuthContext.Provider value={valueToProvide}>
-      {children}
-    </AuthContext.Provider>
+    <AuthContext.Provider value={valueToProvide}>{children}</AuthContext.Provider>
   );
 };
 
 describe('Settings Route', () => {
   const authenticatedState: Partial<AuthContextType> = {
-    isAuthenticated: true, 
-    isLoading: false, 
-    userPayload: { 
+    isAuthenticated: true,
+    isLoading: false,
+    userPayload: {
       userId: 'test',
       exp: 9999999999,
       tenants: [],
       ledgers: [],
       iat: 1234567890,
       iss: 'FP_CLOUD',
-      aud: 'PUBLIC'
-    }
+      aud: 'PUBLIC',
+    },
   };
-  
+
   const unauthenticatedState: Partial<AuthContextType> = {
-    isAuthenticated: false, isLoading: false, userPayload: null 
+    isAuthenticated: false,
+    isLoading: false,
+    userPayload: null,
   };
 
   const mockDoc = { _id: 'user_settings', stylePrompt: '', userPrompt: '', model: '' };
@@ -115,25 +119,25 @@ describe('Settings Route', () => {
     vi.clearAllMocks();
     // Setup fake timers
     vi.useFakeTimers();
-    
+
     // Reset the mock implementations
     mockUseDocument.mockReturnValue({
       doc: mockDoc,
       merge: mockMerge,
       save: mockSave,
     });
-    
+
     // Reset navigate mock
     navigateMock.mockReset();
   });
-  
+
   afterEach(() => {
     // Restore real timers
     vi.useRealTimers();
   });
 
-  it.skip('renders the settings page with correct title and sections', async () => { 
-    const wrapper = createWrapper(authenticatedState); 
+  it.skip('renders the settings page with correct title and sections', async () => {
+    const wrapper = createWrapper(authenticatedState);
     render(<Settings />, { wrapper });
     // ... assertions ...
   }, 10000);
@@ -142,37 +146,37 @@ describe('Settings Route', () => {
     const wrapper = createWrapper(authenticatedState);
     render(<Settings />, { wrapper });
     const styleInput = screen.getByPlaceholderText(/enter or select style prompt/i);
-    
+
     await act(async () => {
       fireEvent.change(styleInput, { target: { value: 'new style' } });
     });
-    
+
     expect(mockMerge).toHaveBeenCalledWith({ stylePrompt: 'new style' });
   });
 
   it('allows selecting a style prompt from suggestions', async () => {
-     const wrapper = createWrapper(authenticatedState);
-     render(<Settings />, { wrapper });
-     const suggestionButton = screen.getByText('synthwave');
-     
-     await act(async () => {
-       fireEvent.click(suggestionButton);
-       vi.runAllTimers(); // For the focus setTimeout
-     });
-     
-     expect(mockMerge).toHaveBeenCalledWith({ stylePrompt: 'synthwave (80s digital aesthetic)' });
+    const wrapper = createWrapper(authenticatedState);
+    render(<Settings />, { wrapper });
+    const suggestionButton = screen.getByText('synthwave');
+
+    await act(async () => {
+      fireEvent.click(suggestionButton);
+      vi.runAllTimers(); // For the focus setTimeout
+    });
+
+    expect(mockMerge).toHaveBeenCalledWith({ stylePrompt: 'synthwave (80s digital aesthetic)' });
   });
 
   it('allows updating user prompt via textarea', async () => {
-     const wrapper = createWrapper(authenticatedState);
-     render(<Settings />, { wrapper });
-     const userPromptTextarea = screen.getByPlaceholderText(/enter custom instructions/i);
-     
-     await act(async () => {
-       fireEvent.change(userPromptTextarea, { target: { value: 'custom prompt' } });
-     });
-     
-     expect(mockMerge).toHaveBeenCalledWith({ userPrompt: 'custom prompt' });
+    const wrapper = createWrapper(authenticatedState);
+    render(<Settings />, { wrapper });
+    const userPromptTextarea = screen.getByPlaceholderText(/enter custom instructions/i);
+
+    await act(async () => {
+      fireEvent.change(userPromptTextarea, { target: { value: 'custom prompt' } });
+    });
+
+    expect(mockMerge).toHaveBeenCalledWith({ userPrompt: 'custom prompt' });
   });
 
   it('calls save when the save button is clicked', async () => {
@@ -184,21 +188,22 @@ describe('Settings Route', () => {
       }, 0);
       return Promise.resolve({ ok: true });
     });
-    
+
     const wrapper = createWrapper(authenticatedState);
     render(<Settings />, { wrapper });
-    
+
     const saveButton = screen.getByRole('button', { name: /save/i });
     expect(saveButton).toBeDisabled(); // Initially disabled
-    
+
     // Enable the save button
     await act(async () => {
-      fireEvent.change(screen.getByPlaceholderText(/enter or select style prompt/i), 
-        { target: { value: 'enable save' } });
+      fireEvent.change(screen.getByPlaceholderText(/enter or select style prompt/i), {
+        target: { value: 'enable save' },
+      });
     });
-    
+
     expect(saveButton).not.toBeDisabled(); // Enabled after change
-    
+
     // Click the save button
     await act(async () => {
       fireEvent.click(saveButton);
@@ -206,7 +211,7 @@ describe('Settings Route', () => {
       vi.runAllTimers();
       await Promise.resolve();
     });
-    
+
     // Check that save was called
     expect(mockSave).toHaveBeenCalled();
     // Check navigation occurred
@@ -222,18 +227,19 @@ describe('Settings Route', () => {
       }, 0);
       return Promise.resolve({ ok: true });
     });
-    
+
     const wrapper = createWrapper(authenticatedState);
     render(<Settings />, { wrapper });
-    
+
     const saveButton = screen.getByRole('button', { name: /save/i });
-    
+
     // Make a change to enable the save button
     await act(async () => {
-      fireEvent.change(screen.getByPlaceholderText(/enter or select style prompt/i), 
-        { target: { value: 'save this' } });
+      fireEvent.change(screen.getByPlaceholderText(/enter or select style prompt/i), {
+        target: { value: 'save this' },
+      });
     });
-    
+
     // Click the save button
     await act(async () => {
       fireEvent.click(saveButton);
@@ -241,26 +247,29 @@ describe('Settings Route', () => {
       vi.runAllTimers();
       await Promise.resolve();
     });
-    
+
     // Verify save was called and we navigated home
     expect(mockSave).toHaveBeenCalled();
     expect(navigateMock).toHaveBeenCalledWith('/');
   }, 10000);
 
-  it.skip('highlights the selected style prompt suggestion', async () => { 
+  it.skip('highlights the selected style prompt suggestion', async () => {
     // Need to control the useDocument mock *before* render for this specific test
     const mockSettingsWithStyle = { ...mockDoc, stylePrompt: 'brutalist web (raw, grid-heavy)' };
     mockUseDocument.mockReturnValueOnce({
-        doc: mockSettingsWithStyle, 
-        merge: mockMerge,
-        save: mockSave,
+      doc: mockSettingsWithStyle,
+      merge: mockMerge,
+      save: mockSave,
     });
     const wrapper = createWrapper(authenticatedState);
     render(<Settings />, { wrapper });
     const brutalistButton = await screen.findByText('brutalist web');
-    await waitFor(() => {
-        expect(brutalistButton).toHaveClass('bg-blue-500'); 
-    }, { timeout: 10000 });
+    await waitFor(
+      () => {
+        expect(brutalistButton).toHaveClass('bg-blue-500');
+      },
+      { timeout: 10000 }
+    );
     expect(brutalistButton).toHaveClass('text-white');
-  }, 10000); 
+  }, 10000);
 });
