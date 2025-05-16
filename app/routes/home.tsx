@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router';
 import { encodeTitle } from '~/components/SessionSidebar/utils';
+import { useAuth } from '~/contexts/AuthContext';
 import AppLayout from '../components/AppLayout';
 import ChatHeaderContent from '../components/ChatHeaderContent';
 import ChatInput from '../components/ChatInput';
@@ -25,7 +26,10 @@ export default function UnifiedSession() {
   const { sessionId: urlSessionId } = useParams<{ sessionId: string }>();
   const navigate = useNavigate();
   const location = useLocation();
+  const { isAuthenticated } = useAuth();
   const chatState = useSimpleChat(urlSessionId);
+  chatState.needsLogin = !isAuthenticated;
+
   const { setMessageHasBeenSent } = useCookieConsent();
 
   // Track message submission events
@@ -149,11 +153,15 @@ export default function UnifiedSession() {
     (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
       if (e.key === 'Enter' && !e.shiftKey && !chatState.isStreaming) {
         e.preventDefault();
+        if (chatState.needsLogin) {
+          window.dispatchEvent(new Event('needsLoginTriggered'));
+          return;
+        }
         chatState.sendMessage(chatState.input);
         setMessageHasBeenSent(true);
       }
     },
-    [chatState.isStreaming, chatState.sendMessage, setMessageHasBeenSent]
+    [chatState.isStreaming, chatState.sendMessage, setMessageHasBeenSent, chatState.needsLogin]
   );
 
   // Handle suggestion selection directly
@@ -295,6 +303,10 @@ export default function UnifiedSession() {
             onChange={handleInputChange}
             onKeyDown={handleKeyDown}
             onSend={() => {
+              if (chatState.needsLogin) {
+                window.dispatchEvent(new Event('needsLoginTriggered'));
+                return;
+              }
               chatState.sendMessage(chatState.input);
               setMessageHasBeenSent(true);
               setHasSubmittedMessage(true);
