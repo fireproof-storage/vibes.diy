@@ -35,39 +35,43 @@ vi.mock('../app/utils/segmentParser');
 const navigateMock = vi.fn();
 vi.mock('react-router-dom', async (importOriginal) => {
   const actual = await importOriginal<typeof import('react-router-dom')>();
-  return { 
-    ...actual, 
-    useParams: () => ({ 
+  return {
+    ...actual,
+    useParams: () => ({
       spaceId: 'test-session-id',
-      prefixUserId: '~test-user' // Add this to prevent redirection
-    }), 
+      prefixUserId: '~test-user', // Add this to prevent redirection
+    }),
     useNavigate: () => navigateMock,
     useLocation: () => ({
       search: '',
       pathname: '/space/test-session-id',
-    })
+    }),
   };
 });
 
-vi.mock('../app/components/AppLayout', () => ({ 
-  default: ({ children, chatPanel, previewPanel }: { 
-    children?: React.ReactNode; 
-    chatPanel?: React.ReactNode; 
-    previewPanel?: React.ReactNode 
+vi.mock('../app/components/AppLayout', () => ({
+  default: ({
+    children,
+    chatPanel,
+    previewPanel,
+  }: {
+    children?: React.ReactNode;
+    chatPanel?: React.ReactNode;
+    previewPanel?: React.ReactNode;
   }) => (
-      <div data-testid="mock-app-layout">
-          {chatPanel}
-          {previewPanel}
-      </div>
-  )
+    <div data-testid="mock-app-layout">
+      {chatPanel}
+      {previewPanel}
+    </div>
+  ),
 }));
 
-vi.mock('../app/components/ChatInterface', () => ({ 
-  default: (props: Record<string, unknown>) => <div data-testid="mock-chat-interface" /> 
+vi.mock('../app/components/ChatInterface', () => ({
+  default: (props: Record<string, unknown>) => <div data-testid="mock-chat-interface" />,
 }));
 
-vi.mock('../app/components/ResultPreview/ResultPreview', () => ({ 
-  default: (props: Record<string, unknown>) => <div data-testid="mock-result-preview" /> 
+vi.mock('../app/components/ResultPreview/ResultPreview', () => ({
+  default: (props: Record<string, unknown>) => <div data-testid="mock-result-preview" />,
 }));
 
 // Mock Fireproof
@@ -94,9 +98,16 @@ vi.mock('../app/components/SimpleAppLayout', () => ({
 }));
 
 // Define a wrapper component providing controlled context value and MemoryRouter
-const createWrapper = (initialEntries = ['/space/test-session-id'], contextValue?: Partial<AuthContextType>) => {
+const createWrapper = (
+  initialEntries = ['/space/test-session-id'],
+  contextValue?: Partial<AuthContextType>
+) => {
   const defaultContextValue: AuthContextType = {
-    token: null, isAuthenticated: false, isLoading: false, userPayload: null, checkAuthStatus: vi.fn(),
+    token: null,
+    isAuthenticated: false,
+    isLoading: false,
+    userPayload: null,
+    checkAuthStatus: vi.fn(),
   };
   const valueToProvide = { ...defaultContextValue, ...contextValue };
   return ({ children }: { children: ReactNode }) => (
@@ -104,7 +115,7 @@ const createWrapper = (initialEntries = ['/space/test-session-id'], contextValue
       <AuthContext.Provider value={valueToProvide}>
         <Routes>
           {/* Adjust path if needed based on actual route structure */}
-          <Route path="/space/:spaceId" element={children} /> 
+          <Route path="/space/:spaceId" element={children} />
         </Routes>
       </AuthContext.Provider>
     </MemoryRouter>
@@ -113,19 +124,19 @@ const createWrapper = (initialEntries = ['/space/test-session-id'], contextValue
 
 describe('Space Route Integration', () => {
   const authenticatedState: Partial<AuthContextType> = {
-    isAuthenticated: true, 
-    isLoading: false, 
-    userPayload: { 
+    isAuthenticated: true,
+    isLoading: false,
+    userPayload: {
       userId: 'test',
       exp: 9999999999,
       tenants: [],
       ledgers: [],
       iat: 1234567890,
       iss: 'FP_CLOUD',
-      aud: 'PUBLIC'
-    }
+      aud: 'PUBLIC',
+    },
   };
-  
+
   beforeEach(() => {
     vi.clearAllMocks();
     // Mock useSimpleChat return value for this suite
@@ -150,19 +161,19 @@ describe('Space Route Integration', () => {
   });
 
   it.skip('displays the correct components in the space view', async () => {
-    const wrapper = createWrapper(['/~test-user'], authenticatedState); 
-    render(<Space />, { wrapper }); 
-    
+    const wrapper = createWrapper(['/~test-user'], authenticatedState);
+    render(<Space />, { wrapper });
+
     // Check our SimpleAppLayout is rendered
     expect(screen.getByTestId('simple-app-layout')).toBeInTheDocument();
     expect(screen.getByTestId('content-area')).toBeInTheDocument();
   });
 
   it.skip('should provide a share button that copies link to clipboard', async () => {
-     const wrapper = createWrapper(['/~test-user'], authenticatedState);
-     render(<Space />, { wrapper });
-     // Add assertions relevant to Space component, e.g. finding share button
-     // Note: Share button might be inside the mocked ResultPreview
-     // Depending on implementation, might need to adjust mocks/assertions
+    const wrapper = createWrapper(['/~test-user'], authenticatedState);
+    render(<Space />, { wrapper });
+    // Add assertions relevant to Space component, e.g. finding share button
+    // Note: Share button might be inside the mocked ResultPreview
+    // Depending on implementation, might need to adjust mocks/assertions
   });
 });

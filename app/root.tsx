@@ -15,8 +15,8 @@ import './app.css';
 import ClientOnly from './components/ClientOnly';
 import CookieBanner from './components/CookieBanner';
 import { NeedsLoginModal } from './components/NeedsLoginModal';
-import { CookieConsentProvider } from './contexts/CookieConsentContext';
 import { AuthProvider } from './contexts/AuthContext';
+import { CookieConsentProvider } from './contexts/CookieConsentContext';
 
 export const links: Route.LinksFunction = () => [
   { rel: 'icon', type: 'image/svg+xml', href: '/favicon.svg' },

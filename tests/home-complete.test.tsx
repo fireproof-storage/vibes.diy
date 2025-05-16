@@ -158,16 +158,16 @@ describe('Home Route in completed state', () => {
     isAuthenticated: true,
     isLoading: false,
     token: 'mock-token',
-    userPayload: { 
-      userId: 'test-user-id', 
+    userPayload: {
+      userId: 'test-user-id',
       exp: 9999999999,
-      tenants: [], 
+      tenants: [],
       ledgers: [],
       iat: 1234567890,
       iss: 'FP_CLOUD',
-      aud: 'PUBLIC'
+      aud: 'PUBLIC',
     },
-    checkAuthStatus: vi.fn()
+    checkAuthStatus: vi.fn(),
   };
 
   beforeEach(() => {
@@ -249,7 +249,7 @@ describe('Home Route in completed state', () => {
         </AuthContext.Provider>
       </MemoryRouter>
     );
-    
+
     await waitFor(() => {
       expect(screen.getByTestId('code-line-count')).toHaveTextContent('210 lines of code');
     });
@@ -263,7 +263,7 @@ describe('Home Route in completed state', () => {
         </AuthContext.Provider>
       </MemoryRouter>
     );
-    
+
     const shareButton = await screen.findByTestId('share-button');
     fireEvent.click(shareButton);
     await waitFor(() => {
@@ -328,7 +328,7 @@ describe('Home Route in completed state', () => {
       state: null,
       key: '',
     };
-    
+
     render(
       <MemoryRouter>
         <AuthContext.Provider value={authenticatedState as AuthContextType}>
@@ -336,7 +336,7 @@ describe('Home Route in completed state', () => {
         </AuthContext.Provider>
       </MemoryRouter>
     );
-    
+
     // Verify the component renders without crashing
     await waitFor(() => {
       expect(screen.getByTestId('mock-chat-interface')).toBeInTheDocument();

@@ -130,17 +130,17 @@ vi.mock('../app/components/ResultPreview/ResultPreview', () => {
 
 describe('Home Route', () => {
   const authenticatedState: Partial<AuthContextType> = {
-    isAuthenticated: true, 
-    isLoading: false, 
-    userPayload: { 
+    isAuthenticated: true,
+    isLoading: false,
+    userPayload: {
       userId: 'test',
       exp: 9999999999,
       tenants: [],
       ledgers: [],
       iat: 1234567890,
       iss: 'FP_CLOUD',
-      aud: 'PUBLIC'
-    } 
+      aud: 'PUBLIC',
+    },
   };
 
   beforeEach(() => {
@@ -150,26 +150,28 @@ describe('Home Route', () => {
   it('should render the chat interface and result preview', async () => {
     render(
       <MemoryRouter>
-        <AuthContext.Provider value={{
-          token: 'mock-token',
-          isAuthenticated: true,
-          isLoading: false,
-          userPayload: {
-            userId: 'test',
-            exp: 9999999999,
-            tenants: [],
-            ledgers: [],
-            iat: 1234567890,
-            iss: 'FP_CLOUD',
-            aud: 'PUBLIC'
-          },
-          checkAuthStatus: vi.fn()
-        }}>
+        <AuthContext.Provider
+          value={{
+            token: 'mock-token',
+            isAuthenticated: true,
+            isLoading: false,
+            userPayload: {
+              userId: 'test',
+              exp: 9999999999,
+              tenants: [],
+              ledgers: [],
+              iat: 1234567890,
+              iss: 'FP_CLOUD',
+              aud: 'PUBLIC',
+            },
+            checkAuthStatus: vi.fn(),
+          }}
+        >
           <UnifiedSession />
         </AuthContext.Provider>
       </MemoryRouter>
     );
-    
+
     await waitFor(() => {
       // Check for our components which should be visible
       expect(screen.getByTestId('chat-interface')).toBeInTheDocument();

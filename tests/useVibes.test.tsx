@@ -9,7 +9,12 @@ import type { VibeDocument } from '../app/types/chat';
 // Import TokenPayload for our mock
 import type { TokenPayload } from '../app/utils/auth';
 import type { LocalVibe } from '../app/utils/vibeUtils';
-import { deleteVibeDatabase, listLocalVibeIds, listLocalVibes, toggleVibeFavorite } from '../app/utils/vibeUtils';
+import {
+  deleteVibeDatabase,
+  listLocalVibeIds,
+  listLocalVibes,
+  toggleVibeFavorite,
+} from '../app/utils/vibeUtils';
 
 // Mock vibeUtils
 vi.mock('../app/utils/vibeUtils', () => ({
@@ -22,11 +27,11 @@ vi.mock('../app/utils/vibeUtils', () => ({
 
 // Mock the AuthContext instead of the hook
 vi.mock('../app/contexts/AuthContext', async (importOriginal) => {
-   const actual = await importOriginal<typeof import('../app/contexts/AuthContext')>();
-   return {
-     ...actual, // Keep exports
-     // No need to mock useAuth as we'll provide context value through wrapper
-   };
+  const actual = await importOriginal<typeof import('../app/contexts/AuthContext')>();
+  return {
+    ...actual, // Keep exports
+    // No need to mock useAuth as we'll provide context value through wrapper
+  };
 });
 
 // Wrapper definition with controlled auth context value
@@ -39,9 +44,9 @@ const createWrapper = () => {
     ledgers: [],
     iat: 1234567890,
     iss: 'FP_CLOUD',
-    aud: 'PUBLIC'
+    aud: 'PUBLIC',
   };
-  
+
   const authContextValue = {
     token: 'mock-token',
     isAuthenticated: true,
@@ -49,7 +54,7 @@ const createWrapper = () => {
     userPayload: mockUserPayload,
     checkAuthStatus: vi.fn(),
   };
-  
+
   return ({ children }: { children: ReactNode }) => (
     <AuthContext.Provider value={authContextValue}>{children}</AuthContext.Provider>
   );
@@ -57,18 +62,32 @@ const createWrapper = () => {
 
 describe('useVibes', () => {
   const mockVibes: Partial<LocalVibe>[] = [
-    { id: 'test-vibe-1', title: 'Test Vibe 1', favorite: false, created: '', encodedTitle: 'test-vibe-1', slug: 'test-vibe-1' },
-    { id: 'test-vibe-2', title: 'Test Vibe 2', favorite: true, created: '', encodedTitle: 'test-vibe-2', slug: 'test-vibe-2' },
+    {
+      id: 'test-vibe-1',
+      title: 'Test Vibe 1',
+      favorite: false,
+      created: '',
+      encodedTitle: 'test-vibe-1',
+      slug: 'test-vibe-1',
+    },
+    {
+      id: 'test-vibe-2',
+      title: 'Test Vibe 2',
+      favorite: true,
+      created: '',
+      encodedTitle: 'test-vibe-2',
+      slug: 'test-vibe-2',
+    },
   ];
 
   // Mock vibe document for toggleVibeFavorite
-  const mockVibeDoc: VibeDocument = { 
-    _id: 'vibe', 
+  const mockVibeDoc: VibeDocument = {
+    _id: 'vibe',
     favorite: true,
     title: 'Test Vibe',
     encodedTitle: 'test-vibe',
     remixOf: '',
-    created_at: Date.now()
+    created_at: Date.now(),
   };
 
   beforeEach(() => {
@@ -190,22 +209,22 @@ describe('useVibes', () => {
   });
 
   it('should toggle favorite status and update state optimistically', async () => {
-    const wrapper = createWrapper(); 
+    const wrapper = createWrapper();
     const { result } = renderHook(() => useVibes(), { wrapper });
     await waitFor(() => expect(result.current.isLoading).toBe(false));
-    
+
     // Setup state with safer optional chaining
     act(() => {
-        const vibe1 = result.current.vibes.find(v => v.id === 'test-vibe-1');
-        const vibe2 = result.current.vibes.find(v => v.id === 'test-vibe-2');
-        if (vibe1) vibe1.favorite = false;
-        if (vibe2) vibe2.favorite = true;
+      const vibe1 = result.current.vibes.find((v) => v.id === 'test-vibe-1');
+      const vibe2 = result.current.vibes.find((v) => v.id === 'test-vibe-2');
+      if (vibe1) vibe1.favorite = false;
+      if (vibe2) vibe2.favorite = true;
     });
 
     await act(async () => {
       await result.current.toggleFavorite('test-vibe-1');
     });
-    expect(toggleVibeFavorite).toHaveBeenCalledWith('test-vibe-1', 'test-user-id'); 
+    expect(toggleVibeFavorite).toHaveBeenCalledWith('test-vibe-1', 'test-user-id');
     // ... assertions ...
   });
 
@@ -216,7 +235,11 @@ describe('useVibes', () => {
     await waitFor(() => expect(result.current.isLoading).toBe(false));
     vi.mocked(listLocalVibeIds).mockClear();
     await act(async () => {
-      try { await result.current.toggleFavorite('test-vibe-1'); } catch (e) { /* Ignore */ }
+      try {
+        await result.current.toggleFavorite('test-vibe-1');
+      } catch (e) {
+        /* Ignore */
+      }
     });
     await waitFor(() => expect(result.current.error).toBeDefined());
     expect(toggleVibeFavorite).toHaveBeenCalledWith('test-vibe-1', 'test-user-id');

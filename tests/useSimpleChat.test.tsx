@@ -691,13 +691,12 @@ export default Timer;`,
 
 // Wrapper definition
 const createWrapper = () => {
-  return ({ children }: { children: ReactNode }) => (
-    <AuthProvider>{children}</AuthProvider>
-  );
+  return ({ children }: { children: ReactNode }) => <AuthProvider>{children}</AuthProvider>;
 };
 
 describe('useSimpleChat', () => {
-  const testJwt = 'eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0=.eyJ1c2VySWQiOiJ0ZXN0LXVzZXItaWQiLCJleHAiOjI1MzQwMjMwMDc5OX0=.';
+  const testJwt =
+    'eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0=.eyJ1c2VySWQiOiJ0ZXN0LXVzZXItaWQiLCJleHAiOjI1MzQwMjMwMDc5OX0=.';
 
   beforeEach(() => {
     // Mock createKeyViaEdgeFunction to ensure it returns the correct structure
@@ -765,7 +764,7 @@ describe('useSimpleChat', () => {
     // Add localStorage mock
     vi.spyOn(Storage.prototype, 'getItem');
     localStorage.getItem = vi.fn((key) => {
-      if (key === 'auth_token') return testJwt; 
+      if (key === 'auth_token') return testJwt;
       return null;
     });
   });

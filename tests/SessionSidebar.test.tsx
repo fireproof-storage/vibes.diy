@@ -10,14 +10,14 @@ vi.mock('../app/contexts/AuthContext', () => {
     useAuth: vi.fn().mockImplementation(() => ({
       isAuthenticated: true,
       isLoading: false,
-      userPayload: { 
-        userId: 'test-user-id', 
-        exp: 9999999999, 
-        tenants: [], 
+      userPayload: {
+        userId: 'test-user-id',
+        exp: 9999999999,
+        tenants: [],
         ledgers: [],
         iat: 1234567890,
         iss: 'FP_CLOUD',
-        aud: 'PUBLIC'
+        aud: 'PUBLIC',
       },
       checkAuthStatus: vi.fn(),
     })),
@@ -77,7 +77,7 @@ Object.defineProperty(global.URL, 'revokeObjectURL', {
 describe('SessionSidebar component', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    
+
     // Reset mocks
     vi.mocked(initiateAuthFlow).mockClear();
     vi.mocked(trackAuthClick).mockClear();
@@ -93,14 +93,14 @@ describe('SessionSidebar component', () => {
     vi.mocked(useAuth).mockReturnValue({
       isAuthenticated: true,
       isLoading: false,
-      userPayload: { 
-        userId: 'test-user-id', 
-        exp: 9999999999, 
-        tenants: [], 
+      userPayload: {
+        userId: 'test-user-id',
+        exp: 9999999999,
+        tenants: [],
         ledgers: [],
         iat: 1234567890,
         iss: 'FP_CLOUD',
-        aud: 'PUBLIC'
+        aud: 'PUBLIC',
       },
       token: 'mock-token',
       checkAuthStatus: vi.fn(),
@@ -135,7 +135,7 @@ describe('SessionSidebar component', () => {
     const props = {
       ...mockSessionSidebarProps,
     };
-    
+
     const { container } = render(<SessionSidebar {...props} />);
 
     // Check if the sidebar is rendered - it's the first div in the container
@@ -161,14 +161,14 @@ describe('SessionSidebar component', () => {
     vi.mocked(useAuth).mockReturnValue({
       isAuthenticated: true,
       isLoading: false,
-      userPayload: { 
-        userId: 'test-user-id', 
-        exp: 9999999999, 
-        tenants: [], 
+      userPayload: {
+        userId: 'test-user-id',
+        exp: 9999999999,
+        tenants: [],
         ledgers: [],
         iat: 1234567890,
         iss: 'FP_CLOUD',
-        aud: 'PUBLIC'
+        aud: 'PUBLIC',
       },
       token: 'mock-token',
       checkAuthStatus: vi.fn(),
@@ -177,7 +177,7 @@ describe('SessionSidebar component', () => {
     const props = {
       ...mockSessionSidebarProps,
     };
-    
+
     const { container } = render(<SessionSidebar {...props} />);
 
     // Check if the sidebar is rendered - it's the first div in the container
@@ -200,24 +200,24 @@ describe('SessionSidebar component', () => {
 
     // After simulating the event, we re-render to see the updated state
     // This is needed because Jest's JSDOM doesn't fully simulate React's event handling
-    
+
     // Update the useAuth mock for the re-render
     vi.mocked(useAuth).mockReturnValue({
       isAuthenticated: true,
       isLoading: false,
-      userPayload: { 
-        userId: 'test-user-id', 
-        exp: 9999999999, 
-        tenants: [], 
+      userPayload: {
+        userId: 'test-user-id',
+        exp: 9999999999,
+        tenants: [],
         ledgers: [],
         iat: 1234567890,
         iss: 'FP_CLOUD',
-        aud: 'PUBLIC'
+        aud: 'PUBLIC',
       },
       token: 'mock-token',
       checkAuthStatus: vi.fn(),
     });
-    
+
     render(<SessionSidebar {...props} />);
 
     // Now look for the 'Get Credits' text
@@ -239,7 +239,7 @@ describe('SessionSidebar component', () => {
     const props = {
       ...mockSessionSidebarProps,
     };
-    
+
     const { container } = render(<SessionSidebar {...props} />);
 
     // Check if the sidebar is rendered - it's the first div in the container
@@ -260,7 +260,7 @@ describe('SessionSidebar component', () => {
     const props = {
       ...mockSessionSidebarProps,
     };
-    
+
     const { unmount } = render(<SessionSidebar {...props} />);
     unmount();
 
@@ -278,7 +278,7 @@ describe('SessionSidebar component', () => {
       isVisible: true,
       onClose: onClose,
     };
-    
+
     const { container } = render(<SessionSidebar {...props} />);
 
     // Check that the menu items are rendered
@@ -299,7 +299,7 @@ describe('SessionSidebar component', () => {
       isVisible: true,
       onClose: onClose,
     };
-    
+
     render(<SessionSidebar {...props} />);
 
     // Find the close button (it's a button with an SVG icon, so we use aria-label)
@@ -318,14 +318,14 @@ describe('SessionSidebar component', () => {
     vi.mocked(useAuth).mockReturnValue({
       isAuthenticated: true,
       isLoading: false,
-      userPayload: { 
-        userId: 'test-user-id', 
-        exp: 9999999999, 
-        tenants: [], 
+      userPayload: {
+        userId: 'test-user-id',
+        exp: 9999999999,
+        tenants: [],
         ledgers: [],
         iat: 1234567890,
         iss: 'FP_CLOUD',
-        aud: 'PUBLIC'
+        aud: 'PUBLIC',
       },
       token: 'mock-token',
       checkAuthStatus: vi.fn(),
@@ -334,7 +334,7 @@ describe('SessionSidebar component', () => {
     const props = {
       ...mockSessionSidebarProps,
     };
-    
+
     const { container } = render(<SessionSidebar {...props} />);
 
     // Check if the sidebar is rendered - it's the first div in the container
@@ -356,14 +356,14 @@ describe('SessionSidebar component', () => {
     vi.mocked(useAuth).mockReturnValue({
       isAuthenticated: true,
       isLoading: false,
-      userPayload: { 
-        userId: 'test-user-id', 
-        exp: 9999999999, 
-        tenants: [], 
+      userPayload: {
+        userId: 'test-user-id',
+        exp: 9999999999,
+        tenants: [],
         ledgers: [],
         iat: 1234567890,
         iss: 'FP_CLOUD',
-        aud: 'PUBLIC'
+        aud: 'PUBLIC',
       },
       token: 'mock-token',
       checkAuthStatus: vi.fn(),
@@ -375,7 +375,7 @@ describe('SessionSidebar component', () => {
       isVisible: true,
       onClose: onClose,
     };
-    
+
     render(<SessionSidebar {...props} />);
 
     // Find the close button (it's a button with an SVG icon, so we use aria-label)
@@ -394,14 +394,14 @@ describe('SessionSidebar component', () => {
     vi.mocked(useAuth).mockReturnValue({
       isAuthenticated: true,
       isLoading: false,
-      userPayload: { 
-        userId: 'test-user-id', 
-        exp: 9999999999, 
-        tenants: [], 
+      userPayload: {
+        userId: 'test-user-id',
+        exp: 9999999999,
+        tenants: [],
         ledgers: [],
         iat: 1234567890,
         iss: 'FP_CLOUD',
-        aud: 'PUBLIC'
+        aud: 'PUBLIC',
       },
       token: 'mock-token',
       checkAuthStatus: vi.fn(),
@@ -411,12 +411,12 @@ describe('SessionSidebar component', () => {
       ...mockSessionSidebarProps,
       isVisible: false,
     };
-    
+
     const { container } = render(<SessionSidebar {...props} />);
 
     // Find the sidebar div
     const sidebar = screen.getByTestId('session-sidebar');
-    
+
     // Verify it has the -translate-x-full class for hiding
     expect(sidebar).toHaveClass('-translate-x-full');
   });
@@ -426,14 +426,14 @@ describe('SessionSidebar component', () => {
     vi.mocked(useAuth).mockReturnValue({
       isAuthenticated: true,
       isLoading: false,
-      userPayload: { 
-        userId: 'test-user-id', 
-        exp: 9999999999, 
-        tenants: [], 
+      userPayload: {
+        userId: 'test-user-id',
+        exp: 9999999999,
+        tenants: [],
         ledgers: [],
         iat: 1234567890,
         iss: 'FP_CLOUD',
-        aud: 'PUBLIC'
+        aud: 'PUBLIC',
       },
       token: 'mock-token',
       checkAuthStatus: vi.fn(),
@@ -442,19 +442,19 @@ describe('SessionSidebar component', () => {
     const props = {
       ...mockSessionSidebarProps,
     };
-    
+
     render(<SessionSidebar {...props} />);
 
     // Find the navigation element
     const nav = document.querySelector('nav');
     expect(nav).toBeInTheDocument();
-    
+
     // Check that it has list items
     const listItems = nav?.querySelectorAll('li');
     expect(listItems?.length).toBeGreaterThan(0);
-    
+
     // Check that each list item has a link or button
-    Array.from(listItems || []).forEach(li => {
+    Array.from(listItems || []).forEach((li) => {
       const linkOrButton = li.querySelector('a, button');
       expect(linkOrButton).toBeInTheDocument();
     });
@@ -465,14 +465,14 @@ describe('SessionSidebar component', () => {
     vi.mocked(useAuth).mockReturnValue({
       isAuthenticated: true,
       isLoading: false,
-      userPayload: { 
-        userId: 'test-user-id', 
-        exp: 9999999999, 
-        tenants: [], 
+      userPayload: {
+        userId: 'test-user-id',
+        exp: 9999999999,
+        tenants: [],
         ledgers: [],
         iat: 1234567890,
         iss: 'FP_CLOUD',
-        aud: 'PUBLIC'
+        aud: 'PUBLIC',
       },
       token: 'mock-token',
       checkAuthStatus: vi.fn(),
@@ -484,14 +484,14 @@ describe('SessionSidebar component', () => {
       isVisible: true,
       onClose: onClose,
     };
-    
+
     render(<SessionSidebar {...props} />);
 
     // Find all navigation links
     const navLinks = screen.getAllByText(/Home|My Vibes|Settings|About/);
-    
+
     // Click each link and verify onClose is called
-    navLinks.forEach(link => {
+    navLinks.forEach((link) => {
       fireEvent.click(link);
       expect(onClose).toHaveBeenCalled();
       onClose.mockClear();

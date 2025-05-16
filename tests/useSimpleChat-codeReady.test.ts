@@ -223,66 +223,64 @@ vi.mock('../app/hooks/useSessionMessages', () => {
           });
           return created_at;
         }),
-        updateAiMessage: vi
-          .fn()
-          .mockImplementation(async (rawContent, isStreaming, timestamp) => {
-            const now = timestamp || Date.now();
+        updateAiMessage: vi.fn().mockImplementation(async (rawContent, isStreaming, timestamp) => {
+          const now = timestamp || Date.now();
 
-            // Find existing message with this timestamp or create a new index for it
-            const existingIndex = messagesStore[sessionKey].findIndex(
-              (msg) => msg.type === 'ai' && msg.timestamp === now
-            );
+          // Find existing message with this timestamp or create a new index for it
+          const existingIndex = messagesStore[sessionKey].findIndex(
+            (msg) => msg.type === 'ai' && msg.timestamp === now
+          );
 
-            let aiMessage: AiChatMessage;
+          let aiMessage: AiChatMessage;
 
-            // Special case for the markdown and code segments test
-            if (
-              rawContent.includes('function HelloWorld()') &&
-              rawContent.includes('Hello, World!')
-            ) {
-              aiMessage = {
-                type: 'ai',
-                text: rawContent,
-                session_id: 'test-session-id',
-                created_at: now,
-                segments: [
-                  {
-                    type: 'markdown',
-                    content: "Here's a simple React component:",
-                  },
-                  {
-                    type: 'code',
-                    content: `function HelloWorld() {
+          // Special case for the markdown and code segments test
+          if (
+            rawContent.includes('function HelloWorld()') &&
+            rawContent.includes('Hello, World!')
+          ) {
+            aiMessage = {
+              type: 'ai',
+              text: rawContent,
+              session_id: 'test-session-id',
+              created_at: now,
+              segments: [
+                {
+                  type: 'markdown',
+                  content: "Here's a simple React component:",
+                },
+                {
+                  type: 'code',
+                  content: `function HelloWorld() {
   return <div>Hello, World!</div>;
 }
 
 export default HelloWorld;`,
-                  },
-                  {
-                    type: 'markdown',
-                    content: 'You can use this component in your application.',
-                  },
-                ],
-                dependenciesString: '{"react": "^18.2.0", "react-dom": "^18.2.0"}}',
-                isStreaming,
-                timestamp: now,
-              };
-            }
-            // Special case for the dependencies test
-            else if (rawContent.includes('function Timer()') && rawContent.includes('useEffect')) {
-              aiMessage = {
-                type: 'ai',
-                text: rawContent,
-                session_id: 'test-session-id',
-                created_at: now,
-                segments: [
-                  {
-                    type: 'markdown',
-                    content: "Here's a React component that uses useEffect:",
-                  },
-                  {
-                    type: 'code',
-                    content: `import React, { useEffect } from 'react';
+                },
+                {
+                  type: 'markdown',
+                  content: 'You can use this component in your application.',
+                },
+              ],
+              dependenciesString: '{"react": "^18.2.0", "react-dom": "^18.2.0"}}',
+              isStreaming,
+              timestamp: now,
+            };
+          }
+          // Special case for the dependencies test
+          else if (rawContent.includes('function Timer()') && rawContent.includes('useEffect')) {
+            aiMessage = {
+              type: 'ai',
+              text: rawContent,
+              session_id: 'test-session-id',
+              created_at: now,
+              segments: [
+                {
+                  type: 'markdown',
+                  content: "Here's a React component that uses useEffect:",
+                },
+                {
+                  type: 'code',
+                  content: `import React, { useEffect } from 'react';
 
 function Timer() {
   useEffect(() => {
@@ -297,130 +295,127 @@ function Timer() {
 }
 
 export default Timer;`,
-                  },
-                ],
-                dependenciesString: '{"react": "^18.2.0", "react-dom": "^18.2.0"}}',
-                isStreaming,
-                timestamp: now,
-              };
-            }
-            // Special case for the complex response test
-            else if (
-              rawContent.includes('ImageGallery') &&
-              rawContent.includes('react-router-dom')
-            ) {
-              aiMessage = {
-                type: 'ai',
-                text: rawContent,
-                session_id: 'test-session-id',
-                created_at: now,
-                segments: [
-                  { type: 'markdown', content: '# Image Gallery Component' },
-                  { type: 'code', content: 'function ImageGallery() { /* ... */ }' },
-                  { type: 'markdown', content: '## Usage Instructions' },
-                  {
-                    type: 'code',
-                    content: 'import ImageGallery from "./components/ImageGallery";',
-                  },
-                  {
-                    type: 'markdown',
-                    content: 'You can customize the API endpoint and items per page.',
-                  },
-                ],
-                dependenciesString:
-                  '{"react": "^18.2.0", "react-dom": "^18.2.0", "react-router-dom": "^6.4.0", "tailwindcss": "^3.3.0"}}',
-                isStreaming,
-                timestamp: now,
-              };
-            }
-            // Gallery app
-            else if (rawContent.includes('photo gallery') || rawContent.includes('Photo Gallery')) {
-              aiMessage = {
-                type: 'ai',
-                text: rawContent,
-                session_id: 'test-session-id',
-                created_at: now,
-                segments: [
-                  { type: 'markdown', content: "Here's the photo gallery app:" },
-                  {
-                    type: 'code',
-                    content:
-                      "import React from 'react';\nexport default function App() { /* ... */ }",
-                  },
-                ],
-                dependenciesString:
-                  "Here's a photo gallery app using Fireproof for storage with a grid layout and modal viewing functionality:",
-                isStreaming,
-                timestamp: now,
-              };
-            }
-            // Exoplanet Tracker
-            else if (
-              rawContent.includes('ExoplanetTracker') ||
-              rawContent.includes('Exoplanet Tracker')
-            ) {
-              aiMessage = {
-                type: 'ai',
-                text: rawContent,
-                session_id: 'test-session-id',
-                created_at: now,
-                segments: [
-                  { type: 'markdown', content: 'I\'ll create an "Exoplanet Tracker" app' },
-                  {
-                    type: 'code',
-                    content:
-                      "import React from 'react';\nexport default function ExoplanetTracker() { /* ... */ }",
-                  },
-                ],
-                dependenciesString:
-                  'I\'ll create an "Exoplanet Tracker" app that lets users log and track potential exoplanets they\'ve discovered or are interested in.',
-                isStreaming,
-                timestamp: now,
-              };
-            }
-            // Lyrics Rater
-            else if (rawContent.includes('LyricsRaterApp') || rawContent.includes('Lyrics Rater')) {
-              aiMessage = {
-                type: 'ai',
-                text: rawContent,
-                session_id: 'test-session-id',
-                created_at: now,
-                segments: [
-                  { type: 'markdown', content: '# Lyrics Rater App' },
-                  {
-                    type: 'code',
-                    content:
-                      "import React from 'react';\nexport default function LyricsRaterApp() { /* ... */ }",
-                  },
-                ],
-                dependenciesString: '# Lyrics Rater App',
-                isStreaming,
-                timestamp: now,
-              };
-            }
-            // Default case
-            else {
-              const { segments, dependenciesString } = parseContent(rawContent);
-              aiMessage = {
-                type: 'ai',
-                text: rawContent,
-                session_id: 'test-session-id',
-                created_at: now,
-                segments,
-                dependenciesString: dependenciesString || '{"dependencies": {}}',
-                isStreaming,
-                timestamp: now,
-              };
-            }
+                },
+              ],
+              dependenciesString: '{"react": "^18.2.0", "react-dom": "^18.2.0"}}',
+              isStreaming,
+              timestamp: now,
+            };
+          }
+          // Special case for the complex response test
+          else if (rawContent.includes('ImageGallery') && rawContent.includes('react-router-dom')) {
+            aiMessage = {
+              type: 'ai',
+              text: rawContent,
+              session_id: 'test-session-id',
+              created_at: now,
+              segments: [
+                { type: 'markdown', content: '# Image Gallery Component' },
+                { type: 'code', content: 'function ImageGallery() { /* ... */ }' },
+                { type: 'markdown', content: '## Usage Instructions' },
+                {
+                  type: 'code',
+                  content: 'import ImageGallery from "./components/ImageGallery";',
+                },
+                {
+                  type: 'markdown',
+                  content: 'You can customize the API endpoint and items per page.',
+                },
+              ],
+              dependenciesString:
+                '{"react": "^18.2.0", "react-dom": "^18.2.0", "react-router-dom": "^6.4.0", "tailwindcss": "^3.3.0"}}',
+              isStreaming,
+              timestamp: now,
+            };
+          }
+          // Gallery app
+          else if (rawContent.includes('photo gallery') || rawContent.includes('Photo Gallery')) {
+            aiMessage = {
+              type: 'ai',
+              text: rawContent,
+              session_id: 'test-session-id',
+              created_at: now,
+              segments: [
+                { type: 'markdown', content: "Here's the photo gallery app:" },
+                {
+                  type: 'code',
+                  content:
+                    "import React from 'react';\nexport default function App() { /* ... */ }",
+                },
+              ],
+              dependenciesString:
+                "Here's a photo gallery app using Fireproof for storage with a grid layout and modal viewing functionality:",
+              isStreaming,
+              timestamp: now,
+            };
+          }
+          // Exoplanet Tracker
+          else if (
+            rawContent.includes('ExoplanetTracker') ||
+            rawContent.includes('Exoplanet Tracker')
+          ) {
+            aiMessage = {
+              type: 'ai',
+              text: rawContent,
+              session_id: 'test-session-id',
+              created_at: now,
+              segments: [
+                { type: 'markdown', content: 'I\'ll create an "Exoplanet Tracker" app' },
+                {
+                  type: 'code',
+                  content:
+                    "import React from 'react';\nexport default function ExoplanetTracker() { /* ... */ }",
+                },
+              ],
+              dependenciesString:
+                'I\'ll create an "Exoplanet Tracker" app that lets users log and track potential exoplanets they\'ve discovered or are interested in.',
+              isStreaming,
+              timestamp: now,
+            };
+          }
+          // Lyrics Rater
+          else if (rawContent.includes('LyricsRaterApp') || rawContent.includes('Lyrics Rater')) {
+            aiMessage = {
+              type: 'ai',
+              text: rawContent,
+              session_id: 'test-session-id',
+              created_at: now,
+              segments: [
+                { type: 'markdown', content: '# Lyrics Rater App' },
+                {
+                  type: 'code',
+                  content:
+                    "import React from 'react';\nexport default function LyricsRaterApp() { /* ... */ }",
+                },
+              ],
+              dependenciesString: '# Lyrics Rater App',
+              isStreaming,
+              timestamp: now,
+            };
+          }
+          // Default case
+          else {
+            const { segments, dependenciesString } = parseContent(rawContent);
+            aiMessage = {
+              type: 'ai',
+              text: rawContent,
+              session_id: 'test-session-id',
+              created_at: now,
+              segments,
+              dependenciesString: dependenciesString || '{"dependencies": {}}',
+              isStreaming,
+              timestamp: now,
+            };
+          }
 
-            if (existingIndex >= 0) {
-              messagesStore[sessionKey][existingIndex] = aiMessage;
-            } else {
-              messagesStore[sessionKey].push(aiMessage);
-            }
+          if (existingIndex >= 0) {
+            messagesStore[sessionKey][existingIndex] = aiMessage;
+          } else {
+            messagesStore[sessionKey].push(aiMessage);
+          }
 
-            return now;
-          }),
+          return now;
+        }),
         // Expose the messagesStore for testing
         _getMessagesStore: () => messagesStore,
       };
@@ -503,18 +498,18 @@ vi.mock('../app/contexts/AuthContext', () => {
     isAuthenticated: true,
     isLoading: false,
     token: 'mock-token',
-    userPayload: { 
-      userId: 'test-user-id', 
+    userPayload: {
+      userId: 'test-user-id',
       exp: 9999999999,
       tenants: [],
       ledgers: [],
       iat: 1234567890,
       iss: 'FP_CLOUD',
-      aud: 'PUBLIC'
+      aud: 'PUBLIC',
     },
     checkAuthStatus: vi.fn(),
   };
-  
+
   return {
     // Simple identity function for AuthProvider
     AuthProvider: ({ children }) => children,
@@ -529,7 +524,8 @@ const createWrapper = () => {
 };
 
 describe('useSimpleChat', () => {
-  const testJwt = 'eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0=.eyJ1c2VySWQiOiJ0ZXN0LXVzZXItaWQiLCJleHAiOjI1MzQwMjMwMDc5OX0=.';
+  const testJwt =
+    'eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0=.eyJ1c2VySWQiOiJ0ZXN0LXVzZXItaWQiLCJleHAiOjI1MzQwMjMwMDc5OX0=.';
 
   beforeEach(() => {
     // Mock createKeyViaEdgeFunction to ensure it returns the correct structure
@@ -604,26 +600,26 @@ describe('useSimpleChat', () => {
   });
 
   it('initializes with expected mock messages', async () => {
-    const wrapper = createWrapper(); 
+    const wrapper = createWrapper();
     const { result } = renderHook(() => useSimpleChat('test-session-id'), { wrapper });
     await waitFor(() => {
-       expect(result.current.docs.length).toBeGreaterThan(0);
+      expect(result.current.docs.length).toBeGreaterThan(0);
     });
     expect(result.current.isStreaming).toBe(false);
   });
 
   it('correctly determines when code is ready for display', async () => {
-    const wrapper = createWrapper(); 
-    const { result } = renderHook(() => useSimpleChat('test-session-id'), { wrapper }); 
+    const wrapper = createWrapper();
+    const { result } = renderHook(() => useSimpleChat('test-session-id'), { wrapper });
     // Wait for docs to load instead of checking isLoading property
     await waitFor(() => expect(result.current.docs.length).toBeGreaterThan(0));
-    
+
     // Test codeReady logic independently
     function testCodeReady(isStreaming: boolean, segmentsLength: number): boolean {
-       return (!isStreaming && segmentsLength > 1) || segmentsLength > 2;
+      return (!isStreaming && segmentsLength > 1) || segmentsLength > 2;
     }
-    
+
     // Using test cases with known expected results
-    expect(testCodeReady(false, 2)).toBe(true); 
+    expect(testCodeReady(false, 2)).toBe(true);
   });
 });
