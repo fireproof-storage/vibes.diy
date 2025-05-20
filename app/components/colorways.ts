@@ -15,8 +15,6 @@ export const light = {
     main: '#212A4A',
     gleam: 'white',
     diy: '#E9AD21',
-
-
     diyText: 'black',
   },
   shamrock: {
@@ -55,9 +53,6 @@ export const dark = {
   shamrock: {
     gleam: '#212A4A',
     main: 'white',
-
-
-
     diy: '#01A947',
     diyText: 'black',
   },
