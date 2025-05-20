@@ -1,7 +1,6 @@
 import { act, cleanup, renderHook, waitFor } from '@testing-library/react';
 import type { ReactNode } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { useAuth } from '../app/contexts/AuthContext';
 import { AuthProvider } from '../app/contexts/AuthContext';
 import { useSession } from '../app/hooks/useSession'; // Import the actual hook for vi.mocked
 import { useSimpleChat } from '../app/hooks/useSimpleChat';
@@ -786,7 +785,7 @@ describe('useSimpleChat', () => {
 
   it.skip('updates input value', async () => {
     const wrapper = createWrapper();
-    const { result } = renderHook(() => useSimpleChat('test-session-id'), { wrapper });
+    renderHook(() => useSimpleChat('test-session-id'), { wrapper });
     // ... assertions ...
   });
 

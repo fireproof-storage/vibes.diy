@@ -2,21 +2,12 @@ import { render, screen } from '@testing-library/react';
 import type { ReactNode } from 'react';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import type { AuthContextType } from '../app/contexts/AuthContext';
 import { AuthContext } from '../app/contexts/AuthContext';
 import * as useSimpleChatModule from '../app/hooks/useSimpleChat';
 import Space from '../app/routes/space';
 import type { ChatState, Segment } from '../app/types/chat';
-import type { TokenPayload } from '../app/utils/auth';
 import { mockChatStateProps } from './mockData';
-
-// Define the AuthContextType directly since it's not exported from the module
-interface AuthContextType {
-  token: string | null;
-  isAuthenticated: boolean;
-  isLoading: boolean;
-  userPayload: TokenPayload | null;
-  checkAuthStatus: () => Promise<void>;
-}
 
 // Mock the CookieConsentContext
 vi.mock('../app/contexts/CookieConsentContext', () => ({
@@ -108,6 +99,7 @@ const createWrapper = (
     isLoading: false,
     userPayload: null,
     checkAuthStatus: vi.fn(),
+    processToken: vi.fn(),
   };
   const valueToProvide = { ...defaultContextValue, ...contextValue };
   return ({ children }: { children: ReactNode }) => (

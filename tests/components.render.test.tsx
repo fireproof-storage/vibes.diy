@@ -1,11 +1,11 @@
 // Vitest will automatically use mocks from __mocks__ directory
 import { fireEvent, render, screen } from '@testing-library/react';
-import type { ReactNode } from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { mockUseAuth, resetMockAuthState, setMockAuthState } from '../__mocks__/useAuth';
 import ChatHeader from '../app/components/ChatHeaderContent';
 import MessageList from '../app/components/MessageList';
 import SessionSidebar from '../app/components/SessionSidebar';
-import { AuthContext, type AuthContextType } from '../app/contexts/AuthContext';
+import type { AuthContextType } from '../app/contexts/AuthContext';
 import type { AiChatMessage, ChatMessageDocument, UserChatMessage } from '../app/types/chat';
 import { mockSessionSidebarProps } from './mockData';
 
@@ -24,12 +24,9 @@ vi.mock('react-markdown', () => {
 window.HTMLElement.prototype.scrollIntoView = vi.fn();
 
 // Mock the useAuth hook for SessionSidebar
-vi.mock('../app/hooks/useAuth', () => ({
-  useAuth: () => ({
-    isAuthenticated: true,
-    userId: 'test-user',
-    isLoading: false,
-  }),
+vi.mock('../app/contexts/AuthContext', () => ({
+  useAuth: mockUseAuth,
+  AuthProvider: ({ children }: { children: React.ReactNode }) => children,
 }));
 
 // Mock the useSessionMessages hook for MessageList
@@ -52,7 +49,8 @@ vi.mock('../app/hooks/useSessionMessages', () => {
           addUserMessage: vi.fn(),
           updateAiMessage: vi.fn(),
         };
-      } else if (sessionId === 'empty-session-streaming') {
+      }
+      if (sessionId === 'empty-session-streaming') {
         return {
           messages: [
             { type: 'user', text: 'Hello', timestamp: Date.now() },
@@ -68,7 +66,8 @@ vi.mock('../app/hooks/useSessionMessages', () => {
           addUserMessage: vi.fn(),
           updateAiMessage: vi.fn(),
         };
-      } else if (sessionId === 'test-session') {
+      }
+      if (sessionId === 'test-session') {
         return {
           messages: [
             { type: 'user', text: 'Hello', timestamp: Date.now() },
@@ -83,14 +82,13 @@ vi.mock('../app/hooks/useSessionMessages', () => {
           addUserMessage: vi.fn(),
           updateAiMessage: vi.fn(),
         };
-      } else {
-        return {
-          messages: [],
-          isLoading: false,
-          addUserMessage: vi.fn(),
-          updateAiMessage: vi.fn(),
-        };
       }
+      return {
+        messages: [],
+        isLoading: false,
+        addUserMessage: vi.fn(),
+        updateAiMessage: vi.fn(),
+      };
     },
   };
 });
@@ -99,24 +97,11 @@ vi.mock('../app/hooks/useSessionMessages', () => {
 const onOpenSidebar = vi.fn();
 
 // Wrapper providing controlled context value
-const createWrapper = (contextValue: Partial<AuthContextType> = {}) => {
-  const defaultContextValue: AuthContextType = {
-    token: null,
-    isAuthenticated: false,
-    isLoading: false,
-    userPayload: null,
-    checkAuthStatus: vi.fn(),
-  };
-  const valueToProvide = { ...defaultContextValue, ...contextValue };
-
-  return ({ children }: { children: ReactNode }) => (
-    <AuthContext.Provider value={valueToProvide}>{children}</AuthContext.Provider>
-  );
-};
 
 describe('Component Rendering', () => {
   beforeEach(() => {
     vi.resetAllMocks();
+    resetMockAuthState();
   });
 
   describe('ChatHeader', () => {
@@ -169,7 +154,15 @@ describe('Component Rendering', () => {
     const authenticatedState: Partial<AuthContextType> = {
       isAuthenticated: true,
       isLoading: false,
-      userPayload: { userId: 'test-user', exp: 9999, tenants: [], ledgers: [] },
+      userPayload: {
+        userId: 'test-user',
+        exp: 9999,
+        tenants: [],
+        ledgers: [],
+        iat: 1234567890,
+        iss: 'FP_CLOUD',
+        aud: 'PUBLIC',
+      },
     };
     const unauthenticatedState: Partial<AuthContextType> = {
       isAuthenticated: false,
@@ -179,25 +172,24 @@ describe('Component Rendering', () => {
 
     it('renders in hidden state', async () => {
       const props = { ...mockSessionSidebarProps, isVisible: false };
-      // Provide a default state (e.g., authenticated) for basic rendering
-      const wrapper = createWrapper(authenticatedState);
-      render(<SessionSidebar {...props} />, { wrapper });
+      setMockAuthState(authenticatedState);
+      render(<SessionSidebar {...props} />);
       const sidebarElement = await screen.findByTestId('session-sidebar');
       expect(sidebarElement).toHaveClass('-translate-x-full');
     });
 
     it('renders in visible state', async () => {
       const props = { ...mockSessionSidebarProps, isVisible: true };
-      const wrapper = createWrapper(authenticatedState);
-      render(<SessionSidebar {...props} />, { wrapper });
+      setMockAuthState(authenticatedState);
+      render(<SessionSidebar {...props} />);
       const sidebarElement = await screen.findByTestId('session-sidebar');
       expect(sidebarElement).not.toHaveClass('-translate-x-full');
     });
 
     it('shows navigation menu items when authenticated', async () => {
       const props = { ...mockSessionSidebarProps, isVisible: true };
-      const wrapper = createWrapper(authenticatedState);
-      render(<SessionSidebar {...props} />, { wrapper });
+      setMockAuthState(authenticatedState);
+      render(<SessionSidebar {...props} />);
       expect(await screen.findByText('Settings')).toBeInTheDocument();
       expect(screen.getByText('Home')).toBeInTheDocument();
       expect(screen.getByText('My Vibes')).toBeInTheDocument();
@@ -208,8 +200,8 @@ describe('Component Rendering', () => {
 
     it('shows Login button when not authenticated', async () => {
       const props = { ...mockSessionSidebarProps, isVisible: true };
-      const wrapper = createWrapper(unauthenticatedState); // Provide unauthenticated state
-      render(<SessionSidebar {...props} />, { wrapper });
+      setMockAuthState(unauthenticatedState);
+      render(<SessionSidebar {...props} />);
       expect(await screen.findByText('Login')).toBeInTheDocument();
       expect(screen.queryByText('Settings')).not.toBeInTheDocument();
       expect(screen.getByText('Logged Out')).toBeInTheDocument();
@@ -218,8 +210,8 @@ describe('Component Rendering', () => {
     it('has a close button that works', () => {
       const onCloseMock = vi.fn();
       const props = { ...mockSessionSidebarProps, isVisible: true, onClose: onCloseMock };
-      const wrapper = createWrapper(authenticatedState);
-      render(<SessionSidebar {...props} />, { wrapper });
+      setMockAuthState(authenticatedState);
+      render(<SessionSidebar {...props} />);
       fireEvent.click(screen.getByLabelText('Close sidebar'));
       expect(onCloseMock).toHaveBeenCalled();
     });

@@ -1,18 +1,9 @@
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import type { ReactNode } from 'react';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import type { AuthContextType } from '../app/contexts/AuthContext';
 import { AuthContext } from '../app/contexts/AuthContext';
 import Settings from '../app/routes/settings';
-import type { TokenPayload } from '../app/utils/auth';
-
-// Define the AuthContextType directly since it's not exported from the module
-interface AuthContextType {
-  token: string | null;
-  isAuthenticated: boolean;
-  isLoading: boolean;
-  userPayload: TokenPayload | null;
-  checkAuthStatus: () => Promise<void>;
-}
 
 // Create mock objects outside the mock function to access them in tests
 const mockMerge = vi.fn();
@@ -85,6 +76,7 @@ const createWrapper = (contextValue?: Partial<AuthContextType>) => {
     isLoading: false,
     userPayload: null,
     checkAuthStatus: vi.fn(),
+    processToken: vi.fn(),
   };
   const valueToProvide = { ...defaultContextValue, ...contextValue };
   return ({ children }: { children: ReactNode }) => (
@@ -105,12 +97,6 @@ describe('Settings Route', () => {
       iss: 'FP_CLOUD',
       aud: 'PUBLIC',
     },
-  };
-
-  const unauthenticatedState: Partial<AuthContextType> = {
-    isAuthenticated: false,
-    isLoading: false,
-    userPayload: null,
   };
 
   const mockDoc = { _id: 'user_settings', stylePrompt: '', userPrompt: '', model: '' };

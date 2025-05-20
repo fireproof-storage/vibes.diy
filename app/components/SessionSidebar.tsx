@@ -1,9 +1,9 @@
 import React, { memo, useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { useAuthPopup } from '../hooks/useAuthPopup';
 import type { SessionSidebarProps } from '../types/chat';
 import { trackAuthClick } from '../utils/analytics';
-import { useAuthPopup } from '../hooks/useAuthPopup';
 import { GearIcon } from './SessionSidebar/GearIcon';
 import { HomeIcon } from './SessionSidebar/HomeIcon';
 import { InfoIcon } from './SessionSidebar/InfoIcon';

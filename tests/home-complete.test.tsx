@@ -1,8 +1,9 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
-import React from 'react';
+import type React from 'react';
 import { MemoryRouter } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { AuthContext, type AuthContextType } from '../app/contexts/AuthContext';
+import type { AuthContextType } from '../app/contexts/AuthContext';
+import { AuthContext } from '../app/contexts/AuthContext';
 import * as useSimpleChatModule from '../app/hooks/useSimpleChat';
 import UnifiedSession from '../app/routes/home';
 import type { AiChatMessage, ChatMessage, Segment, UserChatMessage } from '../app/types/chat';
@@ -168,6 +169,7 @@ describe('Home Route in completed state', () => {
       aud: 'PUBLIC',
     },
     checkAuthStatus: vi.fn(),
+    processToken: vi.fn(),
   };
 
   beforeEach(() => {
@@ -204,7 +206,7 @@ describe('Home Route in completed state', () => {
         } as UserChatMessage,
         {
           type: 'ai',
-          text: '```javascript\n' + mockCode + '\n```\n\nExplanation of the code',
+          text: `javascript\n${mockCode}\n\n\nExplanation of the code`,
           segments: [
             { type: 'markdown', content: 'Explanation of the code' } as Segment,
             { type: 'code', content: mockCode } as Segment,
@@ -230,7 +232,7 @@ describe('Home Route in completed state', () => {
       title: 'React App',
       selectedResponseDoc: {
         type: 'ai',
-        text: '```javascript\n' + mockCode + '\n```\n\nExplanation of the code',
+        text: `javascript\n${mockCode}\n\n\nExplanation of the code`,
         segments: [
           { type: 'markdown', content: 'Explanation of the code' } as Segment,
           { type: 'code', content: mockCode } as Segment,
@@ -244,7 +246,15 @@ describe('Home Route in completed state', () => {
   it('displays the correct number of code lines in the preview', async () => {
     render(
       <MemoryRouter>
-        <AuthContext.Provider value={authenticatedState as AuthContextType}>
+        <AuthContext.Provider
+          value={
+            {
+              ...authenticatedState,
+              checkAuthStatus: vi.fn(),
+              processToken: vi.fn(),
+            } as AuthContextType
+          }
+        >
           <UnifiedSession />
         </AuthContext.Provider>
       </MemoryRouter>
@@ -258,7 +268,15 @@ describe('Home Route in completed state', () => {
   it('shows share button and handles sharing', async () => {
     render(
       <MemoryRouter>
-        <AuthContext.Provider value={authenticatedState as AuthContextType}>
+        <AuthContext.Provider
+          value={
+            {
+              ...authenticatedState,
+              checkAuthStatus: vi.fn(),
+              processToken: vi.fn(),
+            } as AuthContextType
+          }
+        >
           <UnifiedSession />
         </AuthContext.Provider>
       </MemoryRouter>
@@ -291,7 +309,15 @@ describe('Home Route in completed state', () => {
 
     render(
       <MemoryRouter>
-        <AuthContext.Provider value={authenticatedState as AuthContextType}>
+        <AuthContext.Provider
+          value={
+            {
+              ...authenticatedState,
+              checkAuthStatus: vi.fn(),
+              processToken: vi.fn(),
+            } as AuthContextType
+          }
+        >
           <UnifiedSession />
         </AuthContext.Provider>
       </MemoryRouter>
@@ -331,7 +357,15 @@ describe('Home Route in completed state', () => {
 
     render(
       <MemoryRouter>
-        <AuthContext.Provider value={authenticatedState as AuthContextType}>
+        <AuthContext.Provider
+          value={
+            {
+              ...authenticatedState,
+              checkAuthStatus: vi.fn(),
+              processToken: vi.fn(),
+            } as AuthContextType
+          }
+        >
           <UnifiedSession />
         </AuthContext.Provider>
       </MemoryRouter>
