@@ -13,15 +13,14 @@ interface VibesDIYLogoProps extends React.HTMLAttributes<HTMLDivElement> {
 }
 const names = Object.keys(dark);
 
-let _randomColor : ColorwayName | undefined;
+let _randomColor: ColorwayName | undefined;
 
-export const randomColorway = () : ColorwayName => {
-  if(!_randomColor) {
-    _randomColor = names[Math.floor(Date.now() / 10000) % names.length] as ColorwayName
+export const randomColorway = (): ColorwayName => {
+  if (!_randomColor) {
+    _randomColor = names[Math.floor(Date.now() / 10000) % names.length] as ColorwayName;
   }
   return _randomColor;
-}
-
+};
 
 // SVG-based logo using the imported SVG component
 const VibesDIYLogo: React.FC<VibesDIYLogoProps> = ({
