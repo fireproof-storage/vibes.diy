@@ -97,7 +97,7 @@ describe('SessionSidebar component', () => {
     expect(screen.queryByText('Get Credits')).toBeNull();
   });
 
-  it('should show Login button when not authenticated', () => {
+  it('should show Log in button when not authenticated', () => {
     // Mock useAuth to return unauthenticated state
     setMockAuthState({
       isAuthenticated: false,
@@ -117,12 +117,12 @@ describe('SessionSidebar component', () => {
     expect(sidebar).toBeDefined();
 
     // Check for Login text
-    expect(screen.queryAllByText('Login').length).toBeGreaterThan(0);
+    expect(screen.queryAllByText('Log in').length).toBeGreaterThan(0);
     // There should be no Settings text
     expect(screen.queryAllByText('Settings').length).toBe(0);
 
     // Get the login button and click it
-    const loginButton = screen.getByText('Login');
+    const loginButton = screen.getByText('Log in');
     fireEvent.click(loginButton);
 
     // Verify that initiateAuthFlow and trackAuthClick were called
