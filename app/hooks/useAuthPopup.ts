@@ -29,11 +29,11 @@ export function useAuthPopup() {
         if (token) {
           processToken(token);
         } else {
-          setPollError('Login timed out. Please try again.');
+          setPollError('Log in timed out. Please try again.');
         }
       } catch (err) {
         setIsPolling(false);
-        setPollError('An error occurred during login.');
+        setPollError('An error occurred during log in.');
       }
     } else {
       console.log('Authentication flow could not be initiated.');
