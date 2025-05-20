@@ -28,6 +28,7 @@ function SessionSidebar({ isVisible, onClose }: SessionSidebarProps) {
   // Use a simplified approach to detect dark mode based on the existing system
   const [isDarkMode, setIsDarkMode] = React.useState(false);
   const rando = isDarkMode ? dark[colorway] : light[colorway];
+  console.log("random color:", rando);
 
   // DUPE from VibesDIYLogo.tsx
   React.useEffect(() => {
@@ -90,7 +91,6 @@ function SessionSidebar({ isVisible, onClose }: SessionSidebarProps) {
   }, [isVisible, onClose]);
 
   // Conditionally render content but keep animation classes
-  console.log(needsLogin);
   return (
     <div
       ref={sidebarRef}
