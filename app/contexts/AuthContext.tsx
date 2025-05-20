@@ -10,7 +10,7 @@ import { type TokenPayload, verifyToken } from '../utils/auth';
 // interface DecodedToken { ... }
 
 // Update AuthContextType to hold the full payload
-interface AuthContextType {
+export interface AuthContextType {
   token: string | null;
   isAuthenticated: boolean;
   isLoading: boolean;

@@ -97,7 +97,6 @@ vi.mock('../app/hooks/useSessionMessages', () => {
 
 // Create mock functions we can control
 const onOpenSidebar = vi.fn();
-const onClose = vi.fn();
 
 // Wrapper providing controlled context value
 const createWrapper = (contextValue: Partial<AuthContextType> = {}) => {
