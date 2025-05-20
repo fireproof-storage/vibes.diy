@@ -174,69 +174,68 @@ function SessionSidebar({ isVisible, onClose }: SessionSidebarProps) {
         <div className="mt-auto">
           <nav className="flex-grow p-2">
             <ul className="space-y-1">
-              {
-                isLoading ? (
-                  // LOADING
-                  <li className="flex items-center rounded-md px-4 py-3 text-sm font-medium text-gray-400">
-                    <span className="animate-pulse">Loading...</span>
+              {isLoading ? (
+                // LOADING
+                <li className="flex items-center rounded-md px-4 py-3 text-sm font-medium text-gray-400">
+                  <span className="animate-pulse">Loading...</span>
+                </li>
+              ) : isAuthenticated ? null : isPolling ? (
+                <li>
+                  <div className="flex flex-col gap-1 px-4 py-3 text-sm font-medium">
+                    <span className="">Opening log in window...</span>
+                    <span className="font-small text-xs italic">
+                      Don't see it? Please check your browser for a blocked pop-up window
+                    </span>
+                  </div>
+                </li>
+              ) : (
+                <>
+                  <li>
+                    <div className="flex flex-col px-1 py-1 text-sm font-medium">
+                      {pollError && (
+                        <span className="font-small text-xs text-gray-400 italic">{pollError}</span>
+                      )}
+                    </div>
                   </li>
-                ) :
-                  isAuthenticated ?
-                    null :
-                    isPolling ? (
-                      <li>
-                        <div className="flex flex-col gap-1 px-4 py-3 text-sm font-medium">
-                          <span className="">Opening log in window...</span>
-                          <span className="italic text-xs font-small">Don't see it? Please check your browser for a blocked pop-up window</span>
-                        </div>
-                      </li>
-                    )
-                      :
-                      (
-                        <>
-                          <li>
-                            <div className="flex flex-col px-1 py-1 text-sm font-medium">
-                              {pollError && <span className="italic text-xs font-small text-gray-400">{pollError}</span>}
-                            </div>
-                          </li>
-                          <li>
-                            <button
-                              type="button"
-                              onClick={async () => {
-                                trackAuthClick({ label: 'Sign up' });
-                                await initiateLogin();
-                                setNeedsLogin(false);
-                                onClose();
-                              }}
-                              style={{
-                                backgroundColor: rando.diy,
-                              }}
-                              className={`flex w-full items-center rounded-md px-4 py-3 text-left text-sm font-bold transition-colors`}
-                            >
-                              <span
-                                style={{
-                                  color: rando.diyText
-                                }}
-                              >Sign up {needsLogin ? 'for credits' : ''}</span>
-                            </button>
-                          </li>
-                          <li>
-
-                            <button
-                              type="button"
-                              onClick={async () => {
-                                await initiateLogin();
-                                onClose();
-                              }}
-                              className="hover:bg-light-background-01 dark:hover:bg-dark-background-01 flex w-full items-center rounded-md px-4 py-3 text-left text-sm font-medium"
-                            >
-                              <span>{'Log in'}</span>
-                            </button>
-                          </li>
-                        </>
-                      )
-              }
-            </ul></nav>
+                  <li>
+                    <button
+                      type="button"
+                      onClick={async () => {
+                        trackAuthClick({ label: 'Sign up' });
+                        await initiateLogin();
+                        setNeedsLogin(false);
+                        onClose();
+                      }}
+                      style={{
+                        backgroundColor: rando.diy,
+                      }}
+                      className={`flex w-full items-center rounded-md px-4 py-3 text-left text-sm font-bold transition-colors`}
+                    >
+                      <span
+                        style={{
+                          color: rando.diyText,
+                        }}
+                      >
+                        Sign up {needsLogin ? 'for credits' : ''}
+                      </span>
+                    </button>
+                  </li>
+                  <li>
+                    <button
+                      type="button"
+                      onClick={async () => {
+                        await initiateLogin();
+                        onClose();
+                      }}
+                      className="hover:bg-light-background-01 dark:hover:bg-dark-background-01 flex w-full items-center rounded-md px-4 py-3 text-left text-sm font-medium"
+                    >
+                      <span>{'Log in'}</span>
+                    </button>
+                  </li>
+                </>
+              )}
+            </ul>
+          </nav>
         </div>
       </div>
     </div>
