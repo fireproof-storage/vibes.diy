@@ -1,4 +1,3 @@
-import { useEffect, useState } from 'react';
 import { dark, light } from './colorways';
 
 type ColorwayName = keyof typeof dark;

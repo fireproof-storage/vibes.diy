@@ -4,7 +4,6 @@ import { useAuth } from '../contexts/AuthContext';
 import type { SessionSidebarProps } from '../types/chat';
 import { trackAuthClick } from '../utils/analytics';
 import { useAuthPopup } from '../hooks/useAuthPopup';
-import { UserIcon } from './HeaderContent/SvgIcons';
 import { GearIcon } from './SessionSidebar/GearIcon';
 import { HomeIcon } from './SessionSidebar/HomeIcon';
 import { InfoIcon } from './SessionSidebar/InfoIcon';
@@ -17,10 +16,9 @@ import { dark, light } from './colorways';
  */
 function SessionSidebar({ isVisible, onClose }: SessionSidebarProps) {
   const sidebarRef = useRef<HTMLDivElement>(null);
-  const { isAuthenticated, isLoading, userPayload } = useAuth();
+  const { isAuthenticated, isLoading } = useAuth();
   const [needsLogin, setNeedsLogin] = useState(false);
-  let { isPolling, pollError, initiateLogin } = useAuthPopup();
-  // pollError = 'Log in timed out. Please try again.';
+  const { isPolling, pollError, initiateLogin } = useAuthPopup();
 
   const colorway = randomColorway();
   // Use a simplified approach to detect dark mode based on the existing system
@@ -176,73 +174,69 @@ function SessionSidebar({ isVisible, onClose }: SessionSidebarProps) {
         <div className="mt-auto">
           <nav className="flex-grow p-2">
             <ul className="space-y-1">
-              {isLoading ? (
-                // LOADING
-                <li className="flex items-center rounded-md px-4 py-3 text-sm font-medium text-gray-400">
-                  <span className="animate-pulse">Loading...</span>
-                </li>
-              ) : needsLogin || !isAuthenticated ? ( // remove me
-                // Sign Up
-                isPolling ? (
-                  <li>
-                    <div className="flex flex-col gap-1 px-4 py-3 text-sm font-medium">
-                      <span className="">Opening log in window...</span>
-                      <span className="font-small text-xs italic">
-                        Don't see it? Please check your browser for a blocked pop-up window
-                      </span>
-                    </div>
+              {
+                isLoading ? (
+                  // LOADING
+                  <li className="flex items-center rounded-md px-4 py-3 text-sm font-medium text-gray-400">
+                    <span className="animate-pulse">Loading...</span>
                   </li>
-                ) : (
-                  <>
-                    <li>
-                      <div className="flex flex-col px-1 py-1 text-sm font-medium">
-                        {pollError && (
-                          <span className="font-small text-xs text-gray-400 italic">
-                            {pollError}
-                          </span>
-                        )}
-                      </div>
-                    </li>
-                    <li>
-                      <button
-                        type="button"
-                        onClick={async () => {
-                          trackAuthClick({ label: 'Sign up' });
-                          await initiateLogin();
-                          setNeedsLogin(false);
-                          onClose();
-                        }}
-                        style={{
-                          backgroundColor: rando.diy,
-                        }}
-                        className={`flex w-full items-center rounded-md px-4 py-3 text-left text-sm font-bold transition-colors`}
-                      >
-                        <span
-                          style={{
-                            color: rando.diyText,
-                          }}
-                        >
-                          Sign up
-                        </span>
-                      </button>
-                    </li>
-                    <li>
-                      <button
-                        type="button"
-                        onClick={async () => {
-                          await initiateLogin();
-                          onClose();
-                        }}
-                        className="hover:bg-light-background-01 dark:hover:bg-dark-background-01 flex w-full items-center rounded-md px-4 py-3 text-left text-sm font-medium"
-                      >
-                        <span>{'Log in'}</span>
-                      </button>
-                    </li>
-                  </>
-                )
-              ) : null}
-            </ul>
-          </nav>
+                ) :
+                  isAuthenticated ?
+                    null :
+                    isPolling ? (
+                      <li>
+                        <div className="flex flex-col gap-1 px-4 py-3 text-sm font-medium">
+                          <span className="">Opening log in window...</span>
+                          <span className="italic text-xs font-small">Don't see it? Please check your browser for a blocked pop-up window</span>
+                        </div>
+                      </li>
+                    )
+                      :
+                      (
+                        <>
+                          <li>
+                            <div className="flex flex-col px-1 py-1 text-sm font-medium">
+                              {pollError && <span className="italic text-xs font-small text-gray-400">{pollError}</span>}
+                            </div>
+                          </li>
+                          <li>
+                            <button
+                              type="button"
+                              onClick={async () => {
+                                trackAuthClick({ label: 'Sign up' });
+                                await initiateLogin();
+                                setNeedsLogin(false);
+                                onClose();
+                              }}
+                              style={{
+                                backgroundColor: rando.diy,
+                              }}
+                              className={`flex w-full items-center rounded-md px-4 py-3 text-left text-sm font-bold transition-colors`}
+                            >
+                              <span
+                                style={{
+                                  color: rando.diyText
+                                }}
+                              >Sign up {needsLogin ? 'for credits' : ''}</span>
+                            </button>
+                          </li>
+                          <li>
+
+                            <button
+                              type="button"
+                              onClick={async () => {
+                                await initiateLogin();
+                                onClose();
+                              }}
+                              className="hover:bg-light-background-01 dark:hover:bg-dark-background-01 flex w-full items-center rounded-md px-4 py-3 text-left text-sm font-medium"
+                            >
+                              <span>{'Log in'}</span>
+                            </button>
+                          </li>
+                        </>
+                      )
+              }
+            </ul></nav>
         </div>
       </div>
     </div>
