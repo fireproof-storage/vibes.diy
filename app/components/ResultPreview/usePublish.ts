@@ -1,7 +1,8 @@
-import { useState, useEffect } from 'react';
-import { publishApp } from '../../utils/publishUtils';
-import { trackPublishClick } from '../../utils/analytics';
+import { useEffect, useState } from 'react';
+import { useAuth } from '~/contexts/AuthContext';
 import type { ChatMessageDocument } from '../../types/chat';
+import { trackPublishClick } from '../../utils/analytics';
+import { publishApp } from '../../utils/publishUtils';
 
 interface UsePublishProps {
   sessionId: string | undefined;
@@ -10,6 +11,7 @@ interface UsePublishProps {
   messages: ChatMessageDocument[];
   updatePublishedUrl: (url: string) => Promise<void>;
   publishedUrl?: string;
+  userId?: string;
 }
 
 export const usePublish = ({
@@ -24,6 +26,8 @@ export const usePublish = ({
   const [urlCopied, setUrlCopied] = useState(false);
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
   const [publishedAppUrl, setPublishedAppUrl] = useState<string | undefined>(initialPublishedUrl);
+
+  const { userPayload } = useAuth();
 
   // Update publishedAppUrl when the initial URL changes
   useEffect(() => {
@@ -62,6 +66,7 @@ export const usePublish = ({
         title,
         prompt,
         updatePublishedUrl,
+        userId: userPayload?.userId,
       });
 
       if (appUrl) {

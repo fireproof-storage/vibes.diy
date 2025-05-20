@@ -9,7 +9,6 @@ interface DIYLogoProps {
 }
 
 export default function DIYLogo({ colorway, isDarkMode = true }: DIYLogoProps) {
-
   const colors = isDarkMode ? dark[colorway] : light[colorway];
 
   // Define CSS variables using a style object
