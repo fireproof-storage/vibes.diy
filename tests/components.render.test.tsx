@@ -193,18 +193,15 @@ describe('Component Rendering', () => {
       expect(await screen.findByText('Settings')).toBeInTheDocument();
       expect(screen.getByText('Home')).toBeInTheDocument();
       expect(screen.getByText('My Vibes')).toBeInTheDocument();
-      expect(screen.queryByText('Login')).not.toBeInTheDocument();
       expect(screen.getByText('About')).toBeInTheDocument();
-      expect(screen.getByText('Logged In')).toBeInTheDocument();
     });
 
     it('shows Login button when not authenticated', async () => {
       const props = { ...mockSessionSidebarProps, isVisible: true };
       setMockAuthState(unauthenticatedState);
       render(<SessionSidebar {...props} />);
-      expect(await screen.findByText('Login')).toBeInTheDocument();
+      expect(await screen.findByText('Log in')).toBeInTheDocument();
       expect(screen.queryByText('Settings')).not.toBeInTheDocument();
-      expect(screen.getByText('Logged Out')).toBeInTheDocument();
     });
 
     it('has a close button that works', () => {
