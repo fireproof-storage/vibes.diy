@@ -28,7 +28,6 @@ function SessionSidebar({ isVisible, onClose }: SessionSidebarProps) {
   // Use a simplified approach to detect dark mode based on the existing system
   const [isDarkMode, setIsDarkMode] = React.useState(false);
   const rando = isDarkMode ? dark[colorway] : light[colorway];
-  console.log("random color:", rando);
 
   // DUPE from VibesDIYLogo.tsx
   React.useEffect(() => {
@@ -95,8 +94,7 @@ function SessionSidebar({ isVisible, onClose }: SessionSidebarProps) {
     <div
       ref={sidebarRef}
       data-testid="session-sidebar"
-      className={`bg-light-background-00 dark:bg-dark-background-00 fixed top-0 left-0 z-10 h-full shadow-lg transition-all duration-300 ${
-        isVisible ? 'w-64 translate-x-0' : 'w-64 -translate-x-full'
+      className={`bg-light-background-00 dark:bg-dark-background-00 fixed top-0 left-0 z-10 h-full shadow-lg transition-all duration-300 ${isVisible ? 'w-64 translate-x-0' : 'w-64 -translate-x-full'
         }`}
     >
       <div className="flex h-full flex-col overflow-auto">
@@ -222,9 +220,13 @@ function SessionSidebar({ isVisible, onClose }: SessionSidebarProps) {
                               style={{
                                 backgroundColor: rando.diy,
                               }}
-                              className={`flex w-full items-center rounded-md bg-[${rando.diy}] px-4 py-3 text-left text-sm font-bold text-[${rando.diyText}] transition-colors`}
+                              className={`flex w-full items-center rounded-md px-4 py-3 text-left text-sm font-bold transition-colors`}
                             >
-                              <span>Sign up</span>
+                              <span
+                                style={{
+                                  color: rando.diyText
+                                }}
+                              >Sign up</span>
                             </button>
                           </li>
                           <li>
