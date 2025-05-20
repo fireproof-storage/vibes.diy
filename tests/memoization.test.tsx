@@ -1,7 +1,6 @@
 import { act, render, screen } from '@testing-library/react';
-import React, { ReactNode, useContext } from 'react';
+import React, { useContext } from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { AuthProvider } from '../app/contexts/AuthContext';
 
 // Create a controlled context for testing
 const TestContext = React.createContext<{ isStreaming: () => boolean }>({
@@ -21,7 +20,6 @@ vi.mock('react-markdown', () => ({
 // Now import components after mocks
 import ChatHeader from '../app/components/ChatHeaderContent';
 import MessageList from '../app/components/MessageList';
-import SessionSidebar from '../app/components/SessionSidebar';
 import type { ChatMessageDocument } from '../app/types/chat';
 
 // Mock component that tracks renders
@@ -54,11 +52,6 @@ function TestComponent({ renderCount }: { renderCount: React.MutableRefObject<nu
   const { isStreaming } = useTestContext();
   return <div data-testid="test-component">{isStreaming() ? 'Generating' : 'Idle'}</div>;
 }
-
-// Already skipped, but add wrapper for consistency if uncommented
-const createWrapper = () => {
-  return ({ children }: { children: ReactNode }) => <AuthProvider>{children}</AuthProvider>;
-};
 
 describe('Component Memoization', () => {
   describe('ChatHeader Memoization', () => {
@@ -134,12 +127,10 @@ describe('Component Memoization', () => {
 
   describe('SessionSidebar Memoization', () => {
     it.skip('does not re-render when props are unchanged', async () => {
-      const TrackedSidebar = withRenderTracking(SessionSidebar, 'SessionSidebar');
-      const wrapper = createWrapper(); // Use wrapper
-      const stableOnClose = vi.fn();
-      const props = { ...mockSessionSidebarProps, isVisible: true, onClose: stableOnClose };
-      const { rerender } = render(<TrackedSidebar {...props} />, { wrapper }); // Pass wrapper
-      // ... assertions ...
+      // TODO: Define or import withRenderTracking and mockSessionSidebarProps if needed for this test.
+      // const TrackedSidebar = withRenderTracking(SessionSidebar, 'SessionSidebar');
+      // const props = { ...mockSessionSidebarProps, isVisible: true, onClose: stableOnClose };
+      // render(<TrackedSidebar {...props} />, { wrapper }); // Pass wrapper
     });
   });
 

@@ -53,6 +53,7 @@ const createWrapper = () => {
     isLoading: false,
     userPayload: mockUserPayload,
     checkAuthStatus: vi.fn(),
+    processToken: vi.fn(),
   };
 
   return ({ children }: { children: ReactNode }) => (

@@ -508,11 +508,12 @@ vi.mock('../app/contexts/AuthContext', () => {
       aud: 'PUBLIC',
     },
     checkAuthStatus: vi.fn(),
+    processToken: vi.fn(),
   };
 
   return {
     // Simple identity function for AuthProvider
-    AuthProvider: ({ children }) => children,
+    AuthProvider: ({ children }: { children: React.ReactNode }) => children,
     // Always return our mock context
     useAuth: () => mockAuthContext,
   };
@@ -520,13 +521,10 @@ vi.mock('../app/contexts/AuthContext', () => {
 
 // Simple wrapper function - passes children through
 const createWrapper = () => {
-  return ({ children }) => children;
+  return ({ children }: { children: React.ReactNode }) => children;
 };
 
 describe('useSimpleChat', () => {
-  const testJwt =
-    'eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0=.eyJ1c2VySWQiOiJ0ZXN0LXVzZXItaWQiLCJleHAiOjI1MzQwMjMwMDc5OX0=.';
-
   beforeEach(() => {
     // Mock createKeyViaEdgeFunction to ensure it returns the correct structure
     vi.mocked(createKeyViaEdgeFunction).mockImplementation(async () => {

@@ -1,7 +1,7 @@
 import { render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { AuthContext, type AuthContextType } from '../app/contexts/AuthContext';
+import { AuthContext } from '../app/contexts/AuthContext';
 import UnifiedSession from '../app/routes/home';
 
 // Mock the CookieConsentContext
@@ -106,13 +106,13 @@ vi.mock('../app/components/AppLayout', () => {
 vi.mock('../app/components/ChatInterface', () => {
   return {
     __esModule: true,
-    default: (props: any) => {
+    default: (props: unknown) => {
       return <div data-testid="chat-interface">Chat Interface</div>;
     },
-    getChatInputComponent: (props: any) => {
+    getChatInputComponent: (props: unknown) => {
       return <div data-testid="chat-input">Chat Input</div>;
     },
-    getSuggestionsComponent: (props: any) => {
+    getSuggestionsComponent: (props: unknown) => {
       return <div data-testid="suggestions">Suggestions</div>;
     },
   };
@@ -122,27 +122,13 @@ vi.mock('../app/components/ChatInterface', () => {
 vi.mock('../app/components/ResultPreview/ResultPreview', () => {
   return {
     __esModule: true,
-    default: (props: any) => {
+    default: (props: unknown) => {
       return <div data-testid="result-preview">Result Preview</div>;
     },
   };
 });
 
 describe('Home Route', () => {
-  const authenticatedState: Partial<AuthContextType> = {
-    isAuthenticated: true,
-    isLoading: false,
-    userPayload: {
-      userId: 'test',
-      exp: 9999999999,
-      tenants: [],
-      ledgers: [],
-      iat: 1234567890,
-      iss: 'FP_CLOUD',
-      aud: 'PUBLIC',
-    },
-  };
-
   beforeEach(() => {
     vi.clearAllMocks();
   });
@@ -165,6 +151,7 @@ describe('Home Route', () => {
               aud: 'PUBLIC',
             },
             checkAuthStatus: vi.fn(),
+            processToken: vi.fn(),
           }}
         >
           <UnifiedSession />

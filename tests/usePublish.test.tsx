@@ -1,13 +1,13 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { renderHook, act, waitFor } from '@testing-library/react';
+import { act, renderHook, waitFor } from '@testing-library/react';
 import type { ReactNode } from 'react';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { usePublish } from '../app/components/ResultPreview/usePublish';
-import { publishApp } from '../app/utils/publishUtils';
-import { trackPublishClick } from '../app/utils/analytics';
-import type { ChatMessageDocument, UserChatMessage, AiChatMessage } from '../app/types/chat';
 import type { AuthContextType } from '../app/contexts/AuthContext';
 import { AuthContext } from '../app/contexts/AuthContext';
+import type { AiChatMessage, ChatMessageDocument, UserChatMessage } from '../app/types/chat';
+import { trackPublishClick } from '../app/utils/analytics';
 import type { TokenPayload } from '../app/utils/auth';
+import { publishApp } from '../app/utils/publishUtils';
 
 // Mock dependencies
 vi.mock('../app/utils/publishUtils', () => ({
