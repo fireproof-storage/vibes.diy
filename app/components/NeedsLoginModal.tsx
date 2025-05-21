@@ -89,7 +89,7 @@ export function NeedsLoginModal() {
               id="login-modal-title"
               className="mb-3 text-center text-lg font-bold text-orange-500"
             >
-              Login for Credits
+              Log in for Credits
             </h3>
             <p className="text-light-secondary dark:text-dark-secondary text-sm leading-relaxed">
               Log in or create an account to continue generating creative apps with Vibes DIY.
