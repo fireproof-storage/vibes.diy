@@ -11,6 +11,16 @@ interface VibesDIYLogoProps extends React.HTMLAttributes<HTMLDivElement> {
   overflow?: 'visible' | 'hidden' | 'auto' | 'scroll';
   colorway?: ColorwayName;
 }
+const names = Object.keys(dark);
+
+let _randomColor: ColorwayName | undefined;
+
+export const randomColorway = (): ColorwayName => {
+  if (!_randomColor) {
+    _randomColor = names[Math.floor(Date.now() / 10000) % names.length] as ColorwayName;
+  }
+  return _randomColor;
+};
 
 // SVG-based logo using the imported SVG component
 const VibesDIYLogo: React.FC<VibesDIYLogoProps> = ({
@@ -72,7 +82,7 @@ const VibesDIYLogo: React.FC<VibesDIYLogoProps> = ({
           minHeight: 0,
         }}
       >
-        <DIYLogo isDarkMode={isDarkMode} colorway={colorway} />
+        <DIYLogo isDarkMode={isDarkMode} colorway={colorway || randomColorway()} />
       </div>
     </div>
   );

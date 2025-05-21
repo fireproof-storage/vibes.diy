@@ -1,7 +1,7 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router';
-import { useCookieConsent } from '../context/CookieConsentContext';
 import { encodeTitle } from '~/components/SessionSidebar/utils';
+import { useAuth } from '~/contexts/AuthContext';
 import AppLayout from '../components/AppLayout';
 import ChatHeaderContent from '../components/ChatHeaderContent';
 import ChatInput from '../components/ChatInput';
@@ -10,6 +10,7 @@ import QuickSuggestions from '../components/QuickSuggestions';
 import ResultPreview from '../components/ResultPreview/ResultPreview';
 import ResultPreviewHeaderContent from '../components/ResultPreview/ResultPreviewHeaderContent';
 import SessionSidebar from '../components/SessionSidebar';
+import { useCookieConsent } from '../contexts/CookieConsentContext';
 import { useSimpleChat } from '../hooks/useSimpleChat';
 import { isMobileViewport } from '../utils/ViewState';
 // import { useSession } from '../hooks/useSession';
@@ -25,7 +26,10 @@ export default function UnifiedSession() {
   const { sessionId: urlSessionId } = useParams<{ sessionId: string }>();
   const navigate = useNavigate();
   const location = useLocation();
+  const { isAuthenticated } = useAuth();
   const chatState = useSimpleChat(urlSessionId);
+  chatState.needsLogin = !isAuthenticated;
+
   const { setMessageHasBeenSent } = useCookieConsent();
 
   // Track message submission events
@@ -149,11 +153,15 @@ export default function UnifiedSession() {
     (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
       if (e.key === 'Enter' && !e.shiftKey && !chatState.isStreaming) {
         e.preventDefault();
+        if (chatState.needsLogin) {
+          window.dispatchEvent(new Event('needsLoginTriggered'));
+          return;
+        }
         chatState.sendMessage(chatState.input);
         setMessageHasBeenSent(true);
       }
     },
-    [chatState.isStreaming, chatState.sendMessage, setMessageHasBeenSent]
+    [chatState.isStreaming, chatState.sendMessage, setMessageHasBeenSent, chatState.needsLogin]
   );
 
   // Handle suggestion selection directly
@@ -298,6 +306,9 @@ export default function UnifiedSession() {
               chatState.sendMessage(chatState.input);
               setMessageHasBeenSent(true);
               setHasSubmittedMessage(true);
+              if (chatState.needsLogin) {
+                window.dispatchEvent(new Event('needsLoginTriggered'));
+              }
             }}
             disabled={chatState.isStreaming}
             inputRef={chatState.inputRef}

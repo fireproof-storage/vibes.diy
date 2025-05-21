@@ -44,10 +44,10 @@ export function LoginMenu({ isOpen, onLogin, onClose, buttonRef }: LoginMenuProp
         <div className="py-1" role="menu" aria-orientation="vertical" aria-labelledby="login-menu">
           <div className="mb-6">
             <h3 className="mb-3 text-center text-lg font-bold text-orange-500">
-              Login for Credits
+              Log in for Credits
             </h3>
             <p className="text-light-secondary dark:text-dark-secondary text-sm leading-relaxed">
-              Login or create an account to continue generating creative apps with Vibes DIY.
+              Log in or create an account to continue generating creative apps with Vibes DIY.
             </p>
           </div>
           <button
@@ -59,7 +59,7 @@ export function LoginMenu({ isOpen, onLogin, onClose, buttonRef }: LoginMenuProp
             className="accent-01 block w-full rounded-md bg-orange-500 px-5 py-3 text-center text-sm font-medium text-white transition-colors duration-150 ease-in-out hover:bg-orange-600 dark:bg-orange-500 dark:hover:bg-orange-600"
             role="menuitem"
           >
-            <span className="w-full text-center font-bold">Login</span>
+            <span className="w-full text-center font-bold">Log in</span>
           </button>
         </div>
       </div>

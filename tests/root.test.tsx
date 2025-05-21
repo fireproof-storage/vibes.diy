@@ -1,5 +1,6 @@
 import { render, screen } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { mockUseAuth, resetMockAuthState } from '../__mocks__/useAuth';
 import { ErrorBoundary, Layout } from '../app/root';
 
 // Mock React Router components to avoid HTML validation errors
@@ -19,10 +20,20 @@ vi.mock('react-router', () => ({
 
 // Mock the cookie consent library
 vi.mock('react-cookie-consent', () => ({
-  default: ({ children, buttonText, onAccept }: any) => (
+  default: ({
+    children,
+    buttonText,
+    onAccept,
+  }: {
+    children: React.ReactNode;
+    buttonText: string;
+    onAccept: () => void;
+  }) => (
     <div data-testid="cookie-consent">
       {children}
-      <button onClick={onAccept}>{buttonText}</button>
+      <button type="button" onClick={onAccept}>
+        {buttonText}
+      </button>
     </div>
   ),
   getCookieConsentValue: vi.fn().mockReturnValue(null),
@@ -34,7 +45,7 @@ vi.mock('react-cookie-consent', () => ({
 }));
 
 // Mock the CookieConsentContext
-vi.mock('../app/context/CookieConsentContext', () => ({
+vi.mock('../app/contexts/CookieConsentContext', () => ({
   useCookieConsent: () => ({
     messageHasBeenSent: false,
     setMessageHasBeenSent: vi.fn(),
@@ -74,18 +85,15 @@ vi.mock('../app/hooks/useSimpleChat', () => ({
 }));
 
 // Mock the useAuth hook
-vi.mock('../app/hooks/useAuth', () => ({
-  useAuth: () => ({
-    userId: 'mock-user-id',
-    isAuthenticated: true,
-    login: vi.fn(),
-    logout: vi.fn(),
-  }),
+vi.mock('../app/contexts/AuthContext', () => ({
+  useAuth: mockUseAuth,
+  AuthProvider: ({ children }: { children: React.ReactNode }) => children,
 }));
 
 describe('Root Component', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    resetMockAuthState();
 
     // Mock window.matchMedia
     Object.defineProperty(window, 'matchMedia', {
