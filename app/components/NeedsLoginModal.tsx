@@ -92,7 +92,7 @@ export function NeedsLoginModal() {
               Login for Credits
             </h3>
             <p className="text-light-secondary dark:text-dark-secondary text-sm leading-relaxed">
-              Login or create an account to continue generating creative apps with Vibes DIY.
+              Log in or create an account to continue generating creative apps with Vibes DIY.
             </p>
           </div>
           <button

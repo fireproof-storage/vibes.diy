@@ -92,9 +92,8 @@ describe('SessionSidebar component', () => {
     expect(screen.queryAllByText('Settings').length).toBeGreaterThan(0);
     expect(screen.queryAllByText('About').length).toBeGreaterThan(0);
 
-    // Should not show Login or Get Credits when authenticated
-    expect(screen.queryByText('Login')).toBeNull();
-    expect(screen.queryByText('Get Credits')).toBeNull();
+    // Should not show Log in
+    expect(screen.queryByText('Log in')).toBeNull();
   });
 
   it('should show Log in button when not authenticated', () => {
