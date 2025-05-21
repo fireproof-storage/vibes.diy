@@ -111,7 +111,7 @@ const IframeContent: React.FC<IframeContentProps> = ({
             // Skip transforming imports that are already handled in the importmap
             // Only skip the core libraries we have in our importmap
             if (
-              ['react', 'react-dom', 'react-dom/client', 'use-fireproof', 'call-ai'].includes(
+              ['react', 'react-dom', 'react-dom/client', 'use-fireproof', 'call-ai', 'use-vibes'].includes(
                 importPath
               )
             ) {
