@@ -303,13 +303,12 @@ export default function UnifiedSession() {
             onChange={handleInputChange}
             onKeyDown={handleKeyDown}
             onSend={() => {
-              if (chatState.needsLogin) {
-                window.dispatchEvent(new Event('needsLoginTriggered'));
-                return;
-              }
               chatState.sendMessage(chatState.input);
               setMessageHasBeenSent(true);
               setHasSubmittedMessage(true);
+              if (chatState.needsLogin) {
+                window.dispatchEvent(new Event('needsLoginTriggered'));
+              }
             }}
             disabled={chatState.isStreaming}
             inputRef={chatState.inputRef}
