@@ -1,26 +1,26 @@
-import { useState, useRef, useCallback, useEffect, useMemo } from 'react';
-import { trackChatInputClick } from '../utils/analytics';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { ChatMessageDocument, ChatState } from '../types/chat';
 import type { UserSettings } from '../types/settings';
+import { trackChatInputClick } from '../utils/analytics';
 import { parseContent } from '../utils/segmentParser';
 
-import { useRuntimeErrors, type RuntimeError, type ErrorCategory } from './useRuntimeErrors';
-import { useSession } from './useSession';
 import { useFireproof } from 'use-fireproof';
-import { generateTitle } from '../utils/titleGenerator';
+import { FIREPROOF_CHAT_HISTORY } from '../config/env';
+import { getCredits } from '../config/provisioning';
 import { streamAI } from '../utils/streamHandler';
+import { generateTitle } from '../utils/titleGenerator';
 import { useApiKey } from './useApiKey';
 import { useAuth } from './useAuth';
-import { getCredits } from '../config/provisioning';
-import { FIREPROOF_CHAT_HISTORY } from '../config/env';
+import { type ErrorCategory, type RuntimeError, useRuntimeErrors } from './useRuntimeErrors';
+import { useSession } from './useSession';
 
+import { useMessageSelection } from './useMessageSelection';
 // Import our custom hooks
 import { useSystemPromptManager } from './useSystemPromptManager';
-import { useMessageSelection } from './useMessageSelection';
 import { useThrottledUpdates } from './useThrottledUpdates';
 
 // Constants
-const CODING_MODEL = 'anthropic/claude-3.7-sonnet';
+const CODING_MODEL = 'anthropic/claude-sonnet-4';
 const TITLE_MODEL = 'meta-llama/llama-3.1-8b-instruct';
 
 // Global request tracking to prevent duplicate credit check calls

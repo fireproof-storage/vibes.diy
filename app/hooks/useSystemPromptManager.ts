@@ -1,9 +1,9 @@
-import { useState, useCallback, useEffect } from 'react';
-import type { UserSettings } from '../types/settings';
+import { useCallback, useEffect, useState } from 'react';
 import { makeBaseSystemPrompt } from '../prompts';
+import type { UserSettings } from '../types/settings';
 
 // Model constant used for system prompts
-const CODING_MODEL = 'anthropic/claude-opus-4';
+const CODING_MODEL = 'anthropic/claude-sonnet-4';
 
 /**
  * Hook for managing system prompts based on settings

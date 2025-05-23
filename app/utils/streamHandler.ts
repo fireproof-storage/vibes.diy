@@ -2,12 +2,12 @@
  * Utility functions for working with AI models via call-ai library
  */
 
-import { callAI, type Message } from 'call-ai';
+import { type Message, callAI } from 'call-ai';
 
 /**
  * Stream AI responses with accumulated content callback
  *
- * @param model - The model to use (e.g. 'anthropic/claude-opus-4')
+ * @param model - The model to use (e.g. 'anthropic/claude-sonnet-4')
  * @param systemPrompt - The system prompt
  * @param messageHistory - Array of previous messages
  * @param userMessage - The current user message

@@ -1,7 +1,12 @@
 [
   {
+    "id": "anthropic/claude-sonnet-4",
+    "name": "Claude Sonnet 4 (Default)",
+    "description": "Advanced reasoning model from Anthropic"
+  },
+  {
     "id": "anthropic/claude-opus-4",
-    "name": "Claude Opus 4  (Default)",
+    "name": "Claude Opus 4",
     "description": "Advanced coding model from Anthropic"
   },
   {
