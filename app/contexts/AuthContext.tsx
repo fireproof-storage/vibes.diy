@@ -43,7 +43,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       if (payload) {
         // Valid token and payload
         setToken(newToken);
-        setUserPayload(payload); // Store the full payload
+        setUserPayload(payload.payload); // Store the full payload
       } else {
         // Token is invalid or expired
         localStorage.removeItem('auth_token');

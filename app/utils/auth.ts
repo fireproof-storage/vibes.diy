@@ -104,48 +104,6 @@ function decodePublicKeyJWK(encodedString: string): JWK {
 }
 
 /**
- * Get the authentication token without automatically redirecting
- */
-export async function getAuthToken(): Promise<string | null> {
-  // Check URL for token parameter
-  const urlParams = new URLSearchParams(window.location.search);
-  const token = urlParams.get('fpToken');
-
-  if (token) {
-    // Store the token in localStorage for future use
-    localStorage.setItem('auth_token', token);
-
-    // Clean up the URL by removing the token parameter
-    urlParams.delete('fpToken');
-    const newUrl =
-      window.location.pathname + (urlParams.toString() ? `?${urlParams.toString()}` : '');
-    window.history.replaceState({}, document.title, newUrl);
-
-    // Reset redirect prevention flag since we got a valid token
-    sessionStorage.removeItem('auth_redirect_prevention');
-
-    return token;
-  }
-
-  // Check if we have a token in localStorage
-  const storedToken = localStorage.getItem('auth_token');
-  if (storedToken) {
-    // Verify the stored token is still valid
-    const isValid = await verifyToken(storedToken);
-    if (isValid) {
-      return storedToken;
-    }
-
-    // Token is invalid or expired, remove it
-    localStorage.removeItem('auth_token');
-  }
-
-  // At this point, we have no valid token but we DON'T auto-redirect
-  // This allows the component to decide what to do
-  return null;
-}
-
-/**
  * Initiates the authentication flow by generating a resultId and returning the connect URL.
  * No redirect is performed. The resultId is stored in sessionStorage for later polling.
  * Returns an object with { connectUrl, resultId }
@@ -219,9 +177,10 @@ export async function pollForAuthToken(
 /**
  * Verify the token using jose library and return payload if valid.
  * This provides proper cryptographic verification of JWT tokens.
- * Returns the decoded payload if the token is valid and not expired, otherwise null.
+ * If the token is about to expire, it will attempt to extend it automatically.
+ * Returns an object with the decoded payload and potentially extended token if valid, otherwise null.
  */
-export async function verifyToken(token: string): Promise<TokenPayload | null> {
+export async function verifyToken(token: string): Promise<{ payload: TokenPayload } | null> {
   try {
     // Base58btc-encoded public key (replace with actual key)
     const encodedPublicKey = import.meta.env.VITE_CLOUD_SESSION_TOKEN_PUBLIC;
@@ -245,16 +204,81 @@ export async function verifyToken(token: string): Promise<TokenPayload | null> {
     }
 
     // Check if token is expired
-    if (payload.exp < Date.now()) {
+    if (payload.exp * 1000 < Date.now()) {
       // Convert to milliseconds
       console.error('Token has expired');
       return null; // Token expired
     }
 
-    // Cast to unknown first for type safety
-    return payload as unknown as TokenPayload; // Verification successful, return payload
+    const tokenPayload = payload as unknown as TokenPayload;
+
+    // Check if token is about to expire and extend it if needed
+    if (isTokenAboutToExpire(tokenPayload)) {
+      console.log('Token is about to expire, attempting to extend...');
+      const extendedToken = await extendToken(token);
+      if (extendedToken) {
+        // Verify the extended token to get its payload
+        const extendedResult = await verifyToken(extendedToken);
+        if (extendedResult) {
+          return extendedResult;
+        }
+        // If extended token verification failed, fall back to original
+        console.warn('Extended token verification failed, using original token');
+      } else {
+        console.warn('Token extension failed, using current token');
+      }
+    }
+
+    // Return the payload
+    return { payload: tokenPayload };
   } catch (error) {
     console.error('Error verifying or decoding token:', error);
     return null; // Verification failed
   }
+}
+
+/**
+ * Extend an existing token if it's about to expire
+ * @param {string} currentToken - The current token to extend
+ * @returns {Promise<string | null>} - The new extended token or null if extension failed
+ */
+export async function extendToken(currentToken: string): Promise<string | null> {
+  try {
+    const endpoint =
+      `${import.meta.env.VITE_CONNECT_API_URL}` || 'https://dev.connect.fireproof.direct/api';
+
+    const res = await fetch(endpoint, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ token: currentToken, type: 'reqExtendToken' }),
+    });
+
+    if (!res.ok) throw new Error('Network error during token extension');
+
+    const data = await res.json();
+    if (data && typeof data.token === 'string' && data.token.length > 0) {
+      // Store the new token in localStorage
+      localStorage.setItem('auth_token', data.token);
+      console.log('Token extended successfully');
+      return data.token;
+    }
+
+    return null;
+  } catch (error) {
+    console.error('Error extending token:', error);
+    return null;
+  }
+}
+
+/**
+ * Check if a token is about to expire (within 5 minutes)
+ * @param {TokenPayload} payload - The decoded token payload
+ * @returns {boolean} - True if token expires within 5 minutes
+ */
+function isTokenAboutToExpire(payload: TokenPayload): boolean {
+  const expiryInMs = 60 * 60 * 1000; // 1 hour
+  const expirationTime = payload.exp * 1000; // Convert to milliseconds
+  const currentTime = Date.now();
+
+  return expirationTime - currentTime <= expiryInMs;
 }
