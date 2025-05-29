@@ -131,7 +131,7 @@ export function initiateAuthFlow(): { connectUrl: string; resultId: string } | n
   const callbackUrl = new URL('/auth/callback', window.location.origin).toString();
 
   // Compose the connect URL (no redirect, just return)
-  const connectUrl = `${import.meta.env.VITE_CONNECT_URL || 'https://connect.fireproof.direct/token'}?back_url=${encodeURIComponent(callbackUrl)}&result_id=${resultId}&countdownSecs=0&skipChooser`;
+  const connectUrl = `${import.meta.env.VITE_CONNECT_URL || 'https://connect.fireproof.direct/token'}?back_url=${encodeURIComponent(callbackUrl)}&result_id=${resultId}&countdownSecs=0&skipChooser=1&fromApp=vibesdiy`;
   return { connectUrl, resultId };
 }
 
