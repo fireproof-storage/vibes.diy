@@ -1,5 +1,4 @@
-import { useCallback, useEffect, useState, useRef } from 'react';
-import { fireproof, SimpleTokenStrategy, toCloud } from 'use-fireproof';
+import { useCallback, useEffect, useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import type { LocalVibe } from '../utils/vibeUtils';
 import { deleteVibeDatabase, listLocalVibeIds, toggleVibeFavorite } from '../utils/vibeUtils';
@@ -59,64 +58,7 @@ export function useVibes() {
     loadVibes();
   }, [loadVibes]);
 
-  // Attach Fireproof cloud to the user's vibespace database ONCE per userId/token
-  const cloudAttachmentRef = useRef<any>(null);
-  // TODO: Replace this with your actual token acquisition logic (from auth/session)
-  const yourToken = null; // e.g., useAuthToken() or context value
-  useEffect(() => {
-    if (!userId || !yourToken) return;
-    let isMounted = true;
-    const attachCloud = async () => {
-      try {
-        const db = fireproof(`vibesync-${userId}`);
-        const tokenStrategy = new SimpleTokenStrategy(yourToken);
-        const cloudConfig = toCloud({
-          urls: { base: "fpcloud://fireproof-v2-cloud-dev.jchris.workers.dev" },
-          // tokenApiURI: "http://localhost:3000/api",
-          dashboardURI: "http://localhost:3000/fp/cloud/api/token",
-          strategy: tokenStrategy
-        });
-        const attachment = await db.attach(cloudConfig);
-        if (isMounted) {
-          cloudAttachmentRef.current = attachment;
-          console.log('Cloud attachment status:', attachment);
-        }
-      } catch (err) {
-        console.error('Failed to attach Fireproof cloud', err);
-      }
-    };
-    attachCloud();
-    return () => { isMounted = false; };
-  }, [userId, yourToken]);
-
-  // Sync local vibe IDs to the user's vibespace database
-  useEffect(() => {
-    if (!userId || isLoading || vibes.length === 0) return;
-    const sync = async () => {
-      try {
-        const db = fireproof(`vibesync-${userId}`);
-        for (const vibe of vibes) {
-          const docId = `sync-${vibe.id}`;
-          try {
-            await db.get(docId);
-          } catch {
-            await db.put({
-              _id: docId,
-              created: Date.now(),
-              userId,
-              vibeId: vibe.id,
-            });
-          }
-        }
-        db.allDocs().then((result) => {
-          console.log('synced vibes', result);
-        });
-      } catch (err) {
-        console.error('Failed to save vibe IDs', err);
-      }
-    };
-    sync();
-  }, [userId, isLoading, vibes]);
+  // Cloud attachment logic has been moved to the VibeSyncer component
 
   // Function to toggle favorite status on a vibe
   const toggleFavorite = useCallback(
