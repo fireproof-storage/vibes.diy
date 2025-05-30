@@ -11,9 +11,7 @@ export default function RecentVibes() {
 
   return (
     <div className="px-4 py-4">
-      <h3 className="text-accent-01 mb-2 text-center text-sm font-medium">
-        Recent Vibes
-      </h3>
+      <h3 className="text-accent-01 mb-2 text-center text-sm font-medium">Recent Vibes</h3>
       <div className="grid grid-cols-1 gap-4">
         {recent.map((vibe) => (
           <VibeCardData key={vibe.id} vibeId={vibe.id} />

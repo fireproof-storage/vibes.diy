@@ -232,8 +232,7 @@ export default function UnifiedSession() {
     }
   }, [chatState.sessionId, chatState.title, navigate, location.pathname, setActiveView]);
 
-  const isPreChat =
-    chatState.docs.length === 0 && !urlSessionId && !hasSubmittedMessage;
+  const isPreChat = chatState.docs.length === 0 && !urlSessionId && !hasSubmittedMessage;
 
   const fullWidthChat = isPreChat;
 
@@ -314,9 +313,7 @@ export default function UnifiedSession() {
           />
         }
         suggestionsComponent={
-          isPreChat ? (
-            <QuickSuggestions onSelectSuggestion={handleSelectSuggestion} />
-          ) : undefined
+          isPreChat ? <QuickSuggestions onSelectSuggestion={handleSelectSuggestion} /> : undefined
         }
         mobilePreviewShown={mobilePreviewShown}
       />

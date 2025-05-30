@@ -45,11 +45,9 @@ export default function AppLayout({
       >
         <div className="flex h-full flex-col">
           {isPreChat && heroComponent ? (
-            <header className="flex-shrink-0 transition-all duration-300">
-              {heroComponent}
-            </header>
+            <header className="flex-shrink-0 transition-all duration-300">{heroComponent}</header>
           ) : (
-            <header className="flex-shrink-0 h-[4rem]">{headerLeft}</header>
+            <header className="h-[4rem] flex-shrink-0">{headerLeft}</header>
           )}
 
           <main className="flex-grow overflow-auto">{chatPanel}</main>
@@ -58,7 +56,9 @@ export default function AppLayout({
 
           {isPreChat && suggestionsComponent && (
             <div className={`w-full ${fullWidthChat ? 'md:flex md:justify-center' : ''}`}>
-              <div className={`${fullWidthChat ? 'md:w-4/5' : 'w-full'}`}>{suggestionsComponent}</div>
+              <div className={`${fullWidthChat ? 'md:w-4/5' : 'w-full'}`}>
+                {suggestionsComponent}
+              </div>
             </div>
           )}
 
