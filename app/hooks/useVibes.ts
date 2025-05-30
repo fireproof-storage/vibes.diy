@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
+import { fireproof } from 'use-fireproof';
 import { useAuth } from '../contexts/AuthContext';
 import type { LocalVibe } from '../utils/vibeUtils';
 import { deleteVibeDatabase, listLocalVibeIds, toggleVibeFavorite } from '../utils/vibeUtils';
@@ -57,6 +58,34 @@ export function useVibes() {
   useEffect(() => {
     loadVibes();
   }, [loadVibes]);
+
+  // Sync local vibe IDs to the user's vibespace database
+  useEffect(() => {
+    if (!userId || isLoading || vibes.length === 0) return;
+
+    const sync = async () => {
+      try {
+        const db = fireproof(`vibespace-${userId}`);
+        for (const vibe of vibes) {
+          const docId = `fp.sync-${vibe.id}`;
+          try {
+            await db.get(docId);
+          } catch {
+            await db.put({
+              _id: docId,
+              created: Date.now(),
+              userId,
+              vibeId: vibe.id,
+            });
+          }
+        }
+      } catch (err) {
+        console.error('Failed to sync vibe IDs', err);
+      }
+    };
+
+    sync();
+  }, [userId, isLoading, vibes]);
 
   // Function to toggle favorite status on a vibe
   const toggleFavorite = useCallback(
