@@ -2,9 +2,11 @@
  * Authentication utilities for handling token-based auth
  */
 import { importJWK, jwtVerify } from 'jose';
+import toast from 'react-hot-toast';
 
 // Export the interface
 export interface TokenPayload {
+  email?: string; // Assuming email might be added or needed later
   userId: string;
   tenants: Array<{
     id: string;
@@ -21,114 +23,167 @@ export interface TokenPayload {
   exp: number;
 }
 
+// Base58 alphabet for base58btc
+const BASE58BTC_ALPHABET = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz';
+
+// Define JWK type
+interface JWK {
+  kty: string;
+  crv?: string;
+  x?: string;
+  y?: string;
+  n?: string;
+  e?: string;
+  ext?: boolean;
+  key_ops?: string[];
+}
+
 /**
- * Get the authentication token without automatically redirecting
+ * Decode a base58btc-encoded string to bytes
+ * @param {string} str - The base58btc-encoded string
+ * @returns {Uint8Array} - The decoded bytes
  */
-export async function getAuthToken(): Promise<string | null> {
-  // Check URL for token parameter
-  const urlParams = new URLSearchParams(window.location.search);
-  const token = urlParams.get('fpToken');
-
-  if (token) {
-    // Store the token in localStorage for future use
-    localStorage.setItem('auth_token', token);
-
-    // Clean up the URL by removing the token parameter
-    urlParams.delete('fpToken');
-    const newUrl =
-      window.location.pathname + (urlParams.toString() ? `?${urlParams.toString()}` : '');
-    window.history.replaceState({}, document.title, newUrl);
-
-    // Reset redirect prevention flag since we got a valid token
-    sessionStorage.removeItem('auth_redirect_prevention');
-
-    return token;
+function base58btcDecode(str: string): Uint8Array {
+  // Remove the 'z' prefix for base58btc if present
+  let input = str;
+  if (input.startsWith('z')) {
+    input = input.slice(1);
   }
 
-  // Check if we have a token in localStorage
-  const storedToken = localStorage.getItem('auth_token');
-  if (storedToken) {
-    // Verify the stored token is still valid
-    const isValid = await verifyToken(storedToken);
-    if (isValid) {
-      return storedToken;
+  let num = BigInt(0);
+  for (let i = 0; i < input.length; i++) {
+    const char = input[i];
+    const value = BASE58BTC_ALPHABET.indexOf(char);
+    if (value === -1) throw new Error(`Invalid base58 character: ${char}`);
+    num = num * BigInt(58) + BigInt(value);
+  }
+
+  // Convert to bytes
+  const bytes = [];
+  while (num > 0) {
+    bytes.unshift(Number(num % BigInt(256)));
+    num = num / BigInt(256);
+  }
+
+  // Account for leading zeros in the input
+  for (let i = 0; i < input.length; i++) {
+    if (input[i] === '1') {
+      bytes.unshift(0);
+    } else {
+      break;
     }
-
-    // Token is invalid or expired, remove it
-    localStorage.removeItem('auth_token');
   }
 
-  // At this point, we have no valid token but we DON'T auto-redirect
-  // This allows the component to decide what to do
-  return null;
+  return new Uint8Array(bytes);
 }
 
 /**
- * Initiate the authentication flow
- * This should be called when the user clicks the Connect button
+ * Decode a base58btc-encoded JWK string to a public key JWK
+ * @param {string} encodedString - The base58btc-encoded JWK string
+ * @returns {JWK} - The decoded JWK public key
  */
-export function initiateAuthFlow(): void {
-  // Don't redirect if we're already on the auth callback page
-  if (window.location.pathname.includes('/auth/callback')) {
-    console.log('Already on auth callback page');
-    return;
-  }
+function decodePublicKeyJWK(encodedString: string): JWK {
+  // Decode the base58btc string
+  const decoded = base58btcDecode(encodedString);
 
-  // Check for redirect prevention flag to avoid redirect loops
-  if (sessionStorage.getItem('auth_redirect_prevention')) {
-    return;
-  }
-
-  // Save the current URL to redirect back after authentication
-  const returnUrl = window.location.pathname + window.location.search;
-  sessionStorage.setItem('auth_return_url', returnUrl);
-
-  // Set redirect prevention flag before redirecting
-  sessionStorage.setItem('auth_redirect_prevention', 'true');
-
-  // Calculate the callback URL (absolute URL to our auth/callback route)
-  const callbackUrl = new URL('/auth/callback', window.location.origin).toString();
-
-  // Redirect to get a token, using our auth/callback route as the back_url
-  const authUrl = `https://connect.fireproof.direct/fp/cloud/api/token?back_url=${encodeURIComponent(callbackUrl)}`;
-  window.location.href = authUrl;
-}
-
-/**
- * Parse and validate the JWT token
- */
-export function parseToken(token: string): TokenPayload | null {
+  // Try to parse as JSON
   try {
-    // The token is in JWT format, but we'll just parse the payload part
-    const payload = JSON.parse(atob(token.split('.')[1]));
-    return payload as TokenPayload;
+    const rawText = new TextDecoder().decode(decoded);
+    return JSON.parse(rawText);
   } catch (error) {
-    console.error('Error parsing token:', error);
-    return null;
-  }
-}
+    // If parsing fails, log the error and return a default JWK
+    console.error('Failed to parse JWK from base58btc string:', error);
 
-/**
- * Verify the token using jose library
- * This provides proper cryptographic verification of JWT tokens
- */
-export async function verifyToken(token: string): Promise<boolean> {
-  try {
-    // In a development environment, return true to simplify testing
-    // This should be replaced with proper verification in production
-    if (import.meta.env.DEV || import.meta.env.VITE_SKIP_TOKEN_VERIFICATION) {
-      return true;
-    }
-
-    // JWK public key for ES256
-    const publicKey = {
+    return {
       kty: 'EC',
       crv: 'P-256',
-      x: 'zeWndr5LEoaySgKSo2aZniYqXf5WxWq3WDGYvT4K4gg',
-      y: 'qX2wWPXAc4TXhRFrQAGUgCwkAYHCTZNn8Yqz62DzFzs',
-      ext: true,
-      key_ops: ['verify'],
+      x: '',
+      y: '',
     };
+  }
+}
+
+/**
+ * Initiates the authentication flow by generating a resultId and returning the connect URL.
+ * No redirect is performed. The resultId is stored in sessionStorage for later polling.
+ * Returns an object with { connectUrl, resultId }
+ */
+export function initiateAuthFlow(): { connectUrl: string; resultId: string } | null {
+  // Don't initiate if already on the callback page
+  if (window.location.pathname.includes('/auth/callback')) {
+    console.log('Already on auth callback page');
+    return null;
+  }
+
+  // Generate a random resultId (base58btc-like, 10 chars)
+  const BASE58BTC_ALPHABET = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz';
+  function randomResultId(length = 10) {
+    let res = 'z';
+    for (let i = 0; i < length; i++) {
+      res += BASE58BTC_ALPHABET[Math.floor(Math.random() * BASE58BTC_ALPHABET.length)];
+    }
+    return res;
+  }
+  const resultId = randomResultId();
+  sessionStorage.setItem('auth_result_id', resultId);
+
+  // Compose the connect URL (no redirect, just return)
+  const connectUrl = `${import.meta.env.VITE_CONNECT_URL || 'https://connect.fireproof.direct/token'}?result_id=${resultId}&countdownSecs=0&skipChooser=1&fromApp=vibesdiy`;
+  return { connectUrl, resultId };
+}
+
+/**
+ * Polls the Fireproof Connect API for a token using the resultId.
+ * Resolves with the token string when found, or null if timed out.
+ * @param {string} resultId
+ * @param {number} intervalMs
+ * @param {number} timeoutMs
+ */
+export async function pollForAuthToken(
+  resultId: string,
+  intervalMs = 1500,
+  timeoutMs = 30000
+): Promise<string | null> {
+  const endpoint =
+    `${import.meta.env.VITE_CONNECT_API_URL}` || 'https://dev.connect.fireproof.direct/api';
+  const start = Date.now();
+  while (Date.now() - start < timeoutMs) {
+    console.log(Date.now() - start);
+    try {
+      const res = await fetch(endpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ resultId, type: 'reqTokenByResultId' }),
+      });
+      if (!res.ok) throw new Error('Network error');
+      const data = await res.json();
+      if (data && typeof data.token === 'string' && data.token.length > 0) {
+        // Store the token in localStorage for future use
+        localStorage.setItem('auth_token', data.token);
+        toast.success('Logged in successfully!');
+        return data.token;
+      }
+    } catch (err) {
+      console.error('Polling error:', err);
+    }
+    await new Promise((r) => setTimeout(r, intervalMs));
+  }
+  return null; // Timed out
+}
+
+/**
+ * Verify the token using jose library and return payload if valid.
+ * This provides proper cryptographic verification of JWT tokens.
+ * If the token is about to expire, it will attempt to extend it automatically.
+ * Returns an object with the decoded payload and potentially extended token if valid, otherwise null.
+ */
+export async function verifyToken(token: string): Promise<{ payload: TokenPayload } | null> {
+  try {
+    // Base58btc-encoded public key (replace with actual key)
+    const encodedPublicKey = import.meta.env.VITE_CLOUD_SESSION_TOKEN_PUBLIC;
+
+    // Decode the base58btc-encoded JWK
+    const publicKey = decodePublicKeyJWK(encodedPublicKey);
 
     // Import the JWK
     const key = await importJWK(publicKey, 'ES256');
@@ -140,43 +195,87 @@ export async function verifyToken(token: string): Promise<boolean> {
     });
 
     // If we got here, verification succeeded
-    // Additional checks can be performed on the payload if needed
     if (!payload.exp || typeof payload.exp !== 'number') {
       console.error('Token missing expiration');
-      return false;
+      return null; // Missing expiration
     }
 
     // Check if token is expired
     if (payload.exp * 1000 < Date.now()) {
       // Convert to milliseconds
       console.error('Token has expired');
-      return false;
+      return null; // Token expired
     }
 
-    return true;
+    const tokenPayload = payload as unknown as TokenPayload;
+
+    // Check if token is about to expire and extend it if needed
+    if (isTokenAboutToExpire(tokenPayload)) {
+      console.log('Token is about to expire, attempting to extend...');
+      const extendedToken = await extendToken(token);
+      if (extendedToken) {
+        // Verify the extended token to get its payload
+        const extendedResult = await verifyToken(extendedToken);
+        if (extendedResult) {
+          return extendedResult;
+        }
+        // If extended token verification failed, fall back to original
+        console.warn('Extended token verification failed, using original token');
+      } else {
+        console.warn('Token extension failed, using current token');
+      }
+    }
+
+    // Return the payload
+    return { payload: tokenPayload };
   } catch (error) {
-    console.error('Error verifying token:', error);
-    return false;
+    console.error('Error verifying or decoding token:', error);
+    return null; // Verification failed
   }
 }
 
 /**
- * Check if the user is authenticated
+ * Extend an existing token if it's about to expire
+ * @param {string} currentToken - The current token to extend
+ * @returns {Promise<string | null>} - The new extended token or null if extension failed
  */
-export async function isAuthenticated(): Promise<boolean> {
-  const token = await getAuthToken();
-  if (!token) return false;
+export async function extendToken(currentToken: string): Promise<string | null> {
+  try {
+    const endpoint =
+      `${import.meta.env.VITE_CONNECT_API_URL}` || 'https://dev.connect.fireproof.direct/api';
 
-  // Verify the token using jose library
-  const isValid = await verifyToken(token);
-  if (!isValid) return false;
+    const res = await fetch(endpoint, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ token: currentToken, type: 'reqExtendToken' }),
+    });
 
-  const payload = parseToken(token);
-  if (!payload) return false;
+    if (!res.ok) throw new Error('Network error during token extension');
 
-  // Additional check for token expiration
-  const now = Date.now() / 1000; // Convert to seconds to match JWT exp
-  if (payload.exp < now) return false;
+    const data = await res.json();
+    if (data && typeof data.token === 'string' && data.token.length > 0) {
+      // Store the new token in localStorage
+      localStorage.setItem('auth_token', data.token);
+      console.log('Token extended successfully');
+      return data.token;
+    }
 
-  return true;
+    return null;
+  } catch (error) {
+    console.error('Error extending token:', error);
+    return null;
+  }
+}
+
+/**
+ * Check if a token is about to expire (within 5 minutes)
+ * @param {TokenPayload} payload - The decoded token payload
+ * @returns {boolean} - True if token expires within 5 minutes
+ */
+function isTokenAboutToExpire(payload: TokenPayload): boolean {
+  const expiryInMs = 60 * 60 * 1000; // 1 hour
+  const expirationTime = payload.exp * 1000; // Convert to milliseconds
+  const currentTime = Date.now();
+
+  return expirationTime - currentTime <= expiryInMs;
 }

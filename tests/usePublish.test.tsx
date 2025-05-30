@@ -1,9 +1,13 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { renderHook, act, waitFor } from '@testing-library/react';
+import { act, renderHook, waitFor } from '@testing-library/react';
+import type { ReactNode } from 'react';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { usePublish } from '../app/components/ResultPreview/usePublish';
-import { publishApp } from '../app/utils/publishUtils';
+import type { AuthContextType } from '../app/contexts/AuthContext';
+import { AuthContext } from '../app/contexts/AuthContext';
+import type { AiChatMessage, ChatMessageDocument, UserChatMessage } from '../app/types/chat';
 import { trackPublishClick } from '../app/utils/analytics';
-import type { ChatMessageDocument, UserChatMessage, AiChatMessage } from '../app/types/chat';
+import type { TokenPayload } from '../app/utils/auth';
+import { publishApp } from '../app/utils/publishUtils';
 
 // Mock dependencies
 vi.mock('../app/utils/publishUtils', () => ({
@@ -21,6 +25,32 @@ Object.defineProperty(navigator, 'clipboard', {
   },
   writable: true,
 });
+
+// Create wrapper with AuthProvider
+const createWrapper = () => {
+  const mockUserPayload: TokenPayload = {
+    userId: 'test-user-id',
+    exp: 9999999999,
+    tenants: [],
+    ledgers: [],
+    iat: 1234567890,
+    iss: 'FP_CLOUD',
+    aud: 'PUBLIC',
+  };
+
+  const authValue: AuthContextType = {
+    token: 'test-token',
+    isAuthenticated: true,
+    isLoading: false,
+    userPayload: mockUserPayload,
+    checkAuthStatus: vi.fn().mockImplementation(() => Promise.resolve()),
+    processToken: vi.fn().mockImplementation(() => Promise.resolve()),
+  };
+
+  return ({ children }: { children: ReactNode }) => (
+    <AuthContext.Provider value={authValue}>{children}</AuthContext.Provider>
+  );
+};
 
 describe('usePublish Hook', () => {
   const mockSessionId = 'test-session-id';
@@ -46,20 +76,23 @@ describe('usePublish Hook', () => {
 
   beforeEach(() => {
     vi.resetAllMocks();
-
     // Default implementation for publishApp
     (publishApp as any).mockResolvedValue('https://test-app.vibecode.garden');
   });
 
   it('initializes with correct default values', () => {
-    const { result } = renderHook(() =>
-      usePublish({
-        sessionId: mockSessionId,
-        code: mockCode,
-        title: mockTitle,
-        messages: mockMessages,
-        updatePublishedUrl: mockUpdatePublishedUrl,
-      })
+    const { result } = renderHook(
+      () =>
+        usePublish({
+          sessionId: mockSessionId,
+          code: mockCode,
+          title: mockTitle,
+          messages: mockMessages,
+          updatePublishedUrl: mockUpdatePublishedUrl,
+        }),
+      {
+        wrapper: createWrapper(),
+      }
     );
 
     expect(result.current.isPublishing).toBe(false);
@@ -73,29 +106,37 @@ describe('usePublish Hook', () => {
   it('initializes with provided publishedUrl', () => {
     const initialUrl = 'https://initial-app.vibecode.garden';
 
-    const { result } = renderHook(() =>
-      usePublish({
-        sessionId: mockSessionId,
-        code: mockCode,
-        title: mockTitle,
-        messages: mockMessages,
-        updatePublishedUrl: mockUpdatePublishedUrl,
-        publishedUrl: initialUrl,
-      })
+    const { result } = renderHook(
+      () =>
+        usePublish({
+          sessionId: mockSessionId,
+          code: mockCode,
+          title: mockTitle,
+          messages: mockMessages,
+          updatePublishedUrl: mockUpdatePublishedUrl,
+          publishedUrl: initialUrl,
+        }),
+      {
+        wrapper: createWrapper(),
+      }
     );
 
     expect(result.current.publishedAppUrl).toBe(initialUrl);
   });
 
   it('toggles the share modal', () => {
-    const { result } = renderHook(() =>
-      usePublish({
-        sessionId: mockSessionId,
-        code: mockCode,
-        title: mockTitle,
-        messages: mockMessages,
-        updatePublishedUrl: mockUpdatePublishedUrl,
-      })
+    const { result } = renderHook(
+      () =>
+        usePublish({
+          sessionId: mockSessionId,
+          code: mockCode,
+          title: mockTitle,
+          messages: mockMessages,
+          updatePublishedUrl: mockUpdatePublishedUrl,
+        }),
+      {
+        wrapper: createWrapper(),
+      }
     );
 
     // Initial state should be closed
@@ -118,14 +159,18 @@ describe('usePublish Hook', () => {
     const mockAppUrl = 'https://published-app.vibecode.garden';
     (publishApp as any).mockResolvedValue(mockAppUrl);
 
-    const { result } = renderHook(() =>
-      usePublish({
-        sessionId: mockSessionId,
-        code: mockCode,
-        title: mockTitle,
-        messages: mockMessages,
-        updatePublishedUrl: mockUpdatePublishedUrl,
-      })
+    const { result } = renderHook(
+      () =>
+        usePublish({
+          sessionId: mockSessionId,
+          code: mockCode,
+          title: mockTitle,
+          messages: mockMessages,
+          updatePublishedUrl: mockUpdatePublishedUrl,
+        }),
+      {
+        wrapper: createWrapper(),
+      }
     );
 
     // Call handlePublish
@@ -140,6 +185,7 @@ describe('usePublish Hook', () => {
       title: mockTitle,
       prompt: 'Create a test app', // First user message
       updatePublishedUrl: mockUpdatePublishedUrl,
+      userId: 'test-user-id',
     });
 
     // Verify state updates
@@ -156,7 +202,7 @@ describe('usePublish Hook', () => {
         expect(result.current.urlCopied).toBe(false);
       },
       { timeout: 4000 }
-    ); // Increased timeout since we're waiting for 3 seconds
+    );
   });
 
   it('handles failure to publish gracefully', async () => {
@@ -165,14 +211,18 @@ describe('usePublish Hook', () => {
 
     const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
 
-    const { result } = renderHook(() =>
-      usePublish({
-        sessionId: mockSessionId,
-        code: mockCode,
-        title: mockTitle,
-        messages: mockMessages,
-        updatePublishedUrl: mockUpdatePublishedUrl,
-      })
+    const { result } = renderHook(
+      () =>
+        usePublish({
+          sessionId: mockSessionId,
+          code: mockCode,
+          title: mockTitle,
+          messages: mockMessages,
+          updatePublishedUrl: mockUpdatePublishedUrl,
+        }),
+      {
+        wrapper: createWrapper(),
+      }
     );
 
     // Call handlePublish
@@ -215,14 +265,18 @@ describe('usePublish Hook', () => {
       } as AiChatMessage,
     ];
 
-    const { result } = renderHook(() =>
-      usePublish({
-        sessionId: mockSessionId,
-        code: mockCode,
-        title: mockTitle,
-        messages: specialMessages,
-        updatePublishedUrl: mockUpdatePublishedUrl,
-      })
+    const { result } = renderHook(
+      () =>
+        usePublish({
+          sessionId: mockSessionId,
+          code: mockCode,
+          title: mockTitle,
+          messages: specialMessages,
+          updatePublishedUrl: mockUpdatePublishedUrl,
+        }),
+      {
+        wrapper: createWrapper(),
+      }
     );
 
     // Call handlePublish
@@ -239,14 +293,18 @@ describe('usePublish Hook', () => {
   });
 
   it('does nothing when no messages to publish', async () => {
-    const { result } = renderHook(() =>
-      usePublish({
-        sessionId: mockSessionId,
-        code: mockCode,
-        title: mockTitle,
-        messages: [] as ChatMessageDocument[],
-        updatePublishedUrl: mockUpdatePublishedUrl,
-      })
+    const { result } = renderHook(
+      () =>
+        usePublish({
+          sessionId: mockSessionId,
+          code: mockCode,
+          title: mockTitle,
+          messages: [] as ChatMessageDocument[],
+          updatePublishedUrl: mockUpdatePublishedUrl,
+        }),
+      {
+        wrapper: createWrapper(),
+      }
     );
 
     // Call handlePublish

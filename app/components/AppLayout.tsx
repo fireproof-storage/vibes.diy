@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 import LightUpYourData from './ResultPreview/LightUpYourData';
+import { Toaster } from 'react-hot-toast';
 
 interface AppLayoutProps {
   chatPanel: ReactNode;
@@ -26,6 +27,9 @@ export default function AppLayout({
 }: AppLayoutProps) {
   return (
     <div className="relative flex h-dvh flex-col md:flex-row md:overflow-hidden">
+      <div>
+        <Toaster />
+      </div>
       {/* Background component that covers the entire viewport */}
       <div className="absolute inset-0 z-0 h-full w-full overflow-hidden">
         <LightUpYourData />
