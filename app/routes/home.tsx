@@ -7,6 +7,8 @@ import ChatHeaderContent from '../components/ChatHeaderContent';
 import ChatInput from '../components/ChatInput';
 import ChatInterface from '../components/ChatInterface';
 import QuickSuggestions from '../components/QuickSuggestions';
+import RecentVibes from '../components/RecentVibes';
+import WelcomeScreen from '../components/WelcomeScreen';
 import ResultPreview from '../components/ResultPreview/ResultPreview';
 import ResultPreviewHeaderContent from '../components/ResultPreview/ResultPreviewHeaderContent';
 import SessionSidebar from '../components/SessionSidebar';
@@ -230,14 +232,21 @@ export default function UnifiedSession() {
     }
   }, [chatState.sessionId, chatState.title, navigate, location.pathname, setActiveView]);
 
-  // Switch to 2-column view immediately when a message is submitted
-  const shouldUseFullWidthChat =
+  const isPreChat =
     chatState.docs.length === 0 && !urlSessionId && !hasSubmittedMessage;
+
+  const fullWidthChat = isPreChat;
+
+  const heroComponent = isPreChat ? <WelcomeScreen /> : null;
+  const recentProjectsComponent = isPreChat ? <RecentVibes /> : null;
 
   return (
     <>
       <AppLayout
-        fullWidthChat={shouldUseFullWidthChat}
+        fullWidthChat={fullWidthChat}
+        heroComponent={heroComponent}
+        recentProjectsComponent={recentProjectsComponent}
+        isPreChat={isPreChat}
         headerLeft={
           <ChatHeaderContent
             remixOf={chatState.vibeDoc?.remixOf}
@@ -305,7 +314,7 @@ export default function UnifiedSession() {
           />
         }
         suggestionsComponent={
-          chatState.docs.length === 0 ? (
+          isPreChat ? (
             <QuickSuggestions onSelectSuggestion={handleSelectSuggestion} />
           ) : undefined
         }

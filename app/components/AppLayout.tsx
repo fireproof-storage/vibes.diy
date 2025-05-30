@@ -11,6 +11,9 @@ interface AppLayoutProps {
   mobilePreviewShown?: boolean;
   appInfo?: ReactNode;
   fullWidthChat?: boolean;
+  heroComponent?: ReactNode;
+  recentProjectsComponent?: ReactNode;
+  isPreChat?: boolean;
 }
 
 export default function AppLayout({
@@ -23,6 +26,9 @@ export default function AppLayout({
   mobilePreviewShown = false,
   appInfo,
   fullWidthChat = false,
+  heroComponent,
+  recentProjectsComponent,
+  isPreChat = false,
 }: AppLayoutProps) {
   return (
     <div className="relative flex h-dvh flex-col md:flex-row md:overflow-hidden">
@@ -31,30 +37,36 @@ export default function AppLayout({
         <LightUpYourData />
       </div>
 
-      {/* Content with relative positioning to appear above the background */}
+      {/* Chat column */}
       <div
         className={`flex w-full flex-col ${fullWidthChat ? 'md:w-full' : 'md:w-1/3'} ${
           mobilePreviewShown ? 'hidden md:flex md:h-full' : 'h-full'
         } relative z-10 transition-all duration-300 ease-in-out`}
       >
-        <div className="flex h-[4rem] items-center p-2">{headerLeft}</div>
+        <div className="flex h-full flex-col">
+          {isPreChat && heroComponent ? (
+            <header className="flex-shrink-0 transition-all duration-300">
+              {heroComponent}
+            </header>
+          ) : (
+            <header className="flex-shrink-0 h-[4rem]">{headerLeft}</header>
+          )}
 
-        <div className="flex-grow overflow-auto">{chatPanel}</div>
+          <main className="flex-grow overflow-auto">{chatPanel}</main>
 
-        {suggestionsComponent && (
-          <div className={`w-full ${fullWidthChat ? 'md:flex md:justify-center' : ''}`}>
-            <div className={`${fullWidthChat ? 'md:w-4/5' : 'w-full'}`}>{suggestionsComponent}</div>
-          </div>
-        )}
+          <footer className="flex-shrink-0">{chatInput}</footer>
 
-        <div
-          className={`w-full ${fullWidthChat ? 'md:flex md:justify-center md:pb-[20vh]' : 'pb-0'} transition-all duration-300 ease-in-out`}
-        >
-          <div
-            className={`${fullWidthChat ? 'md:w-4/5' : 'w-full'} transition-all duration-300 ease-in-out`}
-          >
-            {chatInput}
-          </div>
+          {isPreChat && suggestionsComponent && (
+            <div className={`w-full ${fullWidthChat ? 'md:flex md:justify-center' : ''}`}>
+              <div className={`${fullWidthChat ? 'md:w-4/5' : 'w-full'}`}>{suggestionsComponent}</div>
+            </div>
+          )}
+
+          {isPreChat && recentProjectsComponent && (
+            <aside className="flex-shrink-0 transition-all duration-300">
+              {recentProjectsComponent}
+            </aside>
+          )}
         </div>
       </div>
 
