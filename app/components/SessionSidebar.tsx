@@ -3,7 +3,6 @@ import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useAuthPopup } from '../hooks/useAuthPopup';
 import type { SessionSidebarProps } from '../types/chat';
-import { trackAuthClick } from '../utils/analytics';
 import { GearIcon } from './SessionSidebar/GearIcon';
 import { HomeIcon } from './SessionSidebar/HomeIcon';
 import { InfoIcon } from './SessionSidebar/InfoIcon';
@@ -201,7 +200,6 @@ function SessionSidebar({ isVisible, onClose }: SessionSidebarProps) {
                     <button
                       type="button"
                       onClick={async () => {
-                        trackAuthClick({ label: 'Sign up' });
                         await initiateLogin();
                         setNeedsLogin(false);
                         onClose();
@@ -216,20 +214,8 @@ function SessionSidebar({ isVisible, onClose }: SessionSidebarProps) {
                           color: rando.diyText,
                         }}
                       >
-                        Sign up {needsLogin ? 'for credits' : ''}
+                        Log in {needsLogin ? 'for credits' : ''}
                       </span>
-                    </button>
-                  </li>
-                  <li>
-                    <button
-                      type="button"
-                      onClick={async () => {
-                        await initiateLogin();
-                        onClose();
-                      }}
-                      className="hover:bg-light-background-01 dark:hover:bg-dark-background-01 flex w-full items-center rounded-md px-4 py-3 text-left text-sm font-medium"
-                    >
-                      <span>{'Log in'}</span>
                     </button>
                   </li>
                 </>
