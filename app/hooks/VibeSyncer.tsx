@@ -1,11 +1,19 @@
-import { useFireproof } from 'use-fireproof';
+import { useFireproof, toCloud } from 'use-fireproof';
 import { useSync } from './useSync';
 
 export function VibeSyncer({ userId, vibes }: { userId?: string; vibes?: Array<{ id: string }> }) {
   if (!userId) throw new Error('No user ID provided');
 
-  // Use the fireproof hook to get the database API and live query hooks
-  const { useAllDocs } = useFireproof(`vibesync-${userId}`);
+  // Use the fireproof hook with cloud attachment configuration
+  const { useAllDocs } = useFireproof(`vibesync-${userId}`, {
+    attach: toCloud({
+      dashboardURI: "http://localhost:3000/fp/cloud/api/token",
+      tokenApiURI: "http://localhost:3000/api",
+      urls: { base: "fpcloud://fireproof-v2-cloud-dev.jchris.workers.dev" },
+      // tenant: "3rd-party",
+      // ledger: "have-four-drinks",
+    }),
+  });
 
   // Get real-time count of synced vibes
   const allDocsResult = useAllDocs() as {
