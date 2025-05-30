@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
+import { fireproof } from 'use-fireproof';
 import { useAuth } from '../contexts/AuthContext';
 import type { LocalVibe } from '../utils/vibeUtils';
 import { deleteVibeDatabase, listLocalVibeIds, toggleVibeFavorite } from '../utils/vibeUtils';
