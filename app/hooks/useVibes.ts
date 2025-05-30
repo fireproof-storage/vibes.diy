@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useState } from 'react';
-import { fireproof } from 'use-fireproof';
+import { useCallback, useEffect, useState, useRef } from 'react';
+import { fireproof, SimpleTokenStrategy, toCloud } from 'use-fireproof';
 import { useAuth } from '../contexts/AuthContext';
 import type { LocalVibe } from '../utils/vibeUtils';
 import { deleteVibeDatabase, listLocalVibeIds, toggleVibeFavorite } from '../utils/vibeUtils';
@@ -59,10 +59,39 @@ export function useVibes() {
     loadVibes();
   }, [loadVibes]);
 
+  // Attach Fireproof cloud to the user's vibespace database ONCE per userId/token
+  const cloudAttachmentRef = useRef<any>(null);
+  // TODO: Replace this with your actual token acquisition logic (from auth/session)
+  const yourToken = null; // e.g., useAuthToken() or context value
+  useEffect(() => {
+    if (!userId || !yourToken) return;
+    let isMounted = true;
+    const attachCloud = async () => {
+      try {
+        const db = fireproof(`vibesync-${userId}`);
+        const tokenStrategy = new SimpleTokenStrategy(yourToken);
+        const cloudConfig = toCloud({
+          urls: { base: "fpcloud://fireproof-v2-cloud-dev.jchris.workers.dev" },
+          // tokenApiURI: "http://localhost:3000/api",
+          dashboardURI: "http://localhost:3000/fp/cloud/api/token",
+          strategy: tokenStrategy
+        });
+        const attachment = await db.attach(cloudConfig);
+        if (isMounted) {
+          cloudAttachmentRef.current = attachment;
+          console.log('Cloud attachment status:', attachment);
+        }
+      } catch (err) {
+        console.error('Failed to attach Fireproof cloud', err);
+      }
+    };
+    attachCloud();
+    return () => { isMounted = false; };
+  }, [userId, yourToken]);
+
   // Sync local vibe IDs to the user's vibespace database
   useEffect(() => {
     if (!userId || isLoading || vibes.length === 0) return;
-
     const sync = async () => {
       try {
         const db = fireproof(`vibesync-${userId}`);
@@ -86,7 +115,6 @@ export function useVibes() {
         console.error('Failed to save vibe IDs', err);
       }
     };
-
     sync();
   }, [userId, isLoading, vibes]);
 
