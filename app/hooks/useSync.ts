@@ -1,7 +1,8 @@
 import { useEffect } from 'react';
 import { useFireproof } from 'use-fireproof';
+import type { LocalVibe } from '../utils/vibeUtils';
 
-export function useSync(userId: string, vibes: Array<{ id: string }>) {
+export function useSync(userId: string, vibes: Array<LocalVibe>) {
   if (!userId) throw new Error('No user ID provided');
   const { database } = useFireproof(`vibesync-${userId}`);
 
@@ -18,6 +19,8 @@ export function useSync(userId: string, vibes: Array<{ id: string }>) {
             created: Date.now(),
             userId,
             vibeId: vibe.id,
+            title: vibe.title,
+            url: vibe.publishedUrl
           });
         }
       }
