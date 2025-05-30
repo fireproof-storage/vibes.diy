@@ -43,7 +43,29 @@ export default function AppLayout({
           mobilePreviewShown ? 'hidden md:flex md:h-full' : 'h-full'
         } relative z-10 transition-all duration-300 ease-in-out`}
       >
-        <div className="flex h-full flex-col">
+        <div className="flex h-full flex-col gap-y-2">
+          {/* Pre-chat: Hero */}
+          {isPreChat && heroComponent && (
+            <header className="flex-shrink-0 transition-all duration-300">{heroComponent}</header>
+          )}
+
+          {/* Pre-chat: Suggestions */}
+          {isPreChat && suggestionsComponent && (
+            <div className="flex-shrink-0">{suggestionsComponent}</div>
+          )}
+
+          {/* Main chat area */}
+          <main className="flex-grow overflow-auto">{chatPanel}</main>
+
+          {/* Pre-chat: Recent Projects */}
+          {isPreChat && recentProjectsComponent && (
+            <aside className="flex-shrink-0 transition-all duration-300">
+              {recentProjectsComponent}
+            </aside>
+          )}
+
+          {/* Chat input always at the bottom */}
+          <footer className="flex-shrink-0">{chatInput}</footer>
           {isPreChat && heroComponent ? (
             <header className="flex-shrink-0 transition-all duration-300">{heroComponent}</header>
           ) : (
