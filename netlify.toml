@@ -1,7 +1,6 @@
 [build]
   publish = "build/client"
   command = "pnpm run build"
-  functions = "netlify/functions"
 
 [dev]
   command = "react-router dev --port 5174"
@@ -13,14 +12,6 @@
   from = "/*"
   to = "/index.html"
   status = 200
-
-[[edge_functions]]
-  path = "/api/callai/*"
-  function = "callai"
-
-[[edge_functions]]
-  path = "/api/openai-image/*"
-  function = "openai-image"
 
 # CORS headers for openai-image edge function
 [[headers]]
