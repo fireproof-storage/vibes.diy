@@ -65,9 +65,9 @@ export function useVibes() {
 
     const sync = async () => {
       try {
-        const db = fireproof(`vibespace-${userId}`);
+        const db = fireproof(`vibesync-${userId}`);
         for (const vibe of vibes) {
-          const docId = `fp.sync-${vibe.id}`;
+          const docId = `sync-${vibe.id}`;
           try {
             await db.get(docId);
           } catch {
@@ -79,8 +79,11 @@ export function useVibes() {
             });
           }
         }
+        db.allDocs().then((result) => {
+          console.log('synced vibes', result);
+        });
       } catch (err) {
-        console.error('Failed to sync vibe IDs', err);
+        console.error('Failed to save vibe IDs', err);
       }
     };
 
