@@ -1,10 +1,25 @@
+import { useFireproof, rt, toCloud } from 'use-fireproof';
 import { useEffect } from 'react';
-import { useFireproof } from 'use-fireproof';
 import type { LocalVibe } from '../utils/vibeUtils';
 
 export function useSync(userId: string, vibes: Array<LocalVibe>) {
   if (!userId) throw new Error('No user ID provided');
-  const { database } = useFireproof(`vibesync-${userId}`);
+
+  const { database, useAllDocs } = useFireproof(`vibesync-${userId}`, {
+    attach: toCloud({
+      urls: { base: 'fpcloud://fireproof-v2-cloud-dev.jchris.workers.dev' },
+      strategy: new rt.gw.cloud.SimpleTokenStrategy('get-token-from-local-storage'),
+      tenant: 'zGoxECs2hPjDM2bf4',
+      ledger: 'z4mMTj7yRtstWBVNtg',
+    }),
+  });
+
+  // Get real-time count of synced vibes
+  const allDocsResult = useAllDocs() as {
+    docs: Array<{ _id: string }>;
+    rows?: Array<{ id: string }>;
+  };
+  const count = allDocsResult?.rows?.length || 0;
 
   useEffect(() => {
     if (!vibes || vibes.length === 0) return;
@@ -20,7 +35,7 @@ export function useSync(userId: string, vibes: Array<LocalVibe>) {
             userId,
             vibeId: vibe.id,
             title: vibe.title,
-            url: vibe.publishedUrl
+            url: vibe.publishedUrl,
           });
         }
       }
@@ -31,4 +46,6 @@ export function useSync(userId: string, vibes: Array<LocalVibe>) {
     sync();
     // No cleanup needed
   }, [userId, vibes]);
+
+  return { count };
 }

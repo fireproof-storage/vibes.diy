@@ -80,7 +80,7 @@ export default function MyVibesRoute(): ReactElement {
         <div className="mb-6">
           <div className="flex items-center justify-between">
             <div>
-              {userId && <VibeSyncer userId={userId} vibes={vibes} />}
+              <VibeSyncer userId={userId} vibes={vibes} />
               <h2 className="mb-4 text-2xl font-bold">My Vibes</h2>
               {userId && (
                 <p className="text-accent-01 dark:text-accent-01 mb-6">
