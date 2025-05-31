@@ -5,10 +5,17 @@ import type { LocalVibe } from '../utils/vibeUtils';
 export function useSync(userId: string, vibes: Array<LocalVibe>) {
   if (!userId) throw new Error('No user ID provided');
 
+  // Create a token strategy that retrieves the token from localStorage
+  const getToken = () => {
+    // Guard against SSR where localStorage isn't available
+    if (typeof window === 'undefined' || !window.localStorage) return '';
+    return localStorage.getItem('auth_token') || '';
+  };
+
   const { database, useAllDocs } = useFireproof(`vibesync-${userId}`, {
     attach: toCloud({
       urls: { base: 'fpcloud://fireproof-v2-cloud-dev.jchris.workers.dev' },
-      strategy: new rt.gw.cloud.SimpleTokenStrategy('get-token-from-local-storage'),
+      strategy: new rt.gw.cloud.SimpleTokenStrategy(getToken()),
       tenant: 'zGoxECs2hPjDM2bf4',
       ledger: 'z4mMTj7yRtstWBVNtg',
     }),
