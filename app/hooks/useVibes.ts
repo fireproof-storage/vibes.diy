@@ -58,6 +58,8 @@ export function useVibes() {
     loadVibes();
   }, [loadVibes]);
 
+  // Cloud attachment logic has been moved to the VibeSyncer component
+
   // Function to toggle favorite status on a vibe
   const toggleFavorite = useCallback(
     async (vibeId: string) => {
