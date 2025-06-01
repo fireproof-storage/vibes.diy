@@ -42,7 +42,7 @@ vi.mock('../app/config/provisioning');
 
 // Import the mocked module
 import { getCredits } from '../app/config/provisioning';
-import { createKeyViaEdgeFunction } from '../app/services/apiKeyService';
+import { createOrUpdateKeyViaEdgeFunction } from '../app/services/apiKeyService';
 
 // Mock the apiKeyService module
 vi.mock('../app/services/apiKeyService');
@@ -698,8 +698,8 @@ describe('useSimpleChat', () => {
     'eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0=.eyJ1c2VySWQiOiJ0ZXN0LXVzZXItaWQiLCJleHAiOjI1MzQwMjMwMDc5OX0=.';
 
   beforeEach(() => {
-    // Mock createKeyViaEdgeFunction to ensure it returns the correct structure
-    vi.mocked(createKeyViaEdgeFunction).mockImplementation(async () => {
+    // Mock createOrUpdateKeyViaEdgeFunction to ensure it returns the correct structure
+    vi.mocked(createOrUpdateKeyViaEdgeFunction).mockImplementation(async () => {
       return {
         key: 'mock-api-key-for-testing',
         hash: 'mock-hash',

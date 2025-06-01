@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { CALLAI_API_KEY } from '../config/env';
-import { createKeyViaEdgeFunction } from '../services/apiKeyService';
+import { createOrUpdateKeyViaEdgeFunction } from '../services/apiKeyService';
 
 // Global request tracking to prevent duplicate API calls
 let pendingKeyRequest: Promise<any> | null = null;
@@ -11,7 +11,7 @@ let pendingKeyRequest: Promise<any> | null = null;
  * @returns Object containing apiKey, isLoading, and error states
  */
 export function useApiKey(userId?: string) {
-  const [apiKey, setApiKey] = useState<string | null>(null);
+  const [apiKey, setApiKey] = useState<{key: string, hash: string} | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<Error | null>(null);
   const hasFetchStarted = useRef(false);
@@ -48,7 +48,7 @@ export function useApiKey(userId?: string) {
 
             if (keyAgeInDays < 7) {
               if (isMounted) {
-                setApiKey(keyData.key);
+                setApiKey({key: keyData.key, hash: keyData.hash});
               }
               return; // Exit early since we found a valid key
             }
@@ -124,7 +124,21 @@ export function useApiKey(userId?: string) {
 
           // Deduplicate API key requests across components
           if (!pendingKeyRequest) {
-            pendingKeyRequest = createKeyViaEdgeFunction(userId);
+            // Extract hash from localStorage even if the key is expired
+            let storedHash = apiKey?.hash;
+            if (!storedHash) {
+              const storedData = localStorage.getItem(storageKey);
+              if (storedData) {
+                try {
+                  const parsed = JSON.parse(storedData);
+                  storedHash = parsed.hash;
+                } catch (e) {
+                  // Ignore parsing errors
+                }
+              }
+            }
+            
+            pendingKeyRequest = createOrUpdateKeyViaEdgeFunction(userId, storedHash);
           }
 
           // Wait for the existing or new request to complete
@@ -173,7 +187,7 @@ export function useApiKey(userId?: string) {
         };
 
         localStorage.setItem(storageKey, JSON.stringify(keyToStore));
-        setApiKey(keyData.key);
+        setApiKey({key: keyData.key, hash: keyData.hash});
       } else {
         throw new Error('Invalid API key response format');
       }
@@ -202,5 +216,5 @@ export function useApiKey(userId?: string) {
     return await fetchNewKey();
   }, [fetchNewKey]);
 
-  return { apiKey, isLoading, error, refreshKey };
+  return { apiKey: apiKey?.key, isLoading, error, refreshKey };
 }

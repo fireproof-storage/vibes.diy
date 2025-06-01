@@ -4,7 +4,7 @@
  * Creates a new API key and checks its credit information using Edge Functions
  */
 import { getCredits } from '../app/config/provisioning';
-import { createKeyViaEdgeFunction } from '../app/services/apiKeyService';
+import { createOrUpdateKeyViaEdgeFunction } from '../app/services/apiKeyService';
 
 /**
  * Creates a new API key and returns the key data using the Edge Function
@@ -15,7 +15,7 @@ async function createApiKey() {
   try {
     // Mock user ID for testing
     const testUserId = `test-${Date.now()}`;
-    const keyData = await createKeyViaEdgeFunction(testUserId);
+    const keyData = await createOrUpdateKeyViaEdgeFunction(testUserId);
 
     console.log('API key created successfully:');
     console.log(`- Hash: ${keyData.hash}`);
