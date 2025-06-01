@@ -124,7 +124,21 @@ export function useApiKey(userId?: string) {
 
           // Deduplicate API key requests across components
           if (!pendingKeyRequest) {
-            pendingKeyRequest = createOrUpdateKeyViaEdgeFunction(userId, apiKey?.hash);
+            // Extract hash from localStorage even if the key is expired
+            let storedHash = apiKey?.hash;
+            if (!storedHash) {
+              const storedData = localStorage.getItem(storageKey);
+              if (storedData) {
+                try {
+                  const parsed = JSON.parse(storedData);
+                  storedHash = parsed.hash;
+                } catch (e) {
+                  // Ignore parsing errors
+                }
+              }
+            }
+            
+            pendingKeyRequest = createOrUpdateKeyViaEdgeFunction(userId, storedHash);
           }
 
           // Wait for the existing or new request to complete

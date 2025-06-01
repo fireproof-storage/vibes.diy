@@ -22,7 +22,7 @@ export async function createOrUpdateKeyViaEdgeFunction(userId: string | undefine
   created_at: string;
   updated_at: string;
 }> {
-  console.log('Creating new key for user:', userId);
+
   // Use the API_ORIGIN for cross-origin requests, or relative path for same-origin
   const endpoint = API_ORIGIN ? `${API_ORIGIN}/api/keys` : '/api/keys';
 
