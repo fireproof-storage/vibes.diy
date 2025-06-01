@@ -11,7 +11,7 @@ let pendingKeyRequest: Promise<any> | null = null;
  * @returns Object containing apiKey, isLoading, and error states
  */
 export function useApiKey(userId?: string) {
-  const [apiKey, setApiKey] = useState<{key: string, hash: string} | null>(null);
+  const [apiKey, setApiKey] = useState<{ key: string; hash: string } | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<Error | null>(null);
   const hasFetchStarted = useRef(false);
@@ -48,7 +48,7 @@ export function useApiKey(userId?: string) {
 
             if (keyAgeInDays < 7) {
               if (isMounted) {
-                setApiKey({key: keyData.key, hash: keyData.hash});
+                setApiKey({ key: keyData.key, hash: keyData.hash });
               }
               return; // Exit early since we found a valid key
             }
@@ -137,7 +137,7 @@ export function useApiKey(userId?: string) {
                 }
               }
             }
-            
+
             pendingKeyRequest = createOrUpdateKeyViaEdgeFunction(userId, storedHash);
           }
 
@@ -187,7 +187,7 @@ export function useApiKey(userId?: string) {
         };
 
         localStorage.setItem(storageKey, JSON.stringify(keyToStore));
-        setApiKey({key: keyData.key, hash: keyData.hash});
+        setApiKey({ key: keyData.key, hash: keyData.hash });
       } else {
         throw new Error('Invalid API key response format');
       }

@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router';
 import { encodeTitle } from '~/components/SessionSidebar/utils';
 import { useAuth } from '~/contexts/AuthContext';
@@ -141,28 +141,7 @@ export default function UnifiedSession() {
     }
   }, [location.search, chatState.setInput]);
 
-  // Create chat input event handlers
-  const handleInputChange = useCallback(
-    (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-      chatState.setInput(e.target.value);
-    },
-    [chatState.setInput]
-  );
-
-  const handleKeyDown = useCallback(
-    (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-      if (e.key === 'Enter' && !e.shiftKey && !chatState.isStreaming) {
-        e.preventDefault();
-        if (chatState.needsLogin) {
-          window.dispatchEvent(new Event('needsLoginTriggered'));
-          return;
-        }
-        chatState.sendMessage(chatState.input);
-        setMessageHasBeenSent(true);
-      }
-    },
-    [chatState.isStreaming, chatState.sendMessage, setMessageHasBeenSent, chatState.needsLogin]
-  );
+  // We're now passing chatState directly to ChatInput
 
   // Handle suggestion selection directly
   const handleSelectSuggestion = useCallback(
@@ -298,21 +277,15 @@ export default function UnifiedSession() {
         }
         chatInput={
           <ChatInput
-            isStreaming={chatState.isStreaming}
-            value={chatState.input}
-            onChange={handleInputChange}
-            onKeyDown={handleKeyDown}
+            chatState={chatState}
             onSend={() => {
-              chatState.sendMessage(chatState.input);
+              // Only handle side effects here
               setMessageHasBeenSent(true);
               setHasSubmittedMessage(true);
               if (chatState.needsLogin) {
                 window.dispatchEvent(new Event('needsLoginTriggered'));
               }
             }}
-            disabled={chatState.isStreaming}
-            inputRef={chatState.inputRef}
-            docsLength={chatState.docs.length}
           />
         }
         suggestionsComponent={

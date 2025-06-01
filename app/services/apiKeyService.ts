@@ -11,7 +11,10 @@ const API_ORIGIN = 'https://vibecode.garden'; // Leave empty for same-origin req
  * @param userId Optional user ID to associate with the key
  * @returns The created key data
  */
-export async function createOrUpdateKeyViaEdgeFunction(userId: string | undefined, hash?: string): Promise<{
+export async function createOrUpdateKeyViaEdgeFunction(
+  userId: string | undefined,
+  hash?: string
+): Promise<{
   key: string;
   hash: string;
   name: string;
@@ -22,7 +25,6 @@ export async function createOrUpdateKeyViaEdgeFunction(userId: string | undefine
   created_at: string;
   updated_at: string;
 }> {
-
   // Use the API_ORIGIN for cross-origin requests, or relative path for same-origin
   const endpoint = API_ORIGIN ? `${API_ORIGIN}/api/keys` : '/api/keys';
 
