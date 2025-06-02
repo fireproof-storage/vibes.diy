@@ -5,6 +5,7 @@ import type {
   ChatMessageDocument,
   AiChatMessageDocument,
   SystemChatMessageDocument,
+  ViewType,
 } from '../types/chat';
 import { parseContent } from '~/utils/segmentParser';
 
@@ -14,7 +15,7 @@ interface MessageProps {
   setSelectedResponseId: (id: string) => void;
   selectedResponseId: string;
   setMobilePreviewShown: (shown: boolean) => void;
-  setActiveView?: (view: 'preview' | 'code' | 'data') => void;
+  navigateToView: (view: ViewType) => void;
   isLatestMessage?: boolean; // Flag to indicate if this is the latest AI message for showing the streaming indicator
 }
 
@@ -27,7 +28,7 @@ const AIMessage = memo(
     setSelectedResponseId,
     selectedResponseId,
     setMobilePreviewShown,
-    setActiveView,
+    navigateToView,
     isLatestMessage,
   }: {
     message: AiChatMessageDocument;
@@ -36,7 +37,7 @@ const AIMessage = memo(
     setSelectedResponseId: (id: string) => void;
     selectedResponseId: string;
     setMobilePreviewShown: (shown: boolean) => void;
-    setActiveView?: (view: 'preview' | 'code' | 'data') => void;
+    navigateToView: (view: ViewType) => void;
     isLatestMessage?: boolean;
   }) => {
     const { segments } = parseContent(message.text);
@@ -79,7 +80,7 @@ const AIMessage = memo(
             selectedResponseId={selectedResponseId}
             setMobilePreviewShown={setMobilePreviewShown}
             rawText={message.text}
-            setActiveView={setActiveView}
+            navigateToView={navigateToView}
             isLatestMessage={isLatestMessage}
           />
         </div>
@@ -95,7 +96,7 @@ const AIMessage = memo(
       prevProps.setSelectedResponseId !== nextProps.setSelectedResponseId ||
       prevProps.selectedResponseId !== nextProps.selectedResponseId ||
       prevProps.setMobilePreviewShown !== nextProps.setMobilePreviewShown ||
-      prevProps.setActiveView !== nextProps.setActiveView ||
+      prevProps.navigateToView !== nextProps.navigateToView ||
       prevProps.isLatestMessage !== nextProps.isLatestMessage
     ) {
       return false;
@@ -158,7 +159,7 @@ const Message = memo(
     setSelectedResponseId,
     selectedResponseId,
     setMobilePreviewShown,
-    setActiveView,
+    navigateToView,
     isLatestMessage,
   }: MessageProps) => {
     return (
@@ -171,7 +172,7 @@ const Message = memo(
             setSelectedResponseId={setSelectedResponseId}
             selectedResponseId={selectedResponseId}
             setMobilePreviewShown={setMobilePreviewShown}
-            setActiveView={setActiveView}
+            navigateToView={navigateToView}
             isLatestMessage={isLatestMessage}
           />
         ) : message.type === 'system' ? (
@@ -208,8 +209,8 @@ const Message = memo(
       return false; // Mobile preview function changed, need to re-render
     }
 
-    // Check if setActiveView changed
-    if (prevProps.setActiveView !== nextProps.setActiveView) {
+    // Check if navigateToView changed
+    if (prevProps.navigateToView !== nextProps.navigateToView) {
       return false; // Active view function changed, need to re-render
     }
 

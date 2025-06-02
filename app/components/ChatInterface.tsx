@@ -1,12 +1,9 @@
 import { useEffect, useMemo, useRef } from 'react';
-import type { ChatState } from '../types/chat';
+import type { ChatInterfaceProps } from '../types/chat'; // Updated import
 import MessageList from './MessageList';
 import WelcomeScreen from './WelcomeScreen';
 
-interface ChatInterfaceProps extends ChatState {
-  setMobilePreviewShown: (shown: boolean) => void;
-  setActiveView?: (view: 'preview' | 'code' | 'data') => void;
-}
+// Removed local ChatInterfaceProps definition
 
 function ChatInterface({
   docs: messages,
@@ -14,7 +11,8 @@ function ChatInterface({
   selectedResponseDoc,
   setSelectedResponseId,
   setMobilePreviewShown,
-  setActiveView,
+  // setActiveView, // Removed
+  navigateToView, // Added
 }: ChatInterfaceProps) {
   // State for UI transitions and sharing
   const messagesContainerRef = useRef<HTMLDivElement>(null);
@@ -40,7 +38,8 @@ function ChatInterface({
         setSelectedResponseId={setSelectedResponseId}
         selectedResponseId={selectedResponseDoc?._id || ''}
         setMobilePreviewShown={setMobilePreviewShown}
-        setActiveView={setActiveView}
+        // setActiveView={setActiveView} // Removed
+        navigateToView={navigateToView} // Added
       />
     );
   }, [
@@ -49,7 +48,8 @@ function ChatInterface({
     setSelectedResponseId,
     selectedResponseDoc,
     setMobilePreviewShown,
-    setActiveView,
+    // setActiveView, // Removed
+    navigateToView, // Added
   ]);
 
   return (

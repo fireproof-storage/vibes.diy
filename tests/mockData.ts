@@ -1,6 +1,6 @@
 export const mockResultPreviewProps = {
-  activeView: 'code' as const,
-  setActiveView: () => {},
+  displayView: 'code' as const, // Changed from activeView
+  // setActiveView: () => {}, // Removed
   onPreviewLoaded: () => {},
   setMobilePreviewShown: () => {},
 };

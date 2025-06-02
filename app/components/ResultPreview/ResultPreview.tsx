@@ -14,8 +14,8 @@ function ResultPreview({
   sessionId,
   isStreaming = false,
   codeReady = false,
-  activeView,
-  setActiveView,
+  displayView, // Changed from activeView
+  // setActiveView, // Removed
   onPreviewLoaded,
   setMobilePreviewShown,
   setIsIframeFetching,
@@ -54,21 +54,9 @@ function ResultPreview({
   }, [isStreaming]);
 
   useEffect(() => {
-    // Effect to set initial view to 'code' only if there's no code yet.
-    // Switches based on streaming/codeReady are handled by the 'preview-ready' message handler.
-    if (!code || code.length === 0) {
-      const path = window.location.pathname;
-
-      // Only switch if we're not already on a specific route or the base chat route
-      // Get base path without suffix
-      const basePath = path.replace(/\/(app|code|data)$/, '');
-
-      // Check if current path is just the base path (no suffix)
-      if (path === basePath && !path.endsWith('/code') && !path.endsWith('/data')) {
-        setActiveView('code');
-      }
-    }
-  }, [code, setActiveView]); // Depend only on `code` for initial check.
+    // Effect to set initial view to 'code' was here.
+    // This logic is now handled by useViewState in home.tsx based on initialLoad and other factors.
+  }, [code]); // Kept code dependency for potential future use, or can be removed if truly no-op.
 
   // Theme detection effect
   useEffect(() => {
@@ -126,8 +114,8 @@ function ResultPreview({
 
           setMobilePreviewShown(true);
 
-          // Always switch to preview view when the iframe signals it's ready.
-          setActiveView('preview');
+          // View switching to 'preview' is now handled by useViewState in home.tsx via the previewReady prop.
+          // setActiveView('preview'); // Removed
 
           // Also navigate to the /app URL suffix if not already there.
           const path = window.location.pathname;
@@ -172,7 +160,7 @@ function ResultPreview({
     };
   }, [
     onScreenshotCaptured,
-    setActiveView,
+    // setActiveView, // Removed
     onPreviewLoaded,
     setIsIframeFetching,
     setMobilePreviewShown,
@@ -185,11 +173,11 @@ function ResultPreview({
     <div className="h-full">{/* empty div to prevent layout shift */}</div>
   ) : (
     <IframeContent
-      activeView={activeView}
+      activeView={displayView} // Changed from activeView
       filesContent={filesContent} // Pass the derived filesContent
       isStreaming={!codeReady} // Pass the derived prop
       codeReady={codeReady}
-      setActiveView={setActiveView}
+      // setActiveView={setActiveView} // Removed from IframeContent props (will need to update IframeContent too)
       /* dependencies prop removed */
       isDarkMode={isDarkMode} // Pass down the theme state
       sessionId={sessionId} // Pass the sessionId to IframeContent

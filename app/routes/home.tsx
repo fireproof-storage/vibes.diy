@@ -1,7 +1,6 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router';
 import { encodeTitle } from '~/components/SessionSidebar/utils';
-import { useAuth } from '~/contexts/AuthContext';
 import AppLayout from '../components/AppLayout';
 import ChatHeaderContent from '../components/ChatHeaderContent';
 import ChatInput from '../components/ChatInput';
@@ -12,7 +11,7 @@ import ResultPreviewHeaderContent from '../components/ResultPreview/ResultPrevie
 import SessionSidebar from '../components/SessionSidebar';
 import { useCookieConsent } from '../contexts/CookieConsentContext';
 import { useSimpleChat } from '../hooks/useSimpleChat';
-import { isMobileViewport } from '../utils/ViewState';
+import { isMobileViewport, useViewState } from '../utils/ViewState'; // Removed ViewType import
 // import { useSession } from '../hooks/useSession';
 
 export function meta() {
@@ -26,34 +25,32 @@ export default function UnifiedSession() {
   const { sessionId: urlSessionId } = useParams<{ sessionId: string }>();
   const navigate = useNavigate();
   const location = useLocation();
-  const { isAuthenticated } = useAuth();
   const chatState = useSimpleChat(urlSessionId);
-  chatState.needsLogin = !isAuthenticated;
 
   const { setMessageHasBeenSent } = useCookieConsent();
 
   // Track message submission events
   const [hasSubmittedMessage, setHasSubmittedMessage] = useState(false);
 
-  // State for view management - set initial view based on URL path
-  const [activeView, setActiveView] = useState<'code' | 'preview' | 'data'>(() => {
-    // Directly check the pathname on initial render
-    // Add null check for location to prevent errors in tests
-    const path = location?.pathname || '';
-    if (path.endsWith('/app')) {
-      return 'preview';
-    } else if (path.endsWith('/code')) {
-      return 'code';
-    } else if (path.endsWith('/data')) {
-      return 'data';
-    }
-    // Default to code view if no suffix is found
-    return 'code';
-  });
   const [previewReady, setPreviewReady] = useState(false);
-  // const [bundlingComplete] = useState(true);
   const [mobilePreviewShown, setMobilePreviewShown] = useState(false);
   const [isIframeFetching, setIsIframeFetching] = useState(false);
+
+  // Centralized view state management
+  const {
+    // currentView, // Removed as it's declared but not read
+    displayView, // Actual view to render
+    navigateToView,
+    viewControls,
+    showViewControls,
+  } = useViewState({
+    sessionId: chatState.sessionId || undefined, // Handle null
+    title: chatState.title || undefined, // Handle null
+    code: chatState.selectedCode?.content || '',
+    isStreaming: chatState.isStreaming,
+    previewReady: previewReady,
+    isIframeFetching: isIframeFetching,
+  });
 
   // Add a ref to track whether streaming was active previously
   const wasStreamingRef = useRef(false);
@@ -86,10 +83,8 @@ export default function UnifiedSession() {
       setMobilePreviewShown(true);
     }
 
-    // Update the active view locally, but don't force navigation
-    // Let the user stay on their current tab
-    setActiveView('preview');
-  }, [chatState.isStreaming, chatState.codeReady]);
+    // setActiveView('preview'); // This is now handled by useViewState when previewReady changes
+  }, []); // chatState.isStreaming, chatState.codeReady removed as setActiveView is gone and useViewState handles this logic
 
   useEffect(() => {
     if (chatState.title) {
@@ -195,27 +190,22 @@ export default function UnifiedSession() {
     wasStreamingRef.current = chatState.isStreaming;
   }, [chatState.selectedCode, chatState.isStreaming, previewReady]);
 
-  // Handle URL path navigation
+  // Handle initial URL path navigation if no view suffix.
+  // useViewState handles subsequent auto-navigation based on state changes (e.g. previewReady).
   useEffect(() => {
-    // Only navigate to /app if we're not already on a specific tab route
-    // This prevents overriding user's manual tab selection
-    // Add null check for location to prevent errors in tests
     const path = location?.pathname || '';
     const hasTabSuffix = path.endsWith('/app') || path.endsWith('/code') || path.endsWith('/data');
+    const encodedAppTitle = chatState.title ? encodeTitle(chatState.title) : '';
 
-    if (!hasTabSuffix && chatState.sessionId && chatState.title) {
-      setActiveView('preview');
-      navigate(`/chat/${chatState.sessionId}/${encodeTitle(chatState.title)}/app`, {
+    // If there's a session and title, but no specific view suffix in the URL, navigate to the 'app' (preview) view.
+    if (!hasTabSuffix && chatState.sessionId && encodedAppTitle) {
+      navigate(`/chat/${chatState.sessionId}/${encodedAppTitle}/app`, {
         replace: true,
       });
-    } else if (path.endsWith('/app')) {
-      setActiveView('preview');
-    } else if (path.endsWith('/code')) {
-      setActiveView('code');
-    } else if (path.endsWith('/data')) {
-      setActiveView('data');
     }
-  }, [chatState.sessionId, chatState.title, navigate, location.pathname, setActiveView]);
+    // The activeView state is now managed by useViewState based on the URL (currentView)
+    // and app state (displayView), so no need for setActiveView calls here.
+  }, [chatState.sessionId, chatState.title, navigate, location.pathname]);
 
   // Switch to 2-column view immediately when a message is submitted
   const shouldUseFullWidthChat =
@@ -238,17 +228,20 @@ export default function UnifiedSession() {
           // Only render the header content when we have code content or a completed session
           chatState.selectedCode?.content || urlSessionId ? (
             <ResultPreviewHeaderContent
-              previewReady={previewReady}
-              activeView={activeView}
-              setActiveView={setActiveView}
+              displayView={displayView}
+              navigateToView={navigateToView}
+              viewControls={viewControls}
+              showViewControls={!!showViewControls}
               setMobilePreviewShown={setMobilePreviewShown}
-              setUserClickedBack={setUserClickedBack}
+              setUserClickedBack={setUserClickedBack} // Keep this for BackButton logic
               isStreaming={chatState.isStreaming}
+              // Props needed by usePublish and useSession within ResultPreviewHeaderContent:
               code={chatState.selectedCode?.content || ''}
-              sessionId={chatState.sessionId || undefined}
-              title={chatState.title || undefined}
+              sessionId={chatState.sessionId || undefined} // Handle null
+              title={chatState.title || undefined} // Handle null
+              // Prop needed by ViewControls for preview loading state
               isIframeFetching={isIframeFetching}
-              needsLogin={chatState.needsLogin}
+              previewReady={previewReady} // needed for publish button visibility logic
             />
           ) : null
         }
@@ -256,7 +249,11 @@ export default function UnifiedSession() {
           <ChatInterface
             {...chatState}
             setMobilePreviewShown={setMobilePreviewShown}
-            setActiveView={setActiveView}
+            // Pass navigateToView for view changes initiated from ChatInterface (if any)
+            // Assuming ChatInterface might have buttons/links to switch views.
+            // If not, this prop might not be strictly needed by ChatInterface itself.
+            // For now, replacing setActiveView with navigateToView for consistency.
+            navigateToView={navigateToView}
           />
         }
         previewPanel={
@@ -267,8 +264,8 @@ export default function UnifiedSession() {
             isStreaming={chatState.isStreaming}
             codeReady={chatState.codeReady}
             onScreenshotCaptured={chatState.addScreenshot}
-            activeView={activeView}
-            setActiveView={setActiveView}
+            displayView={displayView} // Changed from activeView
+            // setActiveView is removed
             onPreviewLoaded={handlePreviewLoaded}
             setMobilePreviewShown={setMobilePreviewShown}
             setIsIframeFetching={setIsIframeFetching}
@@ -282,7 +279,7 @@ export default function UnifiedSession() {
               // Only handle side effects here
               setMessageHasBeenSent(true);
               setHasSubmittedMessage(true);
-              if (chatState.needsLogin) {
+              if (chatState.needsLogin === true) {
                 window.dispatchEvent(new Event('needsLoginTriggered'));
               }
             }}

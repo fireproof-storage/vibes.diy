@@ -16,7 +16,7 @@ interface IframeContentProps {
   isStreaming: boolean;
   codeReady: boolean;
 
-  setActiveView: (view: 'preview' | 'code' | 'data') => void;
+  // setActiveView: (view: 'preview' | 'code' | 'data') => void; // Removed, no longer used
   isDarkMode: boolean; // Add isDarkMode prop
   sessionId?: string; // Add sessionId prop
 }
@@ -26,7 +26,7 @@ const IframeContent: React.FC<IframeContentProps> = ({
   filesContent,
   isStreaming,
   codeReady,
-  setActiveView,
+  // setActiveView, // Removed
   isDarkMode, // Receive the isDarkMode prop
   sessionId, // Receive the sessionId prop
 }) => {
