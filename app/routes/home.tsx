@@ -11,8 +11,7 @@ import ResultPreviewHeaderContent from '../components/ResultPreview/ResultPrevie
 import SessionSidebar from '../components/SessionSidebar';
 import { useCookieConsent } from '../contexts/CookieConsentContext';
 import { useSimpleChat } from '../hooks/useSimpleChat';
-import { isMobileViewport, useViewState } from '../utils/ViewState'; // Removed ViewType import
-// import { useSession } from '../hooks/useSession';
+import { isMobileViewport, useViewState } from '../utils/ViewState';
 
 export function meta() {
   return [
@@ -38,8 +37,7 @@ export default function UnifiedSession() {
 
   // Centralized view state management
   const {
-    // currentView, // Removed as it's declared but not read
-    displayView, // Actual view to render
+    displayView,
     navigateToView,
     viewControls,
     showViewControls,
@@ -203,8 +201,6 @@ export default function UnifiedSession() {
         replace: true,
       });
     }
-    // The activeView state is now managed by useViewState based on the URL (currentView)
-    // and app state (displayView), so no need for setActiveView calls here.
   }, [chatState.sessionId, chatState.title, navigate, location.pathname]);
 
   // Switch to 2-column view immediately when a message is submitted
@@ -258,8 +254,7 @@ export default function UnifiedSession() {
             isStreaming={chatState.isStreaming}
             codeReady={chatState.codeReady}
             onScreenshotCaptured={chatState.addScreenshot}
-            displayView={displayView} // Changed from activeView
-            // setActiveView is removed
+            displayView={displayView}
             onPreviewLoaded={handlePreviewLoaded}
             setMobilePreviewShown={setMobilePreviewShown}
             setIsIframeFetching={setIsIframeFetching}
