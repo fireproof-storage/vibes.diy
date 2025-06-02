@@ -55,7 +55,7 @@ const CodeSegment = ({
 
     // Always navigate to code view when clicking on a code segment
     if (navigateToView) {
-      navigateToView('code');
+      navigateToView('preview');
     }
   };
 
