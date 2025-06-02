@@ -1,4 +1,5 @@
 import type { RuntimeError } from '../../hooks/useRuntimeErrors';
+import type { ViewType } from '../../utils/ViewState';
 
 export interface ResultPreviewProps {
   code: string;
@@ -8,8 +9,8 @@ export interface ResultPreviewProps {
   title?: string;
   isStreaming?: boolean;
   codeReady?: boolean;
-  activeView: 'code' | 'preview' | 'data';
-  setActiveView: (view: 'code' | 'preview' | 'data') => void;
+  displayView: ViewType; // Changed from activeView
+  // setActiveView: (view: 'code' | 'preview' | 'data') => void; // Removed
   onPreviewLoaded: () => void;
   setMobilePreviewShown: (shown: boolean) => void;
   setIsIframeFetching?: (fetching: boolean) => void;

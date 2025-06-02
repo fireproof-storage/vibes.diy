@@ -1,6 +1,6 @@
 import { useRef, useEffect } from 'react';
 import ReactMarkdown from 'react-markdown';
-import type { Segment } from '../types/chat';
+import type { Segment, ViewType } from '../types/chat';
 
 interface StructuredMessageProps {
   segments: Segment[];
@@ -10,7 +10,7 @@ interface StructuredMessageProps {
   selectedResponseId: string;
   setMobilePreviewShown: (shown: boolean) => void;
   rawText?: string; // Raw message text to be copied on shift+click
-  setActiveView?: (view: 'preview' | 'code' | 'data') => void; // Add ability to set active view
+  navigateToView: (view: ViewType) => void; // Add ability to set active view
   isLatestMessage?: boolean; // Add prop to determine if this is the latest AI message
 }
 
@@ -25,7 +25,7 @@ interface CodeSegmentProps {
   setMobilePreviewShown: (shown: boolean) => void;
   codeLines: number;
   rawText?: string; // Raw message text to be copied on shift+click
-  setActiveView?: (view: 'preview' | 'code' | 'data') => void; // Add ability to set active view
+  navigateToView: (view: ViewType) => void; // Add ability to set active view
 }
 
 const CodeSegment = ({
@@ -38,7 +38,7 @@ const CodeSegment = ({
   setMobilePreviewShown,
   codeLines,
   rawText,
-  setActiveView,
+  navigateToView,
 }: CodeSegmentProps) => {
   const content = segment.content || '';
   const codeSegmentRef = useRef<HTMLDivElement>(null);
@@ -54,8 +54,8 @@ const CodeSegment = ({
     setMobilePreviewShown(true);
 
     // Always navigate to code view when clicking on a code segment
-    if (setActiveView) {
-      setActiveView('code');
+    if (navigateToView) {
+      navigateToView('preview');
     }
   };
 
@@ -150,7 +150,7 @@ const StructuredMessage = ({
   selectedResponseId,
   setMobilePreviewShown,
   rawText,
-  setActiveView,
+  navigateToView,
   isLatestMessage = false, // Default to false if not provided
 }: StructuredMessageProps) => {
   // Ensure segments is an array (defensive)
@@ -237,7 +237,7 @@ const StructuredMessage = ({
                   setMobilePreviewShown={setMobilePreviewShown}
                   codeLines={codeLines}
                   rawText={rawText}
-                  setActiveView={setActiveView}
+                  navigateToView={navigateToView}
                 />
               );
             }

@@ -30,15 +30,26 @@ vi.mock('../app/components/ResultPreview/BackButton', () => ({
 }));
 
 vi.mock('../app/components/ResultPreview/ViewControls', () => ({
-  ViewControls: ({ viewControls, currentView }: { viewControls: any; currentView: string }) => (
-    <div data-testid="view-controls" data-view={currentView}>
-      {viewControls.map((control: any, i: number) => (
-        <span key={i} data-control-id={control.id}>
-          {control.label}
-        </span>
-      ))}
-    </div>
-  ),
+  ViewControls: ({ viewControls, currentView }: { viewControls: any; currentView: string }) => {
+    // Handle both the old array format and the new object format
+    const controls = Array.isArray(viewControls)
+      ? viewControls
+      : Object.entries(viewControls).map(([key, value]: [string, any]) => ({
+          id: key,
+          label: value.label,
+          ...value,
+        }));
+
+    return (
+      <div data-testid="view-controls" data-view={currentView}>
+        {controls.map((control: any, i: number) => (
+          <span key={i} data-control-id={control.id}>
+            {control.label}
+          </span>
+        ))}
+      </div>
+    );
+  },
 }));
 
 vi.mock('../app/components/ResultPreview/PublishButton', () => ({
@@ -112,7 +123,7 @@ import { usePublish } from '../app/components/ResultPreview/usePublish';
 
 describe('ResultPreviewHeaderContent', () => {
   // Common mocks and props
-  const mockSetActiveView = vi.fn();
+  // const mockSetActiveView = vi.fn(); // Removed as setActiveView is no longer a prop
   const mockSetMobilePreviewShown = vi.fn();
   const mockSetUserClickedBack = vi.fn();
   const mockSession = { publishedUrl: undefined };
@@ -120,6 +131,34 @@ describe('ResultPreviewHeaderContent', () => {
   const mockUpdatePublishedUrl = vi.fn();
   const mockToggleShareModal = vi.fn();
   const mockHandlePublish = vi.fn();
+
+  const mockNavigateToView = vi.fn();
+  const mockViewControlsMap = {
+    preview: {
+      id: 'preview',
+      label: 'Preview',
+      icon: 'eye',
+      enabled: true,
+      loading: false,
+      navigateTo: vi.fn(),
+    },
+    code: {
+      id: 'code',
+      label: 'Code',
+      icon: 'code',
+      enabled: true,
+      loading: false,
+      navigateTo: vi.fn(),
+    },
+    data: {
+      id: 'data',
+      label: 'Data',
+      icon: 'database',
+      enabled: true,
+      loading: false,
+      navigateTo: vi.fn(),
+    },
+  };
 
   const mockViewControls = [
     { id: 'preview', label: 'Preview', active: true },
@@ -157,34 +196,25 @@ describe('ResultPreviewHeaderContent', () => {
   });
 
   it('renders with default props', () => {
-    // We need to ensure showViewControls is true for the publish button to be shown
-    (useViewState as any).mockReturnValue({
-      currentView: 'preview',
-      displayView: 'preview',
-      viewControls: mockViewControls,
-      showViewControls: true,
-    });
-
-    // Make sure to explicitly set previewReady to true
-    const { container } = render(
+    render(
       <ResultPreviewHeaderContent
         previewReady={true}
-        activeView="preview"
-        setActiveView={mockSetActiveView}
+        displayView="preview"
+        navigateToView={mockNavigateToView}
+        viewControls={mockViewControlsMap}
+        showViewControls={true}
         isStreaming={false}
         code="const App = () => <div>Test</div>"
         setMobilePreviewShown={mockSetMobilePreviewShown}
       />
     );
 
-    // Basic structure should be rendered
-    expect(screen.getByTestId('back-button')).toBeInTheDocument();
-    expect(screen.getByTestId('view-controls')).toBeInTheDocument();
+    // Check for basic elements that should be present
+    const backButton = screen.getByTestId('back-button');
+    expect(backButton).toBeInTheDocument();
 
-    // Since the publish button might not be rendered due to how the test-library handles refs,
-    // let's check for its container div at least - using attribute selector instead of class
-    const headerElement = container.querySelector('div[class*="flex"][class*="w-full"]');
-    expect(headerElement).toBeInTheDocument();
+    const viewControls = screen.getByTestId('view-controls');
+    expect(viewControls).toBeInTheDocument();
 
     // Modal should not be visible initially
     expect(screen.queryByTestId('share-modal')).not.toBeInTheDocument();
@@ -194,12 +224,15 @@ describe('ResultPreviewHeaderContent', () => {
     render(
       <ResultPreviewHeaderContent
         previewReady={true}
-        activeView="preview"
-        setActiveView={mockSetActiveView}
+        displayView="preview"
+        navigateToView={mockNavigateToView}
+        viewControls={mockViewControlsMap}
+        showViewControls={true}
         isStreaming={false}
         code="const App = () => <div>Test</div>"
         setMobilePreviewShown={mockSetMobilePreviewShown}
         sessionId="prop-session-id"
+        title="prop-title"
       />
     );
 
@@ -208,20 +241,34 @@ describe('ResultPreviewHeaderContent', () => {
   });
 
   it('uses title from props over URL params when available', () => {
+    // Mock the usePublish hook to verify it receives the proper title
+    (usePublish as any).mockReturnValue({
+      isPublishing: false,
+      urlCopied: false,
+      publishedAppUrl: undefined,
+      handlePublish: mockHandlePublish,
+      toggleShareModal: mockToggleShareModal,
+      isShareModalOpen: false,
+      setIsShareModalOpen: vi.fn(),
+    });
+
     render(
       <ResultPreviewHeaderContent
         previewReady={true}
-        activeView="preview"
-        setActiveView={mockSetActiveView}
+        displayView="preview"
+        navigateToView={mockNavigateToView}
+        viewControls={mockViewControlsMap}
+        showViewControls={true}
         isStreaming={false}
         code="const App = () => <div>Test</div>"
         setMobilePreviewShown={mockSetMobilePreviewShown}
+        sessionId="prop-session-id"
         title="prop-title"
       />
     );
 
-    // Should use prop title for ViewState
-    expect(useViewState).toHaveBeenCalledWith(
+    // Instead of checking useViewState, verify that usePublish gets the correct title
+    expect(usePublish).toHaveBeenCalledWith(
       expect.objectContaining({
         title: 'prop-title',
       })
@@ -240,25 +287,26 @@ describe('ResultPreviewHeaderContent', () => {
     render(
       <ResultPreviewHeaderContent
         previewReady={true}
-        activeView="preview" // Different from displayView
-        setActiveView={mockSetActiveView}
+        displayView="preview" // Changed from activeView
+        navigateToView={mockNavigateToView}
+        viewControls={mockViewControlsMap}
+        showViewControls={true}
         isStreaming={false}
         code="const App = () => <div>Test</div>"
         setMobilePreviewShown={mockSetMobilePreviewShown}
       />
     );
-
-    // Effect should call setActiveView with the new displayView
-    expect(mockSetActiveView).toHaveBeenCalledWith('code');
   });
 
   it('handles back button click when streaming', () => {
     render(
       <ResultPreviewHeaderContent
         previewReady={true}
-        activeView="preview"
-        setActiveView={mockSetActiveView}
-        isStreaming={true} // This is important for the test
+        displayView="preview"
+        navigateToView={mockNavigateToView}
+        viewControls={mockViewControlsMap}
+        showViewControls={true}
+        isStreaming={true}
         code="const App = () => <div>Test</div>"
         setMobilePreviewShown={mockSetMobilePreviewShown}
         setUserClickedBack={mockSetUserClickedBack}
@@ -277,8 +325,10 @@ describe('ResultPreviewHeaderContent', () => {
     render(
       <ResultPreviewHeaderContent
         previewReady={true}
-        activeView="preview"
-        setActiveView={mockSetActiveView}
+        displayView="preview"
+        navigateToView={mockNavigateToView}
+        viewControls={mockViewControlsMap}
+        showViewControls={true}
         isStreaming={false} // Not streaming
         code="const App = () => <div>Test</div>"
         setMobilePreviewShown={mockSetMobilePreviewShown}
@@ -296,19 +346,13 @@ describe('ResultPreviewHeaderContent', () => {
   });
 
   it('does not show view controls when showViewControls is false', () => {
-    // Mock showViewControls as false
-    (useViewState as any).mockReturnValue({
-      currentView: 'preview',
-      displayView: 'preview',
-      viewControls: mockViewControls,
-      showViewControls: false,
-    });
-
     render(
       <ResultPreviewHeaderContent
         previewReady={true}
-        activeView="preview"
-        setActiveView={mockSetActiveView}
+        displayView="preview"
+        navigateToView={mockNavigateToView}
+        viewControls={mockViewControlsMap}
+        showViewControls={false} // Set to false in the actual props
         isStreaming={false}
         code="const App = () => <div>Test</div>"
         setMobilePreviewShown={mockSetMobilePreviewShown}
@@ -323,8 +367,10 @@ describe('ResultPreviewHeaderContent', () => {
     render(
       <ResultPreviewHeaderContent
         previewReady={false} // Not ready
-        activeView="preview"
-        setActiveView={mockSetActiveView}
+        displayView="preview"
+        navigateToView={mockNavigateToView}
+        viewControls={mockViewControlsMap}
+        showViewControls={true}
         isStreaming={false}
         code="const App = () => <div>Test</div>"
         setMobilePreviewShown={mockSetMobilePreviewShown}
@@ -363,8 +409,10 @@ describe('ResultPreviewHeaderContent', () => {
     render(
       <ResultPreviewHeaderContent
         previewReady={true}
-        activeView="preview"
-        setActiveView={mockSetActiveView}
+        displayView="preview"
+        navigateToView={mockNavigateToView}
+        viewControls={mockViewControlsMap}
+        showViewControls={true}
         isStreaming={false}
         code="const App = () => <div>Test</div>"
         setMobilePreviewShown={mockSetMobilePreviewShown}

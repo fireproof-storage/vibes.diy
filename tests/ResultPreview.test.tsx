@@ -407,7 +407,7 @@ describe('ResultPreview', () => {
 
   it('renders with a simple code snippet', () => {
     const code = 'const test = "Hello";';
-    const setActiveView = vi.fn();
+    // const setActiveView = vi.fn(); // Removed as it's no longer used
 
     // Render the component with a simple code snippet
     render(
@@ -416,8 +416,8 @@ describe('ResultPreview', () => {
         dependencies={{}}
         isStreaming={false}
         codeReady={true}
-        activeView="code"
-        setActiveView={setActiveView}
+        displayView="code" // Changed from activeView
+        // setActiveView={setActiveView} // Removed
         onPreviewLoaded={() => {}}
         setMobilePreviewShown={() => {}}
       />
