@@ -223,6 +223,7 @@ describe('Component Rendering', () => {
           setSelectedResponseId={() => {}}
           selectedResponseId=""
           setMobilePreviewShown={() => {}}
+          navigateToView={() => {}}
         />
       );
 
@@ -258,6 +259,7 @@ describe('Component Rendering', () => {
           setSelectedResponseId={() => {}}
           selectedResponseId=""
           setMobilePreviewShown={() => {}}
+          navigateToView={() => {}}
         />
       );
       expect(screen.getByText('Hello')).toBeInTheDocument();
@@ -291,6 +293,7 @@ describe('Component Rendering', () => {
           setSelectedResponseId={() => {}}
           selectedResponseId=""
           setMobilePreviewShown={() => {}}
+          navigateToView={() => {}}
         />
       );
       // The Message component in our test displays "Processing response..." in a markdown element
@@ -318,6 +321,7 @@ describe('Component Rendering', () => {
           setSelectedResponseId={() => {}}
           selectedResponseId=""
           setMobilePreviewShown={() => {}}
+          navigateToView={() => {}}
         />
       );
       expect(screen.getByText('I am thinking...')).toBeInTheDocument();
@@ -331,6 +335,7 @@ describe('Component Rendering', () => {
           setSelectedResponseId={() => {}}
           selectedResponseId=""
           setMobilePreviewShown={() => {}}
+          navigateToView={() => {}}
         />
       );
     });
@@ -356,6 +361,7 @@ describe('Component Rendering', () => {
           setSelectedResponseId={() => {}}
           selectedResponseId=""
           setMobilePreviewShown={() => {}}
+          navigateToView={() => {}}
         />
       );
     });
@@ -381,6 +387,7 @@ describe('Component Rendering', () => {
           setSelectedResponseId={() => {}}
           selectedResponseId=""
           setMobilePreviewShown={() => {}}
+          navigateToView={() => {}}
         />
       );
     });
@@ -405,6 +412,7 @@ describe('Component Rendering', () => {
           setSelectedResponseId={() => {}}
           selectedResponseId=""
           setMobilePreviewShown={() => {}}
+          navigateToView={() => {}}
         />
       );
     });
@@ -431,6 +439,7 @@ describe('Component Rendering', () => {
           setSelectedResponseId={() => {}}
           selectedResponseId=""
           setMobilePreviewShown={() => {}}
+          navigateToView={() => {}}
         />
       );
 

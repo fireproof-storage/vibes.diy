@@ -1,7 +1,6 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router';
 import { encodeTitle } from '~/components/SessionSidebar/utils';
-import { useAuth } from '~/contexts/AuthContext';
 import AppLayout from '../components/AppLayout';
 import ChatHeaderContent from '../components/ChatHeaderContent';
 import ChatInput from '../components/ChatInput';
@@ -12,8 +11,7 @@ import ResultPreviewHeaderContent from '../components/ResultPreview/ResultPrevie
 import SessionSidebar from '../components/SessionSidebar';
 import { useCookieConsent } from '../contexts/CookieConsentContext';
 import { useSimpleChat } from '../hooks/useSimpleChat';
-import { isMobileViewport } from '../utils/ViewState';
-// import { useSession } from '../hooks/useSession';
+import { isMobileViewport, useViewState } from '../utils/ViewState';
 
 export function meta() {
   return [
@@ -26,34 +24,31 @@ export default function UnifiedSession() {
   const { sessionId: urlSessionId } = useParams<{ sessionId: string }>();
   const navigate = useNavigate();
   const location = useLocation();
-  const { isAuthenticated } = useAuth();
   const chatState = useSimpleChat(urlSessionId);
-  chatState.needsLogin = !isAuthenticated;
 
   const { setMessageHasBeenSent } = useCookieConsent();
 
   // Track message submission events
   const [hasSubmittedMessage, setHasSubmittedMessage] = useState(false);
 
-  // State for view management - set initial view based on URL path
-  const [activeView, setActiveView] = useState<'code' | 'preview' | 'data'>(() => {
-    // Directly check the pathname on initial render
-    // Add null check for location to prevent errors in tests
-    const path = location?.pathname || '';
-    if (path.endsWith('/app')) {
-      return 'preview';
-    } else if (path.endsWith('/code')) {
-      return 'code';
-    } else if (path.endsWith('/data')) {
-      return 'data';
-    }
-    // Default to code view if no suffix is found
-    return 'code';
-  });
   const [previewReady, setPreviewReady] = useState(false);
-  // const [bundlingComplete] = useState(true);
   const [mobilePreviewShown, setMobilePreviewShown] = useState(false);
   const [isIframeFetching, setIsIframeFetching] = useState(false);
+
+  // Centralized view state management
+  const {
+    displayView,
+    navigateToView,
+    viewControls,
+    showViewControls,
+  } = useViewState({
+    sessionId: chatState.sessionId || undefined, // Handle null
+    title: chatState.title || undefined, // Handle null
+    code: chatState.selectedCode?.content || '',
+    isStreaming: chatState.isStreaming,
+    previewReady: previewReady,
+    isIframeFetching: isIframeFetching,
+  });
 
   // Add a ref to track whether streaming was active previously
   const wasStreamingRef = useRef(false);
@@ -86,10 +81,8 @@ export default function UnifiedSession() {
       setMobilePreviewShown(true);
     }
 
-    // Update the active view locally, but don't force navigation
-    // Let the user stay on their current tab
-    setActiveView('preview');
-  }, [chatState.isStreaming, chatState.codeReady]);
+    // setActiveView('preview'); // This is now handled by useViewState when previewReady changes
+  }, []); // chatState.isStreaming, chatState.codeReady removed as setActiveView is gone and useViewState handles this logic
 
   useEffect(() => {
     if (chatState.title) {
@@ -141,28 +134,7 @@ export default function UnifiedSession() {
     }
   }, [location.search, chatState.setInput]);
 
-  // Create chat input event handlers
-  const handleInputChange = useCallback(
-    (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-      chatState.setInput(e.target.value);
-    },
-    [chatState.setInput]
-  );
-
-  const handleKeyDown = useCallback(
-    (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-      if (e.key === 'Enter' && !e.shiftKey && !chatState.isStreaming) {
-        e.preventDefault();
-        if (chatState.needsLogin) {
-          window.dispatchEvent(new Event('needsLoginTriggered'));
-          return;
-        }
-        chatState.sendMessage(chatState.input);
-        setMessageHasBeenSent(true);
-      }
-    },
-    [chatState.isStreaming, chatState.sendMessage, setMessageHasBeenSent, chatState.needsLogin]
-  );
+  // We're now passing chatState directly to ChatInput
 
   // Handle suggestion selection directly
   const handleSelectSuggestion = useCallback(
@@ -216,27 +188,20 @@ export default function UnifiedSession() {
     wasStreamingRef.current = chatState.isStreaming;
   }, [chatState.selectedCode, chatState.isStreaming, previewReady]);
 
-  // Handle URL path navigation
+  // Handle initial URL path navigation if no view suffix.
+  // useViewState handles subsequent auto-navigation based on state changes (e.g. previewReady).
   useEffect(() => {
-    // Only navigate to /app if we're not already on a specific tab route
-    // This prevents overriding user's manual tab selection
-    // Add null check for location to prevent errors in tests
     const path = location?.pathname || '';
     const hasTabSuffix = path.endsWith('/app') || path.endsWith('/code') || path.endsWith('/data');
+    const encodedAppTitle = chatState.title ? encodeTitle(chatState.title) : '';
 
-    if (!hasTabSuffix && chatState.sessionId && chatState.title) {
-      setActiveView('preview');
-      navigate(`/chat/${chatState.sessionId}/${encodeTitle(chatState.title)}/app`, {
+    // If there's a session and title, but no specific view suffix in the URL, navigate to the 'app' (preview) view.
+    if (!hasTabSuffix && chatState.sessionId && encodedAppTitle) {
+      navigate(`/chat/${chatState.sessionId}/${encodedAppTitle}/app`, {
         replace: true,
       });
-    } else if (path.endsWith('/app')) {
-      setActiveView('preview');
-    } else if (path.endsWith('/code')) {
-      setActiveView('code');
-    } else if (path.endsWith('/data')) {
-      setActiveView('data');
     }
-  }, [chatState.sessionId, chatState.title, navigate, location.pathname, setActiveView]);
+  }, [chatState.sessionId, chatState.title, navigate, location.pathname]);
 
   // Switch to 2-column view immediately when a message is submitted
   const shouldUseFullWidthChat =
@@ -259,17 +224,18 @@ export default function UnifiedSession() {
           // Only render the header content when we have code content or a completed session
           chatState.selectedCode?.content || urlSessionId ? (
             <ResultPreviewHeaderContent
-              previewReady={previewReady}
-              activeView={activeView}
-              setActiveView={setActiveView}
+              displayView={displayView}
+              navigateToView={navigateToView}
+              viewControls={viewControls}
+              showViewControls={!!showViewControls}
               setMobilePreviewShown={setMobilePreviewShown}
-              setUserClickedBack={setUserClickedBack}
+              setUserClickedBack={setUserClickedBack} // Keep this for BackButton logic
               isStreaming={chatState.isStreaming}
+              // Props needed by usePublish and useSession within ResultPreviewHeaderContent:
               code={chatState.selectedCode?.content || ''}
-              sessionId={chatState.sessionId || undefined}
-              title={chatState.title || undefined}
-              isIframeFetching={isIframeFetching}
-              needsLogin={chatState.needsLogin}
+              sessionId={chatState.sessionId || undefined} // Handle null
+              title={chatState.title || undefined} // Handle null
+              previewReady={previewReady} // needed for publish button visibility logic
             />
           ) : null
         }
@@ -277,7 +243,7 @@ export default function UnifiedSession() {
           <ChatInterface
             {...chatState}
             setMobilePreviewShown={setMobilePreviewShown}
-            setActiveView={setActiveView}
+            navigateToView={navigateToView}
           />
         }
         previewPanel={
@@ -288,8 +254,7 @@ export default function UnifiedSession() {
             isStreaming={chatState.isStreaming}
             codeReady={chatState.codeReady}
             onScreenshotCaptured={chatState.addScreenshot}
-            activeView={activeView}
-            setActiveView={setActiveView}
+            displayView={displayView}
             onPreviewLoaded={handlePreviewLoaded}
             setMobilePreviewShown={setMobilePreviewShown}
             setIsIframeFetching={setIsIframeFetching}
@@ -298,21 +263,15 @@ export default function UnifiedSession() {
         }
         chatInput={
           <ChatInput
-            isStreaming={chatState.isStreaming}
-            value={chatState.input}
-            onChange={handleInputChange}
-            onKeyDown={handleKeyDown}
+            chatState={chatState}
             onSend={() => {
-              chatState.sendMessage(chatState.input);
+              // Only handle side effects here
               setMessageHasBeenSent(true);
               setHasSubmittedMessage(true);
-              if (chatState.needsLogin) {
+              if (chatState.needsLogin === true) {
                 window.dispatchEvent(new Event('needsLoginTriggered'));
               }
             }}
-            disabled={chatState.isStreaming}
-            inputRef={chatState.inputRef}
-            docsLength={chatState.docs.length}
           />
         }
         suggestionsComponent={

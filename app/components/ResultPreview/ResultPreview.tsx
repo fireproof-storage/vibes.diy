@@ -3,7 +3,7 @@ import { CALLAI_API_KEY } from '../../config/env';
 import { animationStyles } from './ResultPreviewTemplates';
 import type { ResultPreviewProps, IframeFiles } from './ResultPreviewTypes';
 import type { RuntimeError } from '../../hooks/useRuntimeErrors';
-import { encodeTitle } from '../SessionSidebar/utils';
+// import { encodeTitle } from '../SessionSidebar/utils';
 // ResultPreview component
 import IframeContent from './IframeContent';
 
@@ -14,8 +14,7 @@ function ResultPreview({
   sessionId,
   isStreaming = false,
   codeReady = false,
-  activeView,
-  setActiveView,
+  displayView,
   onPreviewLoaded,
   setMobilePreviewShown,
   setIsIframeFetching,
@@ -52,23 +51,6 @@ function ResultPreview({
       }
     }
   }, [isStreaming]);
-
-  useEffect(() => {
-    // Effect to set initial view to 'code' only if there's no code yet.
-    // Switches based on streaming/codeReady are handled by the 'preview-ready' message handler.
-    if (!code || code.length === 0) {
-      const path = window.location.pathname;
-
-      // Only switch if we're not already on a specific route or the base chat route
-      // Get base path without suffix
-      const basePath = path.replace(/\/(app|code|data)$/, '');
-
-      // Check if current path is just the base path (no suffix)
-      if (path === basePath && !path.endsWith('/code') && !path.endsWith('/data')) {
-        setActiveView('code');
-      }
-    }
-  }, [code, setActiveView]); // Depend only on `code` for initial check.
 
   // Theme detection effect
   useEffect(() => {
@@ -118,26 +100,12 @@ function ResultPreview({
                 apiKey = keyData.key;
               } catch (e) {}
             }
-          } else {
           }
 
           const iframe = document.querySelector('iframe') as HTMLIFrameElement;
           iframe?.contentWindow?.postMessage({ type: 'callai-api-key', key: apiKey }, '*');
 
           setMobilePreviewShown(true);
-
-          // Always switch to preview view when the iframe signals it's ready.
-          setActiveView('preview');
-
-          // Also navigate to the /app URL suffix if not already there.
-          const path = window.location.pathname;
-          // Add null check for title and encode it
-          const encodedTitle = title ? encodeTitle(title) : '';
-          if (!path.endsWith('/app') && sessionId && encodedTitle) {
-            // Navigation is handled by the parent component (home.tsx) based on activeView state
-            // We only set the state here.
-            // navigate(`/chat/${sessionId}/${encodedTitle}/app`, { replace: true });
-          }
 
           // Notify parent component that preview is loaded
           onPreviewLoaded();
@@ -172,7 +140,6 @@ function ResultPreview({
     };
   }, [
     onScreenshotCaptured,
-    setActiveView,
     onPreviewLoaded,
     setIsIframeFetching,
     setMobilePreviewShown,
@@ -185,14 +152,12 @@ function ResultPreview({
     <div className="h-full">{/* empty div to prevent layout shift */}</div>
   ) : (
     <IframeContent
-      activeView={activeView}
-      filesContent={filesContent} // Pass the derived filesContent
-      isStreaming={!codeReady} // Pass the derived prop
+      activeView={displayView}
+      filesContent={filesContent}
+      isStreaming={!codeReady}
       codeReady={codeReady}
-      setActiveView={setActiveView}
-      /* dependencies prop removed */
-      isDarkMode={isDarkMode} // Pass down the theme state
-      sessionId={sessionId} // Pass the sessionId to IframeContent
+      isDarkMode={isDarkMode}
+      sessionId={sessionId}
     />
   );
 

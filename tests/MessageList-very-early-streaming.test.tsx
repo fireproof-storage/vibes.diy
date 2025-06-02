@@ -68,6 +68,7 @@ describe('MessageList Real-World Streaming Tests', () => {
         setSelectedResponseId={() => {}}
         selectedResponseId=""
         setMobilePreviewShown={() => {}}
+        navigateToView={() => {}}
       />
     );
 
@@ -123,6 +124,7 @@ describe('MessageList Real-World Streaming Tests', () => {
         setSelectedResponseId={() => {}}
         selectedResponseId=""
         setMobilePreviewShown={() => {}}
+        navigateToView={() => {}}
       />
     );
 
@@ -180,6 +182,7 @@ describe('MessageList Real-World Streaming Tests', () => {
         setSelectedResponseId={() => {}}
         selectedResponseId=""
         setMobilePreviewShown={() => {}}
+        navigateToView={() => {}}
       />
     );
 
@@ -221,6 +224,7 @@ describe('MessageList Real-World Streaming Tests', () => {
         setSelectedResponseId={() => {}}
         selectedResponseId=""
         setMobilePreviewShown={() => {}}
+        navigateToView={() => {}}
       />
     );
 

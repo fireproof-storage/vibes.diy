@@ -1,5 +1,7 @@
 import type { DocTypes } from 'use-fireproof';
 import type { RuntimeError } from '../hooks/useRuntimeErrors';
+import type { ViewType } from '../utils/ViewState'; // Import ViewType
+export type { ViewType } from '../utils/ViewState'; // Re-export ViewType
 
 // ===== Vibe Document Type =====
 export interface VibeDocument {
@@ -142,10 +144,12 @@ export interface ChatState {
   addError: (error: RuntimeError) => void;
 }
 
-export interface ChatInterfaceProps {
-  chatState: ChatState;
-  sessionId?: string | null;
+export interface ChatInterfaceProps extends ChatState {
+  // chatState is now extended
+  // sessionId is part of ChatState
   onSessionCreated?: (newSessionId: string) => void;
+  navigateToView: (view: ViewType) => void;
+  setMobilePreviewShown: (shown: boolean) => void;
 }
 
 /**

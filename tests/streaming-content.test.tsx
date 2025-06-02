@@ -23,6 +23,7 @@ describe('Streaming Content Tests', () => {
         setSelectedResponseId={() => {}}
         selectedResponseId=""
         setMobilePreviewShown={() => {}}
+        navigateToView={() => {}}
       />
     );
 
@@ -43,6 +44,7 @@ describe('Streaming Content Tests', () => {
         setSelectedResponseId={() => {}}
         selectedResponseId=""
         setMobilePreviewShown={() => {}}
+        navigateToView={() => {}}
       />
     );
 
