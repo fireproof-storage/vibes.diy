@@ -3,21 +3,16 @@ import type { ChatInterfaceProps } from '../types/chat'; // Updated import
 import MessageList from './MessageList';
 import WelcomeScreen from './WelcomeScreen';
 
-// Removed local ChatInterfaceProps definition
-
 function ChatInterface({
   docs: messages,
   isStreaming,
   selectedResponseDoc,
   setSelectedResponseId,
   setMobilePreviewShown,
-  // setActiveView, // Removed
-  navigateToView, // Added
+  navigateToView,
 }: ChatInterfaceProps) {
-  // State for UI transitions and sharing
   const messagesContainerRef = useRef<HTMLDivElement>(null);
 
-  // Scroll to bottom when message count changes or when streaming starts/stops
   useEffect(() => {
     if (messagesContainerRef.current && messages.length > 0) {
       try {
@@ -29,7 +24,6 @@ function ChatInterface({
     }
   }, [messages.length, isStreaming]);
 
-  // Memoize the MessageList component to prevent unnecessary re-renders
   const memoizedMessageList = useMemo(() => {
     return (
       <MessageList
@@ -38,8 +32,7 @@ function ChatInterface({
         setSelectedResponseId={setSelectedResponseId}
         selectedResponseId={selectedResponseDoc?._id || ''}
         setMobilePreviewShown={setMobilePreviewShown}
-        // setActiveView={setActiveView} // Removed
-        navigateToView={navigateToView} // Added
+        navigateToView={navigateToView}
       />
     );
   }, [
@@ -48,8 +41,7 @@ function ChatInterface({
     setSelectedResponseId,
     selectedResponseDoc,
     setMobilePreviewShown,
-    // setActiveView, // Removed
-    navigateToView, // Added
+    navigateToView,
   ]);
 
   return (
@@ -69,5 +61,4 @@ function ChatInterface({
   );
 }
 
-// Export the component
 export default ChatInterface;

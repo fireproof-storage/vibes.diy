@@ -3,7 +3,7 @@ import { CALLAI_API_KEY } from '../../config/env';
 import { animationStyles } from './ResultPreviewTemplates';
 import type { ResultPreviewProps, IframeFiles } from './ResultPreviewTypes';
 import type { RuntimeError } from '../../hooks/useRuntimeErrors';
-import { encodeTitle } from '../SessionSidebar/utils';
+// import { encodeTitle } from '../SessionSidebar/utils';
 // ResultPreview component
 import IframeContent from './IframeContent';
 
@@ -14,8 +14,7 @@ function ResultPreview({
   sessionId,
   isStreaming = false,
   codeReady = false,
-  displayView, // Changed from activeView
-  // setActiveView, // Removed
+  displayView,
   onPreviewLoaded,
   setMobilePreviewShown,
   setIsIframeFetching,
@@ -106,26 +105,12 @@ function ResultPreview({
                 apiKey = keyData.key;
               } catch (e) {}
             }
-          } else {
           }
 
           const iframe = document.querySelector('iframe') as HTMLIFrameElement;
           iframe?.contentWindow?.postMessage({ type: 'callai-api-key', key: apiKey }, '*');
 
           setMobilePreviewShown(true);
-
-          // View switching to 'preview' is now handled by useViewState in home.tsx via the previewReady prop.
-          // setActiveView('preview'); // Removed
-
-          // Also navigate to the /app URL suffix if not already there.
-          const path = window.location.pathname;
-          // Add null check for title and encode it
-          const encodedTitle = title ? encodeTitle(title) : '';
-          if (!path.endsWith('/app') && sessionId && encodedTitle) {
-            // Navigation is handled by the parent component (home.tsx) based on activeView state
-            // We only set the state here.
-            // navigate(`/chat/${sessionId}/${encodedTitle}/app`, { replace: true });
-          }
 
           // Notify parent component that preview is loaded
           onPreviewLoaded();
@@ -160,7 +145,6 @@ function ResultPreview({
     };
   }, [
     onScreenshotCaptured,
-    // setActiveView, // Removed
     onPreviewLoaded,
     setIsIframeFetching,
     setMobilePreviewShown,
@@ -173,14 +157,12 @@ function ResultPreview({
     <div className="h-full">{/* empty div to prevent layout shift */}</div>
   ) : (
     <IframeContent
-      activeView={displayView} // Changed from activeView
-      filesContent={filesContent} // Pass the derived filesContent
-      isStreaming={!codeReady} // Pass the derived prop
+      activeView={displayView}
+      filesContent={filesContent}
+      isStreaming={!codeReady}
       codeReady={codeReady}
-      // setActiveView={setActiveView} // Removed from IframeContent props (will need to update IframeContent too)
-      /* dependencies prop removed */
-      isDarkMode={isDarkMode} // Pass down the theme state
-      sessionId={sessionId} // Pass the sessionId to IframeContent
+      isDarkMode={isDarkMode}
+      sessionId={sessionId}
     />
   );
 

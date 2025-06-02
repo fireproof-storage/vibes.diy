@@ -168,8 +168,7 @@ describe('Iframe Template', () => {
           sessionId="test-session"
           isStreaming={false}
           codeReady={true}
-          displayView="preview" // Changed from activeView
-          // setActiveView={vi.fn()} // Removed
+          displayView="preview"
           onPreviewLoaded={onPreviewLoadedMock}
           setMobilePreviewShown={vi.fn()}
         />

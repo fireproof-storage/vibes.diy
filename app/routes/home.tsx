@@ -249,10 +249,6 @@ export default function UnifiedSession() {
           <ChatInterface
             {...chatState}
             setMobilePreviewShown={setMobilePreviewShown}
-            // Pass navigateToView for view changes initiated from ChatInterface (if any)
-            // Assuming ChatInterface might have buttons/links to switch views.
-            // If not, this prop might not be strictly needed by ChatInterface itself.
-            // For now, replacing setActiveView with navigateToView for consistency.
             navigateToView={navigateToView}
           />
         }
