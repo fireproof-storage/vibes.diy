@@ -9,6 +9,15 @@ export const isMobileViewport = () => {
 
 export type ViewType = 'preview' | 'code' | 'data';
 
+export type ViewControlsType = {
+  [key in ViewType]: {
+    enabled: boolean;
+    icon: string;
+    label: string;
+    loading?: boolean; // Made loading optional
+  };
+};
+
 export function useViewState(props: {
   sessionId?: string;
   title?: string;

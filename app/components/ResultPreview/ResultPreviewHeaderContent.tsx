@@ -1,7 +1,7 @@
 import { /*useEffect,*/ useRef } from 'react'; // useEffect no longer needed here
 import { useParams } from 'react-router';
 import { useSession } from '../../hooks/useSession';
-import type { ViewType } from '../../utils/ViewState';
+import type { ViewType, ViewControlsType } from '../../utils/ViewState';
 // import { useViewState } from '../../utils/ViewState'; // useViewState is now lifted to home.tsx
 import { BackButton } from './BackButton';
 import { ViewControls } from './ViewControls';
@@ -13,7 +13,7 @@ interface ResultPreviewHeaderContentProps {
   // Props from useViewState (lifted to home.tsx)
   displayView: ViewType;
   navigateToView: (view: ViewType) => void;
-  viewControls: any; // Consider a more specific type based on useViewState's return
+  viewControls: ViewControlsType;
   showViewControls: boolean;
 
   // Existing props passed from home.tsx

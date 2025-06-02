@@ -52,11 +52,6 @@ function ResultPreview({
     }
   }, [isStreaming]);
 
-  useEffect(() => {
-    // Effect to set initial view to 'code' was here.
-    // This logic is now handled by useViewState in home.tsx based on initialLoad and other factors.
-  }, [code]); // Kept code dependency for potential future use, or can be removed if truly no-op.
-
   // Theme detection effect
   useEffect(() => {
     // Add a small delay to ensure the app's theme detection in root.tsx has run first
