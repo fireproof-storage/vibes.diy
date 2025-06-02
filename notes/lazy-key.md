@@ -7,6 +7,7 @@ The `jchris/lazy-key3` branch implements a more optimized approach to API key ha
 ## Current Analysis
 
 - `selem/auth` branch already has ~90% of the "lazy-key3" logic:
+
   - Rate-limit back-off mechanism
   - Shared `pendingKeyRequest` for deduplication
   - Hash continuity for key tracking
@@ -27,61 +28,65 @@ Implement **on-demand provisioning**: The very first time a component (chat send
 a. Remove the current `useEffect` that automatically calls `fetchNewKey()`.
 
 b. Add `ensureApiKey` as a `useCallback`:
-   ```typescript
-   const ensureApiKey = useCallback(async (): Promise<{ key: string; hash: string }> => {
-     // 1. Return cached apiKey if present
-     if (apiKey?.key && !isLoading) {
-       return apiKey;
-     }
 
-     // 2. Check localStorage
-     const storedKeyData = checkLocalStorageForKey();
-     if (storedKeyData && isValidKey(storedKeyData)) {
-       setApiKey({ key: storedKeyData.key, hash: storedKeyData.hash });
-       return { key: storedKeyData.key, hash: storedKeyData.hash };
-     }
+```typescript
+const ensureApiKey = useCallback(async (): Promise<{ key: string; hash: string }> => {
+  // 1. Return cached apiKey if present
+  if (apiKey?.key && !isLoading) {
+    return apiKey;
+  }
 
-     // 3. Fetch new key if needed
-     try {
-       const hashToUse = storedKeyData?.hash;
-       return await fetchNewKeyInternal(userId, hashToUse);
-     } catch (error) {
-       // Handle fallback logic
-       if (storedKeyData?.key) {
-         return { key: storedKeyData.key, hash: storedKeyData.hash || 'unknown' };
-       }
-       throw error;
-     }
-   }, [apiKey, userId, isLoading]);
-   ```
+  // 2. Check localStorage
+  const storedKeyData = checkLocalStorageForKey();
+  if (storedKeyData && isValidKey(storedKeyData)) {
+    setApiKey({ key: storedKeyData.key, hash: storedKeyData.hash });
+    return { key: storedKeyData.key, hash: storedKeyData.hash };
+  }
+
+  // 3. Fetch new key if needed
+  try {
+    const hashToUse = storedKeyData?.hash;
+    return await fetchNewKeyInternal(userId, hashToUse);
+  } catch (error) {
+    // Handle fallback logic
+    if (storedKeyData?.key) {
+      return { key: storedKeyData.key, hash: storedKeyData.hash || 'unknown' };
+    }
+    throw error;
+  }
+}, [apiKey, userId, isLoading]);
+```
 
 c. Update return signature:
-   ```typescript
-   return { 
-     apiKey: apiKey?.key, 
-     apiKeyObject: apiKey,  // Full object for internal use
-     isLoading, 
-     error, 
-     refreshKey,
-     ensureApiKey  // New imperative function
-   };
-   ```
+
+```typescript
+return {
+  apiKey: apiKey?.key,
+  apiKeyObject: apiKey, // Full object for internal use
+  isLoading,
+  error,
+  refreshKey,
+  ensureApiKey, // New imperative function
+};
+```
 
 d. Keep `refreshKey` and all existing validation/rate-limit logic.
 
 ### 2. Update Consumers
 
 a. Modify `app/hooks/useSimpleChat.ts`:
-   - Replace direct `apiKey` reads with explicit calls to `ensureApiKey()`:
-     ```typescript
-     const { key: apiKey } = await ensureApiKey();
-     ```
-   - Remove the effect that calls `checkCredits()` when `apiKey` appears
-   - Call `checkCredits()` right after `ensureApiKey()` succeeds
-   - Inside `refresh()`, keep existing logic but switch to `await refreshKey()` or `await ensureApiKey()`
+
+- Replace direct `apiKey` reads with explicit calls to `ensureApiKey()`:
+  ```typescript
+  const { key: apiKey } = await ensureApiKey();
+  ```
+- Remove the effect that calls `checkCredits()` when `apiKey` appears
+- Call `checkCredits()` right after `ensureApiKey()` succeeds
+- Inside `refresh()`, keep existing logic but switch to `await refreshKey()` or `await ensureApiKey()`
 
 b. Update other hooks/utilities that expect `apiKey` on mount:
-   - Tests, scripts, and other components should call `ensureApiKey()` when they need the key
+
+- Tests, scripts, and other components should call `ensureApiKey()` when they need the key
 
 ### 3. UI Feedback
 
@@ -103,6 +108,7 @@ The Netlify edge function already accepts an optional `hash` parameter, so no ba
 ## Benefits
 
 Once implemented, the app will:
+
 - Avoid an API round-trip for most page loads
 - Only prompt/refresh when a user actually tries to chat or inspect credits
 - Maintain the same resilience and rate-limit behavior introduced in `jchris/lazy-key3`

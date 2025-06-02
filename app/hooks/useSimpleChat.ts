@@ -41,7 +41,9 @@ export function useSimpleChat(sessionId: string | undefined): ChatState {
   // For logged-in users: uses userId from auth
   // This approach ensures anonymous users get one API key with limited credits
   // and logged-in users will get proper credit assignment based on their ID
-  const { apiKey, refreshKey } = useApiKey(userId);
+  // Using the useApiKey hook to get API key related functionality
+  // Note: ensureApiKey is the key function we need for lazy loading
+  const { ensureApiKey, refreshKey } = useApiKey(userId);
 
   // Get session data
   const {
@@ -222,34 +224,66 @@ export function useSimpleChat(sessionId: string | undefined): ChatState {
   );
 
   // Function to check credits and set needsNewKey if needed
-  const checkCredits = useCallback(async () => {
-    if (!apiKey) return;
-
-    try {
-      // Deduplicate credits check requests across components
-      if (!pendingCreditsCheck) {
-        pendingCreditsCheck = getCredits(apiKey);
+  const checkCredits = useCallback(
+    async (apiKeyToCheck: string): Promise<boolean> => {
+      if (!apiKeyToCheck) {
+        console.warn('checkCredits: No API key provided');
+        addError({
+          type: 'error',
+          message: 'API key is required to check credits.',
+          errorType: 'Other', // Using valid error type
+          source: 'checkCredits',
+          timestamp: new Date().toISOString(),
+        });
+        return false;
       }
 
-      // Wait for the existing or new request to complete
-      const credits = await pendingCreditsCheck;
-      console.log('💳 Credits:', credits);
+      try {
+        // Deduplicate credits check requests across components
+        if (!pendingCreditsCheck) {
+          pendingCreditsCheck = getCredits(apiKeyToCheck);
+        }
 
-      // Reset the pending request after completion
-      pendingCreditsCheck = null;
+        // Wait for the existing or new request to complete
+        const credits = await pendingCreditsCheck;
+        console.log('💳 Credits:', credits);
 
-      if (credits && credits.available <= 0.9) {
+        // Reset the pending request after completion
+        pendingCreditsCheck = null;
+
+        if (credits && credits.available <= 0.9) {
+          setNeedsNewKey(true);
+          addError({
+            type: 'error',
+            message: 'Low credits. A new API key might be required soon.',
+            errorType: 'Other', // Using valid error type
+            source: 'checkCredits',
+            timestamp: new Date().toISOString(),
+          });
+          // Still return true since we have some credits
+        }
+
+        return true; // Credits check successful
+      } catch (error: any) {
+        // Reset the pending request on error
+        pendingCreditsCheck = null;
+
+        // If we can't check credits, we might need a new key
+        console.error('Error checking credits:', error);
         setNeedsNewKey(true);
+        addError({
+          type: 'error',
+          message: error.message || 'Failed to check credits. A new API key might be needed.',
+          errorType: 'Other', // Using valid error type
+          source: 'checkCredits',
+          timestamp: new Date().toISOString(),
+          stack: error.stack,
+        });
+        return false; // Credits check failed
       }
-    } catch (error) {
-      // Reset the pending request on error
-      pendingCreditsCheck = null;
-
-      // If we can't check credits, we might need a new key
-      console.error('Error checking credits:', error);
-      setNeedsNewKey(true);
-    }
-  }, [apiKey]);
+    },
+    [addError, setNeedsNewKey]
+  );
 
   /**
    * Send a message and process the AI response
@@ -264,10 +298,6 @@ export function useSimpleChat(sessionId: string | undefined): ChatState {
       trackChatInputClick(promptText.length);
 
       if (!promptText.trim()) return;
-      if (!apiKey) {
-        console.error('API key not available yet');
-        return;
-      }
 
       // Update user message with the text we're about to send if using an override
       if (textOverride) {
@@ -275,21 +305,56 @@ export function useSimpleChat(sessionId: string | undefined): ChatState {
       }
 
       // Save a copy of the user message for immediate display
-      // This handles the case when the message doesn't appear in docs immediately
       setPendingUserDoc({
         ...userMessage,
         text: promptText,
       });
 
+      // Set streaming state early for better UI feedback
+      setIsStreaming(true);
+
+      // Get API key - this is the core of the lazy key loading pattern
+      let currentApiKey: string;
+      try {
+        console.log('sendMessage: Ensuring API key...');
+        const keyObject = await ensureApiKey();
+        if (!keyObject?.key) {
+          throw new Error('API key not found after ensureApiKey call.');
+        }
+        currentApiKey = keyObject.key;
+        console.log('sendMessage: API key ensured.');
+      } catch (err) {
+        console.warn('sendMessage: Failed to ensure API key:', err);
+        setNeedsLogin(true); // Prompt for login if key cannot be obtained
+        setNeedsNewKey(true); // Also indicate a new key might be needed
+        addError({
+          type: 'error',
+          message: 'API key is required. Please log in or ensure your key is valid.',
+          errorType: 'Other', // Using valid error type
+          source: 'sendMessage',
+          timestamp: new Date().toISOString(),
+        });
+        setIsStreaming(false); // Reset streaming state on error
+        return;
+      }
+
+      // Check credits with the obtained key
+      console.log('sendMessage: Checking credits...');
+      const hasSufficientCredits = await checkCredits(currentApiKey);
+      if (!hasSufficientCredits) {
+        console.warn('sendMessage: Insufficient credits to send message.');
+        // Error is already added by checkCredits
+        setIsStreaming(false);
+        return;
+      }
+      console.log('sendMessage: Credits sufficient.');
+
       // Ensure we have a system prompt
       const currentSystemPrompt = await ensureSystemPrompt();
 
-      // Set streaming state
-      setIsStreaming(true);
-
       // Submit user message first
       return submitUserMessage()
-        .then(() => {
+        .then(async () => {
           const messageHistory = buildMessageHistory();
 
           return streamAI(
@@ -298,7 +363,7 @@ export function useSimpleChat(sessionId: string | undefined): ChatState {
             messageHistory,
             promptText,
             (content) => throttledMergeAiMessage(content),
-            apiKey || '',
+            currentApiKey, // Use the fetched apiKey from above
             userId,
             setNeedsLogin
           );
@@ -358,7 +423,18 @@ export function useSimpleChat(sessionId: string | undefined): ChatState {
 
             // Generate title if needed
             const { segments } = parseContent(aiMessage?.text || '');
-            await generateTitle(segments, TITLE_MODEL, apiKey || '').then(updateTitle);
+            // Make sure we still have a valid key for title generation
+            try {
+              console.log('sendMessage: Generating title...');
+              const title = await generateTitle(segments, TITLE_MODEL, currentApiKey);
+              // Update title with the generated title
+              if (title) {
+                updateTitle(title);
+              }
+            } catch (titleError) {
+              console.warn('Failed to generate title:', titleError);
+              // Non-critical error, don't need to show to user
+            }
           } finally {
             isProcessingRef.current = false;
           }
@@ -373,11 +449,16 @@ export function useSimpleChat(sessionId: string | undefined): ChatState {
           setSelectedResponseId('');
         })
         .finally(() => {
-          // Check credits status
-          checkCredits();
-
-          // Reset streaming state
+          // Reset streaming state first - checkCredits might fail if the API key is no longer valid
           setIsStreaming(false);
+
+          // Check credits status if we still have a valid API key
+          if (currentApiKey) {
+            // Non-blocking check, we don't need to wait for this
+            checkCredits(currentApiKey).catch((err) => {
+              console.warn('Failed to check credits in finally block:', err);
+            });
+          }
         });
     },
     [
@@ -395,7 +476,7 @@ export function useSimpleChat(sessionId: string | undefined): ChatState {
       setSelectedResponseId,
       updateTitle,
       checkCredits,
-      apiKey,
+      ensureApiKey,
     ]
   );
 
@@ -411,12 +492,8 @@ export function useSimpleChat(sessionId: string | undefined): ChatState {
     }
   }, [docs, pendingAiMessage]);
 
-  // Check credits whenever we get an API key
-  useEffect(() => {
-    if (apiKey) {
-      checkCredits();
-    }
-  }, [apiKey, checkCredits]);
+  // Credits are now checked directly during sendMessage after obtaining the API key
+  // No need for a useEffect to check on apiKey changes
 
   // Auto-send for immediate errors (with debounce)
   const debouncedSendRef = useRef<NodeJS.Timeout | null>(null);

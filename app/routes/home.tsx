@@ -36,12 +36,7 @@ export default function UnifiedSession() {
   const [isIframeFetching, setIsIframeFetching] = useState(false);
 
   // Centralized view state management
-  const {
-    displayView,
-    navigateToView,
-    viewControls,
-    showViewControls,
-  } = useViewState({
+  const { displayView, navigateToView, viewControls, showViewControls } = useViewState({
     sessionId: chatState.sessionId || undefined, // Handle null
     title: chatState.title || undefined, // Handle null
     code: chatState.selectedCode?.content || '',
