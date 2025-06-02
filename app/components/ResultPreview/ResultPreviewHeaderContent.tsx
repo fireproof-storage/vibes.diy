@@ -15,8 +15,6 @@ interface ResultPreviewHeaderContentProps {
   navigateToView: (view: ViewType) => void;
   viewControls: ViewControlsType;
   showViewControls: boolean;
-
-  // Existing props passed from home.tsx
   previewReady: boolean;
   setMobilePreviewShown: (shown: boolean) => void;
   setUserClickedBack?: (clicked: boolean) => void;
@@ -26,7 +24,6 @@ interface ResultPreviewHeaderContentProps {
   isStreaming: boolean; // for BackButton logic
   sessionId?: string; // for useSession, usePublish
   title?: string; // for useSession, usePublish
-  isIframeFetching?: boolean; // for viewControls loading state
 }
 
 const ResultPreviewHeaderContent: React.FC<ResultPreviewHeaderContentProps> = ({
@@ -37,11 +34,10 @@ const ResultPreviewHeaderContent: React.FC<ResultPreviewHeaderContentProps> = ({
   previewReady,
   setMobilePreviewShown,
   setUserClickedBack,
-  code, // from home.tsx (chatState.selectedCode.content)
-  isStreaming, // from home.tsx (chatState.isStreaming)
-  sessionId: propSessionId, // from home.tsx (chatState.sessionId)
-  title: propTitle, // from home.tsx (chatState.title)
-  isIframeFetching = false, // from home.tsx
+  code,
+  isStreaming,
+  sessionId: propSessionId,
+  title: propTitle,
 }) => {
   const { sessionId: urlSessionId, view: urlView } = useParams();
   const publishButtonRef = useRef<HTMLButtonElement>(null);

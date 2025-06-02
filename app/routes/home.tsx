@@ -239,8 +239,6 @@ export default function UnifiedSession() {
               code={chatState.selectedCode?.content || ''}
               sessionId={chatState.sessionId || undefined} // Handle null
               title={chatState.title || undefined} // Handle null
-              // Prop needed by ViewControls for preview loading state
-              isIframeFetching={isIframeFetching}
               previewReady={previewReady} // needed for publish button visibility logic
             />
           ) : null
