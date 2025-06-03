@@ -1,7 +1,7 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import type { IframeFiles } from './ResultPreviewTypes';
-import { CALLAI_API_KEY } from '~/config/env';
 import Editor from '@monaco-editor/react';
+import { useApiKey } from '~/hooks/useApiKey';
 import { shikiToMonaco } from '@shikijs/monaco';
 import { createHighlighter } from 'shiki';
 import { DatabaseListView } from './DataView';
@@ -27,6 +27,9 @@ const IframeContent: React.FC<IframeContentProps> = ({
   isDarkMode,
   sessionId,
 }) => {
+  const [apiKeyReady, setApiKeyReady] = useState(false);
+  const { ensureApiKey } = useApiKey();
+  const [apiKey, setApiKey] = useState('');
   const iframeRef = useRef<HTMLIFrameElement>(null);
   // Theme state is now received from parent via props
   const contentLoadedRef = useRef(false);
@@ -81,9 +84,24 @@ const IframeContent: React.FC<IframeContentProps> = ({
 
   // This effect is now managed at the ResultPreview component level
 
+  // Get API key on component mount
   useEffect(() => {
-    // Update iframe when code is ready
-    if (codeReady && iframeRef.current) {
+    const getApiKey = async () => {
+      try {
+        const keyData = await ensureApiKey();
+        setApiKey(keyData.key);
+        setApiKeyReady(true);
+      } catch (error) {
+        console.error('Failed to get API key:', error);
+      }
+    };
+
+    getApiKey();
+  }, [ensureApiKey]);
+
+  // Update iframe when code is ready and API key is available
+  useEffect(() => {
+    if (codeReady && apiKeyReady && iframeRef.current) {
       // Skip if content hasn't changed
       if (contentLoadedRef.current && appCode === lastContentRef.current) {
         return;
@@ -129,7 +147,7 @@ const IframeContent: React.FC<IframeContentProps> = ({
 
       // Use the template and replace placeholders
       const htmlContent = iframeTemplateRaw
-        .replace('{{API_KEY}}', CALLAI_API_KEY)
+        .replace('{{API_KEY}}', apiKey)
         .replace('{{APP_CODE}}', transformedCode)
         .replace('{{SESSION_ID}}', sessionIdValue);
 

@@ -7,6 +7,18 @@ vi.mock('@remix-run/router', () => ({
   createBrowserRouter: vi.fn(),
 }));
 
+// Mock the useApiKey hook
+vi.mock('../app/hooks/useApiKey', () => ({
+  useApiKey: () => ({
+    apiKey: 'test-api-key',
+    apiKeyObject: { key: 'test-api-key', hash: 'test-hash' },
+    isLoading: false,
+    error: null,
+    refreshKey: vi.fn(),
+    ensureApiKey: vi.fn().mockResolvedValue({ key: 'test-api-key', hash: 'test-hash' })
+  })
+}));
+
 describe('Iframe Template', () => {
   it('contains proper APP_CODE placeholder format', () => {
     // Verify the template contains the correct APP_CODE placeholder pattern
