@@ -82,12 +82,8 @@ const IframeContent: React.FC<IframeContentProps> = ({
   // Get API key on component mount
   useEffect(() => {
     const getApiKey = async () => {
-      try {
-        const keyData = await ensureApiKey();
-        setApiKey(keyData.key);
-      } catch (error) {
-        console.error('Failed to get API key:', error);
-      }
+      const keyData = await ensureApiKey();
+      setApiKey(keyData.key);
     };
 
     getApiKey();
@@ -163,7 +159,7 @@ const IframeContent: React.FC<IframeContentProps> = ({
         window.removeEventListener('message', handleMessage);
       };
     }
-  }, [appCode, codeReady]);
+  }, [appCode, apiKey, codeReady]);
 
   // Determine which view to show based on URL path - gives more stable behavior on refresh
   const getViewFromPath = () => {
