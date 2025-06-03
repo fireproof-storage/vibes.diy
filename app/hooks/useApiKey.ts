@@ -67,19 +67,25 @@ export function useApiKey(userId?: string) {
         // Wait for the existing or new request to complete
         const apiResponse = await pendingKeyRequest;
 
-        // Ensure we have the correct key structure
+        // Ensure keyData points to the actual key information object
         if (apiResponse && typeof apiResponse === 'object') {
-          // Check if the API returned a nested key object (common with some APIs)
           if (
             'key' in apiResponse &&
             typeof apiResponse.key === 'object' &&
-            apiResponse.key &&
-            'key' in apiResponse.key
+            apiResponse.key !== null
           ) {
-            keyData = apiResponse.key; // Type should be handled by createOrUpdateKeyViaEdgeFunction's return type
+            // apiResponse is structured like { success: bool, key: { actual_data_object } }
+            // The actual_data_object might or might not contain a 'key' string property.
+            keyData = apiResponse.key;
           } else {
-            keyData = apiResponse; // Type should be handled by createOrUpdateKeyViaEdgeFunction's return type
+            // apiResponse itself is expected to be the actual_data_object
+            // e.g., { key: "string"?, hash: "string", ... }
+            keyData = apiResponse;
           }
+        } else {
+          // apiResponse is not a valid object, or null.
+          // Set keyData to apiResponse to allow downstream error handling or logging of the invalid response.
+          keyData = apiResponse; // keyData will be non-object here if apiResponse was, or null/undefined.
         }
       } catch (error) {
         // Reset the pending request on error to allow future attempts
@@ -93,18 +99,36 @@ export function useApiKey(userId?: string) {
         setIsLoading(false);
       }
 
-      // Validate that we have a proper key object before storing
+      // Validate keyData and determine what to store and return
       if (keyData && typeof keyData.key === 'string' && keyData.key.trim() !== '') {
+        // Case 1: Full key data received (key + hash + other metadata)
         const keyToStore = {
-          ...keyData,
+          ...keyData, // Contains key, hash, and other metadata from API
           createdAt: Date.now(),
         };
-
         localStorage.setItem(storageKey, JSON.stringify(keyToStore));
         const resultingKey = { key: keyData.key, hash: keyData.hash };
         setApiKey(resultingKey);
-        return resultingKey; // Return the key/hash object for ensureApiKey
+        return resultingKey;
+      } else if (keyData && typeof keyData.hash === 'string' && keyData.hash.trim() !== '') {
+        // Case 2: Only hash (and other metadata) received, no new 'key' string
+        // This is the "no-op success" for the key string itself, but hash/metadata might have updated.
+
+        const existingKeyString = apiKey?.key; // Retrieve current key string from state
+
+        const keyToStore = {
+          ...keyData, // Contains new hash and other metadata from API
+          key: existingKeyString, // Preserve existing key string, or undefined if none
+          createdAt: Date.now(),
+        };
+        localStorage.setItem(storageKey, JSON.stringify(keyToStore));
+
+        const resultingKey = { key: existingKeyString || '', hash: keyData.hash };
+        setApiKey(resultingKey); // Update state with new hash and preserved/empty key
+        return resultingKey;
       } else {
+        // Case 3: Invalid response (keyData is null, not an object, or missing both key and hash)
+        console.error('Invalid API key response format (keyData problematic):', keyData);
         const error = new Error('Invalid API key response format');
         setError(error);
         throw error;
