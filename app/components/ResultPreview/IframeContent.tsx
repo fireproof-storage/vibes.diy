@@ -27,7 +27,6 @@ const IframeContent: React.FC<IframeContentProps> = ({
   isDarkMode,
   sessionId,
 }) => {
-  const [apiKeyReady, setApiKeyReady] = useState(false);
   const { ensureApiKey } = useApiKey();
   const [apiKey, setApiKey] = useState('');
   const iframeRef = useRef<HTMLIFrameElement>(null);
@@ -90,7 +89,6 @@ const IframeContent: React.FC<IframeContentProps> = ({
       try {
         const keyData = await ensureApiKey();
         setApiKey(keyData.key);
-        setApiKeyReady(true);
       } catch (error) {
         console.error('Failed to get API key:', error);
       }
@@ -101,7 +99,7 @@ const IframeContent: React.FC<IframeContentProps> = ({
 
   // Update iframe when code is ready and API key is available
   useEffect(() => {
-    if (codeReady && apiKeyReady && iframeRef.current) {
+    if (codeReady && apiKey && iframeRef.current) {
       // Skip if content hasn't changed
       if (contentLoadedRef.current && appCode === lastContentRef.current) {
         return;
