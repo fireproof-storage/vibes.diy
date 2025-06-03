@@ -242,7 +242,7 @@ export async function verifyToken(token: string): Promise<{ payload: TokenPayloa
 export async function extendToken(currentToken: string): Promise<string | null> {
   try {
     const endpoint =
-      `${import.meta.env.VITE_CONNECT_API_URL}` || 'https://dev.connect.fireproof.direct/api';
+      import.meta.env.VITE_CONNECT_API_URL || 'https://dev.connect.fireproof.direct/api';
 
     const res = await fetch(endpoint, {
       method: 'POST',
