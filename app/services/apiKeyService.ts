@@ -1,6 +1,6 @@
-// Configure the API origin here
-// TODO: Replace with your API's domain (e.g., 'https://vibecode.garden')
-const API_ORIGIN = 'https://vibecode.garden'; // Leave empty for same-origin requests
+import { API_BASE_URL } from '../config/env';
+
+// API_ORIGIN is now API_BASE_URL from env.ts
 
 /**
  * Service for managing CallAI API keys through Netlify Edge Functions
@@ -26,7 +26,7 @@ export async function createOrUpdateKeyViaEdgeFunction(
   updated_at: string;
 }> {
   // Use the API_ORIGIN for cross-origin requests, or relative path for same-origin
-  const endpoint = API_ORIGIN ? `${API_ORIGIN}/api/keys` : '/api/keys';
+  const endpoint = API_BASE_URL ? `${API_BASE_URL}/api/keys` : '/api/keys';
 
   const response = await fetch(endpoint, {
     method: 'POST',

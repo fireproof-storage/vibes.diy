@@ -10,6 +10,7 @@ import {
 } from 'react-router';
 
 import { PostHogProvider } from 'posthog-js/react';
+import { POSTHOG_KEY, POSTHOG_HOST, IS_DEV_MODE } from './config/env';
 import type { Route } from './+types/root';
 import './app.css';
 import ClientOnly from './components/ClientOnly';
@@ -92,9 +93,9 @@ export function Layout({ children }: { children: React.ReactNode }) {
       <body>
         <AuthProvider>
           <PostHogProvider
-            apiKey={import.meta.env.VITE_POSTHOG_KEY}
+            apiKey={POSTHOG_KEY}
             options={{
-              api_host: import.meta.env.VITE_POSTHOG_HOST,
+              api_host: POSTHOG_HOST,
               opt_out_capturing_by_default: true,
             }}
           >
@@ -129,7 +130,7 @@ export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
     message = error.status === 404 ? '404' : 'Error';
     details =
       error.status === 404 ? 'The requested page could not be found.' : error.statusText || details;
-  } else if (import.meta.env.DEV && error && error instanceof Error) {
+  } else if (IS_DEV_MODE && error && error instanceof Error) {
     details = error.message;
     stack = error.stack;
   }

@@ -51,6 +51,8 @@ vi.mock('../app/services/apiKeyService');
 vi.mock('../app/config/env', () => ({
   CALLAI_API_KEY: 'mock-callai-api-key-for-testing',
   FIREPROOF_CHAT_HISTORY: 'test-chat-history',
+  GA_TRACKING_ID: 'mock-ga-tracking-id',
+  APP_MODE: 'test', // Added mock APP_MODE
 }));
 
 // Mock Fireproof to prevent CRDT errors

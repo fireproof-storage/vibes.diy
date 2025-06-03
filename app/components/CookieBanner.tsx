@@ -1,7 +1,7 @@
 import { usePostHog } from 'posthog-js/react';
 import { useEffect, useState } from 'react';
 import { useLocation } from 'react-router';
-import { GA_TRACKING_ID } from '../config/analytics';
+import { GA_TRACKING_ID } from '../config/env';
 import { useCookieConsent } from '../contexts/CookieConsentContext';
 import { initGA, pageview } from '../utils/analytics';
 
