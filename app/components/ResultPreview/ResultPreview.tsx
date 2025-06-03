@@ -1,10 +1,8 @@
-import React, { useEffect, useRef, useState, useMemo } from 'react';
-import { CALLAI_API_KEY } from '../../config/env';
+import React, { useEffect, useRef, useMemo, useState, useCallback } from 'react';
 import { animationStyles } from './ResultPreviewTemplates';
 import type { ResultPreviewProps, IframeFiles } from './ResultPreviewTypes';
 import type { RuntimeError } from '../../hooks/useRuntimeErrors';
-// import { encodeTitle } from '../SessionSidebar/utils';
-// ResultPreview component
+import { useApiKey } from '../../hooks/useApiKey';
 import IframeContent from './IframeContent';
 
 function ResultPreview({
@@ -22,63 +20,88 @@ function ResultPreview({
   children,
   title,
 }: ResultPreviewProps & { children?: React.ReactNode }) {
-  // Add theme detection at the parent level
-  const [isDarkMode, setIsDarkMode] = useState<boolean>(true); // Default to dark mode
+  // Still use the useApiKey hook for UI feedback, but we'll directly use ensureApiKey's return value
+  // useApiKey returns apiKey as a string
+  const { apiKey, isLoading: isLoadingApiKey, error: apiKeyError, ensureApiKey } = useApiKey();
+
+  // Create a ref for the iframe to send postMessages
+  const iframeRef = useRef<HTMLIFrameElement>(null);
+
+  // Track if we've successfully set the API key
+  const apiKeySetRef = useRef<boolean>(false);
+
+  const [isDarkMode, setIsDarkMode] = useState<boolean>(true);
   const isStreamingRef = useRef(isStreaming);
   const hasGeneratedStreamingKeyRef = useRef(false);
 
   const showWelcome = !isStreaming && (!code || code.length === 0);
 
-  // Calculate filesContent directly based on code prop
   const filesContent = useMemo<IframeFiles>(() => {
-    // Always return the expected structure, defaulting code to empty string
     return {
       '/App.jsx': {
-        code: code && !showWelcome ? code : '', // Use code if available, else empty string
+        code: code && !showWelcome ? code : '',
         active: true,
       },
     };
-  }, [code, showWelcome, codeReady, isStreaming]); // Include codeReady to ensure updates
+  }, [code, showWelcome, codeReady, isStreaming]);
 
-  // Track streaming state changes to reset key generation only when streaming starts/stops
   useEffect(() => {
     if (isStreaming !== isStreamingRef.current) {
       isStreamingRef.current = isStreaming;
 
-      // Reset streaming key when streaming stops
       if (!isStreaming) {
         hasGeneratedStreamingKeyRef.current = false;
       }
     }
   }, [isStreaming]);
 
-  // Theme detection effect
-  useEffect(() => {
-    // Add a small delay to ensure the app's theme detection in root.tsx has run first
-    const timeoutId = setTimeout(() => {
-      // Check if document has the dark class
-      const hasDarkClass = document.documentElement.classList.contains('dark');
+  // Function to get the API key and send it to the iframe
+  const getAndSendApiKey = useCallback(async () => {
+    try {
+      // Directly use the return value of ensureApiKey instead of waiting for state updates
+      // ensureApiKey returns { key: string, hash: string }
+      const keyResult = await ensureApiKey();
 
-      // Set the theme state
+      // If we have an iframe ref and the key is valid, send it via postMessage
+      if (iframeRef.current?.contentWindow && keyResult && keyResult.key) {
+        iframeRef.current.contentWindow.postMessage(
+          { type: 'SET_API_KEY', apiKey: keyResult.key },
+          '*' // In production, consider using a specific origin for security
+        );
+        apiKeySetRef.current = true;
+        console.log('Sent API key to iframe via postMessage');
+        return true;
+      }
+      return false;
+    } catch (err) {
+      console.error('Failed to get or send API key:', err);
+      return false;
+    }
+  }, [ensureApiKey]);
+
+  // Effect to get and send the API key when the component mounts
+  useEffect(() => {
+    getAndSendApiKey();
+  }, [getAndSendApiKey]);
+
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      const hasDarkClass = document.documentElement.classList.contains('dark');
       setIsDarkMode(hasDarkClass);
 
-      // Set up observer to watch for class changes on document.documentElement
       const observer = new MutationObserver((mutations) => {
         mutations.forEach((mutation) => {
           if (mutation.attributeName === 'class') {
-            // Directly check for dark class
             const hasDarkClass = document.documentElement.classList.contains('dark');
-
             setIsDarkMode(hasDarkClass);
           }
         });
       });
 
-      // Start observing
       observer.observe(document.documentElement, { attributes: true });
 
       return () => observer.disconnect();
-    }, 100); // Slightly shorter delay than before
+    }, 100);
 
     return () => clearTimeout(timeoutId);
   }, []);
@@ -87,28 +110,17 @@ function ResultPreview({
     const handleMessage = ({ data }: MessageEvent) => {
       if (data) {
         if (data.type === 'preview-ready' || data.type === 'preview-loaded') {
-          // respond with the API key
-          // Use CALLAI_API_KEY if available (dev mode), otherwise check localStorage
-          let apiKey = CALLAI_API_KEY;
-
-          // Only check localStorage if no dev key is set
-          if (!apiKey) {
-            const storedKey = localStorage.getItem('vibes-openrouter-key');
-            if (storedKey) {
-              try {
-                const keyData = JSON.parse(storedKey);
-                apiKey = keyData.key;
-              } catch (e) {}
-            }
+          // When the iframe tells us it's ready, send the API key
+          if (!apiKeySetRef.current) {
+            getAndSendApiKey();
           }
-
-          const iframe = document.querySelector('iframe') as HTMLIFrameElement;
-          iframe?.contentWindow?.postMessage({ type: 'callai-api-key', key: apiKey }, '*');
 
           setMobilePreviewShown(true);
 
           // Notify parent component that preview is loaded
-          onPreviewLoaded();
+          if (onPreviewLoaded) {
+            onPreviewLoaded();
+          }
         } else if (data.type === 'streaming' && data.state !== undefined) {
           if (setIsIframeFetching) {
             setIsIframeFetching(data.state);
@@ -146,26 +158,80 @@ function ResultPreview({
     addError,
     sessionId,
     title,
+    getAndSendApiKey, // Add getAndSendApiKey to dependencies
   ]);
 
-  const previewArea = showWelcome ? (
-    <div className="h-full">{/* empty div to prevent layout shift */}</div>
-  ) : (
-    <IframeContent
-      activeView={displayView}
-      filesContent={filesContent}
-      isStreaming={!codeReady}
-      codeReady={codeReady}
-      isDarkMode={isDarkMode}
-      sessionId={sessionId}
-    />
-  );
+  // Always render the iframe, but show overlays for different states
+  // This ensures we have a consistent iframe that won't unmount/remount
+  const showErrorOverlay = apiKeyError && !apiKey;
+  const showLoadingOverlay = isLoadingApiKey && !apiKey && !apiKeySetRef.current;
+  const showWelcomeOverlay = showWelcome;
+
+  // Display states based on API key and welcome status
+  let errorOverlay = null;
+  let loadingOverlay = null;
+
+  if (showErrorOverlay) {
+    const isRateLimitError =
+      apiKeyError.message.includes('rate limit') || apiKeyError.message.includes('429');
+    errorOverlay = (
+      <div className="bg-opacity-90 dark:bg-opacity-90 absolute inset-0 z-10 flex items-center justify-center bg-gray-100 p-4 text-center dark:bg-gray-900">
+        <div>
+          <h3 className="mb-2 text-lg font-medium">
+            {isRateLimitError ? 'Rate Limited' : 'API Key Error'}
+          </h3>
+          <p className="mb-4 text-sm">
+            {isRateLimitError
+              ? 'Could not fetch API key due to rate limiting. Please wait a moment and try again.'
+              : 'There was an issue obtaining the API key. Please ensure you are logged in or the key is valid.'}
+          </p>
+          <button
+            onClick={() => getAndSendApiKey()}
+            className="focus:ring-opacity-50 rounded bg-blue-500 px-4 py-2 text-white hover:bg-blue-600 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+          >
+            Try Again
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (showLoadingOverlay) {
+    loadingOverlay = (
+      <div className="bg-opacity-90 dark:bg-opacity-90 absolute inset-0 z-10 flex items-center justify-center bg-gray-100 dark:bg-gray-900">
+        <div className="animate-pulse">Loading API Key...</div>
+      </div>
+    );
+  }
 
   return (
-    <div className="h-full" style={{ overflow: 'hidden' }}>
+    <div className="relative h-full" style={{ overflow: 'hidden' }}>
       <style>{animationStyles}</style>
-      {previewArea}
-      {children}
+
+      {/* Always render the iframe content */}
+      {!showWelcomeOverlay && (
+        <IframeContent
+          ref={iframeRef}
+          activeView={displayView}
+          filesContent={filesContent}
+          isStreaming={!codeReady}
+          codeReady={codeReady}
+          isDarkMode={isDarkMode}
+          sessionId={sessionId}
+          apiKey={apiKey} // This is already the string key from useApiKey
+        />
+      )}
+
+      {/* Show welcome content if needed */}
+      {showWelcomeOverlay && (
+        <div className="h-full">{/* empty div to prevent layout shift */}</div>
+      )}
+
+      {/* Overlay loading indicator */}
+      {loadingOverlay}
+
+      {/* Overlay error message */}
+      {errorOverlay}
     </div>
   );
 }

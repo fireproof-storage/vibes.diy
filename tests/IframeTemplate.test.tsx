@@ -1,4 +1,15 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+
+// Mock useApiKey to prevent real API calls during tests
+vi.mock('../app/hooks/useApiKey', () => ({
+  useApiKey: () => ({
+    apiKey: 'test-key',
+    isLoading: false,
+    error: null,
+    ensureApiKey: vi.fn().mockResolvedValue({ key: 'test-key', hash: 'test-hash' }),
+  }),
+}));
+
 import { render } from '@testing-library/react';
 import iframeTemplateRaw from '../app/components/ResultPreview/templates/iframe-template.html?raw';
 import ResultPreview from '../app/components/ResultPreview/ResultPreview';
