@@ -77,15 +77,27 @@ global.ResizeObserver = vi.fn().mockImplementation(() => ({
 const originalPostMessage = window.postMessage;
 window.postMessage = vi.fn();
 
+// Original localStorage methods
+const originalGetItem = Storage.prototype.getItem;
+
 // Reset mocks between tests
 beforeEach(() => {
   vi.clearAllMocks();
   window.postMessage = vi.fn();
+
+  // Mock localStorage to return a valid API key
+  Storage.prototype.getItem = function (key) {
+    if (key === 'vibes-openrouter-key') {
+      return JSON.stringify({ key: 'test-api-key', hash: 'test-hash' });
+    }
+    return originalGetItem.call(this, key);
+  };
 });
 
-// Restore original window.postMessage after tests
+// Restore original methods after tests
 afterAll(() => {
   window.postMessage = originalPostMessage;
+  Storage.prototype.getItem = originalGetItem;
 });
 
 describe('ResultPreview', () => {

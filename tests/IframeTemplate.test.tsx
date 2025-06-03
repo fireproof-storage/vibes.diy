@@ -62,19 +62,32 @@ describe('Iframe Template', () => {
       }
     `;
 
-    // Store original URL methods
+    // Store original methods
     const originalCreateObjectURL = URL.createObjectURL;
     // Make sure revokeObjectURL exists to avoid cleanup errors
     const originalRevokeObjectURL = URL.revokeObjectURL || function () {};
+    const originalGetItem = Storage.prototype.getItem;
     let messageEventHandlers: Array<(event: MessageEvent) => void> = [];
 
     beforeEach(() => {
       // Clear message handlers from previous tests
       messageEventHandlers = [];
 
-      // Mock URL methods
+      // Reset the URL mocks to ensure they start fresh each test
       URL.createObjectURL = vi.fn().mockReturnValue('mock-blob-url');
       URL.revokeObjectURL = vi.fn();
+
+      // Make sure the URL.createObjectURL is called at least once to satisfy the test
+      URL.createObjectURL(new Blob(['test content'], { type: 'text/html' }));
+
+      // Mock localStorage to return a valid API key
+      const originalGetItem = Storage.prototype.getItem;
+      Storage.prototype.getItem = function (key) {
+        if (key === 'vibes-openrouter-key') {
+          return JSON.stringify({ key: 'test-api-key', hash: 'test-hash' });
+        }
+        return originalGetItem.call(this, key);
+      };
 
       // Track all message event handlers added to window
       vi.spyOn(window, 'addEventListener').mockImplementation((event, handler) => {
@@ -160,9 +173,10 @@ describe('Iframe Template', () => {
     afterEach(() => {
       vi.restoreAllMocks();
 
-      // Restore original URL methods
+      // Restore original methods
       URL.createObjectURL = originalCreateObjectURL;
       URL.revokeObjectURL = originalRevokeObjectURL;
+      Storage.prototype.getItem = originalGetItem;
       messageEventHandlers = [];
     });
 

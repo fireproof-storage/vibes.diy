@@ -124,14 +124,13 @@ function SessionSidebar({ isVisible, onClose }: SessionSidebarProps) {
         <nav className="flex-grow p-2">
           <ul className="space-y-1">
             <li>
-              <Link
-                to="/"
-                onClick={() => onClose()}
+              <a
+                href="/"
                 className="hover:bg-light-background-01 dark:hover:bg-dark-background-01 flex items-center rounded-md px-4 py-3 text-sm font-medium"
               >
                 <HomeIcon className="text-accent-01 mr-3 h-5 w-5" />
                 <span>Home</span>
-              </Link>
+              </a>
             </li>
             <li>
               <Link
