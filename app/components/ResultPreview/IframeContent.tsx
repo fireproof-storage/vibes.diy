@@ -315,7 +315,7 @@ const IframeContent: React.FC<IframeContentProps> = ({
             editor.onDidScrollChange((e) => {
               const scrollTop = e.scrollTop;
               // If there's a significant difference, consider it a manual scroll
-              if (Math.abs(scrollTop - lastScrollTopRef.current) > 30) {
+              if (Math.abs(scrollTop - lastScrollTopRef.current) > 100) {
                 userScrolledRef.current = true;
               }
               lastScrollTopRef.current = scrollTop;
