@@ -23,17 +23,9 @@ export function useApiKey(userId?: string) {
         const keyData = JSON.parse(storedKey);
         // Make sure we have a valid key object
         if (keyData.key && typeof keyData.key === 'string' && keyData.hash) {
-          // Ensure hash is checked
-          const creationTime = keyData.createdAt || 0;
-          const now = Date.now();
-          const keyAgeInDays = (now - creationTime) / (1000 * 60 * 60 * 24);
-
-          if (keyAgeInDays < 7) {
-            // Keep 7-day expiry from current code
-            return keyData; // Return the full stored object
-          }
+          return keyData; // Return the full stored object if valid
         }
-        // If key is invalid or expired, remove it
+        // If key is invalid, remove it
         localStorage.removeItem(storageKey);
       } catch (e) {
         localStorage.removeItem(storageKey); // Corrupted data
