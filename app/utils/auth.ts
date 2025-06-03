@@ -3,6 +3,7 @@
  */
 import { importJWK, jwtVerify } from 'jose';
 import toast from 'react-hot-toast';
+import { CONNECT_URL, CONNECT_API_URL, CLOUD_SESSION_TOKEN_PUBLIC_KEY } from '../config/env';
 
 // Export the interface
 export interface TokenPayload {
@@ -128,7 +129,7 @@ export function initiateAuthFlow(): { connectUrl: string; resultId: string } | n
   sessionStorage.setItem('auth_result_id', resultId);
 
   // Compose the connect URL (no redirect, just return)
-  const connectUrl = `${import.meta.env.VITE_CONNECT_URL || 'https://connect.fireproof.direct/token'}?result_id=${resultId}&countdownSecs=0&skipChooser=1&fromApp=vibesdiy`;
+  const connectUrl = `${CONNECT_URL}?result_id=${resultId}&countdownSecs=0&skipChooser=1&fromApp=vibesdiy`;
   return { connectUrl, resultId };
 }
 
@@ -144,8 +145,7 @@ export async function pollForAuthToken(
   intervalMs = 1500,
   timeoutMs = 30000
 ): Promise<string | null> {
-  const endpoint =
-    import.meta.env.VITE_CONNECT_API_URL || 'https://dev.connect.fireproof.direct/api';
+  const endpoint = `${CONNECT_API_URL}/token/${resultId}`;
   const start = Date.now();
   while (Date.now() - start < timeoutMs) {
     console.log(Date.now() - start);
@@ -180,7 +180,7 @@ export async function pollForAuthToken(
 export async function verifyToken(token: string): Promise<{ payload: TokenPayload } | null> {
   try {
     // Base58btc-encoded public key (replace with actual key)
-    const encodedPublicKey = import.meta.env.VITE_CLOUD_SESSION_TOKEN_PUBLIC;
+    const encodedPublicKey = CLOUD_SESSION_TOKEN_PUBLIC_KEY;
 
     // Decode the base58btc-encoded JWK
     const publicKey = decodePublicKeyJWK(encodedPublicKey);
@@ -241,8 +241,7 @@ export async function verifyToken(token: string): Promise<{ payload: TokenPayloa
  */
 export async function extendToken(currentToken: string): Promise<string | null> {
   try {
-    const endpoint =
-      import.meta.env.VITE_CONNECT_API_URL || 'https://dev.connect.fireproof.direct/api';
+    const endpoint = CONNECT_API_URL;
 
     const res = await fetch(endpoint, {
       method: 'POST',

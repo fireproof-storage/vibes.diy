@@ -1,5 +1,5 @@
 import ReactGA from 'react-ga4';
-import { GA_TRACKING_ID } from '../config/analytics';
+import { GA_TRACKING_ID } from '../config/env';
 
 /**
  * Initialize Google Analytics

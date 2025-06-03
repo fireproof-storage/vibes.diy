@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
+import { APP_MODE } from '../config/env';
 import { makeBaseSystemPrompt } from '../prompts';
 import type { UserSettings } from '../types/settings';
 
@@ -30,7 +31,7 @@ export function useSystemPromptManager(settingsDoc: UserSettings | undefined) {
     if (systemPrompt) return systemPrompt;
 
     let newPrompt = '';
-    if (import.meta.env.MODE === 'test') {
+    if (APP_MODE === 'test') {
       newPrompt = 'Test system prompt';
     } else {
       newPrompt = await makeBaseSystemPrompt(CODING_MODEL, settingsDoc);
