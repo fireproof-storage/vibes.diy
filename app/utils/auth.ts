@@ -145,7 +145,7 @@ export async function pollForAuthToken(
   timeoutMs = 30000
 ): Promise<string | null> {
   const endpoint =
-    `${import.meta.env.VITE_CONNECT_API_URL}` || 'https://dev.connect.fireproof.direct/api';
+    import.meta.env.VITE_CONNECT_API_URL || 'https://dev.connect.fireproof.direct/api';
   const start = Date.now();
   while (Date.now() - start < timeoutMs) {
     console.log(Date.now() - start);
