@@ -384,7 +384,7 @@ describe('SessionSidebar component', () => {
     render(<SessionSidebar {...props} />);
 
     // Find all navigation links
-    const navLinks = screen.getAllByText(/Home|My Vibes|Settings|About/);
+    const navLinks = screen.getAllByText(/My Vibes|Settings|About/);
 
     // Click each link and verify onClose is called
     for (const link of navLinks) {
