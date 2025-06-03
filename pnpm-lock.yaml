@@ -56,8 +56,8 @@ importers:
         specifier: ^7.4.1
         version: 7.5.3(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
       use-fireproof:
-        specifier: 0.20.5-dev-preview-7
-        version: 0.20.5-dev-preview-7(@fireproof/core@0.20.5-dev-preview-7(@adviser/cement@0.4.14(typescript@5.8.3))(@fireproof/vendor@2.0.2(vitest@3.1.2(@types/debug@4.1.12)(@types/node@22.15.3)(jiti@2.4.2)(jsdom@26.1.0)(lightningcss@1.29.2)(tsx@4.19.4)(yaml@2.7.1)))(react@19.1.0))(react@19.1.0)
+        specifier: 0.20.5
+        version: 0.20.5(@fireproof/core@0.20.5-dev-preview-7(@adviser/cement@0.4.14(typescript@5.8.3))(@fireproof/vendor@2.0.2(vitest@3.1.2(@types/debug@4.1.12)(@types/node@22.15.3)(jiti@2.4.2)(jsdom@26.1.0)(lightningcss@1.29.2)(tsx@4.19.4)(yaml@2.7.1)))(react@19.1.0))(react@19.1.0)
     devDependencies:
       '@react-router/dev':
         specifier: ^7.4.1
@@ -11431,13 +11431,13 @@ packages:
       '@types/react':
         optional: true
 
-  use-fireproof@0.20.5-dev-preview-7:
+  use-fireproof@0.20.5:
     resolution:
       {
-        integrity: sha512-fFYCp/E+U8RMNs8fe1H5TINDaG3p1lhlmf66l23C+8nWyYSVxFt5Oad5ZqEas5KwIIjxyOvKeAaDF2oXcdue0Q==,
+        integrity: sha512-58P0hsXcDAS8Vp0udgCoXYOCk+ockCbku/iPde0wJv2L3DNWOwF3hJpVIrhAsTtqx8g2EZYjpkzq03V2EO3GbA==,
       }
     peerDependencies:
-      '@fireproof/core': 0.20.5-dev-preview-7
+      '@fireproof/core': 0.20.5
       react: '>=18.0.0'
 
   use-sidecar@1.1.3:
@@ -19195,7 +19195,7 @@ snapshots:
     optionalDependencies:
       '@types/react': 19.1.2
 
-  use-fireproof@0.20.5-dev-preview-7(@fireproof/core@0.20.5-dev-preview-7(@adviser/cement@0.4.14(typescript@5.8.3))(@fireproof/vendor@2.0.2(vitest@3.1.2(@types/debug@4.1.12)(@types/node@22.15.3)(jiti@2.4.2)(jsdom@26.1.0)(lightningcss@1.29.2)(tsx@4.19.4)(yaml@2.7.1)))(react@19.1.0))(react@19.1.0):
+  use-fireproof@0.20.5(@fireproof/core@0.20.5-dev-preview-7(@adviser/cement@0.4.14(typescript@5.8.3))(@fireproof/vendor@2.0.2(vitest@3.1.2(@types/debug@4.1.12)(@types/node@22.15.3)(jiti@2.4.2)(jsdom@26.1.0)(lightningcss@1.29.2)(tsx@4.19.4)(yaml@2.7.1)))(react@19.1.0))(react@19.1.0):
     dependencies:
       '@fireproof/core': 0.20.5-dev-preview-7(@adviser/cement@0.4.14(typescript@5.8.3))(@fireproof/vendor@2.0.2(vitest@3.1.2(@types/debug@4.1.12)(@types/node@22.15.3)(jiti@2.4.2)(jsdom@26.1.0)(lightningcss@1.29.2)(tsx@4.19.4)(yaml@2.7.1)))(react@19.1.0)
       react: 19.1.0

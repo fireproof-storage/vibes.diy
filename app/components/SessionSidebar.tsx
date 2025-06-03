@@ -130,7 +130,7 @@ function SessionSidebar({ isVisible, onClose }: SessionSidebarProps) {
               >
                 <HomeIcon className="text-accent-01 mr-3 h-5 w-5" />
                 <span>Home</span>
-              </a>
+              </Link>
             </li>
             <li>
               <Link
