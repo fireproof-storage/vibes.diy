@@ -18,7 +18,10 @@ vi.mock('use-fireproof', () => ({
 }));
 
 // Prepare mock data
-const mockChatState: ChatState & { setMobilePreviewShown: (shown: boolean) => void } = {
+const mockChatState: ChatState & {
+  setMobilePreviewShown: (shown: boolean) => void;
+  navigateToView: (view: any) => void;
+} = {
   ...mockChatStateProps,
   docs: [],
   input: '',
@@ -39,6 +42,7 @@ const mockChatState: ChatState & { setMobilePreviewShown: (shown: boolean) => vo
   addScreenshot: () => Promise.resolve(),
   setSelectedResponseId: vi.fn(),
   setMobilePreviewShown: vi.fn(),
+  navigateToView: vi.fn(),
 };
 
 describe('ChatInterface Component', () => {

@@ -1,6 +1,9 @@
-import { vi, describe, it, expect, beforeEach } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
+import React from 'react';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { AuthContext } from '../app/contexts/AuthContext';
 import * as SettingsModule from '../app/routes/settings';
+import type { TokenPayload } from '../app/utils/auth';
 
 // Extract the Settings component directly since we can't import the default export in tests
 const Settings = SettingsModule.default;
@@ -29,20 +32,6 @@ vi.mock('use-fireproof', () => ({
     }),
   }),
 }));
-
-// Mock the useAuth hook
-vi.mock('../app/hooks/useAuth', () => {
-  return {
-    useAuth: vi.fn().mockReturnValue({
-      isAuthenticated: true,
-      userId: 'test-user',
-      isLoading: false,
-    }),
-  };
-});
-
-// Import the actual hook to modify mock implementation in tests
-import { useAuth } from '../app/hooks/useAuth';
 
 // Mock localStorage
 const localStorageMock = (() => {
@@ -80,6 +69,35 @@ vi.mock('../app/utils/analytics', () => ({
   trackAuthClick: vi.fn(),
 }));
 
+// Create a wrapper component with auth context
+const renderWithAuthContext = (
+  ui: React.ReactNode,
+  { isAuthenticated = true, userId = 'test-user' } = {}
+) => {
+  const userPayload: TokenPayload | null = isAuthenticated
+    ? {
+        userId,
+        exp: 9999999999,
+        tenants: [],
+        ledgers: [],
+        iat: 1234567890,
+        iss: 'FP_CLOUD',
+        aud: 'PUBLIC',
+      }
+    : null;
+
+  const authValue = {
+    token: isAuthenticated ? 'test-token' : null,
+    isAuthenticated,
+    isLoading: false,
+    userPayload,
+    checkAuthStatus: vi.fn(() => Promise.resolve()),
+    processToken: vi.fn(),
+  };
+
+  return render(<AuthContext.Provider value={authValue}>{ui}</AuthContext.Provider>);
+};
+
 describe('Settings page', () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -89,17 +107,10 @@ describe('Settings page', () => {
 
     // Reset the navigate mock
     navigateMock.mockClear();
-
-    // Reset mock implementation for useAuth to default (authenticated)
-    (useAuth as any).mockReturnValue({
-      isAuthenticated: true,
-      userId: 'test-user',
-      isLoading: false,
-    });
   });
 
   it('should render the Settings page with a logout button when authenticated', async () => {
-    render(<Settings />);
+    renderWithAuthContext(<Settings />);
 
     // Check if the logout button is rendered
     const logoutButton = screen.getByText('Logout');
@@ -107,7 +118,7 @@ describe('Settings page', () => {
   });
 
   it('should handle logout correctly when the button is clicked', async () => {
-    render(<Settings />);
+    renderWithAuthContext(<Settings />);
 
     // Get the logout button and click it
     const logoutButton = screen.getByText('Logout');
@@ -121,14 +132,8 @@ describe('Settings page', () => {
   });
 
   it('should not show the logout button when not authenticated', async () => {
-    // Mock user as not authenticated
-    (useAuth as any).mockReturnValue({
-      isAuthenticated: false,
-      userId: null,
-      isLoading: false,
-    });
-
-    render(<Settings />);
+    // Render with unauthenticated context
+    renderWithAuthContext(<Settings />, { isAuthenticated: false });
 
     // Logout button should not be present
     const logoutButton = screen.queryByText('Logout');

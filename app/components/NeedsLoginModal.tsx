@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { initiateAuthFlow } from '../utils/auth';
-import { trackAuthClick } from '../utils/analytics';
 import { useSimpleChat } from '../hooks/useSimpleChat';
+import { trackAuthClick } from '../utils/analytics';
+import { useAuthPopup } from '../hooks/useAuthPopup';
 
 /**
  * A modal that appears when the user needs to login to get more credits
@@ -10,11 +10,8 @@ import { useSimpleChat } from '../hooks/useSimpleChat';
  */
 export function NeedsLoginModal() {
   const [isOpen, setIsOpen] = useState(false);
-  // We don't need the buttonRef anymore since we're only displaying a single button
-  // without a reference to a trigger button
-  // We get needsLogin from the global app state since this is a global modal
-  // Using undefined sessionId to access the global state
   const { needsLogin } = useSimpleChat(undefined);
+  const { initiateLogin } = useAuthPopup();
 
   // Show the modal when needsLogin becomes true or is already true
   useEffect(() => {
@@ -44,13 +41,13 @@ export function NeedsLoginModal() {
     setIsOpen(false);
   };
 
-  const handleLogin = () => {
+  const handleLogin = async () => {
     trackAuthClick({
       label: 'Get Credits Modal',
       isUserAuthenticated: false,
     });
-    initiateAuthFlow();
-    setIsOpen(false);
+    await initiateLogin();
+    setIsOpen(false); // Close the modal after attempting to open the popup
   };
 
   if (!isOpen) return null;
@@ -92,10 +89,10 @@ export function NeedsLoginModal() {
               id="login-modal-title"
               className="mb-3 text-center text-lg font-bold text-orange-500"
             >
-              Login for Credits
+              Log in for Credits
             </h3>
             <p className="text-light-secondary dark:text-dark-secondary text-sm leading-relaxed">
-              Login or create an account to continue generating creative apps with Vibes DIY.
+              Log in or create an account to continue generating creative apps with Vibes DIY.
             </p>
           </div>
           <button

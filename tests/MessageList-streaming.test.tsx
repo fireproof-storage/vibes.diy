@@ -46,6 +46,7 @@ describe('MessageList streaming tests', () => {
         setSelectedResponseId={() => {}}
         selectedResponseId=""
         setMobilePreviewShown={() => {}}
+        navigateToView={() => {}}
       />
     );
 
@@ -80,6 +81,7 @@ describe('MessageList streaming tests', () => {
         setSelectedResponseId={() => {}}
         selectedResponseId=""
         setMobilePreviewShown={() => {}}
+        navigateToView={() => {}}
       />
     );
 
@@ -127,6 +129,7 @@ describe('MessageList streaming tests', () => {
         setSelectedResponseId={() => {}}
         selectedResponseId=""
         setMobilePreviewShown={() => {}}
+        navigateToView={() => {}}
       />
     );
 

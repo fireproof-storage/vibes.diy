@@ -9,14 +9,14 @@ import {
   isRouteErrorResponse,
 } from 'react-router';
 
+import { PostHogProvider } from 'posthog-js/react';
 import type { Route } from './+types/root';
 import './app.css';
 import ClientOnly from './components/ClientOnly';
 import CookieBanner from './components/CookieBanner';
 import { NeedsLoginModal } from './components/NeedsLoginModal';
-import { CookieConsentProvider } from './context/CookieConsentContext';
-
-import { PostHogProvider } from 'posthog-js/react';
+import { AuthProvider } from './contexts/AuthContext';
+import { CookieConsentProvider } from './contexts/CookieConsentContext';
 
 export const links: Route.LinksFunction = () => [
   { rel: 'icon', type: 'image/svg+xml', href: '/favicon.svg' },
@@ -90,23 +90,27 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <Links />
       </head>
       <body>
-        <PostHogProvider
-          apiKey={import.meta.env.VITE_POSTHOG_KEY}
-          options={{
-            api_host: import.meta.env.VITE_POSTHOG_HOST,
-            opt_out_capturing_by_default: true,
-          }}
-        >
-          <CookieConsentProvider>
-            {children}
-            <ClientOnly>
-              <CookieBanner />
-              <NeedsLoginModal />
-            </ClientOnly>
-          </CookieConsentProvider>
-          <ScrollRestoration data-testid="scroll-restoration" />
-          <Scripts data-testid="scripts" />
-        </PostHogProvider>
+        <AuthProvider>
+          <PostHogProvider
+            apiKey={import.meta.env.VITE_POSTHOG_KEY}
+            options={{
+              api_host: import.meta.env.VITE_POSTHOG_HOST,
+              opt_out_capturing_by_default: true,
+            }}
+          >
+            <CookieConsentProvider>
+              {children}
+              <ClientOnly>
+                <CookieBanner />
+                <NeedsLoginModal />
+              </ClientOnly>
+            </CookieConsentProvider>
+            <ScrollRestoration data-testid="scroll-restoration" />
+            <Scripts data-testid="scripts" />
+          </PostHogProvider>
+        </AuthProvider>
+        <ScrollRestoration data-testid="scroll-restoration" />
+        <Scripts data-testid="scripts" />
       </body>
     </html>
   );

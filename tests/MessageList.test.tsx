@@ -36,6 +36,7 @@ describe('MessageList', () => {
         setSelectedResponseId={() => {}}
         selectedResponseId=""
         setMobilePreviewShown={() => {}}
+        navigateToView={() => {}}
       />
     );
 
@@ -52,6 +53,7 @@ describe('MessageList', () => {
         setSelectedResponseId={() => {}}
         selectedResponseId=""
         setMobilePreviewShown={() => {}}
+        navigateToView={() => {}}
       />
     );
 
@@ -88,6 +90,7 @@ describe('MessageList', () => {
         setSelectedResponseId={() => {}}
         selectedResponseId=""
         setMobilePreviewShown={() => {}}
+        navigateToView={() => {}}
       />
     );
 
@@ -123,6 +126,7 @@ describe('MessageList', () => {
         setSelectedResponseId={() => {}}
         selectedResponseId=""
         setMobilePreviewShown={() => {}}
+        navigateToView={() => {}}
       />
     );
 
@@ -156,6 +160,7 @@ describe('MessageList', () => {
         setSelectedResponseId={() => {}}
         selectedResponseId=""
         setMobilePreviewShown={() => {}}
+        navigateToView={() => {}}
       />
     );
 

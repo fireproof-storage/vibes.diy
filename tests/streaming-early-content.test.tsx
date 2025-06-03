@@ -32,6 +32,7 @@ describe('Early Streaming Content Display', () => {
         selectedResponseId=""
         setMobilePreviewShown={() => {}}
         isLatestMessage={true}
+        navigateToView={() => {}}
       />
     );
 
@@ -57,6 +58,7 @@ describe('Early Streaming Content Display', () => {
         selectedResponseId=""
         setMobilePreviewShown={() => {}}
         isLatestMessage={true}
+        navigateToView={() => {}}
       />
     );
 
@@ -79,6 +81,7 @@ describe('Early Streaming Content Display', () => {
         selectedResponseId=""
         setMobilePreviewShown={() => {}}
         isLatestMessage={true}
+        navigateToView={() => {}}
       />
     );
 
@@ -97,6 +100,7 @@ describe('Early Streaming Content Display', () => {
         selectedResponseId=""
         setMobilePreviewShown={() => {}}
         isLatestMessage={true}
+        navigateToView={() => {}}
       />
     );
 
@@ -115,6 +119,7 @@ describe('Early Streaming Content Display', () => {
         selectedResponseId=""
         setMobilePreviewShown={() => {}}
         isLatestMessage={true}
+        navigateToView={() => {}}
       />
     );
 
@@ -136,6 +141,7 @@ describe('Early Streaming Content Handling', () => {
         selectedResponseId=""
         setMobilePreviewShown={() => {}}
         isLatestMessage={true}
+        navigateToView={() => {}}
       />
     );
     // ... rest of test ...
@@ -151,6 +157,7 @@ describe('Early Streaming Content Handling', () => {
         selectedResponseId=""
         setMobilePreviewShown={() => {}}
         isLatestMessage={true}
+        navigateToView={() => {}}
       />
     );
     // ... rest of test ...

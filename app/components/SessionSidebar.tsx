@@ -1,22 +1,54 @@
-import { useEffect, useRef, useState, memo } from 'react';
+import React, { memo, useEffect, useRef, useState } from 'react';
+import { Link } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
+import { useAuthPopup } from '../hooks/useAuthPopup';
+import type { SessionSidebarProps } from '../types/chat';
 import { GearIcon } from './SessionSidebar/GearIcon';
+import { HomeIcon } from './SessionSidebar/HomeIcon';
 import { InfoIcon } from './SessionSidebar/InfoIcon';
 import { StarIcon } from './SessionSidebar/StarIcon';
-import { HomeIcon } from './SessionSidebar/HomeIcon';
-import { UserIcon } from './HeaderContent/SvgIcons';
-import type { SessionSidebarProps } from '../types/chat';
-import VibesDIYLogo from './VibesDIYLogo';
-import { useAuth } from '../hooks/useAuth';
-import { initiateAuthFlow } from '../utils/auth';
-import { trackAuthClick } from '../utils/analytics';
+import VibesDIYLogo, { randomColorway } from './VibesDIYLogo';
+import { dark, light } from './colorways';
 
 /**
  * Component that displays a navigation sidebar with menu items
  */
 function SessionSidebar({ isVisible, onClose }: SessionSidebarProps) {
   const sidebarRef = useRef<HTMLDivElement>(null);
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, isLoading } = useAuth();
   const [needsLogin, setNeedsLogin] = useState(false);
+  const { isPolling, pollError, initiateLogin } = useAuthPopup();
+
+  const colorway = randomColorway();
+  // Use a simplified approach to detect dark mode based on the existing system
+  const [isDarkMode, setIsDarkMode] = React.useState(false);
+  const rando = isDarkMode ? dark[colorway] : light[colorway];
+
+  // DUPE from VibesDIYLogo.tsx
+  React.useEffect(() => {
+    if (typeof window !== 'undefined') {
+      // Function to check dark mode
+      const checkDarkMode = () => {
+        setIsDarkMode(document.documentElement.classList.contains('dark'));
+      };
+
+      // Initial check
+      checkDarkMode();
+
+      // Create observer for theme changes
+      const observer = new MutationObserver((mutations) => {
+        mutations.forEach((mutation) => {
+          if (mutation.attributeName === 'class') {
+            checkDarkMode();
+          }
+        });
+      });
+
+      observer.observe(document.documentElement, { attributes: true });
+      return () => observer.disconnect();
+    }
+  }, []);
+  // END DUPE from VibesDIYLogo.tsx
 
   // Listen for the needsLoginTriggered event to update needsLogin state
   useEffect(() => {
@@ -56,8 +88,9 @@ function SessionSidebar({ isVisible, onClose }: SessionSidebarProps) {
   return (
     <div
       ref={sidebarRef}
+      data-testid="session-sidebar"
       className={`bg-light-background-00 dark:bg-dark-background-00 fixed top-0 left-0 z-10 h-full shadow-lg transition-all duration-300 ${
-        isVisible ? 'w-64 translate-x-0' : 'w-0 -translate-x-full'
+        isVisible ? 'w-64 translate-x-0' : 'w-64 -translate-x-full'
       }`}
     >
       <div className="flex h-full flex-col overflow-auto">
@@ -91,82 +124,105 @@ function SessionSidebar({ isVisible, onClose }: SessionSidebarProps) {
         <nav className="flex-grow p-2">
           <ul className="space-y-1">
             <li>
-              <a
-                href="/"
+              <Link
+                to="/"
                 onClick={() => onClose()}
                 className="hover:bg-light-background-01 dark:hover:bg-dark-background-01 flex items-center rounded-md px-4 py-3 text-sm font-medium"
               >
                 <HomeIcon className="text-accent-01 mr-3 h-5 w-5" />
                 <span>Home</span>
-              </a>
+              </Link>
             </li>
             <li>
-              <a
-                href="/vibes/mine"
+              <Link
+                to="/vibes/mine"
                 onClick={() => onClose()}
                 className="hover:bg-light-background-01 dark:hover:bg-dark-background-01 flex items-center rounded-md px-4 py-3 text-sm font-medium"
               >
                 <StarIcon className="text-accent-01 mr-3 h-5 w-5" />
                 <span>My Vibes</span>
-              </a>
+              </Link>
             </li>
             <li>
               {isAuthenticated ? (
-                <a
-                  href="/settings"
+                // SETTINGS
+                <Link
+                  to="/settings"
                   onClick={() => onClose()}
                   className="hover:bg-light-background-01 dark:hover:bg-dark-background-01 flex items-center rounded-md px-4 py-3 text-sm font-medium"
                 >
                   <GearIcon className="text-accent-01 mr-3 h-5 w-5" />
                   <span>Settings</span>
-                </a>
-              ) : needsLogin ? (
-                <button
-                  onClick={() => {
-                    trackAuthClick({ label: 'Get Credits' });
-                    initiateAuthFlow();
-                    setNeedsLogin(false);
-                    onClose();
-                  }}
-                  className="flex w-full items-center rounded-md bg-orange-500 px-4 py-3 text-left text-sm font-bold text-white transition-colors hover:bg-orange-600 dark:hover:bg-orange-600"
-                >
-                  <UserIcon
-                    className="mr-3 h-5 w-5 text-white"
-                    isUserAuthenticated={false}
-                    isVerifying={false}
-                  />
-                  <span>Get Credits</span>
-                </button>
-              ) : (
-                <button
-                  onClick={() => {
-                    trackAuthClick();
-                    initiateAuthFlow();
-                    onClose();
-                  }}
-                  className="hover:bg-light-background-01 dark:hover:bg-dark-background-01 flex w-full items-center rounded-md px-4 py-3 text-left text-sm font-medium"
-                >
-                  <UserIcon
-                    className="text-accent-01 mr-3 h-5 w-5"
-                    isUserAuthenticated={false}
-                    isVerifying={false}
-                  />
-                  <span>Login</span>
-                </button>
-              )}
+                </Link>
+              ) : null}
             </li>
             <li>
-              <a
-                href="/about"
+              <Link
+                to="/about"
                 onClick={() => onClose()}
                 className="hover:bg-light-background-01 dark:hover:bg-dark-background-01 flex items-center rounded-md px-4 py-3 text-sm font-medium"
               >
                 <InfoIcon className="text-accent-01 mr-3 h-5 w-5" />
                 <span>About</span>
-              </a>
+              </Link>
             </li>
           </ul>
         </nav>
+
+        {/* Login Status Indicator */}
+        <div className="mt-auto">
+          <nav className="flex-grow p-2">
+            <ul className="space-y-1">
+              {isLoading ? (
+                // LOADING
+                <li className="flex items-center rounded-md px-4 py-3 text-sm font-medium text-gray-400">
+                  <span className="animate-pulse">Loading...</span>
+                </li>
+              ) : isAuthenticated ? null : isPolling ? (
+                <li>
+                  <div className="flex flex-col gap-1 px-4 py-3 text-sm font-medium">
+                    <span className="">Opening log in window...</span>
+                    <span className="font-small text-xs italic">
+                      Don't see it? Please check your browser for a blocked pop-up window
+                    </span>
+                  </div>
+                </li>
+              ) : (
+                <>
+                  <li>
+                    <div className="flex flex-col px-1 py-1 text-sm font-medium">
+                      {pollError && (
+                        <span className="font-small text-xs text-gray-400 italic">{pollError}</span>
+                      )}
+                    </div>
+                  </li>
+                  <li>
+                    <button
+                      type="button"
+                      onClick={async () => {
+                        await initiateLogin();
+                        setNeedsLogin(false);
+                        onClose();
+                      }}
+                      style={{
+                        backgroundColor: rando.diy,
+                      }}
+                      className={`flex w-full items-center rounded-md px-4 py-3 text-left text-sm font-bold transition-colors`}
+                    >
+                      <span
+                        style={{
+                          color: rando.diyText,
+                        }}
+                      >
+                        Log in {needsLogin ? 'for credits' : ''}
+                      </span>
+                    </button>
+                  </li>
+                </>
+              )}
+            </ul>
+          </nav>
+        </div>
       </div>
     </div>
   );

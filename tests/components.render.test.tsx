@@ -1,10 +1,12 @@
 // Vitest will automatically use mocks from __mocks__ directory
-import { render, screen, fireEvent } from '@testing-library/react';
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { fireEvent, render, screen } from '@testing-library/react';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { mockUseAuth, resetMockAuthState, setMockAuthState } from '../__mocks__/useAuth';
 import ChatHeader from '../app/components/ChatHeaderContent';
-import SessionSidebar from '../app/components/SessionSidebar';
 import MessageList from '../app/components/MessageList';
-import type { UserChatMessage, AiChatMessage, ChatMessageDocument } from '../app/types/chat';
+import SessionSidebar from '../app/components/SessionSidebar';
+import type { AuthContextType } from '../app/contexts/AuthContext';
+import type { AiChatMessage, ChatMessageDocument, UserChatMessage } from '../app/types/chat';
 import { mockSessionSidebarProps } from './mockData';
 
 // Mock dependencies
@@ -22,12 +24,9 @@ vi.mock('react-markdown', () => {
 window.HTMLElement.prototype.scrollIntoView = vi.fn();
 
 // Mock the useAuth hook for SessionSidebar
-vi.mock('../app/hooks/useAuth', () => ({
-  useAuth: () => ({
-    isAuthenticated: true,
-    userId: 'test-user',
-    isLoading: false,
-  }),
+vi.mock('../app/contexts/AuthContext', () => ({
+  useAuth: mockUseAuth,
+  AuthProvider: ({ children }: { children: React.ReactNode }) => children,
 }));
 
 // Mock the useSessionMessages hook for MessageList
@@ -50,7 +49,8 @@ vi.mock('../app/hooks/useSessionMessages', () => {
           addUserMessage: vi.fn(),
           updateAiMessage: vi.fn(),
         };
-      } else if (sessionId === 'empty-session-streaming') {
+      }
+      if (sessionId === 'empty-session-streaming') {
         return {
           messages: [
             { type: 'user', text: 'Hello', timestamp: Date.now() },
@@ -66,7 +66,8 @@ vi.mock('../app/hooks/useSessionMessages', () => {
           addUserMessage: vi.fn(),
           updateAiMessage: vi.fn(),
         };
-      } else if (sessionId === 'test-session') {
+      }
+      if (sessionId === 'test-session') {
         return {
           messages: [
             { type: 'user', text: 'Hello', timestamp: Date.now() },
@@ -81,25 +82,26 @@ vi.mock('../app/hooks/useSessionMessages', () => {
           addUserMessage: vi.fn(),
           updateAiMessage: vi.fn(),
         };
-      } else {
-        return {
-          messages: [],
-          isLoading: false,
-          addUserMessage: vi.fn(),
-          updateAiMessage: vi.fn(),
-        };
       }
+      return {
+        messages: [],
+        isLoading: false,
+        addUserMessage: vi.fn(),
+        updateAiMessage: vi.fn(),
+      };
     },
   };
 });
 
 // Create mock functions we can control
 const onOpenSidebar = vi.fn();
-const onClose = vi.fn();
+
+// Wrapper providing controlled context value
 
 describe('Component Rendering', () => {
   beforeEach(() => {
     vi.resetAllMocks();
+    resetMockAuthState();
   });
 
   describe('ChatHeader', () => {
@@ -149,56 +151,66 @@ describe('Component Rendering', () => {
   });
 
   describe('SessionSidebar', () => {
-    it('renders in hidden state', () => {
-      // Override the isVisible prop for this test
-      const props = {
-        ...mockSessionSidebarProps,
-        isVisible: false,
-        onClose: onClose,
-      };
-      const { container } = render(<SessionSidebar {...props} />);
-      // Check that it has the hidden class
-      expect(container.firstChild).toHaveClass('-translate-x-full');
+    const authenticatedState: Partial<AuthContextType> = {
+      isAuthenticated: true,
+      isLoading: false,
+      userPayload: {
+        userId: 'test-user',
+        exp: 9999,
+        tenants: [],
+        ledgers: [],
+        iat: 1234567890,
+        iss: 'FP_CLOUD',
+        aud: 'PUBLIC',
+      },
+    };
+    const unauthenticatedState: Partial<AuthContextType> = {
+      isAuthenticated: false,
+      isLoading: false,
+      userPayload: null,
+    };
+
+    it('renders in hidden state', async () => {
+      const props = { ...mockSessionSidebarProps, isVisible: false };
+      setMockAuthState(authenticatedState);
+      render(<SessionSidebar {...props} />);
+      const sidebarElement = await screen.findByTestId('session-sidebar');
+      expect(sidebarElement).toHaveClass('-translate-x-full');
     });
 
-    it('renders in visible state', () => {
-      // Override the isVisible prop for this test
-      const props = {
-        ...mockSessionSidebarProps,
-        isVisible: true,
-        onClose: onClose,
-      };
-      const { container } = render(<SessionSidebar {...props} />);
-      // Check that it doesn't have the hidden class
-      expect(container.firstChild).not.toHaveClass('-translate-x-full');
+    it('renders in visible state', async () => {
+      const props = { ...mockSessionSidebarProps, isVisible: true };
+      setMockAuthState(authenticatedState);
+      render(<SessionSidebar {...props} />);
+      const sidebarElement = await screen.findByTestId('session-sidebar');
+      expect(sidebarElement).not.toHaveClass('-translate-x-full');
+    });
 
-      // Check that navigation menu items are rendered
+    it('shows navigation menu items when authenticated', async () => {
+      const props = { ...mockSessionSidebarProps, isVisible: true };
+      setMockAuthState(authenticatedState);
+      render(<SessionSidebar {...props} />);
+      expect(await screen.findByText('Settings')).toBeInTheDocument();
       expect(screen.getByText('Home')).toBeInTheDocument();
       expect(screen.getByText('My Vibes')).toBeInTheDocument();
-    });
-
-    it('shows navigation menu items', () => {
-      // Override isVisible and onClose for this test
-      const props = {
-        ...mockSessionSidebarProps,
-        isVisible: true,
-        onClose: onClose,
-      };
-      render(<SessionSidebar {...props} />);
-      expect(screen.getByText('Settings')).toBeInTheDocument();
       expect(screen.getByText('About')).toBeInTheDocument();
     });
 
+    it('shows Login button when not authenticated', async () => {
+      const props = { ...mockSessionSidebarProps, isVisible: true };
+      setMockAuthState(unauthenticatedState);
+      render(<SessionSidebar {...props} />);
+      expect(await screen.findByText('Log in')).toBeInTheDocument();
+      expect(screen.queryByText('Settings')).not.toBeInTheDocument();
+    });
+
     it('has a close button that works', () => {
-      const onClose = vi.fn();
-      render(<SessionSidebar {...mockSessionSidebarProps} isVisible={true} onClose={onClose} />);
-
-      // Find and click the close button
-      const closeButton = screen.getByLabelText('Close sidebar');
-      fireEvent.click(closeButton);
-
-      // Verify that onClose was called
-      expect(onClose).toHaveBeenCalled();
+      const onCloseMock = vi.fn();
+      const props = { ...mockSessionSidebarProps, isVisible: true, onClose: onCloseMock };
+      setMockAuthState(authenticatedState);
+      render(<SessionSidebar {...props} />);
+      fireEvent.click(screen.getByLabelText('Close sidebar'));
+      expect(onCloseMock).toHaveBeenCalled();
     });
   });
 
@@ -211,6 +223,7 @@ describe('Component Rendering', () => {
           setSelectedResponseId={() => {}}
           selectedResponseId=""
           setMobilePreviewShown={() => {}}
+          navigateToView={() => {}}
         />
       );
 
@@ -246,6 +259,7 @@ describe('Component Rendering', () => {
           setSelectedResponseId={() => {}}
           selectedResponseId=""
           setMobilePreviewShown={() => {}}
+          navigateToView={() => {}}
         />
       );
       expect(screen.getByText('Hello')).toBeInTheDocument();
@@ -279,6 +293,7 @@ describe('Component Rendering', () => {
           setSelectedResponseId={() => {}}
           selectedResponseId=""
           setMobilePreviewShown={() => {}}
+          navigateToView={() => {}}
         />
       );
       // The Message component in our test displays "Processing response..." in a markdown element
@@ -306,6 +321,7 @@ describe('Component Rendering', () => {
           setSelectedResponseId={() => {}}
           selectedResponseId=""
           setMobilePreviewShown={() => {}}
+          navigateToView={() => {}}
         />
       );
       expect(screen.getByText('I am thinking...')).toBeInTheDocument();
@@ -319,6 +335,7 @@ describe('Component Rendering', () => {
           setSelectedResponseId={() => {}}
           selectedResponseId=""
           setMobilePreviewShown={() => {}}
+          navigateToView={() => {}}
         />
       );
     });
@@ -344,6 +361,7 @@ describe('Component Rendering', () => {
           setSelectedResponseId={() => {}}
           selectedResponseId=""
           setMobilePreviewShown={() => {}}
+          navigateToView={() => {}}
         />
       );
     });
@@ -369,6 +387,7 @@ describe('Component Rendering', () => {
           setSelectedResponseId={() => {}}
           selectedResponseId=""
           setMobilePreviewShown={() => {}}
+          navigateToView={() => {}}
         />
       );
     });
@@ -393,6 +412,7 @@ describe('Component Rendering', () => {
           setSelectedResponseId={() => {}}
           selectedResponseId=""
           setMobilePreviewShown={() => {}}
+          navigateToView={() => {}}
         />
       );
     });
@@ -419,6 +439,7 @@ describe('Component Rendering', () => {
           setSelectedResponseId={() => {}}
           selectedResponseId=""
           setMobilePreviewShown={() => {}}
+          navigateToView={() => {}}
         />
       );
 

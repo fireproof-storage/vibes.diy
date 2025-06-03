@@ -15,10 +15,8 @@ interface IframeContentProps {
   filesContent: IframeFiles;
   isStreaming: boolean;
   codeReady: boolean;
-
-  setActiveView: (view: 'preview' | 'code' | 'data') => void;
-  isDarkMode: boolean; // Add isDarkMode prop
-  sessionId?: string; // Add sessionId prop
+  isDarkMode: boolean;
+  sessionId?: string;
 }
 
 const IframeContent: React.FC<IframeContentProps> = ({
@@ -26,9 +24,8 @@ const IframeContent: React.FC<IframeContentProps> = ({
   filesContent,
   isStreaming,
   codeReady,
-  setActiveView,
-  isDarkMode, // Receive the isDarkMode prop
-  sessionId, // Receive the sessionId prop
+  isDarkMode,
+  sessionId,
 }) => {
   const iframeRef = useRef<HTMLIFrameElement>(null);
   // Theme state is now received from parent via props

@@ -1,8 +1,8 @@
-import { useEffect, useRef } from 'react';
+import { /*useEffect,*/ useRef } from 'react'; // useEffect no longer needed here
 import { useParams } from 'react-router';
 import { useSession } from '../../hooks/useSession';
-import type { ViewType } from '../../utils/ViewState';
-import { useViewState } from '../../utils/ViewState';
+import type { ViewType, ViewControlsType } from '../../utils/ViewState';
+// import { useViewState } from '../../utils/ViewState'; // useViewState is now lifted to home.tsx
 import { BackButton } from './BackButton';
 import { ViewControls } from './ViewControls';
 import { PublishButton } from './PublishButton';
@@ -10,31 +10,34 @@ import { usePublish } from './usePublish';
 import { ShareModal } from './ShareModal';
 
 interface ResultPreviewHeaderContentProps {
+  // Props from useViewState (lifted to home.tsx)
+  displayView: ViewType;
+  navigateToView: (view: ViewType) => void;
+  viewControls: ViewControlsType;
+  showViewControls: boolean;
   previewReady: boolean;
-  activeView: ViewType;
-  setActiveView: (view: ViewType) => void;
-  isStreaming: boolean;
-  code: string;
   setMobilePreviewShown: (shown: boolean) => void;
   setUserClickedBack?: (clicked: boolean) => void;
-  sessionId?: string;
-  title?: string;
-  isIframeFetching?: boolean;
-  needsLogin?: boolean;
+
+  // Props required by usePublish and useSession hooks, and for BackButton logic
+  code: string; // for usePublish
+  isStreaming: boolean; // for BackButton logic
+  sessionId?: string; // for useSession, usePublish
+  title?: string; // for useSession, usePublish
 }
 
 const ResultPreviewHeaderContent: React.FC<ResultPreviewHeaderContentProps> = ({
+  displayView,
+  navigateToView,
+  viewControls,
+  showViewControls,
   previewReady,
-  activeView,
-  setActiveView,
-  isStreaming,
-  code,
   setMobilePreviewShown,
   setUserClickedBack,
+  code,
+  isStreaming,
   sessionId: propSessionId,
   title: propTitle,
-  isIframeFetching = false,
-  needsLogin = false,
 }) => {
   const { sessionId: urlSessionId, view: urlView } = useParams();
   const publishButtonRef = useRef<HTMLButtonElement>(null);
@@ -46,24 +49,8 @@ const ResultPreviewHeaderContent: React.FC<ResultPreviewHeaderContentProps> = ({
   // Use the session hook to get and update session data
   const { session, docs: messages, updatePublishedUrl } = useSession(sessionId);
 
-  // Use the new ViewState hook to manage all view-related state and navigation
-  const { currentView, displayView, viewControls, showViewControls, navigateToView } = useViewState(
-    {
-      sessionId,
-      title,
-      code,
-      isStreaming,
-      previewReady,
-      isIframeFetching,
-    }
-  );
-
-  // When displayView changes, update activeView to match
-  useEffect(() => {
-    if (activeView !== displayView) {
-      setActiveView(displayView);
-    }
-  }, [displayView, activeView, setActiveView]);
+  // useViewState is now lifted, props like displayView, navigateToView, viewControls, showViewControls are passed in.
+  // The useEffect syncing activeView with displayView is no longer needed.
 
   // Use the custom hook for publish functionality
   const {
@@ -105,7 +92,7 @@ const ResultPreviewHeaderContent: React.FC<ResultPreviewHeaderContentProps> = ({
         {showViewControls && (
           <ViewControls
             viewControls={viewControls}
-            currentView={currentView}
+            currentView={displayView} // Use displayView for the currently active button highlight
             onClick={navigateToView}
           />
         )}

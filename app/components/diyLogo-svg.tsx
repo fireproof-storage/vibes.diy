@@ -1,29 +1,14 @@
-import { useEffect, useState } from 'react';
 import { dark, light } from './colorways';
-
-const names = Object.keys(dark);
 
 type ColorwayName = keyof typeof dark;
 
 interface DIYLogoProps {
-  colorway?: ColorwayName;
+  colorway: ColorwayName;
   isDarkMode?: boolean;
 }
 
-export default function DIYLogo({ colorway, isDarkMode = true }: DIYLogoProps = {}) {
-  const [colorwayName, setColorwayName] = useState<ColorwayName>(() => {
-    // Initialize with provided colorway or a random one based on time
-    return colorway || (names[Math.floor(Date.now() / 10000) % names.length] as ColorwayName);
-  });
-
-  // Update colorwayName when the colorway prop changes
-  useEffect(() => {
-    if (colorway) {
-      setColorwayName(colorway);
-    }
-  }, [colorway]);
-
-  const colors = isDarkMode ? dark[colorwayName] : light[colorwayName];
+export default function DIYLogo({ colorway, isDarkMode = true }: DIYLogoProps) {
+  const colors = isDarkMode ? dark[colorway] : light[colorway];
 
   // Define CSS variables using a style object
   const svgStyle = {
