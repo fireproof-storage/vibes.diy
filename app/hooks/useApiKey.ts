@@ -47,127 +47,75 @@ export function useApiKey(userId?: string) {
     async (currentUserId?: string, currentKeyHash?: string) => {
       setIsLoading(true);
       setError(null);
+      let keyData: any = null;
 
       try {
-        let keyData;
-
-        try {
-          // Check for rate limiting - only if we don't already have a key
-          // being passed (e.g. from our successful response)
-          if (!keyData) {
-            const lastAttempt = localStorage.getItem('vibes-key-backoff');
-            if (lastAttempt) {
-              const lastTime = parseInt(lastAttempt, 10);
-              const now = Date.now();
-              const elapsedMs = now - lastTime;
-
-              // If last attempt was less than 10 seconds ago, wait before trying again
-              if (elapsedMs < 10 * 1000) {
-                const waitTime = Math.ceil((10 * 1000 - elapsedMs) / 1000);
-                const tempErr = new Error(`Rate limited. Please try again in ${waitTime} seconds.`);
-                setError(tempErr);
-                setIsLoading(false);
-                return;
+        // Deduplicate API key requests across components
+        if (!pendingKeyRequest) {
+          // Extract hash from localStorage even if the key is expired
+          let storedHash = apiKey?.hash;
+          if (!storedHash) {
+            const storedData = localStorage.getItem(storageKey);
+            if (storedData) {
+              try {
+                const parsed = JSON.parse(storedData);
+                storedHash = parsed.hash;
+              } catch (e) {
+                // Ignore parsing errors
               }
             }
           }
 
-          // Clear any old state that might be causing confusion
-          localStorage.removeItem('vibes-key-backoff');
+          pendingKeyRequest = createOrUpdateKeyViaEdgeFunction(
+            currentUserId,
+            currentKeyHash || storedHash
+          );
+        }
 
-          // Set the attempt timestamp before making the request
-          localStorage.setItem('vibes-key-backoff', Date.now().toString());
+        // Wait for the existing or new request to complete
+        const apiResponse = await pendingKeyRequest;
 
-          // Deduplicate API key requests across components
-          if (!pendingKeyRequest) {
-            // Extract hash from localStorage even if the key is expired
-            let storedHash = apiKey?.hash;
-            if (!storedHash) {
-              const storedData = localStorage.getItem(storageKey);
-              if (storedData) {
-                try {
-                  const parsed = JSON.parse(storedData);
-                  storedHash = parsed.hash;
-                } catch (e) {
-                  // Ignore parsing errors
-                }
-              }
-            }
-
-            pendingKeyRequest = createOrUpdateKeyViaEdgeFunction(
-              currentUserId,
-              currentKeyHash || storedHash
-            );
-          }
-
-          // Wait for the existing or new request to complete
-          const apiResponse = await pendingKeyRequest;
-
-          // Success - clear the backoff timer
-          localStorage.removeItem('vibes-key-backoff');
-
-          // Reset the pending request after successful fetch
-          pendingKeyRequest = null;
-
-          // Ensure we have the correct key structure
-          if (apiResponse && typeof apiResponse === 'object') {
-            // Check if the API returned a nested key object (common with some APIs)
-            if (
-              'key' in apiResponse &&
-              typeof apiResponse.key === 'object' &&
-              apiResponse.key &&
-              'key' in apiResponse.key
-            ) {
-              keyData = apiResponse.key; // Type should be handled by createOrUpdateKeyViaEdgeFunction's return type
-            } else {
-              keyData = apiResponse; // Type should be handled by createOrUpdateKeyViaEdgeFunction's return type
-            }
-          }
-        } catch (error) {
-          // Reset the pending request on error to allow retries
-          pendingKeyRequest = null;
-
-          // Handle rate limiting specifically
-          if (error instanceof Error && error.message.includes('Too Many Requests')) {
-            // Don't remove the backoff timer on rate limit errors
+        // Ensure we have the correct key structure
+        if (apiResponse && typeof apiResponse === 'object') {
+          // Check if the API returned a nested key object (common with some APIs)
+          if (
+            'key' in apiResponse &&
+            typeof apiResponse.key === 'object' &&
+            apiResponse.key &&
+            'key' in apiResponse.key
+          ) {
+            keyData = apiResponse.key; // Type should be handled by createOrUpdateKeyViaEdgeFunction's return type
           } else {
-            // For other errors, clear the backoff timer
-            localStorage.removeItem('vibes-key-backoff');
-          }
-          throw error;
-        }
-
-        // Validate that we have a proper key object before storing
-        if (keyData && typeof keyData.key === 'string' && keyData.key.trim() !== '') {
-          const keyToStore = {
-            ...keyData,
-            createdAt: Date.now(),
-          };
-
-          localStorage.setItem(storageKey, JSON.stringify(keyToStore));
-          const resultingKey = { key: keyData.key, hash: keyData.hash };
-          setApiKey(resultingKey);
-          return resultingKey; // Return the key/hash object for ensureApiKey
-        } else {
-          throw new Error('Invalid API key response format');
-        }
-      } catch (err) {
-        setError(err instanceof Error ? err : new Error('Unknown error creating API key'));
-        // Clear any invalid data that might be in localStorage
-        const storedData = localStorage.getItem(storageKey);
-        if (storedData) {
-          try {
-            const parsed = JSON.parse(storedData);
-            if (!parsed.key || parsed.error) {
-              localStorage.removeItem(storageKey);
-            }
-          } catch (e) {
-            // If we can't parse it, it's invalid
-            localStorage.removeItem(storageKey);
+            keyData = apiResponse; // Type should be handled by createOrUpdateKeyViaEdgeFunction's return type
           }
         }
+      } catch (error) {
+        // Reset the pending request on error to allow future attempts
+        pendingKeyRequest = null;
+        // Set error state for components to display
+        setError(error instanceof Error ? error : new Error('Unknown error creating API key'));
+        throw error;
       } finally {
+        // Always reset the pending request regardless of outcome
+        pendingKeyRequest = null;
         setIsLoading(false);
+      }
+
+      // Validate that we have a proper key object before storing
+      if (keyData && typeof keyData.key === 'string' && keyData.key.trim() !== '') {
+        const keyToStore = {
+          ...keyData,
+          createdAt: Date.now(),
+        };
+
+        localStorage.setItem(storageKey, JSON.stringify(keyToStore));
+        const resultingKey = { key: keyData.key, hash: keyData.hash };
+        setApiKey(resultingKey);
+        return resultingKey; // Return the key/hash object for ensureApiKey
+      } else {
+        const error = new Error('Invalid API key response format');
+        setError(error);
+        throw error;
       }
     },
     [userId, storageKey]
@@ -187,42 +135,17 @@ export function useApiKey(userId?: string) {
     }
 
     // 3. No valid key in state or localStorage, so fetch a new one.
-    // setIsLoading(true); // fetchNewKeyInternal will set this
-    // setError(null);
     try {
       const newKeyData = await fetchNewKeyInternal(userId, storedKeyData?.hash); // Pass userId and hash from localStorage if available
-      if (!newKeyData?.key || !newKeyData?.hash) {
-        // fetchNewKeyInternal now expected to return key/hash or throw
-        // This path should ideally not be hit if fetchNewKeyInternal throws on failure or returns valid data.
-        // However, as a safeguard based on original plan's fallback:
-        if (storedKeyData?.key) {
-          // Fallback to localStorage key if fetch failed but a key string exists
-          console.warn('Using potentially stale localStorage key as fallback after fetch failure.');
-          setApiKey({
-            key: storedKeyData.key,
-            hash: storedKeyData.hash || 'unknown_fallback_hash',
-          });
-          return { key: storedKeyData.key, hash: storedKeyData.hash || 'unknown_fallback_hash' };
-        }
-        throw error || new Error('Failed to obtain a new API key and no fallback available.');
-      }
       // fetchNewKeyInternal already sets apiKey state and localStorage on success.
       return newKeyData;
     } catch (fetchError) {
       console.error('Error obtaining API key in ensureApiKey:', fetchError);
-      // As a desperate fallback, if the localStorage key has a key string, try to use it anyway
-      if (storedKeyData?.key) {
-        console.warn('Using localStorage key as fallback despite fetch error in ensureApiKey.');
-        setApiKey({ key: storedKeyData.key, hash: storedKeyData.hash || 'unknown_fallback_hash' });
-        return { key: storedKeyData.key, hash: storedKeyData.hash || 'unknown_fallback_hash' };
-      }
-      throw fetchError; // Re-throw the error if no key could be provided.
+      throw fetchError; // Surface the error directly to the caller
     }
   }, [apiKey, userId, isLoading, checkLocalStorageForKey, fetchNewKeyInternal, error]);
 
-  const refreshKey = useCallback(async () => {
-    // setIsLoading(true); // fetchNewKeyInternal will set this
-    // setError(null);
+  const refreshKey = useCallback(async (): Promise<{ key: string; hash: string }> => {
     // Attempt to refresh using the current key's hash if available.
     return await fetchNewKeyInternal(userId, apiKey?.hash);
   }, [fetchNewKeyInternal, userId, apiKey]);
