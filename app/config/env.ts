@@ -36,7 +36,7 @@ export const GA_TRACKING_ID = import.meta.env.VITE_GOOGLE_ANALYTICS_ID || '';
 
 // PostHog
 export const POSTHOG_KEY = import.meta.env.VITE_POSTHOG_KEY || '';
-export const POSTHOG_HOST = import.meta.env.VITE_POSTHOG_HOST || 'https://app.posthog.com';
+export const POSTHOG_HOST = import.meta.env.VITE_POSTHOG_HOST || '';
 
 // Application Behavior
 export const IS_DEV_MODE = import.meta.env.DEV || false;
@@ -44,7 +44,7 @@ export const APP_MODE = import.meta.env.MODE || 'production'; // typically 'deve
 
 // Fireproof Connect & Auth
 export const CONNECT_URL =
-  import.meta.env.VITE_CONNECT_URL || 'https://connect.fireproof.direct/token';
+  import.meta.env.VITE_CONNECT_URL || 'https://dev.connect.fireproof.direct/token';
 export const CONNECT_API_URL =
   import.meta.env.VITE_CONNECT_API_URL || 'https://dev.connect.fireproof.direct/api';
 export const CLOUD_SESSION_TOKEN_PUBLIC_KEY = import.meta.env.VITE_CLOUD_SESSION_TOKEN_PUBLIC || '';
