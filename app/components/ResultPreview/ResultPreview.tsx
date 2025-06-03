@@ -1,5 +1,4 @@
-import React, { useEffect, useRef, useState, useMemo } from 'react';
-import { CALLAI_API_KEY } from '../../config/env';
+import React, { useEffect, useState, useMemo } from 'react';
 import { animationStyles } from './ResultPreviewTemplates';
 import type { ResultPreviewProps, IframeFiles } from './ResultPreviewTypes';
 import type { RuntimeError } from '../../hooks/useRuntimeErrors';
@@ -22,11 +21,7 @@ function ResultPreview({
   children,
   title,
 }: ResultPreviewProps & { children?: React.ReactNode }) {
-  // Add theme detection at the parent level
   const [isDarkMode, setIsDarkMode] = useState<boolean>(true); // Default to dark mode
-  const isStreamingRef = useRef(isStreaming);
-  const hasGeneratedStreamingKeyRef = useRef(false);
-
   const showWelcome = !isStreaming && (!code || code.length === 0);
 
   // Calculate filesContent directly based on code prop
@@ -39,18 +34,6 @@ function ResultPreview({
       },
     };
   }, [code, showWelcome, codeReady, isStreaming]); // Include codeReady to ensure updates
-
-  // Track streaming state changes to reset key generation only when streaming starts/stops
-  useEffect(() => {
-    if (isStreaming !== isStreamingRef.current) {
-      isStreamingRef.current = isStreaming;
-
-      // Reset streaming key when streaming stops
-      if (!isStreaming) {
-        hasGeneratedStreamingKeyRef.current = false;
-      }
-    }
-  }, [isStreaming]);
 
   // Theme detection effect
   useEffect(() => {
@@ -88,27 +71,14 @@ function ResultPreview({
       if (data) {
         if (data.type === 'preview-ready' || data.type === 'preview-loaded') {
           // respond with the API key
-          // Use CALLAI_API_KEY if available (dev mode), otherwise check localStorage
-          let apiKey = CALLAI_API_KEY;
-
-          // Only check localStorage if no dev key is set
-          if (!apiKey) {
-            const storedKey = localStorage.getItem('vibes-openrouter-key');
-            if (storedKey) {
-              try {
-                const keyData = JSON.parse(storedKey);
-                apiKey = keyData.key;
-              } catch (e) {}
-            }
+          const storedKey = localStorage.getItem('vibes-openrouter-key');
+          if (storedKey) {
+            const keyData = JSON.parse(storedKey);
+            const iframe = document.querySelector('iframe') as HTMLIFrameElement;
+            iframe?.contentWindow?.postMessage({ type: 'callai-api-key', key: keyData.key }, '*');
+            setMobilePreviewShown(true);
+            onPreviewLoaded();
           }
-
-          const iframe = document.querySelector('iframe') as HTMLIFrameElement;
-          iframe?.contentWindow?.postMessage({ type: 'callai-api-key', key: apiKey }, '*');
-
-          setMobilePreviewShown(true);
-
-          // Notify parent component that preview is loaded
-          onPreviewLoaded();
         } else if (data.type === 'streaming' && data.state !== undefined) {
           if (setIsIframeFetching) {
             setIsIframeFetching(data.state);
@@ -123,10 +93,7 @@ function ResultPreview({
             onScreenshotCaptured(null);
           }
         } else if (data.type === 'iframe-error' && data.error) {
-          // Process the error and forward it to the error handler
           const error = data.error as RuntimeError;
-
-          // Send to error handler if available
           if (addError) {
             addError(error);
           }

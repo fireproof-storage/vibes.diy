@@ -15,8 +15,8 @@ vi.mock('../app/hooks/useApiKey', () => ({
     isLoading: false,
     error: null,
     refreshKey: vi.fn(),
-    ensureApiKey: vi.fn().mockResolvedValue({ key: 'test-api-key', hash: 'test-hash' })
-  })
+    ensureApiKey: vi.fn().mockResolvedValue({ key: 'test-api-key', hash: 'test-hash' }),
+  }),
 }));
 
 describe('Iframe Template', () => {

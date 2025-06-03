@@ -1,5 +1,4 @@
 import { useState, useCallback } from 'react';
-import { CALLAI_API_KEY } from '../config/env';
 import { createOrUpdateKeyViaEdgeFunction } from '../services/apiKeyService';
 
 // Global request tracking to prevent duplicate API calls
@@ -51,106 +50,91 @@ export function useApiKey(userId?: string) {
 
       try {
         let keyData;
-        if (CALLAI_API_KEY === 'force-prov') {
-          keyData = {
-            key: CALLAI_API_KEY,
-            hash: 'local-dev',
-            name: 'Local Development Key',
-            label: 'local-dev',
-            limit: 1.0,
-            disabled: false,
-            usage: 0,
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString(),
-          };
-        } else {
-          try {
-            // Check for rate limiting - only if we don't already have a key
-            // being passed (e.g. from our successful response)
-            if (!keyData) {
-              const lastAttempt = localStorage.getItem('vibes-key-backoff');
-              if (lastAttempt) {
-                const lastTime = parseInt(lastAttempt, 10);
-                const now = Date.now();
-                const elapsedMs = now - lastTime;
 
-                // If last attempt was less than 10 seconds ago, wait before trying again
-                if (elapsedMs < 10 * 1000) {
-                  const waitTime = Math.ceil((10 * 1000 - elapsedMs) / 1000);
-                  const tempErr = new Error(
-                    `Rate limited. Please try again in ${waitTime} seconds.`
-                  );
-                  setError(tempErr);
-                  setIsLoading(false);
-                  return;
-                }
+        try {
+          // Check for rate limiting - only if we don't already have a key
+          // being passed (e.g. from our successful response)
+          if (!keyData) {
+            const lastAttempt = localStorage.getItem('vibes-key-backoff');
+            if (lastAttempt) {
+              const lastTime = parseInt(lastAttempt, 10);
+              const now = Date.now();
+              const elapsedMs = now - lastTime;
+
+              // If last attempt was less than 10 seconds ago, wait before trying again
+              if (elapsedMs < 10 * 1000) {
+                const waitTime = Math.ceil((10 * 1000 - elapsedMs) / 1000);
+                const tempErr = new Error(`Rate limited. Please try again in ${waitTime} seconds.`);
+                setError(tempErr);
+                setIsLoading(false);
+                return;
               }
             }
-
-            // Clear any old state that might be causing confusion
-            localStorage.removeItem('vibes-key-backoff');
-
-            // Set the attempt timestamp before making the request
-            localStorage.setItem('vibes-key-backoff', Date.now().toString());
-
-            // Deduplicate API key requests across components
-            if (!pendingKeyRequest) {
-              // Extract hash from localStorage even if the key is expired
-              let storedHash = apiKey?.hash;
-              if (!storedHash) {
-                const storedData = localStorage.getItem(storageKey);
-                if (storedData) {
-                  try {
-                    const parsed = JSON.parse(storedData);
-                    storedHash = parsed.hash;
-                  } catch (e) {
-                    // Ignore parsing errors
-                  }
-                }
-              }
-
-              pendingKeyRequest = createOrUpdateKeyViaEdgeFunction(
-                currentUserId,
-                currentKeyHash || storedHash
-              );
-            }
-
-            // Wait for the existing or new request to complete
-            const apiResponse = await pendingKeyRequest;
-
-            // Success - clear the backoff timer
-            localStorage.removeItem('vibes-key-backoff');
-
-            // Reset the pending request after successful fetch
-            pendingKeyRequest = null;
-
-            // Ensure we have the correct key structure
-            if (apiResponse && typeof apiResponse === 'object') {
-              // Check if the API returned a nested key object (common with some APIs)
-              if (
-                'key' in apiResponse &&
-                typeof apiResponse.key === 'object' &&
-                apiResponse.key &&
-                'key' in apiResponse.key
-              ) {
-                keyData = apiResponse.key; // Type should be handled by createOrUpdateKeyViaEdgeFunction's return type
-              } else {
-                keyData = apiResponse; // Type should be handled by createOrUpdateKeyViaEdgeFunction's return type
-              }
-            }
-          } catch (error) {
-            // Reset the pending request on error to allow retries
-            pendingKeyRequest = null;
-
-            // Handle rate limiting specifically
-            if (error instanceof Error && error.message.includes('Too Many Requests')) {
-              // Don't remove the backoff timer on rate limit errors
-            } else {
-              // For other errors, clear the backoff timer
-              localStorage.removeItem('vibes-key-backoff');
-            }
-            throw error;
           }
+
+          // Clear any old state that might be causing confusion
+          localStorage.removeItem('vibes-key-backoff');
+
+          // Set the attempt timestamp before making the request
+          localStorage.setItem('vibes-key-backoff', Date.now().toString());
+
+          // Deduplicate API key requests across components
+          if (!pendingKeyRequest) {
+            // Extract hash from localStorage even if the key is expired
+            let storedHash = apiKey?.hash;
+            if (!storedHash) {
+              const storedData = localStorage.getItem(storageKey);
+              if (storedData) {
+                try {
+                  const parsed = JSON.parse(storedData);
+                  storedHash = parsed.hash;
+                } catch (e) {
+                  // Ignore parsing errors
+                }
+              }
+            }
+
+            pendingKeyRequest = createOrUpdateKeyViaEdgeFunction(
+              currentUserId,
+              currentKeyHash || storedHash
+            );
+          }
+
+          // Wait for the existing or new request to complete
+          const apiResponse = await pendingKeyRequest;
+
+          // Success - clear the backoff timer
+          localStorage.removeItem('vibes-key-backoff');
+
+          // Reset the pending request after successful fetch
+          pendingKeyRequest = null;
+
+          // Ensure we have the correct key structure
+          if (apiResponse && typeof apiResponse === 'object') {
+            // Check if the API returned a nested key object (common with some APIs)
+            if (
+              'key' in apiResponse &&
+              typeof apiResponse.key === 'object' &&
+              apiResponse.key &&
+              'key' in apiResponse.key
+            ) {
+              keyData = apiResponse.key; // Type should be handled by createOrUpdateKeyViaEdgeFunction's return type
+            } else {
+              keyData = apiResponse; // Type should be handled by createOrUpdateKeyViaEdgeFunction's return type
+            }
+          }
+        } catch (error) {
+          // Reset the pending request on error to allow retries
+          pendingKeyRequest = null;
+
+          // Handle rate limiting specifically
+          if (error instanceof Error && error.message.includes('Too Many Requests')) {
+            // Don't remove the backoff timer on rate limit errors
+          } else {
+            // For other errors, clear the backoff timer
+            localStorage.removeItem('vibes-key-backoff');
+          }
+          throw error;
         }
 
         // Validate that we have a proper key object before storing
