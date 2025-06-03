@@ -11,7 +11,6 @@ let pendingKeyRequest: Promise<any> | null = null;
  */
 export function useApiKey(userId?: string) {
   const [apiKey, setApiKey] = useState<{ key: string; hash: string } | null>(null);
-  const [apiKey, setApiKey] = useState<{ key: string; hash: string } | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<Error | null>(null);
   // Always use a consistent storage key regardless of user ID

@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { useAuth } from '../contexts/AuthContext';
 import type { ChatMessageDocument, ChatState } from '../types/chat';
 import type { UserSettings } from '../types/settings';
 import { trackChatInputClick } from '../utils/analytics';
