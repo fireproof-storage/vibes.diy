@@ -337,7 +337,9 @@ describe('ShareModal', () => {
 
     // Click the update button
     const updateButton = screen.getByText('Update Code');
-    fireEvent.click(updateButton);
+    await act(async () => {
+      fireEvent.click(updateButton);
+    });
 
     // Wait for success message (the test is simplifying this to avoid waiting for actual time to pass)
     expect(mockOnPublish).toHaveBeenCalledTimes(1);

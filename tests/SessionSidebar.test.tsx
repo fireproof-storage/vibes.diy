@@ -101,7 +101,7 @@ describe('SessionSidebar component', () => {
     expect(screen.queryByText('Log in')).toBeNull();
   });
 
-  it('should show Log in button when not authenticated', () => {
+  it('should show Log in button when not authenticated', async () => {
     // Mock useAuth to return unauthenticated state
     setMockAuthState({
       isAuthenticated: false,
@@ -131,7 +131,10 @@ describe('SessionSidebar component', () => {
 
     // Get the login button and click it
     const loginButton = screen.getByText('Log in');
-    fireEvent.click(loginButton);
+    await act(async () => {
+      fireEvent.click(loginButton);
+      await Promise.resolve();
+    });
 
     // Verify that initiateAuthFlow and trackAuthClick were called
     expect(initiateAuthFlow).toHaveBeenCalledTimes(1);

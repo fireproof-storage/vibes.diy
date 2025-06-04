@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { render } from '@testing-library/react';
+import { render, act } from '@testing-library/react';
 import iframeTemplateRaw from '../app/components/ResultPreview/templates/iframe-template.html?raw';
 import ResultPreview from '../app/components/ResultPreview/ResultPreview';
 import { MockThemeProvider } from './utils/MockThemeProvider';
@@ -212,19 +212,23 @@ describe('Iframe Template', () => {
 
       // Simulate iframe loading and sending the ready message
       // This triggers our mock contentWindow.postMessage which triggers parent's message handlers
-      iframe?.contentWindow?.postMessage({ type: 'preview-ready' }, '*');
+      await act(async () => {
+        iframe?.contentWindow?.postMessage({ type: 'preview-ready' }, '*');
+      });
 
       // Verify that onPreviewLoaded was called as a result of the message
       expect(onPreviewLoadedMock).toHaveBeenCalled();
 
       // Simulate iframe sending a screenshot message
-      iframe?.contentWindow?.postMessage(
-        {
-          type: 'screenshot',
-          data: 'data:image/png;base64,fakeScreenshotData',
-        },
-        '*'
-      );
+      await act(async () => {
+        iframe?.contentWindow?.postMessage(
+          {
+            type: 'screenshot',
+            data: 'data:image/png;base64,fakeScreenshotData',
+          },
+          '*'
+        );
+      });
 
       // Verify screenshot handler was called with screenshot data
       expect(onScreenshotCapturedMock).toHaveBeenCalledWith(

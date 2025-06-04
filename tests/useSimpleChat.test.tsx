@@ -2,6 +2,24 @@ import { act, cleanup, renderHook, waitFor } from '@testing-library/react';
 import type { ReactNode } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { AuthProvider } from '../app/contexts/AuthContext';
+
+// Mock AuthContext to avoid state updates during tests
+vi.mock('../app/contexts/AuthContext', () => {
+  const React = require('react');
+  return {
+    AuthProvider: ({ children }: { children: React.ReactNode }) => (
+      <>{children}</>
+    ),
+    useAuth: () => ({
+      token: 'mock-token',
+      isAuthenticated: true,
+      isLoading: false,
+      userPayload: { userId: 'test-user-id', exp: 0, tenants: [], ledgers: [] },
+      checkAuthStatus: vi.fn(),
+      processToken: vi.fn(),
+    }),
+  };
+});
 import { useSession } from '../app/hooks/useSession'; // Import the actual hook for vi.mocked
 import { useSimpleChat } from '../app/hooks/useSimpleChat';
 import type { AiChatMessage, ChatMessage } from '../app/types/chat';
