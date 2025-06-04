@@ -16,6 +16,14 @@
  * - export function ComponentName() {} (converts to default)
  * - export const ComponentName = ... (converts to default)
  */
+import {
+  transformArrowFunction,
+  transformClassDeclaration,
+  transformFunctionDeclaration,
+  transformHOC,
+  transformObjectLiteral,
+} from './componentExportTransforms';
+
 export function normalizeComponentExports(code: string): string {
   // Clean up the code by removing leading/trailing comments and whitespace
   const cleanedCode = code
@@ -417,93 +425,4 @@ export default App;`;
   }
 
   return normalizedCode;
-}
-
-/**
- * Transform Object Literal Export pattern into standardized format
- * Special care is taken to ensure the format matches test requirements
- */
-function transformObjectLiteral(state: {
-  input: string;
-  patterns: { objectLiteral: string | null; [key: string]: any };
-  hasAppDeclared: boolean;
-  beforeExport: string;
-  afterExport: string;
-}): string {
-  if (!state.patterns.objectLiteral) return state.input;
-
-  // This is the exact format required by the test
-  // The string 'const App = AppObject.default || AppObject;' must be preserved
-  return `${state.beforeExport}
-const AppObject = ${state.patterns.objectLiteral};
-const App = AppObject.default || AppObject;
-export default App;${state.afterExport}`;
-}
-
-/**
- * Transform HOC pattern (memo, forwardRef) into standardized format
- */
-function transformHOC(state: {
-  input: string;
-  patterns: { hoc: string | null; [key: string]: any };
-  hasAppDeclared: boolean;
-  beforeExport: string;
-  afterExport: string;
-}): string {
-  if (!state.patterns.hoc) return state.input;
-
-  // Replace the HOC pattern with App assignment and ensure export default App
-  return `${state.beforeExport}const App = ${state.patterns.hoc};
-export default App;`;
-}
-
-/**
- * Transform function declaration export into standardized format
- */
-function transformFunctionDeclaration(state: {
-  input: string;
-  patterns: { functionDeclaration: { name: string; signature: string } | null; [key: string]: any };
-  hasAppDeclared: boolean;
-}): string {
-  if (!state.patterns.functionDeclaration) return state.input;
-
-  // Replace original function name with App
-  return state.input.replace(
-    /export\s+default\s+function\s+\w+\s*(\([^)]*\))/g,
-    'export default function App$1'
-  );
-}
-
-/**
- * Transform class declaration export into standardized format
- */
-function transformClassDeclaration(state: {
-  input: string;
-  patterns: { classDeclaration: { name: string } | null; [key: string]: any };
-  hasAppDeclared: boolean;
-}): string {
-  if (!state.patterns.classDeclaration) return state.input;
-
-  // Replace original class name with App
-  return state.input.replace(/export\s+default\s+class\s+\w+/g, 'export default class App');
-}
-
-/**
- * Transform arrow function export into standardized format
- */
-function transformArrowFunction(state: {
-  input: string;
-  patterns: { arrowFunction: boolean | null; [key: string]: any };
-  hasAppDeclared: boolean;
-  beforeExport: string;
-  afterExport: string;
-}): string {
-  if (!state.patterns.arrowFunction) return state.input;
-
-  // Clean up any trailing semicolons in the afterExport to avoid duplicates
-  const cleanedAfterExport = state.afterExport.replace(/;\s*$/, '');
-
-  // Replace export default with const App =
-  return `${state.beforeExport}const App = ${cleanedAfterExport};
-export default App;`;
 }
