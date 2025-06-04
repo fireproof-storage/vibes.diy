@@ -99,21 +99,21 @@ export async function streamAI(
         // Failed to even start streaming
 
         // Format a user-friendly error message for toast
-        const errorMsg = streamError instanceof Error ? streamError.message : String(streamError);
-        const toastMsg = `Error during AI response: ${errorMsg}`;
-        console.log('[TOAST MESSAGE]', toastMsg);
+        // const errorMsg = streamError instanceof Error ? streamError.message : String(streamError);
+        // const toastMsg = `Error during AI response: ${errorMsg}`;
+        // console.log('[TOAST MESSAGE]', toastMsg);
 
         // Check if this is an authentication error
-        if (
-          errorMsg.includes('authentication') ||
-          errorMsg.includes('key') ||
-          errorMsg.includes('token') ||
-          errorMsg.includes('credits')
-        ) {
-          if (setNeedsLogin) {
-            setNeedsLogin(true);
-          }
-        }
+        // if (
+        //   errorMsg.includes('authentication') ||
+        //   errorMsg.includes('key') ||
+        //   errorMsg.includes('token') ||
+        //   errorMsg.includes('credits')
+        // ) {
+        //   if (setNeedsLogin) {
+        //     setNeedsLogin(true);
+        //   }
+        // }
 
         // Don't return any message to the chat, let the caller handle it
         return '';

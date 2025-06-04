@@ -63,9 +63,6 @@ describe('segmentParser utilities', () => {
 
 This app creates a retr`;
 
-    // Log the content for debugging
-    console.log('Testing with problematic content:', text);
-
     const result = parseContent(text);
 
     // We expect the parser to handle this as a single markdown segment
@@ -91,12 +88,7 @@ function SearchResults({ searches }) {
 \`\`\`
 `;
 
-    console.log('Testing with code block JSX content:');
-    console.log(text);
-
     const result = parseContent(text);
-
-    console.log('Resulting segments:', result.segments);
 
     // The text should be split into:
     // 1. Markdown before the code
@@ -135,12 +127,7 @@ function SearchResults({ searches }) {
 Final markdown
 `;
 
-    console.log('Testing with code block JSX content:');
-    console.log(text);
-
     const result = parseContent(text);
-
-    console.log('Resulting segments:', result.segments);
 
     // The text should be split into:
     // 1. Markdown before the code
