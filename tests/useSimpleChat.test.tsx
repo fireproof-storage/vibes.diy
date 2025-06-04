@@ -5,11 +5,8 @@ import { AuthProvider } from '../app/contexts/AuthContext';
 
 // Mock AuthContext to avoid state updates during tests
 vi.mock('../app/contexts/AuthContext', () => {
-  const React = require('react');
   return {
-    AuthProvider: ({ children }: { children: React.ReactNode }) => (
-      <>{children}</>
-    ),
+    AuthProvider: ({ children }: { children: ReactNode }) => <>{children}</>,
     useAuth: () => ({
       token: 'mock-token',
       isAuthenticated: true,
