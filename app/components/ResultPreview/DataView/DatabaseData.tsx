@@ -157,9 +157,6 @@ const DatabaseData: React.FC<{ dbName: string; sessionId: string }> = ({ dbName,
         rows={docs}
         dbName={database.name}
         hrefFn={() => '#'}
-        onRowClick={(docId: string) => {
-          console.log(`View document ${docId} from database ${database.name}`);
-        }}
       />
     </div>
   );

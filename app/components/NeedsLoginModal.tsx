@@ -16,7 +16,6 @@ export function NeedsLoginModal() {
   // Show the modal when needsLogin becomes true or is already true
   useEffect(() => {
     if (needsLogin) {
-      console.log('needsLogin is true, showing modal');
       setIsOpen(true);
     }
   }, [needsLogin]);
@@ -24,7 +23,6 @@ export function NeedsLoginModal() {
   // Also listen for the event as a backup
   useEffect(() => {
     const handleNeedsLoginTriggered = () => {
-      console.log('needsLoginTriggered event received!');
       setIsOpen(true);
     };
 

@@ -53,14 +53,9 @@ export async function generateTitle(
     },
   };
 
-  // console.log('Generating title with titleContent:', titleContent);
-
   try {
     // Use callAI to get the title
     const title = (await callAI(messages, options)) as string;
-
-    console.log('Generated title:', title);
-
     return title.trim() || 'New Chat';
   } catch (error) {
     console.error('Error generating title:', error);

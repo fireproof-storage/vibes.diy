@@ -71,7 +71,7 @@ export async function streamAI(
     }
   } catch (error) {
     // If we can't check credits, just use the default max_tokens
-    console.log('Could not check credits for max_tokens adjustment:', error);
+    console.warn('Could not check credits for max_tokens adjustment:', error);
   }
 
   try {
@@ -125,22 +125,22 @@ export async function streamAI(
     // Failed to even start streaming
 
     // Format a user-friendly error message for toast
-    const errorMsg = initialError instanceof Error ? initialError.message : String(initialError);
-    const toastMsg = `Error starting AI response: ${errorMsg}`;
-    console.log('[TOAST MESSAGE]', toastMsg);
+    // const errorMsg = initialError instanceof Error ? initialError.message : String(initialError);
+    // const toastMsg = `Error starting AI response: ${errorMsg}`;
+    // console.warn('[TOAST MESSAGE]', toastMsg);
 
     // Check if this is an authentication error
-    if (
-      errorMsg.includes('authentication') ||
-      errorMsg.includes('key') ||
-      errorMsg.includes('token') ||
-      errorMsg.includes('credits')
-    ) {
-      console.log('Setting needs login due to auth/credit error');
-      if (setNeedsLogin) {
-        setNeedsLogin(true);
-      }
-    }
+    // if (
+    //   errorMsg.includes('authentication') ||
+    //   errorMsg.includes('key') ||
+    //   errorMsg.includes('token') ||
+    //   errorMsg.includes('credits')
+    // ) {
+    //   console.warn('Setting needs login due to auth/credit error');
+    //   if (setNeedsLogin) {
+    //     setNeedsLogin(true);
+    //   }
+    // }
 
     // Don't return any message to the chat, let the caller handle it
     return '';

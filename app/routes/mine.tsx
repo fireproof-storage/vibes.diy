@@ -27,7 +27,6 @@ export default function MyVibesRoute(): ReactElement {
 
   // Use our custom hook for vibes state management
   const { vibes, isLoading } = useVibes();
-  console.log('vibes', vibes);
   const [showOnlyFavorites, setShowOnlyFavorites] = useState(false);
 
   // Filter vibes based on the showOnlyFavorites toggle

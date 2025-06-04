@@ -36,7 +36,7 @@ export function useAuthPopup() {
         setPollError('An error occurred during log in.');
       }
     } else {
-      console.log('Authentication flow could not be initiated.');
+      console.warn('Authentication flow could not be initiated.');
       setPollError('Could not initiate authentication.');
     }
   };

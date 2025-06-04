@@ -131,7 +131,6 @@ export async function sendMessage(ctx: SendMessageContext, textOverride?: string
             const parsedContent = JSON.parse(finalContent);
 
             if (parsedContent.error) {
-              console.log('Error in API response:', parsedContent);
               setNeedsNewKey(true);
               setInput(promptText);
               finalContent = `Error: ${JSON.stringify(parsedContent.error)}`;
@@ -139,7 +138,7 @@ export async function sendMessage(ctx: SendMessageContext, textOverride?: string
               finalContent = parsedContent;
             }
           } catch (jsonError) {
-            console.log('Error parsing JSON response:', jsonError, finalContent);
+            console.warn('Error parsing JSON response:', jsonError, finalContent);
           }
         }
 
@@ -147,7 +146,6 @@ export async function sendMessage(ctx: SendMessageContext, textOverride?: string
           !finalContent ||
           (typeof finalContent === 'string' && finalContent.trim().length === 0)
         ) {
-          console.log('[TOAST MESSAGE] Error occurred while processing the request');
           setNeedsLogin(true);
           return;
         }
@@ -163,7 +161,6 @@ export async function sendMessage(ctx: SendMessageContext, textOverride?: string
 
         const { segments } = parseContent(aiMessage?.text || '');
         try {
-          console.log('sendMessage: Generating title...');
           const title = await generateTitle(segments, titleModel, currentApiKey);
           if (title) {
             updateTitle(title);
@@ -176,7 +173,7 @@ export async function sendMessage(ctx: SendMessageContext, textOverride?: string
       }
     })
     .catch((error: any) => {
-      console.log('Error:', error);
+      console.warn('Error in sendMessage:', error);
       isProcessingRef.current = false;
       setPendingAiMessage(null);
       setSelectedResponseId('');

@@ -85,7 +85,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         return;
       }
       if (event.data?.type === 'authSuccess' && typeof event.data.token === 'string') {
-        console.log('Auth success message received from popup.');
         const receivedToken = event.data.token;
         setIsLoading(true); // Set loading while processing token
         try {
