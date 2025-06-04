@@ -1,12 +1,12 @@
 import { useEffect, useRef } from 'react';
 import type { RuntimeError } from './useRuntimeErrors';
-import type { ChatMessageDocument } from '../types/chat';
+import type { UserChatMessageDocument } from '../types/chat';
 
 interface Params {
   immediateErrors: RuntimeError[];
   isStreaming: boolean;
   userInput: string;
-  mergeUserMessage: (doc: Partial<ChatMessageDocument>) => void;
+  mergeUserMessage: (doc: Partial<UserChatMessageDocument>) => void;
   setDidSendErrors: (value: boolean) => void;
   setIsStreaming: (value: boolean) => void;
 }
