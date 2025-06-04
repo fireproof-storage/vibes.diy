@@ -2,8 +2,8 @@ import React, { useEffect, useRef, useState } from 'react';
 import type { IframeFiles } from './ResultPreviewTypes';
 import Editor from '@monaco-editor/react';
 import { useApiKey } from '~/hooks/useApiKey';
-import { shikiToMonaco } from '@shikijs/monaco';
-import { createHighlighter } from 'shiki';
+import { setupMonacoEditor } from './setupMonacoEditor';
+import { transformImports } from './transformImports';
 import { DatabaseListView } from './DataView';
 import { normalizeComponentExports } from '../../utils/normalizeComponentExports';
 
@@ -106,33 +106,6 @@ const IframeContent: React.FC<IframeContentProps> = ({
       // Create a session ID variable for the iframe template
       const sessionIdValue = sessionId || 'default-session';
 
-      // Transform bare import statements to use esm.sh URLs
-      const transformImports = (code: string): string => {
-        // This regex matches import statements with bare module specifiers
-        // It specifically looks for import statements that don't start with /, ./, or ../
-        return code.replace(
-          /import\s+(?:(?:\{[^}]*\}|\*\s+as\s+\w+|\w+)\s+from\s+)?['"]([^'"\/][^'"]*)['"];?/g,
-          (match, importPath) => {
-            // Skip transforming imports that are already handled in the importmap
-            // Only skip the core libraries we have in our importmap
-            if (
-              [
-                'react',
-                'react-dom',
-                'react-dom/client',
-                'use-fireproof',
-                'call-ai',
-                'use-vibes',
-              ].includes(importPath)
-            ) {
-              return match;
-            }
-            // Transform the import to use basic esm.sh URL
-            return match.replace(`"${importPath}"`, `"https://esm.sh/${importPath}"`);
-          }
-        );
-      };
-
       const transformedCode = transformImports(normalizedCode);
 
       // Use the template and replace placeholders
@@ -225,119 +198,20 @@ const IframeContent: React.FC<IframeContentProps> = ({
             padding: { top: 16 },
           }}
           onMount={async (editor, monaco) => {
-            // Store the editor instance for later reference
-            monacoEditorRef.current = editor;
-            // Store the Monaco API instance for theme changes
-            monacoApiRef.current = monaco;
-
-            // Configure JavaScript language to support JSX
-            monaco.languages.typescript.javascriptDefaults.setCompilerOptions({
-              jsx: monaco.languages.typescript.JsxEmit.React,
-              jsxFactory: 'React.createElement',
-              reactNamespace: 'React',
-              allowNonTsExtensions: true,
-              allowJs: true,
-              target: monaco.languages.typescript.ScriptTarget.Latest,
+            await setupMonacoEditor(editor, monaco, {
+              isStreaming,
+              codeReady,
+              isDarkMode,
+              userScrolledRef,
+              disposablesRef,
+              setRefs: (ed, mo) => {
+                monacoEditorRef.current = ed;
+                monacoApiRef.current = mo;
+              },
+              setHighlighter: (h) => {
+                highlighterRef.current = h;
+              },
             });
-
-            // Set editor options for better visualization
-            editor.updateOptions({
-              tabSize: 2,
-              bracketPairColorization: { enabled: true },
-              guides: { bracketPairs: true },
-            });
-
-            // Register the language IDs first
-            monaco.languages.register({ id: 'jsx' });
-            monaco.languages.register({ id: 'javascript' });
-
-            // Add auto-scrolling for streaming code
-            if (isStreaming && !codeReady) {
-              let lastScrollTime = 0;
-              const scrollThrottleMs = 30;
-
-              // Initialize positions
-              lastScrollTime = Date.now();
-
-              // Auto-scroll on content change, but only if user hasn't manually scrolled
-              const contentDisposable = editor.onDidChangeModelContent(() => {
-                const now = Date.now();
-                if (now - lastScrollTime > scrollThrottleMs && !userScrolledRef.current) {
-                  lastScrollTime = now;
-                  const model = editor.getModel();
-                  if (model) {
-                    const lineCount = model.getLineCount();
-                    editor.revealLineNearTop(lineCount);
-                  }
-                }
-              });
-
-              // Store disposable for cleanup
-              disposablesRef.current.push(contentDisposable);
-            }
-
-            try {
-              // Create the Shiki highlighter with both light and dark themes
-              const highlighter = await createHighlighter({
-                themes: ['github-dark', 'github-light'],
-                langs: ['javascript', 'jsx', 'typescript', 'tsx'],
-              });
-              // Store highlighter reference for theme switching
-              highlighterRef.current = highlighter;
-
-              // Apply Shiki to Monaco
-              await shikiToMonaco(highlighter, monaco);
-
-              // Set theme based on current dark mode state
-              const currentTheme = isDarkMode ? 'github-dark' : 'github-light';
-              monaco.editor.setTheme(currentTheme);
-
-              // Make sure the model uses JSX highlighting
-              const model = editor.getModel();
-              if (model) {
-                monaco.editor.setModelLanguage(model, 'jsx');
-              }
-            } catch (error) {
-              console.warn('Shiki highlighter setup failed:', error);
-            }
-
-            // Handle scroll events to detect manual user scrolling
-            editor.onDidScrollChange((e) => {
-              const model = editor.getModel();
-              if (model) {
-                const totalLines = model.getLineCount();
-                const visibleRanges = editor.getVisibleRanges();
-                if (visibleRanges.length > 0) {
-                  const lastVisibleLine = visibleRanges[0].endLineNumber;
-                  // If the last 3 lines are visible, keep auto-scroll enabled
-                  if (lastVisibleLine >= totalLines - 2) {
-                    userScrolledRef.current = false;
-                  }
-                }
-              }
-            });
-            // Listen for mouse wheel events to detect manual scroll intent
-            const domNode = editor.getDomNode();
-            if (domNode) {
-              const wheelListener = () => {
-                const model = editor.getModel();
-                if (model) {
-                  const totalLines = model.getLineCount();
-                  const visibleRanges = editor.getVisibleRanges();
-                  if (visibleRanges.length > 0) {
-                    const lastVisibleLine = visibleRanges[0].endLineNumber;
-                    if (lastVisibleLine < totalLines - 2) {
-                      userScrolledRef.current = true;
-                    }
-                  }
-                }
-              };
-              domNode.addEventListener('wheel', wheelListener);
-              // Clean up wheel listener on unmount
-              disposablesRef.current.push({
-                dispose: () => domNode.removeEventListener('wheel', wheelListener),
-              });
-            }
           }}
         />
       </div>

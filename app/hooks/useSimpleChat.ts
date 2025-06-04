@@ -7,6 +7,8 @@ import { useFireproof } from 'use-fireproof';
 import { FIREPROOF_CHAT_HISTORY } from '../config/env';
 import { useApiKey } from './useApiKey';
 import { type ErrorCategory, type RuntimeError, useRuntimeErrors } from './useRuntimeErrors';
+import { saveErrorAsSystemMessage } from './saveErrorAsSystemMessage';
+import { useImmediateErrorAutoSend } from './useImmediateErrorAutoSend';
 import { useSession } from './useSession';
 
 import { useMessageSelection } from './useMessageSelection';
@@ -59,37 +61,9 @@ export function useSimpleChat(sessionId: string | undefined): ChatState {
   const { useDocument } = useFireproof(FIREPROOF_CHAT_HISTORY);
 
   // Function to save errors as system messages to the session database
-  const saveErrorAsSystemMessage = useCallback(
-    async (error: RuntimeError, category: ErrorCategory) => {
-      if (!sessionDatabase) return;
-
-      // Format the error message
-      const errorType = error.errorType || 'Unknown';
-      const errorReason = error.reason || 'Unknown reason';
-      const errorMessage = error.message || 'No message';
-      const errorSource = error.source || 'Unknown source';
-
-      // Create a readable error message for the AI
-      const systemMessageText = `ERROR [${category}]: ${errorType}\n${errorMessage}\n${errorReason}\nSource: ${errorSource}\nStack: ${error.stack || 'No stack trace'}\nTimestamp: ${error.timestamp}`;
-
-      // Create a system message document
-      const systemMessage = {
-        type: 'system',
-        session_id: sessionId || '',
-        text: systemMessageText,
-        created_at: Date.now(),
-        errorType: errorType,
-        errorCategory: category,
-      };
-
-      // Save to the session database
-      try {
-        await sessionDatabase.put(systemMessage);
-        // Saved successfully
-      } catch (err) {
-        console.error('Failed to save error as system message:', err);
-      }
-    },
+  const saveErrorAsSystemMessageCb = useCallback(
+    (error: RuntimeError, category: ErrorCategory) =>
+      saveErrorAsSystemMessage(sessionDatabase, sessionId, error, category),
     [sessionDatabase, sessionId]
   );
 
@@ -98,7 +72,7 @@ export function useSimpleChat(sessionId: string | undefined): ChatState {
 
   // Runtime error tracking with save callback and event-based clearing
   const { immediateErrors, advisoryErrors, addError } = useRuntimeErrors({
-    onSaveError: saveErrorAsSystemMessage,
+    onSaveError: saveErrorAsSystemMessageCb,
     didSendErrors,
   });
 
@@ -290,82 +264,15 @@ export function useSimpleChat(sessionId: string | undefined): ChatState {
   // Credits are now checked directly during sendMessage after obtaining the API key
   // No need for a useEffect to check on apiKey changes
 
-  // Auto-send for immediate errors (with debounce)
-  const debouncedSendRef = useRef<NodeJS.Timeout | null>(null);
-
-  // Track which errors we've already sent to prevent duplicate sends
-  const sentErrorsRef = useRef<Set<string>>(new Set());
-
-  // Handle immediate errors with debounced auto-send
-  useEffect(() => {
-    // Exit early if we don't have any errors
-    if (immediateErrors.length === 0) {
-      return;
-    }
-
-    // Generate a fingerprint for the current set of errors to track if we've already handled them
-    const errorFingerprint = immediateErrors
-      .map((error) => `${error.errorType}:${error.message}`)
-      .sort()
-      .join('|');
-
-    // Exit if we've already sent this exact set of errors - prevents duplicating messages
-    if (sentErrorsRef.current.has(errorFingerprint)) {
-      return;
-    }
-
-    // Determine if this is a syntax error
-    const hasSyntaxErrors = immediateErrors.some((error) => error.errorType === 'SyntaxError');
-
-    // Cancel any streaming if there are syntax errors
-    if (isStreaming && hasSyntaxErrors) {
-      setIsStreaming(false);
-    }
-
-    // Process all errors regardless of streaming state
-    // Only start a debounce timer if one isn't already running
-    if (!debouncedSendRef.current) {
-      // Use a consistent debounce time to collect all related errors
-      debouncedSendRef.current = setTimeout(async () => {
-        try {
-          // Add this error set to our tracking to prevent duplicate sends
-          sentErrorsRef.current.add(errorFingerprint);
-
-          // Simple prompt message - errors have already been saved as system messages
-          const promptText = `Please help me fix the errors shown above. Simplify the code if necessary.`;
-
-          // Send the message with the prompt text directly
-          // await sendMessage(promptText);
-
-          mergeUserMessage({ text: promptText });
-
-          // Signal that errors were sent to trigger clearing
-          setDidSendErrors(true);
-        } catch (error) {
-          // Remove from sent errors if there was a failure
-          sentErrorsRef.current.delete(errorFingerprint);
-        } finally {
-          debouncedSendRef.current = null;
-        }
-      }, 500); // Use consistent 500ms debounce for all errors
-    }
-
-    // Cleanup function
-    return () => {
-      if (debouncedSendRef.current) {
-        clearTimeout(debouncedSendRef.current);
-        debouncedSendRef.current = null;
-      }
-    };
-  }, [
+  // Auto-send for immediate runtime errors
+  useImmediateErrorAutoSend({
     immediateErrors,
     isStreaming,
-    userMessage,
-    sendMessage,
+    userInput: userMessage.text,
+    mergeUserMessage,
     setDidSendErrors,
     setIsStreaming,
-    mergeUserMessage,
-  ]);
+  });
 
   // Monitor advisory errors whenever they change (non-critical errors)
   useEffect(() => {
