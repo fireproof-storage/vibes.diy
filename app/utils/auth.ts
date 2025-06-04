@@ -112,7 +112,6 @@ function decodePublicKeyJWK(encodedString: string): JWK {
 export function initiateAuthFlow(): { connectUrl: string; resultId: string } | null {
   // Don't initiate if already on the callback page
   if (window.location.pathname.includes('/auth/callback')) {
-    console.log('Already on auth callback page');
     return null;
   }
 
@@ -148,7 +147,6 @@ export async function pollForAuthToken(
   const endpoint = `${CONNECT_API_URL}/token/${resultId}`;
   const start = Date.now();
   while (Date.now() - start < timeoutMs) {
-    console.log(Date.now() - start);
     try {
       const res = await fetch(endpoint, {
         method: 'POST',
@@ -211,7 +209,6 @@ export async function verifyToken(token: string): Promise<{ payload: TokenPayloa
 
     // Check if token is about to expire and extend it if needed
     if (isTokenAboutToExpire(tokenPayload)) {
-      console.log('Token is about to expire, attempting to extend...');
       const extendedToken = await extendToken(token);
       if (extendedToken) {
         // Verify the extended token to get its payload
@@ -255,7 +252,6 @@ export async function extendToken(currentToken: string): Promise<string | null> 
     if (data && typeof data.token === 'string' && data.token.length > 0) {
       // Store the new token in localStorage
       localStorage.setItem('auth_token', data.token);
-      console.log('Token extended successfully');
       return data.token;
     }
 

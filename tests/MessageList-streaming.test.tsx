@@ -53,14 +53,10 @@ describe('MessageList streaming tests', () => {
       </MockThemeProvider>
     );
 
-    // Log the DOM content for debugging
-    console.log(`Is minimal content "{" visible? Checking...`);
-
     // Test that the very basic first character of the stream is visible
     const minimalContent = '{';
     const visibleContent = screen.getByText(minimalContent);
     expect(visibleContent).toBeInTheDocument();
-    console.log(`Is minimal content "${minimalContent}" visible? ${visibleContent ? 'YES' : 'NO'}`);
   });
 
   test('should update UI as more content streams in', () => {
@@ -90,21 +86,9 @@ describe('MessageList streaming tests', () => {
       </MockThemeProvider>
     );
 
-    // Output some debug info about what the component sees
-    console.log(
-      `🔍 STREAM UPDATE: length=${messages[1].text.length} - content="${messages[1].text}"`
-    );
-
     // Check that the partial content is visible
     const partialContent = screen.getByText(/This qui/);
     expect(partialContent).toBeInTheDocument();
-    console.log(`Is partial content visible? ${partialContent ? 'YES' : 'NO'}`);
-
-    console.log(
-      `MessageList showTypingIndicator check - would return: ${
-        messages[1].text ? 'SHOW CONTENT' : 'SHOW INDICATOR'
-      }`
-    );
   });
 
   // Add more tests for specific streaming behaviors
@@ -140,27 +124,12 @@ describe('MessageList streaming tests', () => {
       </MockThemeProvider>
     );
 
-    // Log what the component is receiving
-    console.log(
-      `🔍 STREAM UPDATE: length=${
-        messages[1].text.length
-      } with code segment - markdown=${markdownContent.length} bytes, code=${codeContent.length} bytes`
-    );
-
-    // Output the segments that should be detected
-    console.log(`🔍 SEGMENT 0: type=markdown, content="${markdownContent}"`);
-    console.log(`🔍 SEGMENT 1: type=code, content="${codeContent}"`);
-
     // Check that both the markdown and code content are visible
     const mdContent = screen.getByText(/This quick example/);
     expect(mdContent).toBeInTheDocument();
-    console.log(`Markdown content visible? ${mdContent ? 'YES' : 'NO'}`);
 
     const codeElement = screen.getByText(/import React/);
     expect(codeElement).toBeInTheDocument();
-    console.log(`Code content visible? ${codeElement ? 'YES' : 'NO'}`);
-
-    console.log(`Both segments rendering correctly in test`);
   });
 
   // Test other aspects of streaming messages
