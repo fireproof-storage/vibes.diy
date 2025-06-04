@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render } from '@testing-library/react';
 import iframeTemplateRaw from '../app/components/ResultPreview/templates/iframe-template.html?raw';
 import ResultPreview from '../app/components/ResultPreview/ResultPreview';
+import { MockThemeProvider } from './utils/MockThemeProvider';
 
 vi.mock('@remix-run/router', () => ({
   createBrowserRouter: vi.fn(),
@@ -187,17 +188,19 @@ describe('Iframe Template', () => {
 
       // Render the ResultPreview component with sample code
       render(
-        <ResultPreview
-          code={testAppCode}
-          dependencies={{}}
-          onScreenshotCaptured={onScreenshotCapturedMock}
-          sessionId="test-session"
-          isStreaming={false}
-          codeReady={true}
-          displayView="preview"
-          onPreviewLoaded={onPreviewLoadedMock}
-          setMobilePreviewShown={vi.fn()}
-        />
+        <MockThemeProvider>
+          <ResultPreview
+            code={testAppCode}
+            dependencies={{}}
+            onScreenshotCaptured={onScreenshotCapturedMock}
+            sessionId="test-session"
+            isStreaming={false}
+            codeReady={true}
+            displayView="preview"
+            onPreviewLoaded={onPreviewLoadedMock}
+            setMobilePreviewShown={vi.fn()}
+          />
+        </MockThemeProvider>
       );
 
       // Get the mock iframe created by our mocks

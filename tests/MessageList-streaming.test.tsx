@@ -2,6 +2,7 @@ import { render, screen } from '@testing-library/react';
 import MessageList from '../app/components/MessageList';
 import { vi, describe, test, expect, beforeEach } from 'vitest';
 import type { ChatMessageDocument } from '../app/types/chat';
+import { MockThemeProvider } from './utils/MockThemeProvider';
 
 // Mock scrollIntoView
 beforeEach(() => {
@@ -40,14 +41,16 @@ describe('MessageList streaming tests', () => {
     ] as ChatMessageDocument[];
 
     render(
-      <MessageList
-        messages={messages}
-        isStreaming={true}
-        setSelectedResponseId={() => {}}
-        selectedResponseId=""
-        setMobilePreviewShown={() => {}}
-        navigateToView={() => {}}
-      />
+      <MockThemeProvider>
+        <MessageList
+          messages={messages}
+          isStreaming={true}
+          setSelectedResponseId={() => {}}
+          selectedResponseId=""
+          setMobilePreviewShown={() => {}}
+          navigateToView={() => {}}
+        />
+      </MockThemeProvider>
     );
 
     // Log the DOM content for debugging
@@ -75,14 +78,16 @@ describe('MessageList streaming tests', () => {
     ] as ChatMessageDocument[];
 
     render(
-      <MessageList
-        messages={messages}
-        isStreaming={true}
-        setSelectedResponseId={() => {}}
-        selectedResponseId=""
-        setMobilePreviewShown={() => {}}
-        navigateToView={() => {}}
-      />
+      <MockThemeProvider>
+        <MessageList
+          messages={messages}
+          isStreaming={true}
+          setSelectedResponseId={() => {}}
+          selectedResponseId=""
+          setMobilePreviewShown={() => {}}
+          navigateToView={() => {}}
+        />
+      </MockThemeProvider>
     );
 
     // Output some debug info about what the component sees
@@ -123,14 +128,16 @@ describe('MessageList streaming tests', () => {
     ] as ChatMessageDocument[];
 
     render(
-      <MessageList
-        messages={messages}
-        isStreaming={true}
-        setSelectedResponseId={() => {}}
-        selectedResponseId=""
-        setMobilePreviewShown={() => {}}
-        navigateToView={() => {}}
-      />
+      <MockThemeProvider>
+        <MessageList
+          messages={messages}
+          isStreaming={true}
+          setSelectedResponseId={() => {}}
+          selectedResponseId=""
+          setMobilePreviewShown={() => {}}
+          navigateToView={() => {}}
+        />
+      </MockThemeProvider>
     );
 
     // Log what the component is receiving

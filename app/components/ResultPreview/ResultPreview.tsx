@@ -1,4 +1,5 @@
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { useEffect, useMemo } from 'react';
+import { useTheme } from '../../contexts/ThemeContext';
 import { animationStyles } from './ResultPreviewTemplates';
 import type { ResultPreviewProps, IframeFiles } from './ResultPreviewTypes';
 import type { RuntimeError } from '../../hooks/useRuntimeErrors';
@@ -20,7 +21,8 @@ function ResultPreview({
   children,
   title,
 }: ResultPreviewProps & { children?: React.ReactNode }) {
-  const [isDarkMode, setIsDarkMode] = useState<boolean>(true); // Default to dark mode
+  // Use the theme context instead of local state
+  const { isDarkMode } = useTheme();
   const showWelcome = !isStreaming && (!code || code.length === 0);
 
   // Calculate filesContent directly based on code prop
@@ -34,36 +36,7 @@ function ResultPreview({
     };
   }, [code, showWelcome, codeReady, isStreaming]); // Include codeReady to ensure updates
 
-  // Theme detection effect
-  useEffect(() => {
-    // Add a small delay to ensure the app's theme detection in root.tsx has run first
-    const timeoutId = setTimeout(() => {
-      // Check if document has the dark class
-      const hasDarkClass = document.documentElement.classList.contains('dark');
-
-      // Set the theme state
-      setIsDarkMode(hasDarkClass);
-
-      // Set up observer to watch for class changes on document.documentElement
-      const observer = new MutationObserver((mutations) => {
-        mutations.forEach((mutation) => {
-          if (mutation.attributeName === 'class') {
-            // Directly check for dark class
-            const hasDarkClass = document.documentElement.classList.contains('dark');
-
-            setIsDarkMode(hasDarkClass);
-          }
-        });
-      });
-
-      // Start observing
-      observer.observe(document.documentElement, { attributes: true });
-
-      return () => observer.disconnect();
-    }, 100); // Slightly shorter delay than before
-
-    return () => clearTimeout(timeoutId);
-  }, []);
+  // Theme is now provided by ThemeContext
 
   useEffect(() => {
     const handleMessage = ({ data }: MessageEvent) => {

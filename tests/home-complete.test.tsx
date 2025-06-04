@@ -9,6 +9,7 @@ import UnifiedSession from '../app/routes/home';
 import type { AiChatMessage, ChatMessage, Segment, UserChatMessage } from '../app/types/chat';
 import * as segmentParser from '../app/utils/segmentParser';
 import { mockChatStateProps } from './mockData';
+import { MockThemeProvider } from './utils/MockThemeProvider';
 
 // Mock the CookieConsentContext
 vi.mock('../app/contexts/CookieConsentContext', () => ({
@@ -238,19 +239,21 @@ describe('Home Route in completed state', () => {
 
   it('displays the correct number of code lines in the preview', async () => {
     render(
-      <MemoryRouter>
-        <AuthContext.Provider
-          value={
-            {
-              ...authenticatedState,
-              checkAuthStatus: vi.fn(),
-              processToken: vi.fn(),
-            } as AuthContextType
-          }
-        >
-          <UnifiedSession />
-        </AuthContext.Provider>
-      </MemoryRouter>
+      <MockThemeProvider>
+        <MemoryRouter>
+          <AuthContext.Provider
+            value={
+              {
+                ...authenticatedState,
+                checkAuthStatus: vi.fn(),
+                processToken: vi.fn(),
+              } as AuthContextType
+            }
+          >
+            <UnifiedSession />
+          </AuthContext.Provider>
+        </MemoryRouter>
+      </MockThemeProvider>
     );
 
     await waitFor(() => {
@@ -260,19 +263,21 @@ describe('Home Route in completed state', () => {
 
   it('shows share button and handles sharing', async () => {
     render(
-      <MemoryRouter>
-        <AuthContext.Provider
-          value={
-            {
-              ...authenticatedState,
-              checkAuthStatus: vi.fn(),
-              processToken: vi.fn(),
-            } as AuthContextType
-          }
-        >
-          <UnifiedSession />
-        </AuthContext.Provider>
-      </MemoryRouter>
+      <MockThemeProvider>
+        <MemoryRouter>
+          <AuthContext.Provider
+            value={
+              {
+                ...authenticatedState,
+                checkAuthStatus: vi.fn(),
+                processToken: vi.fn(),
+              } as AuthContextType
+            }
+          >
+            <UnifiedSession />
+          </AuthContext.Provider>
+        </MemoryRouter>
+      </MockThemeProvider>
     );
 
     const shareButton = await screen.findByTestId('share-button');
@@ -301,19 +306,21 @@ describe('Home Route in completed state', () => {
     navigateMock.mockClear();
 
     render(
-      <MemoryRouter>
-        <AuthContext.Provider
-          value={
-            {
-              ...authenticatedState,
-              checkAuthStatus: vi.fn(),
-              processToken: vi.fn(),
-            } as AuthContextType
-          }
-        >
-          <UnifiedSession />
-        </AuthContext.Provider>
-      </MemoryRouter>
+      <MockThemeProvider>
+        <MemoryRouter>
+          <AuthContext.Provider
+            value={
+              {
+                ...authenticatedState,
+                checkAuthStatus: vi.fn(),
+                processToken: vi.fn(),
+              } as AuthContextType
+            }
+          >
+            <UnifiedSession />
+          </AuthContext.Provider>
+        </MemoryRouter>
+      </MockThemeProvider>
     );
 
     // Find create session button and click it
@@ -349,19 +356,21 @@ describe('Home Route in completed state', () => {
     };
 
     render(
-      <MemoryRouter>
-        <AuthContext.Provider
-          value={
-            {
-              ...authenticatedState,
-              checkAuthStatus: vi.fn(),
-              processToken: vi.fn(),
-            } as AuthContextType
-          }
-        >
-          <UnifiedSession />
-        </AuthContext.Provider>
-      </MemoryRouter>
+      <MockThemeProvider>
+        <MemoryRouter>
+          <AuthContext.Provider
+            value={
+              {
+                ...authenticatedState,
+                checkAuthStatus: vi.fn(),
+                processToken: vi.fn(),
+              } as AuthContextType
+            }
+          >
+            <UnifiedSession />
+          </AuthContext.Provider>
+        </MemoryRouter>
+      </MockThemeProvider>
     );
 
     // Verify the component renders without crashing

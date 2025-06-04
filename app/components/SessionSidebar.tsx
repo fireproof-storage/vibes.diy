@@ -1,7 +1,8 @@
-import React, { memo, useEffect, useRef, useState } from 'react';
+import { memo, useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useAuthPopup } from '../hooks/useAuthPopup';
+import { useTheme } from '../contexts/ThemeContext';
 import type { SessionSidebarProps } from '../types/chat';
 import { GearIcon } from './SessionSidebar/GearIcon';
 import { HomeIcon } from './SessionSidebar/HomeIcon';
@@ -18,37 +19,10 @@ function SessionSidebar({ isVisible, onClose }: SessionSidebarProps) {
   const { isAuthenticated, isLoading } = useAuth();
   const [needsLogin, setNeedsLogin] = useState(false);
   const { isPolling, pollError, initiateLogin } = useAuthPopup();
+  const { isDarkMode } = useTheme();
 
   const colorway = randomColorway();
-  // Use a simplified approach to detect dark mode based on the existing system
-  const [isDarkMode, setIsDarkMode] = React.useState(false);
   const rando = isDarkMode ? dark[colorway] : light[colorway];
-
-  // DUPE from VibesDIYLogo.tsx
-  React.useEffect(() => {
-    if (typeof window !== 'undefined') {
-      // Function to check dark mode
-      const checkDarkMode = () => {
-        setIsDarkMode(document.documentElement.classList.contains('dark'));
-      };
-
-      // Initial check
-      checkDarkMode();
-
-      // Create observer for theme changes
-      const observer = new MutationObserver((mutations) => {
-        mutations.forEach((mutation) => {
-          if (mutation.attributeName === 'class') {
-            checkDarkMode();
-          }
-        });
-      });
-
-      observer.observe(document.documentElement, { attributes: true });
-      return () => observer.disconnect();
-    }
-  }, []);
-  // END DUPE from VibesDIYLogo.tsx
 
   // Listen for the needsLoginTriggered event to update needsLogin state
   useEffect(() => {

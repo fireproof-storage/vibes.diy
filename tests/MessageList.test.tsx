@@ -2,6 +2,7 @@ import { render, screen } from '@testing-library/react';
 import { vi, describe, test, expect } from 'vitest';
 import MessageList from '../app/components/MessageList';
 import type { UserChatMessage, AiChatMessage } from '../app/types/chat';
+import { MockThemeProvider } from './utils/MockThemeProvider';
 
 // Mock the Message component
 vi.mock('../app/components/Message', () => ({
@@ -30,14 +31,16 @@ describe('MessageList', () => {
     ];
 
     render(
-      <MessageList
-        messages={messages}
-        isStreaming={false}
-        setSelectedResponseId={() => {}}
-        selectedResponseId=""
-        setMobilePreviewShown={() => {}}
-        navigateToView={() => {}}
-      />
+      <MockThemeProvider>
+        <MessageList
+          messages={messages}
+          isStreaming={false}
+          setSelectedResponseId={() => {}}
+          selectedResponseId=""
+          setMobilePreviewShown={() => {}}
+          navigateToView={() => {}}
+        />
+      </MockThemeProvider>
     );
 
     expect(screen.getAllByTestId('mock-message').length).toBe(2);
@@ -47,14 +50,16 @@ describe('MessageList', () => {
 
   test('renders empty state correctly', () => {
     const { container } = render(
-      <MessageList
-        messages={[]}
-        isStreaming={false}
-        setSelectedResponseId={() => {}}
-        selectedResponseId=""
-        setMobilePreviewShown={() => {}}
-        navigateToView={() => {}}
-      />
+      <MockThemeProvider>
+        <MessageList
+          messages={[]}
+          isStreaming={false}
+          setSelectedResponseId={() => {}}
+          selectedResponseId=""
+          setMobilePreviewShown={() => {}}
+          navigateToView={() => {}}
+        />
+      </MockThemeProvider>
     );
 
     // Get the specific element we want to check
@@ -84,14 +89,16 @@ describe('MessageList', () => {
     ];
 
     render(
-      <MessageList
-        messages={messages}
-        isStreaming={true}
-        setSelectedResponseId={() => {}}
-        selectedResponseId=""
-        setMobilePreviewShown={() => {}}
-        navigateToView={() => {}}
-      />
+      <MockThemeProvider>
+        <MessageList
+          messages={messages}
+          isStreaming={true}
+          setSelectedResponseId={() => {}}
+          selectedResponseId=""
+          setMobilePreviewShown={() => {}}
+          navigateToView={() => {}}
+        />
+      </MockThemeProvider>
     );
 
     expect(screen.getAllByTestId('mock-message').length).toBe(2);
@@ -120,14 +127,16 @@ describe('MessageList', () => {
     ];
 
     render(
-      <MessageList
-        messages={messages}
-        isStreaming={true}
-        setSelectedResponseId={() => {}}
-        selectedResponseId=""
-        setMobilePreviewShown={() => {}}
-        navigateToView={() => {}}
-      />
+      <MockThemeProvider>
+        <MessageList
+          messages={messages}
+          isStreaming={true}
+          setSelectedResponseId={() => {}}
+          selectedResponseId=""
+          setMobilePreviewShown={() => {}}
+          navigateToView={() => {}}
+        />
+      </MockThemeProvider>
     );
 
     expect(screen.getByText('Here is a React app')).toBeInTheDocument();
@@ -154,14 +163,16 @@ describe('MessageList', () => {
     ];
 
     render(
-      <MessageList
-        messages={messages}
-        isStreaming={true}
-        setSelectedResponseId={() => {}}
-        selectedResponseId=""
-        setMobilePreviewShown={() => {}}
-        navigateToView={() => {}}
-      />
+      <MockThemeProvider>
+        <MessageList
+          messages={messages}
+          isStreaming={true}
+          setSelectedResponseId={() => {}}
+          selectedResponseId=""
+          setMobilePreviewShown={() => {}}
+          navigateToView={() => {}}
+        />
+      </MockThemeProvider>
     );
 
     expect(screen.getByText('Create a React app')).toBeInTheDocument();

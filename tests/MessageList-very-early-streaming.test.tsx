@@ -2,6 +2,7 @@ import { render, screen } from '@testing-library/react';
 import MessageList from '../app/components/MessageList';
 import { vi, describe, test, expect, beforeEach } from 'vitest';
 import type { UserChatMessage, AiChatMessage, ChatMessageDocument } from '../app/types/chat';
+import { MockThemeProvider } from './utils/MockThemeProvider';
 
 // For direct stdout logging that bypasses Node's buffering
 function writeToStdout(message: string) {
@@ -62,14 +63,16 @@ describe('MessageList Real-World Streaming Tests', () => {
     ];
 
     render(
-      <MessageList
-        messages={messages}
-        isStreaming={true}
-        setSelectedResponseId={() => {}}
-        selectedResponseId=""
-        setMobilePreviewShown={() => {}}
-        navigateToView={() => {}}
-      />
+      <MockThemeProvider>
+        <MessageList
+          messages={messages}
+          isStreaming={true}
+          setSelectedResponseId={() => {}}
+          selectedResponseId=""
+          setMobilePreviewShown={() => {}}
+          navigateToView={() => {}}
+        />
+      </MockThemeProvider>
     );
 
     // Check if we see the minimal content in the DOM
@@ -118,14 +121,16 @@ describe('MessageList Real-World Streaming Tests', () => {
     ];
 
     render(
-      <MessageList
-        messages={messages}
-        isStreaming={true}
-        setSelectedResponseId={() => {}}
-        selectedResponseId=""
-        setMobilePreviewShown={() => {}}
-        navigateToView={() => {}}
-      />
+      <MockThemeProvider>
+        <MessageList
+          messages={messages}
+          isStreaming={true}
+          setSelectedResponseId={() => {}}
+          selectedResponseId=""
+          setMobilePreviewShown={() => {}}
+          navigateToView={() => {}}
+        />
+      </MockThemeProvider>
     );
 
     // Check if we see the content
@@ -176,14 +181,16 @@ describe('MessageList Real-World Streaming Tests', () => {
     ];
 
     render(
-      <MessageList
-        messages={messages}
-        isStreaming={true}
-        setSelectedResponseId={() => {}}
-        selectedResponseId=""
-        setMobilePreviewShown={() => {}}
-        navigateToView={() => {}}
-      />
+      <MockThemeProvider>
+        <MessageList
+          messages={messages}
+          isStreaming={true}
+          setSelectedResponseId={() => {}}
+          selectedResponseId=""
+          setMobilePreviewShown={() => {}}
+          navigateToView={() => {}}
+        />
+      </MockThemeProvider>
     );
 
     // Check if we see both types of content
@@ -218,14 +225,16 @@ describe('MessageList Real-World Streaming Tests', () => {
     ] as ChatMessageDocument[];
 
     render(
-      <MessageList
-        messages={messages}
-        isStreaming={true}
-        setSelectedResponseId={() => {}}
-        selectedResponseId=""
-        setMobilePreviewShown={() => {}}
-        navigateToView={() => {}}
-      />
+      <MockThemeProvider>
+        <MessageList
+          messages={messages}
+          isStreaming={true}
+          setSelectedResponseId={() => {}}
+          selectedResponseId=""
+          setMobilePreviewShown={() => {}}
+          navigateToView={() => {}}
+        />
+      </MockThemeProvider>
     );
 
     // ... rest of the test ...

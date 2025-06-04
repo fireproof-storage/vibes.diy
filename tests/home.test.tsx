@@ -3,6 +3,7 @@ import { MemoryRouter } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { AuthContext } from '../app/contexts/AuthContext';
 import UnifiedSession from '../app/routes/home';
+import { MockThemeProvider } from './utils/MockThemeProvider';
 
 // Mock the CookieConsentContext
 vi.mock('../app/contexts/CookieConsentContext', () => ({
@@ -134,28 +135,30 @@ describe('Home Route', () => {
 
   it('should render the chat interface and result preview', async () => {
     render(
-      <MemoryRouter>
-        <AuthContext.Provider
-          value={{
-            token: 'mock-token',
-            isAuthenticated: true,
-            isLoading: false,
-            userPayload: {
-              userId: 'test',
-              exp: 9999999999,
-              tenants: [],
-              ledgers: [],
-              iat: 1234567890,
-              iss: 'FP_CLOUD',
-              aud: 'PUBLIC',
-            },
-            checkAuthStatus: vi.fn(),
-            processToken: vi.fn(),
-          }}
-        >
-          <UnifiedSession />
-        </AuthContext.Provider>
-      </MemoryRouter>
+      <MockThemeProvider>
+        <MemoryRouter>
+          <AuthContext.Provider
+            value={{
+              token: 'mock-token',
+              isAuthenticated: true,
+              isLoading: false,
+              userPayload: {
+                userId: 'test',
+                exp: 9999999999,
+                tenants: [],
+                ledgers: [],
+                iat: 1234567890,
+                iss: 'FP_CLOUD',
+                aud: 'PUBLIC',
+              },
+              checkAuthStatus: vi.fn(),
+              processToken: vi.fn(),
+            }}
+          >
+            <UnifiedSession />
+          </AuthContext.Provider>
+        </MemoryRouter>
+      </MockThemeProvider>
     );
 
     await waitFor(() => {

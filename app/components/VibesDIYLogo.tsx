@@ -1,6 +1,7 @@
 import React from 'react';
 import DIYLogo from './diyLogo-svg';
 import { dark } from './colorways';
+import { useTheme } from '../contexts/ThemeContext';
 
 type ColorwayName = keyof typeof dark;
 
@@ -30,33 +31,8 @@ const VibesDIYLogo: React.FC<VibesDIYLogoProps> = ({
   colorway,
   ...props
 }) => {
-  // Use a simplified approach to detect dark mode based on the existing system
-  const [isDarkMode, setIsDarkMode] = React.useState(false);
-
-  // Check dark mode on mount and observe changes
-  React.useEffect(() => {
-    if (typeof window !== 'undefined') {
-      // Function to check dark mode
-      const checkDarkMode = () => {
-        setIsDarkMode(document.documentElement.classList.contains('dark'));
-      };
-
-      // Initial check
-      checkDarkMode();
-
-      // Create observer for theme changes
-      const observer = new MutationObserver((mutations) => {
-        mutations.forEach((mutation) => {
-          if (mutation.attributeName === 'class') {
-            checkDarkMode();
-          }
-        });
-      });
-
-      observer.observe(document.documentElement, { attributes: true });
-      return () => observer.disconnect();
-    }
-  }, []);
+  // Use theme context instead of maintaining local state
+  const { isDarkMode } = useTheme();
 
   const aspectRatio = 372 / 123; // Matches SVG viewBox dimensions
 

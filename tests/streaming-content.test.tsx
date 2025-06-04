@@ -2,6 +2,7 @@ import { describe, test, expect } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import StructuredMessage from '../app/components/StructuredMessage';
 import type { Segment } from '../app/types/chat';
+import { MockThemeProvider } from './utils/MockThemeProvider';
 
 describe('Streaming Content Tests', () => {
   test('renders code and markdown segments', () => {
@@ -17,14 +18,16 @@ describe('Streaming Content Tests', () => {
     ];
 
     render(
-      <StructuredMessage
-        segments={segments}
-        isStreaming={true}
-        setSelectedResponseId={() => {}}
-        selectedResponseId=""
-        setMobilePreviewShown={() => {}}
-        navigateToView={() => {}}
-      />
+      <MockThemeProvider>
+        <StructuredMessage
+          segments={segments}
+          isStreaming={true}
+          setSelectedResponseId={() => {}}
+          selectedResponseId=""
+          setMobilePreviewShown={() => {}}
+          navigateToView={() => {}}
+        />
+      </MockThemeProvider>
     );
 
     // Ensure both segments are rendered
@@ -38,14 +41,16 @@ describe('Streaming Content Tests', () => {
 
     // Act: Render the component with streaming flag
     render(
-      <StructuredMessage
-        segments={segments}
-        isStreaming={true}
-        setSelectedResponseId={() => {}}
-        selectedResponseId=""
-        setMobilePreviewShown={() => {}}
-        navigateToView={() => {}}
-      />
+      <MockThemeProvider>
+        <StructuredMessage
+          segments={segments}
+          isStreaming={true}
+          setSelectedResponseId={() => {}}
+          selectedResponseId=""
+          setMobilePreviewShown={() => {}}
+          navigateToView={() => {}}
+        />
+      </MockThemeProvider>
     );
 
     // Assert: The content should be visible

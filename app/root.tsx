@@ -1,4 +1,5 @@
-import { useEffect } from 'react';
+import React from 'react';
+import { ThemeProvider } from './contexts/ThemeContext';
 import type { MetaFunction } from 'react-router';
 import {
   Links,
@@ -51,69 +52,41 @@ export const meta: MetaFunction = () => {
   ];
 };
 
-function useThemeDetection() {
-  useEffect(() => {
-    const prefersDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches;
-
-    if (prefersDarkMode) {
-      document.documentElement.classList.add('dark');
-      document.documentElement.dataset.theme = 'dark';
-    } else {
-      document.documentElement.classList.remove('dark');
-      document.documentElement.dataset.theme = 'light';
-    }
-
-    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-    const handleChange = (e: MediaQueryListEvent) => {
-      if (e.matches) {
-        document.documentElement.classList.add('dark');
-        document.documentElement.dataset.theme = 'dark';
-      } else {
-        document.documentElement.classList.remove('dark');
-        document.documentElement.dataset.theme = 'light';
-      }
-    };
-
-    mediaQuery.addEventListener('change', handleChange);
-    return () => mediaQuery.removeEventListener('change', handleChange);
-  }, []);
-}
-
 export function Layout({ children }: { children: React.ReactNode }) {
-  useThemeDetection();
-
   return (
-    <html lang="en">
-      <head>
-        <meta charSet="utf-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <Meta data-testid="meta" />
-        <Links />
-      </head>
-      <body>
-        <AuthProvider>
-          <PostHogProvider
-            apiKey={POSTHOG_KEY}
-            options={{
-              api_host: POSTHOG_HOST,
-              opt_out_capturing_by_default: true,
-            }}
-          >
-            <CookieConsentProvider>
-              {children}
-              <ClientOnly>
-                <CookieBanner />
-                <NeedsLoginModal />
-              </ClientOnly>
-            </CookieConsentProvider>
-            <ScrollRestoration data-testid="scroll-restoration" />
-            <Scripts data-testid="scripts" />
-          </PostHogProvider>
-        </AuthProvider>
-        <ScrollRestoration data-testid="scroll-restoration" />
-        <Scripts data-testid="scripts" />
-      </body>
-    </html>
+    <ThemeProvider>
+      <html lang="en">
+        <head>
+          <meta charSet="utf-8" />
+          <meta name="viewport" content="width=device-width, initial-scale=1" />
+          <Meta data-testid="meta" />
+          <Links />
+        </head>
+        <body>
+          <AuthProvider>
+            <PostHogProvider
+              apiKey={POSTHOG_KEY}
+              options={{
+                api_host: POSTHOG_HOST,
+                opt_out_capturing_by_default: true,
+              }}
+            >
+              <CookieConsentProvider>
+                {children}
+                <ClientOnly>
+                  <CookieBanner />
+                  <NeedsLoginModal />
+                </ClientOnly>
+              </CookieConsentProvider>
+              <ScrollRestoration data-testid="scroll-restoration" />
+              <Scripts data-testid="scripts" />
+            </PostHogProvider>
+          </AuthProvider>
+          <ScrollRestoration data-testid="scroll-restoration" />
+          <Scripts data-testid="scripts" />
+        </body>
+      </html>
+    </ThemeProvider>
   );
 }
 

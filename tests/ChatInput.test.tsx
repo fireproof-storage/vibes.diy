@@ -2,6 +2,7 @@ import { vi, describe, it, expect, beforeEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import ChatInput from '../app/components/ChatInput';
 import type { ChatState } from '../app/types/chat';
+import { MockThemeProvider } from './utils/MockThemeProvider';
 
 // Create mock functions we can control
 const onSend = vi.fn();
@@ -42,12 +43,20 @@ describe('ChatInput Component', () => {
   });
 
   it('renders without crashing', () => {
-    render(<ChatInput chatState={mockChatState} onSend={onSend} />);
+    render(
+      <MockThemeProvider>
+        <ChatInput chatState={mockChatState} onSend={onSend} />
+      </MockThemeProvider>
+    );
     expect(screen.getByPlaceholderText('I want to build...')).toBeDefined();
   });
 
   it('calls chatState.setInput when text is entered', () => {
-    render(<ChatInput chatState={mockChatState} onSend={onSend} />);
+    render(
+      <MockThemeProvider>
+        <ChatInput chatState={mockChatState} onSend={onSend} />
+      </MockThemeProvider>
+    );
 
     const textArea = screen.getByPlaceholderText('I want to build...');
     fireEvent.change(textArea, { target: { value: 'Hello world' } });
@@ -56,7 +65,11 @@ describe('ChatInput Component', () => {
   });
 
   it('calls sendMessage and onSend when send button is clicked', () => {
-    render(<ChatInput chatState={mockChatState} onSend={onSend} />);
+    render(
+      <MockThemeProvider>
+        <ChatInput chatState={mockChatState} onSend={onSend} />
+      </MockThemeProvider>
+    );
 
     const sendButton = screen.getByLabelText('Send message');
     fireEvent.click(sendButton);
@@ -69,7 +82,11 @@ describe('ChatInput Component', () => {
     // Set isStreaming to true for this test
     mockChatState.isStreaming = true;
 
-    render(<ChatInput chatState={mockChatState} onSend={onSend} />);
+    render(
+      <MockThemeProvider>
+        <ChatInput chatState={mockChatState} onSend={onSend} />
+      </MockThemeProvider>
+    );
 
     const textArea = screen.getByPlaceholderText('Continue coding...');
     const sendButton = screen.getByLabelText('Generating');
@@ -82,7 +99,11 @@ describe('ChatInput Component', () => {
   });
 
   it('calls sendMessage and onSend when Enter is pressed', () => {
-    render(<ChatInput chatState={mockChatState} onSend={onSend} />);
+    render(
+      <MockThemeProvider>
+        <ChatInput chatState={mockChatState} onSend={onSend} />
+      </MockThemeProvider>
+    );
 
     const textArea = screen.getByPlaceholderText('I want to build...');
     fireEvent.keyDown(textArea, { key: 'Enter', shiftKey: false });
@@ -92,7 +113,11 @@ describe('ChatInput Component', () => {
   });
 
   it('does not call sendMessage or onSend when Enter is pressed with Shift', () => {
-    render(<ChatInput chatState={mockChatState} onSend={onSend} />);
+    render(
+      <MockThemeProvider>
+        <ChatInput chatState={mockChatState} onSend={onSend} />
+      </MockThemeProvider>
+    );
 
     const textArea = screen.getByPlaceholderText('I want to build...');
     fireEvent.keyDown(textArea, { key: 'Enter', shiftKey: true });
@@ -105,7 +130,11 @@ describe('ChatInput Component', () => {
     // Set isStreaming to true for this test
     mockChatState.isStreaming = true;
 
-    render(<ChatInput chatState={mockChatState} onSend={onSend} />);
+    render(
+      <MockThemeProvider>
+        <ChatInput chatState={mockChatState} onSend={onSend} />
+      </MockThemeProvider>
+    );
 
     const textArea = screen.getByPlaceholderText('Continue coding...');
     fireEvent.keyDown(textArea, { key: 'Enter', shiftKey: false });
@@ -117,7 +146,11 @@ describe('ChatInput Component', () => {
   it('does not call sendMessage or onSend when button is clicked while streaming', () => {
     mockChatState.isStreaming = true;
 
-    render(<ChatInput chatState={mockChatState} onSend={onSend} />);
+    render(
+      <MockThemeProvider>
+        <ChatInput chatState={mockChatState} onSend={onSend} />
+      </MockThemeProvider>
+    );
 
     // The button should be disabled, but let's try to click it anyway
     const sendButton = screen.getByLabelText('Generating');

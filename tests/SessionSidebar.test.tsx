@@ -4,6 +4,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { mockUseAuth, resetMockAuthState, setMockAuthState } from '../__mocks__/useAuth';
 import SessionSidebar from '../app/components/SessionSidebar';
 import { mockSessionSidebarProps } from './mockData';
+import { MockThemeProvider } from './utils/MockThemeProvider';
 
 // Mock the auth contexts module
 vi.mock('../app/contexts/AuthContext', () => ({
@@ -84,7 +85,11 @@ describe('SessionSidebar component', () => {
     const props = {
       ...mockSessionSidebarProps,
     };
-    render(<SessionSidebar {...props} />);
+    render(
+      <MockThemeProvider>
+        <SessionSidebar {...props} />
+      </MockThemeProvider>
+    );
 
     // Check menu items - using queryAllByText since there might be multiple elements with the same text
     expect(screen.queryAllByText('Home').length).toBeGreaterThan(0);
@@ -109,7 +114,11 @@ describe('SessionSidebar component', () => {
       ...mockSessionSidebarProps,
     };
 
-    const { container } = render(<SessionSidebar {...props} />);
+    const { container } = render(
+      <MockThemeProvider>
+        <SessionSidebar {...props} />
+      </MockThemeProvider>
+    );
 
     // Check if the sidebar is rendered - it's the first div in the container
     const sidebar = container.firstChild;
@@ -140,7 +149,11 @@ describe('SessionSidebar component', () => {
       ...mockSessionSidebarProps,
     };
 
-    const { container } = render(<SessionSidebar {...props} />);
+    const { container } = render(
+      <MockThemeProvider>
+        <SessionSidebar {...props} />
+      </MockThemeProvider>
+    );
 
     // Check if the sidebar is rendered - it's the first div in the container
     const sidebar = container.firstChild;
@@ -169,7 +182,11 @@ describe('SessionSidebar component', () => {
       isLoading: false,
     });
 
-    render(<SessionSidebar {...props} />);
+    render(
+      <MockThemeProvider>
+        <SessionSidebar {...props} />
+      </MockThemeProvider>
+    );
 
     // Now look for the 'Get Credits' text
     // Note: We'd normally check for the presence of 'Get Credits' and absence of 'Settings',
@@ -191,7 +208,11 @@ describe('SessionSidebar component', () => {
       ...mockSessionSidebarProps,
     };
 
-    const { container } = render(<SessionSidebar {...props} />);
+    const { container } = render(
+      <MockThemeProvider>
+        <SessionSidebar {...props} />
+      </MockThemeProvider>
+    );
 
     // Check if the sidebar is rendered - it's the first div in the container
     const sidebar = container.firstChild;
@@ -212,7 +233,11 @@ describe('SessionSidebar component', () => {
       ...mockSessionSidebarProps,
     };
 
-    const { unmount } = render(<SessionSidebar {...props} />);
+    const { unmount } = render(
+      <MockThemeProvider>
+        <SessionSidebar {...props} />
+      </MockThemeProvider>
+    );
     unmount();
 
     // Should have called removeEventListener
@@ -230,7 +255,11 @@ describe('SessionSidebar component', () => {
       onClose: onClose,
     };
 
-    const { container } = render(<SessionSidebar {...props} />);
+    const { container } = render(
+      <MockThemeProvider>
+        <SessionSidebar {...props} />
+      </MockThemeProvider>
+    );
 
     // Check that the menu items are rendered
     expect(screen.getByText('Home')).toBeInTheDocument();
@@ -251,7 +280,11 @@ describe('SessionSidebar component', () => {
       onClose: onClose,
     };
 
-    render(<SessionSidebar {...props} />);
+    render(
+      <MockThemeProvider>
+        <SessionSidebar {...props} />
+      </MockThemeProvider>
+    );
 
     // Find the close button (it's a button with an SVG icon, so we use aria-label)
     const closeButton = screen.getByLabelText('Close sidebar');
@@ -275,7 +308,11 @@ describe('SessionSidebar component', () => {
       ...mockSessionSidebarProps,
     };
 
-    const { container } = render(<SessionSidebar {...props} />);
+    const { container } = render(
+      <MockThemeProvider>
+        <SessionSidebar {...props} />
+      </MockThemeProvider>
+    );
 
     // Check if the sidebar is rendered - it's the first div in the container
     const sidebar = container.firstChild;
@@ -305,7 +342,11 @@ describe('SessionSidebar component', () => {
       onClose: onClose,
     };
 
-    render(<SessionSidebar {...props} />);
+    render(
+      <MockThemeProvider>
+        <SessionSidebar {...props} />
+      </MockThemeProvider>
+    );
 
     // Find the close button (it's a button with an SVG icon, so we use aria-label)
     const closeButton = screen.getByLabelText('Close sidebar');
@@ -330,7 +371,11 @@ describe('SessionSidebar component', () => {
       isVisible: false,
     };
 
-    render(<SessionSidebar {...props} />);
+    render(
+      <MockThemeProvider>
+        <SessionSidebar {...props} />
+      </MockThemeProvider>
+    );
 
     // Find the sidebar div
     const sidebar = screen.getByTestId('session-sidebar');
@@ -350,7 +395,11 @@ describe('SessionSidebar component', () => {
       ...mockSessionSidebarProps,
     };
 
-    render(<SessionSidebar {...props} />);
+    render(
+      <MockThemeProvider>
+        <SessionSidebar {...props} />
+      </MockThemeProvider>
+    );
 
     // Find the navigation element
     const nav = document.querySelector('nav');
@@ -381,7 +430,11 @@ describe('SessionSidebar component', () => {
       onClose: onClose,
     };
 
-    render(<SessionSidebar {...props} />);
+    render(
+      <MockThemeProvider>
+        <SessionSidebar {...props} />
+      </MockThemeProvider>
+    );
 
     // Find all navigation links
     const navLinks = screen.getAllByText(/My Vibes|Settings|About/);

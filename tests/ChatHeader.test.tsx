@@ -1,6 +1,7 @@
 import { vi, describe, it, expect, beforeEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import ChatHeader from '../app/components/ChatHeaderContent';
+import { MockThemeProvider } from './utils/MockThemeProvider';
 
 // Create mock functions we can control
 const onOpenSidebar = vi.fn();
@@ -18,12 +19,14 @@ describe('ChatHeader', () => {
 
   it('renders correctly', () => {
     render(
-      <ChatHeader
-        onOpenSidebar={onOpenSidebar}
-        title="Test Chat"
-        isStreaming={false}
-        codeReady={false}
-      />
+      <MockThemeProvider>
+        <ChatHeader
+          onOpenSidebar={onOpenSidebar}
+          title="Test Chat"
+          isStreaming={false}
+          codeReady={false}
+        />
+      </MockThemeProvider>
     );
 
     expect(screen.getByLabelText('Open chat history')).toBeDefined();
@@ -32,12 +35,14 @@ describe('ChatHeader', () => {
 
   it('calls openSidebar when the sidebar button is clicked', () => {
     render(
-      <ChatHeader
-        onOpenSidebar={onOpenSidebar}
-        title="Test Chat"
-        isStreaming={false}
-        codeReady={false}
-      />
+      <MockThemeProvider>
+        <ChatHeader
+          onOpenSidebar={onOpenSidebar}
+          title="Test Chat"
+          isStreaming={false}
+          codeReady={false}
+        />
+      </MockThemeProvider>
     );
 
     const openButton = screen.getByLabelText('Open chat history');
@@ -48,12 +53,14 @@ describe('ChatHeader', () => {
 
   it('navigates to home when the new chat button is clicked', () => {
     render(
-      <ChatHeader
-        onOpenSidebar={onOpenSidebar}
-        title="Test Chat"
-        isStreaming={false}
-        codeReady={false}
-      />
+      <MockThemeProvider>
+        <ChatHeader
+          onOpenSidebar={onOpenSidebar}
+          title="Test Chat"
+          isStreaming={false}
+          codeReady={false}
+        />
+      </MockThemeProvider>
     );
 
     // Just verify the new vibe button exists since we can't easily mock document.location

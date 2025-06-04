@@ -2,6 +2,7 @@ import { render, screen, cleanup } from '@testing-library/react';
 import { vi, describe, test, expect, afterEach } from 'vitest';
 import StructuredMessage from '../app/components/StructuredMessage';
 import type { Segment } from '../app/types/chat';
+import { MockThemeProvider } from './utils/MockThemeProvider';
 
 // Mock the window.location for any URL operations
 vi.spyOn(window, 'location', 'get').mockImplementation(
@@ -25,15 +26,17 @@ describe('Early Streaming Content Display', () => {
 
     // Act: Render the component with isStreaming=true
     render(
-      <StructuredMessage
-        segments={segments}
-        isStreaming={true}
-        setSelectedResponseId={() => {}}
-        selectedResponseId=""
-        setMobilePreviewShown={() => {}}
-        isLatestMessage={true}
-        navigateToView={() => {}}
-      />
+      <MockThemeProvider>
+        <StructuredMessage
+          segments={segments}
+          isStreaming={true}
+          setSelectedResponseId={() => {}}
+          selectedResponseId=""
+          setMobilePreviewShown={() => {}}
+          isLatestMessage={true}
+          navigateToView={() => {}}
+        />
+      </MockThemeProvider>
     );
 
     // Assert: The single character content should be visible
@@ -51,15 +54,17 @@ describe('Early Streaming Content Display', () => {
 
     // Act: Render the component with isStreaming=true
     render(
-      <StructuredMessage
-        segments={segments}
-        isStreaming={true}
-        setSelectedResponseId={() => {}}
-        selectedResponseId=""
-        setMobilePreviewShown={() => {}}
-        isLatestMessage={true}
-        navigateToView={() => {}}
-      />
+      <MockThemeProvider>
+        <StructuredMessage
+          segments={segments}
+          isStreaming={true}
+          setSelectedResponseId={() => {}}
+          selectedResponseId=""
+          setMobilePreviewShown={() => {}}
+          isLatestMessage={true}
+          navigateToView={() => {}}
+        />
+      </MockThemeProvider>
     );
 
     // Assert: Even with minimal content, we should see the content not a placeholder
@@ -74,15 +79,17 @@ describe('Early Streaming Content Display', () => {
   test('thinking indicator is only visible when segments length is zero', () => {
     // First test with empty segments array
     render(
-      <StructuredMessage
-        segments={[]}
-        isStreaming={true}
-        setSelectedResponseId={() => {}}
-        selectedResponseId=""
-        setMobilePreviewShown={() => {}}
-        isLatestMessage={true}
-        navigateToView={() => {}}
-      />
+      <MockThemeProvider>
+        <StructuredMessage
+          segments={[]}
+          isStreaming={true}
+          setSelectedResponseId={() => {}}
+          selectedResponseId=""
+          setMobilePreviewShown={() => {}}
+          isLatestMessage={true}
+          navigateToView={() => {}}
+        />
+      </MockThemeProvider>
     );
 
     // Should show the "Processing response..." placeholder when no segments
@@ -93,15 +100,17 @@ describe('Early Streaming Content Display', () => {
 
     // Now test with a segment that has empty content
     render(
-      <StructuredMessage
-        segments={[{ type: 'markdown', content: '' }]}
-        isStreaming={true}
-        setSelectedResponseId={() => {}}
-        selectedResponseId=""
-        setMobilePreviewShown={() => {}}
-        isLatestMessage={true}
-        navigateToView={() => {}}
-      />
+      <MockThemeProvider>
+        <StructuredMessage
+          segments={[{ type: 'markdown', content: '' }]}
+          isStreaming={true}
+          setSelectedResponseId={() => {}}
+          selectedResponseId=""
+          setMobilePreviewShown={() => {}}
+          isLatestMessage={true}
+          navigateToView={() => {}}
+        />
+      </MockThemeProvider>
     );
 
     // Should still show placeholder with empty content
@@ -112,15 +121,17 @@ describe('Early Streaming Content Display', () => {
 
     // Finally test with a segment that has content
     render(
-      <StructuredMessage
-        segments={[{ type: 'markdown', content: 'Hello' }]}
-        isStreaming={true}
-        setSelectedResponseId={() => {}}
-        selectedResponseId=""
-        setMobilePreviewShown={() => {}}
-        isLatestMessage={true}
-        navigateToView={() => {}}
-      />
+      <MockThemeProvider>
+        <StructuredMessage
+          segments={[{ type: 'markdown', content: 'Hello' }]}
+          isStreaming={true}
+          setSelectedResponseId={() => {}}
+          selectedResponseId=""
+          setMobilePreviewShown={() => {}}
+          isLatestMessage={true}
+          navigateToView={() => {}}
+        />
+      </MockThemeProvider>
     );
 
     // Should NOT show placeholder when there's content
@@ -134,15 +145,17 @@ describe('Early Streaming Content Handling', () => {
   test('handles empty segment array correctly', () => {
     const segments: Segment[] = [];
     render(
-      <StructuredMessage
-        segments={segments}
-        isStreaming={true}
-        setSelectedResponseId={() => {}}
-        selectedResponseId=""
-        setMobilePreviewShown={() => {}}
-        isLatestMessage={true}
-        navigateToView={() => {}}
-      />
+      <MockThemeProvider>
+        <StructuredMessage
+          segments={segments}
+          isStreaming={true}
+          setSelectedResponseId={() => {}}
+          selectedResponseId=""
+          setMobilePreviewShown={() => {}}
+          isLatestMessage={true}
+          navigateToView={() => {}}
+        />
+      </MockThemeProvider>
     );
     // ... rest of test ...
   });
@@ -150,15 +163,17 @@ describe('Early Streaming Content Handling', () => {
   test('handles empty markdown content', () => {
     const segments: Segment[] = [{ type: 'markdown', content: '' }];
     render(
-      <StructuredMessage
-        segments={segments}
-        isStreaming={true}
-        setSelectedResponseId={() => {}}
-        selectedResponseId=""
-        setMobilePreviewShown={() => {}}
-        isLatestMessage={true}
-        navigateToView={() => {}}
-      />
+      <MockThemeProvider>
+        <StructuredMessage
+          segments={segments}
+          isStreaming={true}
+          setSelectedResponseId={() => {}}
+          selectedResponseId=""
+          setMobilePreviewShown={() => {}}
+          isLatestMessage={true}
+          navigateToView={() => {}}
+        />
+      </MockThemeProvider>
     );
     // ... rest of test ...
   });

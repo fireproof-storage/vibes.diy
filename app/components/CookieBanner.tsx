@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import { useLocation } from 'react-router';
 import { GA_TRACKING_ID } from '../config/env';
 import { useCookieConsent } from '../contexts/CookieConsentContext';
+import { useTheme } from '../contexts/ThemeContext';
 import { initGA, pageview } from '../utils/analytics';
 
 // We'll use any type for dynamic imports to avoid TypeScript errors with the cookie consent component
@@ -11,7 +12,7 @@ export default function CookieBanner() {
   const location = useLocation();
   const [hasConsent, setHasConsent] = useState(false);
   const { messageHasBeenSent } = useCookieConsent();
-  const [isDarkMode, setIsDarkMode] = useState(false);
+  const { isDarkMode } = useTheme();
 
   // Dynamic import for client-side only
   const [CookieConsent, setCookieConsent] = useState<any>(null);
@@ -19,29 +20,7 @@ export default function CookieBanner() {
 
   const posthog = usePostHog();
 
-  // Detect dark mode
-  useEffect(() => {
-    // Check initial theme
-    const checkTheme = () => {
-      const hasDarkClass = document.documentElement.classList.contains('dark');
-      setIsDarkMode(hasDarkClass);
-    };
-
-    checkTheme();
-
-    // Set up observer for theme changes
-    const observer = new MutationObserver((mutations) => {
-      mutations.forEach((mutation) => {
-        if (mutation.attributeName === 'class') {
-          checkTheme();
-        }
-      });
-    });
-
-    observer.observe(document.documentElement, { attributes: true });
-
-    return () => observer.disconnect();
-  }, []);
+  // Dark mode is now managed by ThemeContext
 
   // Load the cookie consent library on client side only
   useEffect(() => {
