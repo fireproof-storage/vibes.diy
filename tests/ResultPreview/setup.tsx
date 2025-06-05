@@ -27,17 +27,17 @@ vi.mock('@codesandbox/sandpack-react', () => ({
 }));
 
 // Mock WelcomeScreen
-vi.mock('../app/components/ResultPreview/WelcomeScreen', () => ({
+vi.mock('../../app/components/ResultPreview/WelcomeScreen', () => ({
   default: () => <div data-testid="welcome-screen">Welcome Screen Content</div>,
 }));
 
 // Mock scroll controller
-vi.mock('../app/components/ResultPreview/SandpackScrollController', () => ({
+vi.mock('../../app/components/ResultPreview/SandpackScrollController', () => ({
   default: () => null,
 }));
 
 // Mock IframeContent to avoid iframe issues
-vi.mock('../app/components/ResultPreview/IframeContent', () => ({
+vi.mock('../../app/components/ResultPreview/IframeContent', () => ({
   default: () => (
     <div data-testid="sandpack-provider" className="h-full">
       <div>

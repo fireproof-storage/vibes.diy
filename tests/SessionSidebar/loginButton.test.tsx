@@ -1,4 +1,7 @@
-import { setMockAuthState, initiateAuthFlow, trackAuthClick } from './setup';
+import './setup';
+import { setMockAuthState } from './setup';
+import { initiateAuthFlow } from '../../app/utils/auth';
+import { trackAuthClick } from '../../app/utils/analytics';
 import { act, fireEvent, render, screen } from '@testing-library/react';
 import { describe, it, expect } from 'vitest';
 import SessionSidebar from '../../app/components/SessionSidebar';

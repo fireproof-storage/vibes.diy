@@ -1,3 +1,4 @@
+import './setup';
 import { render } from '@testing-library/react';
 import { describe, it, expect } from 'vitest';
 import SessionSidebar from '../../app/components/SessionSidebar';
