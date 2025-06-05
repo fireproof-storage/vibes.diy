@@ -38,25 +38,12 @@ vi.mock('../app/components/ResultPreview/SandpackScrollController', () => ({
 
 // Mock IframeContent to avoid iframe issues
 vi.mock('../app/components/ResultPreview/IframeContent', () => ({
-  default: ({ activeView }: { activeView: string }) => (
+  default: () => (
     <div data-testid="sandpack-provider" className="h-full">
-      <div
-        style={{
-          visibility: activeView === 'preview' ? 'visible' : 'hidden',
-          position: activeView === 'preview' ? 'static' : 'absolute',
-        }}
-      >
+      <div>
         <iframe data-testid="preview-iframe" title="Preview" />
       </div>
-      <div
-        data-testid="sandpack-editor"
-        style={{
-          visibility: activeView === 'code' ? 'visible' : 'hidden',
-          position: activeView === 'code' ? 'static' : 'absolute',
-        }}
-      >
-        Code Editor Content
-      </div>
+      <div data-testid="sandpack-editor">Code Editor Content</div>
     </div>
   ),
 }));

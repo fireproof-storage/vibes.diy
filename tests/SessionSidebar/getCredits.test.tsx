@@ -1,10 +1,9 @@
+import { setMockAuthState, initiateAuthFlow, trackAuthClick } from './setup';
 import { act, fireEvent, render, screen } from '@testing-library/react';
 import { describe, it, expect, vi } from 'vitest';
 import SessionSidebar from '../../app/components/SessionSidebar';
 import { mockSessionSidebarProps } from '../mockData';
 import { MockThemeProvider } from '../utils/MockThemeProvider';
-import { setMockAuthState, initiateAuthFlow, trackAuthClick } from './setup';
-import './setup';
 
 describe('SessionSidebar credits', () => {
   it('should show Get Credits button when needsLogin is true', () => {

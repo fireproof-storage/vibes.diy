@@ -1,9 +1,9 @@
+import './setup';
 import { render, act, waitFor } from '@testing-library/react';
 import { describe, it, expect, vi } from 'vitest';
 import ResultPreview from '../../app/components/ResultPreview/ResultPreview';
 import { mockResultPreviewProps } from '../mockData';
 import { MockThemeProvider } from '../utils/MockThemeProvider';
-import './setup';
 
 describe('ResultPreview preview events', () => {
   it('receives preview-ready message from iframe when content loads', async () => {

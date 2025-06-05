@@ -1,10 +1,9 @@
+import './setup';
 import { renderHook } from '@testing-library/react';
 import { describe, test, expect, vi } from 'vitest';
 import { useViewState } from '../../app/utils/ViewState';
 import { useLocation } from 'react-router-dom';
 import { mockNavigate, mockSessionId, mockTitle } from './setup';
-
-import './setup';
 
 describe('useViewState streaming', () => {
   test('should not navigate to app view when on code path and preview becomes ready', () => {

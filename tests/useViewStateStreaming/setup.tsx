@@ -1,11 +1,12 @@
 import { beforeEach, afterEach, vi } from 'vitest';
-import { useNavigate, useParams, useLocation } from 'react-router-dom';
 
 vi.mock('react-router-dom', () => ({
   useNavigate: vi.fn(),
   useParams: vi.fn(),
   useLocation: vi.fn(),
 }));
+
+import { useNavigate, useParams, useLocation } from 'react-router-dom';
 
 const mockNavigate = vi.fn();
 const mockSessionId = 'test-session-id';

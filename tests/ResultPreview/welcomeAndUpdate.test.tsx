@@ -1,9 +1,9 @@
+import './setup';
 import { render, screen } from '@testing-library/react';
 import { describe, it, expect } from 'vitest';
 import ResultPreview from '../../app/components/ResultPreview/ResultPreview';
 import { mockResultPreviewProps } from '../mockData';
 import { MockThemeProvider } from '../utils/MockThemeProvider';
-import './setup';
 
 describe('ResultPreview welcome and update', () => {
   it('shows welcome screen for empty code', () => {

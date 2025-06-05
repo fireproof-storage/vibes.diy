@@ -1,9 +1,8 @@
+import './setup';
 import { renderHook } from '@testing-library/react';
 import { describe, test, expect } from 'vitest';
 import { useViewState } from '../../app/utils/ViewState';
 import { mockNavigate, mockSessionId, mockTitle } from './setup';
-
-import './setup';
 
 describe('useViewState streaming', () => {
   test('should display code view when streaming starts for first message', () => {

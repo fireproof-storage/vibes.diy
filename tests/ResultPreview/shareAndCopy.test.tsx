@@ -1,9 +1,9 @@
+import './setup';
 import { render } from '@testing-library/react';
 import { describe, it, expect } from 'vitest';
 import ResultPreview from '../../app/components/ResultPreview/ResultPreview';
 import { mockResultPreviewProps } from '../mockData';
 import { MockThemeProvider } from '../utils/MockThemeProvider';
-import './setup';
 
 describe('ResultPreview share actions', () => {
   it('calls onShare when share button is clicked', () => {

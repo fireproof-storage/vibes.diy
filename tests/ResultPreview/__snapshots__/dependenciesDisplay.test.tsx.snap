@@ -1,0 +1,29 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`ResultPreview dependencies and display > renders empty state correctly 1`] = `
+<div>
+  <div
+    class="h-full"
+    style="overflow: hidden;"
+  >
+    <style>
+      
+  @keyframes spin-slow {
+    from {
+      transform: rotate(0deg);
+    }
+    to {
+      transform: rotate(360deg);
+    }
+  }
+  .animate-spin-slow {
+    animation: spin-slow 1s linear infinite;
+  }
+
+    </style>
+    <div
+      class="h-full"
+    />
+  </div>
+</div>
+`;

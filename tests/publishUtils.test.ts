@@ -71,6 +71,7 @@ describe('publishApp', () => {
   beforeEach(() => {
     // Reset all mocks before each test
     vi.resetAllMocks();
+    global.fetch = mockFetch;
 
     // Setup our mocks with default behavior
     mockFireproofDb.get.mockImplementation(async (id) => {

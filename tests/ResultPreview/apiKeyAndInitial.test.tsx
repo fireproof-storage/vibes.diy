@@ -1,9 +1,9 @@
+import './setup';
 import { render, screen, act, waitFor } from '@testing-library/react';
 import { describe, it, expect, vi } from 'vitest';
 import ResultPreview from '../../app/components/ResultPreview/ResultPreview';
 import { mockResultPreviewProps } from '../mockData';
 import { MockThemeProvider } from '../utils/MockThemeProvider';
-import './setup';
 
 describe('ResultPreview API key and initial view', () => {
   it('passes API key to iframe when preview-ready message is received', async () => {

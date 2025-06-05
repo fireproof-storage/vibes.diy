@@ -1,10 +1,9 @@
+import './setup';
 import { renderHook } from '@testing-library/react';
 import { describe, test, expect, vi } from 'vitest';
 import { useViewState } from '../../app/utils/ViewState';
 import { useLocation, useParams } from 'react-router-dom';
 import { mockNavigate, mockSessionId, mockTitle } from './setup';
-
-import './setup';
 
 describe('useViewState streaming', () => {
   test('should handle initial app flow from root URL with correct navigation timing', () => {

@@ -1,10 +1,9 @@
+import { setMockAuthState, initiateAuthFlow, trackAuthClick } from './setup';
 import { act, fireEvent, render, screen } from '@testing-library/react';
 import { describe, it, expect } from 'vitest';
 import SessionSidebar from '../../app/components/SessionSidebar';
 import { mockSessionSidebarProps } from '../mockData';
 import { MockThemeProvider } from '../utils/MockThemeProvider';
-import { setMockAuthState, initiateAuthFlow, trackAuthClick } from './setup';
-import './setup';
 
 describe('SessionSidebar login button', () => {
   it('should show Log in button when not authenticated', async () => {

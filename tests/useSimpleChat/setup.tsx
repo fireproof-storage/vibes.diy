@@ -3,6 +3,12 @@ import type { ReactNode } from 'react';
 import { afterEach, beforeEach, vi } from 'vitest';
 import { AuthProvider } from '../../app/contexts/AuthContext';
 
+// Mock call-ai to avoid network and streaming logic
+vi.mock('call-ai', () => ({
+  callAI: vi.fn().mockResolvedValue('Test Title'),
+  callAIStreaming: vi.fn(),
+}));
+
 // Mock AuthContext to avoid state updates during tests
 vi.mock('../../app/contexts/AuthContext', () => {
   return {

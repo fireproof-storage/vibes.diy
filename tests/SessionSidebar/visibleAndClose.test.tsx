@@ -1,10 +1,9 @@
+import { setMockAuthState } from './setup';
 import { fireEvent, render, screen } from '@testing-library/react';
 import { describe, it, expect, vi } from 'vitest';
 import SessionSidebar from '../../app/components/SessionSidebar';
 import { mockSessionSidebarProps } from '../mockData';
 import { MockThemeProvider } from '../utils/MockThemeProvider';
-import { setMockAuthState } from './setup';
-import './setup';
 
 describe('SessionSidebar visibility and close', () => {
   it('renders sidebar correctly when visible', () => {
