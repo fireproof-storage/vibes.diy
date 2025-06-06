@@ -5,19 +5,19 @@ import type { UserSettings } from '../types/settings';
 
 import { useFireproof } from 'use-fireproof';
 import { FIREPROOF_CHAT_HISTORY } from '../config/env';
-import { useApiKey } from './useApiKey';
-import { type ErrorCategory, type RuntimeError, useRuntimeErrors } from './useRuntimeErrors';
 import { saveErrorAsSystemMessage } from './saveErrorAsSystemMessage';
+import { useApiKey } from './useApiKey';
 import { useImmediateErrorAutoSend } from './useImmediateErrorAutoSend';
+import { type ErrorCategory, type RuntimeError, useRuntimeErrors } from './useRuntimeErrors';
 import { useSession } from './useSession';
 
 import { useMessageSelection } from './useMessageSelection';
 // Import our custom hooks
+import { checkCredits } from './checkCredits';
+import type { SendMessageContext } from './sendMessage';
+import { sendMessage as sendChatMessage } from './sendMessage';
 import { useSystemPromptManager } from './useSystemPromptManager';
 import { useThrottledUpdates } from './useThrottledUpdates';
-import { checkCredits } from './checkCredits';
-import { sendMessage as sendChatMessage } from './sendMessage';
-import type { SendMessageContext } from './sendMessage';
 
 // Constants
 const CODING_MODEL = 'anthropic/claude-sonnet-4';
@@ -221,6 +221,7 @@ export function useSimpleChat(sessionId: string | undefined): ChatState {
         setInput,
         userId,
         titleModel: TITLE_MODEL,
+        isAuthenticated,
       };
       return sendChatMessage(ctx, textOverride);
     },
@@ -240,6 +241,7 @@ export function useSimpleChat(sessionId: string | undefined): ChatState {
       updateTitle,
       boundCheckCredits,
       ensureApiKey,
+      isAuthenticated,
     ]
   );
 

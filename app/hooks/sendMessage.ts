@@ -1,12 +1,12 @@
+import type {
+  AiChatMessageDocument,
+  ChatMessageDocument,
+  UserChatMessageDocument,
+} from '../types/chat';
+import { trackChatInputClick } from '../utils/analytics';
 import { parseContent } from '../utils/segmentParser';
 import { streamAI } from '../utils/streamHandler';
 import { generateTitle } from '../utils/titleGenerator';
-import { trackChatInputClick } from '../utils/analytics';
-import type {
-  ChatMessageDocument,
-  AiChatMessageDocument,
-  UserChatMessageDocument,
-} from '../types/chat';
 
 export interface SendMessageContext {
   userMessage: ChatMessageDocument;
@@ -32,6 +32,7 @@ export interface SendMessageContext {
   setInput: (text: string) => void;
   userId: string | undefined;
   titleModel: string;
+  isAuthenticated: boolean;
 }
 
 export async function sendMessage(ctx: SendMessageContext, textOverride?: string): Promise<void> {
@@ -59,12 +60,18 @@ export async function sendMessage(ctx: SendMessageContext, textOverride?: string
     setInput,
     userId,
     titleModel,
+    isAuthenticated,
   } = ctx;
 
   const promptText = textOverride || userMessage.text;
   trackChatInputClick(promptText.length);
 
   if (!promptText.trim()) return;
+
+  // Allow user message to be submitted, but check authentication for AI processing
+  if (!isAuthenticated) {
+    setNeedsLogin(true);
+  }
 
   if (textOverride) {
     mergeUserMessage({ text: textOverride });
@@ -74,6 +81,9 @@ export async function sendMessage(ctx: SendMessageContext, textOverride?: string
     ...userMessage,
     text: promptText,
   });
+
+  // Always submit the user message first
+  await submitUserMessage();
 
   setIsStreaming(true);
 
@@ -107,21 +117,19 @@ export async function sendMessage(ctx: SendMessageContext, textOverride?: string
 
   const currentSystemPrompt = await ensureSystemPrompt();
 
-  return submitUserMessage()
-    .then(async () => {
-      const messageHistory = buildMessageHistory();
+  // Now proceed with AI processing for authenticated users
+  const messageHistory = buildMessageHistory();
 
-      return streamAI(
-        modelToUse,
-        currentSystemPrompt,
-        messageHistory,
-        promptText,
-        (content) => throttledMergeAiMessage(content),
-        currentApiKey,
-        userId,
-        setNeedsLogin
-      );
-    })
+  return streamAI(
+    modelToUse,
+    currentSystemPrompt,
+    messageHistory,
+    promptText,
+    (content) => throttledMergeAiMessage(content),
+    currentApiKey,
+    userId,
+    setNeedsLogin
+  )
     .then(async (finalContent) => {
       isProcessingRef.current = true;
 
