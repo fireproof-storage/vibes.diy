@@ -3,7 +3,7 @@
  */
 import { importJWK, jwtVerify } from 'jose';
 import toast from 'react-hot-toast';
-import { CONNECT_URL, CONNECT_API_URL, CLOUD_SESSION_TOKEN_PUBLIC_KEY } from '../config/env';
+import { CLOUD_SESSION_TOKEN_PUBLIC_KEY, CONNECT_API_URL, CONNECT_URL } from '../config/env';
 
 // Export the interface
 export interface TokenPayload {
@@ -142,7 +142,7 @@ export function initiateAuthFlow(): { connectUrl: string; resultId: string } | n
 export async function pollForAuthToken(
   resultId: string,
   intervalMs = 1500,
-  timeoutMs = 30000
+  timeoutMs = 60000
 ): Promise<string | null> {
   const endpoint = `${CONNECT_API_URL}/token/${resultId}`;
   const start = Date.now();
