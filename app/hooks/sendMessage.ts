@@ -14,7 +14,7 @@ export interface SendMessageContext {
   setPendingUserDoc: (doc: ChatMessageDocument) => void;
   setIsStreaming: (v: boolean) => void;
   ensureApiKey: () => Promise<{ key: string } | null>;
-  setNeedsLogin: (v: boolean) => void;
+  setNeedsLogin: (v: boolean, reason: string) => void;
   setNeedsNewKey: (v: boolean) => void;
   addError: (err: any) => void;
   checkCredits: (key: string) => Promise<boolean>;
@@ -70,7 +70,7 @@ export async function sendMessage(ctx: SendMessageContext, textOverride?: string
 
   // Allow user message to be submitted, but check authentication for AI processing
   if (!isAuthenticated) {
-    setNeedsLogin(true);
+    setNeedsLogin(true, 'sendMessage not authenticated');
   }
 
   if (textOverride) {
@@ -96,7 +96,7 @@ export async function sendMessage(ctx: SendMessageContext, textOverride?: string
     currentApiKey = keyObject.key;
   } catch (err) {
     console.warn('sendMessage: Failed to ensure API key:', err);
-    setNeedsLogin(true);
+    setNeedsLogin(true, 'sendMessage failed to ensure API key');
     setNeedsNewKey(true);
     addError({
       type: 'error',
@@ -154,7 +154,7 @@ export async function sendMessage(ctx: SendMessageContext, textOverride?: string
           !finalContent ||
           (typeof finalContent === 'string' && finalContent.trim().length === 0)
         ) {
-          setNeedsLogin(true);
+          setNeedsLogin(true, 'empty response');
           return;
         }
 

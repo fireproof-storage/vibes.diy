@@ -101,8 +101,9 @@ export function useSimpleChat(sessionId: string | undefined): ChatState {
   const [needsLogin, _setNeedsLogin] = useState<boolean>(false);
 
   // Custom setNeedsLogin that emits an event when set to true
-  const setNeedsLogin = (value: boolean) => {
+  const setNeedsLogin = (value: boolean, reason: string) => {
     _setNeedsLogin(value);
+    console.log(`setNeedsLogin: ${value} from ${reason}`);
     if (value) {
       // Create a custom event to notify about needsLogin change
       const event = new CustomEvent('needsLoginTriggered');
@@ -118,14 +119,14 @@ export function useSimpleChat(sessionId: string | undefined): ChatState {
           try {
             await refreshKey();
             setNeedsNewKey(false);
-            setNeedsLogin(false);
+            setNeedsLogin(false, 'refreshKey success');
           } catch (error) {
             console.error('Failed to refresh API key:', error);
-            setNeedsLogin(true); // Also set login needed if refresh fails
+            setNeedsLogin(true, 'refreshKey failure'); // Also set login needed if refresh fails
           }
         } else {
           // Not authenticated and needs a new key
-          setNeedsLogin(true);
+          setNeedsLogin(true, 'not authenticated');
         }
       }
     }

@@ -25,7 +25,7 @@ export async function streamAI(
   onContent: (content: string) => void,
   apiKey: string,
   userId?: string,
-  setNeedsLogin?: (value: boolean) => void
+  setNeedsLogin?: (value: boolean, reason: string) => void
 ): Promise<string> {
   // Stream process starts
 
@@ -111,7 +111,7 @@ export async function streamAI(
         //   errorMsg.includes('credits')
         // ) {
         //   if (setNeedsLogin) {
-        //     setNeedsLogin(true);
+        //     setNeedsLogin(true, 'streamAI authentication error');
         //   }
         // }
 
@@ -138,7 +138,7 @@ export async function streamAI(
     // ) {
     //   console.warn('Setting needs login due to auth/credit error');
     //   if (setNeedsLogin) {
-    //     setNeedsLogin(true);
+    //     setNeedsLogin(true, 'streamAI authentication error');
     //   }
     // }
 
