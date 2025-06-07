@@ -32,7 +32,7 @@ function SessionSidebar({ isVisible, onClose }: SessionSidebarProps) {
   // Listen for the needsLoginTriggered event to update needsLogin state
   useEffect(() => {
     const handleNeedsLoginTriggered = () => {
-      setNeedsLogin(true, 'needsLoginTriggered');
+      setNeedsLogin(true, 'needsLoginTriggered window event');
     };
 
     // Add event listener
