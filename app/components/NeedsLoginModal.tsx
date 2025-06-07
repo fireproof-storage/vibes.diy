@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { useSimpleChat } from '../hooks/useSimpleChat';
+import { useAuth } from '../contexts/AuthContext';
 import { trackAuthClick } from '../utils/analytics';
 import { useAuthPopup } from '../hooks/useAuthPopup';
 
@@ -10,7 +10,7 @@ import { useAuthPopup } from '../hooks/useAuthPopup';
  */
 export function NeedsLoginModal() {
   const [isOpen, setIsOpen] = useState(false);
-  const { needsLogin } = useSimpleChat(undefined);
+  const { needsLogin } = useAuth();
   const { initiateLogin } = useAuthPopup();
 
   // Show the modal when needsLogin becomes true or is already true
@@ -19,21 +19,6 @@ export function NeedsLoginModal() {
       setIsOpen(true);
     }
   }, [needsLogin]);
-
-  // Also listen for the event as a backup
-  useEffect(() => {
-    const handleNeedsLoginTriggered = () => {
-      setIsOpen(true);
-    };
-
-    // Add event listener
-    window.addEventListener('needsLoginTriggered', handleNeedsLoginTriggered);
-
-    // Cleanup
-    return () => {
-      window.removeEventListener('needsLoginTriggered', handleNeedsLoginTriggered);
-    };
-  }, []);
 
   const handleClose = () => {
     setIsOpen(false);

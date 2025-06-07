@@ -15,6 +15,8 @@ export interface AuthContextType {
   isAuthenticated: boolean;
   isLoading: boolean;
   userPayload: TokenPayload | null; // Changed from userEmail
+  needsLogin: boolean;
+  setNeedsLogin: (value: boolean) => void;
   checkAuthStatus: () => Promise<void>;
   processToken: (token: string | null) => Promise<void>;
 }
@@ -35,6 +37,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [token, setToken] = useState<string | null>(null);
   const [userPayload, setUserPayload] = useState<TokenPayload | null>(null); // Changed state
   const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [needsLogin, setNeedsLogin] = useState<boolean>(false);
 
   // Updated function to process token using verifyToken
   const processToken = useCallback(async (newToken: string | null) => {
@@ -44,6 +47,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         // Valid token and payload
         setToken(newToken);
         setUserPayload(payload.payload); // Store the full payload
+        setNeedsLogin(false); // user is authenticated
       } else {
         // Token is invalid or expired
         localStorage.removeItem('auth_token');
@@ -66,6 +70,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     } catch (error) {
       console.error('Error reading auth token from storage:', error);
       await processToken(null); // Ensure state is cleared on error
+      setNeedsLogin(true); // trigger login requirement on error
     } finally {
       setIsLoading(false);
     }
@@ -93,6 +98,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         } catch (error) {
           console.error('Error processing token from popup message:', error);
           await processToken(null); // Clear state on error
+          setNeedsLogin(true); // trigger login requirement on error
         } finally {
           setIsLoading(false);
         }
@@ -114,6 +120,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     isAuthenticated,
     isLoading,
     userPayload, // Provide userPayload
+    needsLogin,
+    setNeedsLogin,
     checkAuthStatus,
     processToken,
   };

@@ -259,12 +259,8 @@ export default function UnifiedSession() {
           <ChatInput
             chatState={chatState}
             onSend={() => {
-              // Only handle side effects here
               setMessageHasBeenSent(true);
               setHasSubmittedMessage(true);
-              if (chatState.needsLogin === true) {
-                window.dispatchEvent(new Event('needsLoginTriggered'));
-              }
             }}
           />
         }

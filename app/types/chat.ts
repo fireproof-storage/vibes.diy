@@ -133,13 +133,12 @@ export interface ChatState {
   selectedCode?: Segment;
   needsNewKey?: boolean;
   setNeedsNewKey: (value: boolean) => void;
-  needsLogin?: boolean;
-  vibeDoc?: VibeDocument;
 
   // Error tracking
   immediateErrors: RuntimeError[];
   advisoryErrors: RuntimeError[];
   addError: (error: RuntimeError) => void;
+  vibeDoc?: VibeDocument;
 }
 
 export interface ChatInterfaceProps extends ChatState {
