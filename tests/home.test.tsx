@@ -151,6 +151,8 @@ describe('Home Route', () => {
                 iss: 'FP_CLOUD',
                 aud: 'PUBLIC',
               },
+              needsLogin: false,
+              setNeedsLogin: vi.fn(),
               checkAuthStatus: vi.fn(),
               processToken: vi.fn(),
             }}

@@ -25,6 +25,10 @@ export default defineConfig(({ command, mode }: ConfigEnv): UserConfig => {
       allowedHosts: ['.ngrok-free.app'], // Specific ngrok hostname
       cors: true, // Enable CORS for all origins
       hmr: true, // Use default HMR settings for local development
+      // Ignore test directory changes to prevent unnecessary reloads during development
+      watch: {
+        ignored: ['**/tests/**'],
+      },
     },
     // Ensure JSON imports are properly handled
     json: {

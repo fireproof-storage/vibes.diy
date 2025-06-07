@@ -43,6 +43,8 @@ const renderWithAuthContext = (
     isAuthenticated,
     isLoading: false,
     userPayload,
+    needsLogin: false,
+    setNeedsLogin: vi.fn(),
     checkAuthStatus: vi.fn(() => Promise.resolve()),
     processToken: vi.fn(),
   };

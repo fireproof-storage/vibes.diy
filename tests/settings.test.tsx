@@ -2,6 +2,7 @@ import { fireEvent, render, screen } from '@testing-library/react';
 import React from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { AuthContext } from '../app/contexts/AuthContext';
+import type { AuthContextType } from '../app/contexts/AuthContext';
 import * as SettingsModule from '../app/routes/settings';
 import type { TokenPayload } from '../app/utils/auth';
 
@@ -91,9 +92,11 @@ const renderWithAuthContext = (
     isAuthenticated,
     isLoading: false,
     userPayload,
+    needsLogin: false,
+    setNeedsLogin: vi.fn(),
     checkAuthStatus: vi.fn(() => Promise.resolve()),
     processToken: vi.fn(),
-  };
+  } as AuthContextType;
 
   return render(<AuthContext.Provider value={authValue}>{ui}</AuthContext.Provider>);
 };

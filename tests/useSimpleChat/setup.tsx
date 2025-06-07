@@ -12,6 +12,8 @@ vi.mock('../../app/contexts/AuthContext', () => {
       isAuthenticated: true,
       isLoading: false,
       userPayload: { userId: 'test-user-id', exp: 0, tenants: [], ledgers: [] },
+      needsLogin: false,
+      setNeedsLogin: vi.fn(),
       checkAuthStatus: vi.fn(),
       processToken: vi.fn(),
     }),

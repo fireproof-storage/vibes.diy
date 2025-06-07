@@ -1,16 +1,22 @@
-import { act, fireEvent, render, screen } from '@testing-library/react';
+import { act, fireEvent, screen, render } from '@testing-library/react';
 // Vitest will automatically use mocks from __mocks__ directory
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { mockUseAuth, resetMockAuthState, setMockAuthState } from '../__mocks__/useAuth';
+import { resetMockAuthState, setMockAuthState } from '../__mocks__/useAuth';
 import SessionSidebar from '../app/components/SessionSidebar';
 import { mockSessionSidebarProps } from './mockData';
 import { MockThemeProvider } from './utils/MockThemeProvider';
 
-// Mock the auth contexts module
-vi.mock('../app/contexts/AuthContext', () => ({
-  useAuth: mockUseAuth,
-  AuthProvider: ({ children }: { children: React.ReactNode }) => children,
-}));
+// Mock AuthContext to use the mocked useAuth implementation so components don’t require an AuthProvider
+vi.mock('../app/contexts/AuthContext', async () => {
+  const mockAuth = await import('../__mocks__/useAuth');
+  return {
+    useAuth: mockAuth.mockUseAuth,
+    AuthProvider: ({ children }: { children: React.ReactNode }) => children,
+  };
+});
+
+// Use __mocks__/useAuth helpers to manipulate auth state in tests
+// (setMockAuthState / resetMockAuthState imported below)
 
 // Mock the auth utility functions
 vi.mock('../app/utils/auth', () => ({
@@ -64,13 +70,10 @@ describe('SessionSidebar component', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     resetMockAuthState();
-
     // Reset mocks
     vi.mocked(initiateAuthFlow).mockClear();
     vi.mocked(trackAuthClick).mockClear();
-    // Mock the window event listener
-    window.addEventListener = vi.fn();
-    window.removeEventListener = vi.fn();
+    // No window event listeners needed anymore
     // Reset DOM
     document.body.innerHTML = '';
   });
@@ -114,14 +117,14 @@ describe('SessionSidebar component', () => {
       ...mockSessionSidebarProps,
     };
 
-    const { container } = render(
+    render(
       <MockThemeProvider>
         <SessionSidebar {...props} />
       </MockThemeProvider>
     );
 
     // Check if the sidebar is rendered - it's the first div in the container
-    const sidebar = container.firstChild;
+    const sidebar = screen.getByTestId('session-sidebar');
     expect(sidebar).toBeDefined();
 
     // Check for Login text
@@ -141,49 +144,17 @@ describe('SessionSidebar component', () => {
     expect(trackAuthClick).toHaveBeenCalledTimes(1);
   });
 
-  it('should show Get Credits button when needsLogin is true', () => {
+  it('should show "Log in for credits" when needsLogin is true', () => {
     // Mock useAuth to return authenticated state
     setMockAuthState({
-      isAuthenticated: true,
+      isAuthenticated: false,
       isLoading: false,
+      needsLogin: true,
     });
 
     const props = {
       ...mockSessionSidebarProps,
     };
-
-    const { container } = render(
-      <MockThemeProvider>
-        <SessionSidebar {...props} />
-      </MockThemeProvider>
-    );
-
-    // Check if the sidebar is rendered - it's the first div in the container
-    const sidebar = container.firstChild;
-    expect(sidebar).toBeDefined();
-
-    // Check for Settings text
-    expect(screen.queryAllByText('Settings').length).toBeGreaterThan(0);
-
-    // Simulate the needsLoginTriggered event
-    const needsLoginEvent = new CustomEvent('needsLoginTriggered');
-    act(() => {
-      // Find the event listener callback
-      const calls = vi.mocked(window.addEventListener).mock.calls;
-      const needsLoginCallback = calls.find(
-        (call) => call[0] === 'needsLoginTriggered'
-      )?.[1] as EventListener;
-      if (needsLoginCallback) needsLoginCallback(needsLoginEvent);
-    });
-
-    // After simulating the event, we re-render to see the updated state
-    // This is needed because Jest's JSDOM doesn't fully simulate React's event handling
-
-    // Update the useAuth mock for the re-render
-    setMockAuthState({
-      isAuthenticated: true,
-      isLoading: false,
-    });
 
     render(
       <MockThemeProvider>
@@ -191,19 +162,16 @@ describe('SessionSidebar component', () => {
       </MockThemeProvider>
     );
 
-    // Now look for the 'Get Credits' text
-    // Note: We'd normally check for the presence of 'Get Credits' and absence of 'Settings',
-    // but in the test environment the custom event might not update the state as expected.
-    // For now, we'll just make sure we can click the 'Get Credits' button if it exists
-    const getCreditsButton = screen.queryByText('Get Credits');
-    if (getCreditsButton) {
-      fireEvent.click(getCreditsButton);
-      expect(initiateAuthFlow).toHaveBeenCalled();
-      expect(trackAuthClick).toHaveBeenCalled();
-    } else {
-      // If no Get Credits button found, at least make sure Settings is present
-      expect(screen.queryAllByText('Settings').length).toBeGreaterThan(0);
-    }
+    // Check that the menu items are rendered
+    expect(screen.getByText('Home')).toBeInTheDocument();
+    expect(screen.getByText('My Vibes')).toBeInTheDocument();
+    expect(screen.getByText('About')).toBeInTheDocument();
+
+    // Now look for the 'Log in for credits' text
+    const loginCreditsBtn = screen.getByText('Log in for credits');
+    fireEvent.click(loginCreditsBtn);
+    expect(initiateAuthFlow).toHaveBeenCalled();
+    expect(trackAuthClick).toHaveBeenCalled();
   });
 
   it('should render navigation links with correct labels', () => {
@@ -211,14 +179,14 @@ describe('SessionSidebar component', () => {
       ...mockSessionSidebarProps,
     };
 
-    const { container } = render(
+    render(
       <MockThemeProvider>
         <SessionSidebar {...props} />
       </MockThemeProvider>
     );
 
     // Check if the sidebar is rendered - it's the first div in the container
-    const sidebar = container.firstChild;
+    const sidebar = screen.getByTestId('session-sidebar');
     expect(sidebar).toBeDefined();
 
     // Check menu items - using queryAllByText since there might be multiple elements with the same text
@@ -231,25 +199,6 @@ describe('SessionSidebar component', () => {
     // This is sufficient to verify that the navigation structure is correct
   });
 
-  it('should remove event listener on unmount', () => {
-    const props = {
-      ...mockSessionSidebarProps,
-    };
-
-    const { unmount } = render(
-      <MockThemeProvider>
-        <SessionSidebar {...props} />
-      </MockThemeProvider>
-    );
-    unmount();
-
-    // Should have called removeEventListener
-    expect(window.removeEventListener).toHaveBeenCalledWith(
-      'needsLoginTriggered',
-      expect.any(Function)
-    );
-  });
-
   it('renders sidebar correctly when visible', () => {
     const onClose = vi.fn();
     const props = {
@@ -258,7 +207,7 @@ describe('SessionSidebar component', () => {
       onClose: onClose,
     };
 
-    const { container } = render(
+    render(
       <MockThemeProvider>
         <SessionSidebar {...props} />
       </MockThemeProvider>
@@ -271,7 +220,7 @@ describe('SessionSidebar component', () => {
     expect(screen.getByText('About')).toBeInTheDocument();
 
     // The sidebar is the first div within the container that has position fixed
-    const sidebarContainer = container.querySelector('div > div'); // First div inside the container div
+    const sidebarContainer = screen.getByTestId('session-sidebar');
     expect(sidebarContainer).not.toHaveClass('-translate-x-full');
   });
 
@@ -311,14 +260,14 @@ describe('SessionSidebar component', () => {
       ...mockSessionSidebarProps,
     };
 
-    const { container } = render(
+    render(
       <MockThemeProvider>
         <SessionSidebar {...props} />
       </MockThemeProvider>
     );
 
     // Check if the sidebar is rendered - it's the first div in the container
-    const sidebar = container.firstChild;
+    const sidebar = screen.getByTestId('session-sidebar');
     expect(sidebar).toBeDefined();
 
     // Check menu items - using queryAllByText since there might be multiple elements with the same text

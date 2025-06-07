@@ -98,6 +98,8 @@ const createWrapper = (
     isAuthenticated: false,
     isLoading: false,
     userPayload: null,
+    needsLogin: false,
+    setNeedsLogin: vi.fn(),
     checkAuthStatus: vi.fn(),
     processToken: vi.fn(),
   };

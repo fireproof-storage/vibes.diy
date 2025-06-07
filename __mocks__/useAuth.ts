@@ -15,6 +15,8 @@ export const defaultAuthenticatedState: AuthContextType = {
     iss: 'FP_CLOUD',
     aud: 'PUBLIC',
   },
+  needsLogin: false,
+  setNeedsLogin: vi.fn(),
   checkAuthStatus: vi.fn(),
   processToken: vi.fn(),
 };
@@ -25,6 +27,8 @@ export const defaultUnauthenticatedState: AuthContextType = {
   isLoading: false,
   token: null,
   userPayload: null,
+  needsLogin: false,
+  setNeedsLogin: vi.fn(),
   checkAuthStatus: vi.fn(),
   processToken: vi.fn(),
 };
@@ -36,6 +40,8 @@ export const mockUseAuth = vi.fn().mockImplementation(() => defaultAuthenticated
 export const setMockAuthState = (state: Partial<AuthContextType>) => {
   mockUseAuth.mockImplementation(() => ({
     ...defaultAuthenticatedState,
+    needsLogin: false,
+    setNeedsLogin: vi.fn(),
     ...state,
   }));
 };

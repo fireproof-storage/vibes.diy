@@ -43,6 +43,8 @@ const createWrapper = () => {
     isAuthenticated: true,
     isLoading: false,
     userPayload: mockUserPayload,
+    needsLogin: false,
+    setNeedsLogin: vi.fn(),
     checkAuthStatus: vi.fn().mockImplementation(() => Promise.resolve()),
     processToken: vi.fn().mockImplementation(() => Promise.resolve()),
   };
