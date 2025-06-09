@@ -542,3 +542,46 @@ button:hover .bg-glimmer,
   background-size: 200% auto;
   animation: gradient-x 3s linear infinite;
 }
+
+/* === Loading stripes overlay === */
+@keyframes moving-stripes {
+  0% {
+    background-position: 0 0;
+  }
+  100% {
+    background-position: 40px 0;
+  }
+}
+
+.stripes-overlay {
+  position: relative;
+  overflow: hidden; /* ensure stripes clipped to element */
+}
+
+.stripes-overlay::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image: repeating-linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.35) 0px,
+    rgba(255, 255, 255, 0.35) 12px,
+    transparent 12px,
+    transparent 24px
+  );
+  background-size: 40px 40px;
+  animation: moving-stripes 1s linear infinite;
+}
+
+@media (prefers-color-scheme: dark) {
+  .stripes-overlay::after {
+    background-image: repeating-linear-gradient(
+      135deg,
+      rgba(0, 0, 0, 0.4) 0px,
+      rgba(0, 0, 0, 0.4) 12px,
+      transparent 12px,
+      transparent 24px
+    );
+  }
+}
