@@ -164,7 +164,7 @@ export function ShareModal({
                   type="button"
                   onClick={handlePublish}
                   disabled={isPublishing}
-                  className="flex w-full items-center justify-between rounded border border-blue-500 bg-transparent px-3 py-1.5 text-xs text-blue-600 hover:bg-blue-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-blue-400 dark:text-blue-400 dark:hover:bg-blue-900/20"
+                  className={`flex w-full items-center justify-between rounded border border-blue-500 bg-transparent px-3 py-1.5 text-xs text-blue-600 hover:bg-blue-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-blue-400 dark:text-blue-400 dark:hover:bg-blue-900/20 ${isPublishing ? 'animate-gradient-x' : ''}`}
                 >
                   <div className="flex items-center">
                     {showUpdateSuccess ? (
@@ -204,30 +204,6 @@ export function ShareModal({
                       </>
                     )}
                   </div>
-                  {isPublishing && (
-                    <svg
-                      className="text-accent-01 h-3.5 w-3.5 animate-spin"
-                      xmlns="http://www.w3.org/2000/svg"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      aria-label="Publishing in progress"
-                    >
-                      <title>Updating in progress</title>
-                      <circle
-                        className="opacity-25"
-                        cx="12"
-                        cy="12"
-                        r="10"
-                        stroke="currentColor"
-                        strokeWidth="4"
-                      />
-                      <path
-                        className="opacity-75"
-                        fill="currentColor"
-                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                      />
-                    </svg>
-                  )}
                 </button>
               </div>
             </div>
@@ -236,36 +212,15 @@ export function ShareModal({
               type="button"
               onClick={handlePublish}
               disabled={isPublishing}
-              className="accent-00 text-light-secondary hover:bg-light-background-01 dark:bg-dark-decorative-01 dark:text-dark-secondary dark:hover:bg-dark-decorative-00 mt-4 block w-full rounded px-4 py-2 text-center text-sm disabled:cursor-not-allowed disabled:opacity-50"
+              className={`flex w-full items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-indigo-500 via-violet-500 to-fuchsia-500 px-4 py-2 text-sm md:text-base font-bold text-white shadow-lg transition-all duration-300 hover:from-violet-500 hover:via-pink-500 hover:to-orange-500 hover:shadow-xl hover:scale-105 focus:outline-none focus:ring-4 focus:ring-violet-400/50 disabled:cursor-not-allowed disabled:opacity-60 dark:from-indigo-400 dark:via-violet-400 dark:to-fuchsia-400 ${isPublishing ? 'animate-gradient-x' : ''}`}
               role="menuitem"
             >
-              <div className="flex items-center justify-between">
-                <span className="w-full text-center font-bold">Publish App</span>
-                {isPublishing && (
-                  <svg
-                    className="text-accent-01 h-4 w-4 animate-spin"
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    aria-label="Publishing in progress"
-                  >
-                    <title>Publishing in progress</title>
-                    <circle
-                      className="opacity-25"
-                      cx="12"
-                      cy="12"
-                      r="10"
-                      stroke="currentColor"
-                      strokeWidth="4"
-                    />
-                    <path
-                      className="opacity-75"
-                      fill="currentColor"
-                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                    />
-                  </svg>
-                )}
-              </div>
+              <span className="flex items-center gap-3">
+                <span role="img" aria-label="disk">💽</span>
+                Publish App
+                <span role="img" aria-label="disk">💽</span>
+              </span>
+              {/* animated background indicates progress */}
             </button>
           )}
         </div>

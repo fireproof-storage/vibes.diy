@@ -525,3 +525,20 @@ button:hover .bg-glimmer,
   margin-top: 0.75rem;
   margin-bottom: 0.5rem;
 }
+
+/* Animated gradient background utility */
+@keyframes gradient-x {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+.animate-gradient-x {
+  background-size: 200% auto;
+  animation: gradient-x 3s linear infinite;
+}

@@ -20,7 +20,7 @@ export const ShareButton = forwardRef<HTMLButtonElement, ShareButtonProps>(
         type="button"
         onClick={onClick}
         disabled={isPublishing}
-        className="flex items-center justify-center gap-1 rounded-md bg-gradient-to-br from-blue-600 to-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-md transition hover:shadow-lg focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-none disabled:cursor-wait disabled:bg-blue-400 max-[767px]:aspect-square max-[767px]:p-2 min-[768px]:w-auto"
+        className="flex items-center justify-center gap-1 rounded-md bg-light-background-01 dark:bg-dark-decorative-01 px-4 py-2 text-sm font-semibold text-light-secondary dark:text-dark-secondary hover:bg-light-background-02 dark:hover:bg-dark-decorative-00 shadow focus:outline-none focus:ring-1 focus:ring-light-border-01 dark:focus:ring-dark-border-01 disabled:cursor-wait disabled:opacity-50 max-[767px]:aspect-square max-[767px]:p-2 min-[768px]:w-auto"
         aria-label={urlCopied ? 'URL copied to clipboard' : buttonLabel}
         title={urlCopied ? 'URL copied to clipboard' : buttonTooltip}
       >
