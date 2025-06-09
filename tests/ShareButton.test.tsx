@@ -1,7 +1,7 @@
 import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { PublishButton } from '../app/components/ResultPreview/PublishButton';
+import { ShareButton } from '../app/components/ResultPreview/ShareButton';
 
 // Mock the SVG icon component
 vi.mock('../app/components/HeaderContent/SvgIcons', () => ({
@@ -10,7 +10,7 @@ vi.mock('../app/components/HeaderContent/SvgIcons', () => ({
   ),
 }));
 
-describe('PublishButton', () => {
+describe('ShareButton', () => {
   const mockOnClick = vi.fn();
 
   beforeEach(() => {
@@ -18,7 +18,7 @@ describe('PublishButton', () => {
   });
 
   it('renders with default props', () => {
-    render(<PublishButton onClick={mockOnClick} isPublishing={false} urlCopied={false} />);
+    render(<ShareButton onClick={mockOnClick} isPublishing={false} urlCopied={false} />);
 
     // Button should be enabled and show the publish icon
     const button = screen.getByRole('button');
@@ -36,7 +36,7 @@ describe('PublishButton', () => {
 
   it('renders with hasPublishedUrl=true', () => {
     render(
-      <PublishButton
+      <ShareButton
         onClick={mockOnClick}
         isPublishing={false}
         urlCopied={false}
@@ -54,7 +54,7 @@ describe('PublishButton', () => {
   });
 
   it('shows publishing state', () => {
-    render(<PublishButton onClick={mockOnClick} isPublishing={true} urlCopied={false} />);
+    render(<ShareButton onClick={mockOnClick} isPublishing={true} urlCopied={false} />);
 
     // Button should be disabled when publishing
     const button = screen.getByRole('button');
@@ -71,7 +71,7 @@ describe('PublishButton', () => {
   });
 
   it('shows URL copied state', () => {
-    render(<PublishButton onClick={mockOnClick} isPublishing={false} urlCopied={true} />);
+    render(<ShareButton onClick={mockOnClick} isPublishing={false} urlCopied={true} />);
 
     // Should show URL copied text
     expect(screen.getByText('URL copied')).toBeInTheDocument();
@@ -91,7 +91,7 @@ describe('PublishButton', () => {
   });
 
   it('calls onClick when clicked', () => {
-    render(<PublishButton onClick={mockOnClick} isPublishing={false} urlCopied={false} />);
+    render(<ShareButton onClick={mockOnClick} isPublishing={false} urlCopied={false} />);
 
     // Click the button
     const button = screen.getByRole('button');
@@ -102,7 +102,7 @@ describe('PublishButton', () => {
   });
 
   it('does not call onClick when disabled', () => {
-    render(<PublishButton onClick={mockOnClick} isPublishing={true} urlCopied={false} />);
+    render(<ShareButton onClick={mockOnClick} isPublishing={true} urlCopied={false} />);
 
     // Try to click the disabled button
     const button = screen.getByRole('button');
@@ -116,9 +116,7 @@ describe('PublishButton', () => {
     // Create a ref
     const ref = React.createRef<HTMLButtonElement>();
 
-    render(
-      <PublishButton ref={ref} onClick={mockOnClick} isPublishing={false} urlCopied={false} />
-    );
+    render(<ShareButton ref={ref} onClick={mockOnClick} isPublishing={false} urlCopied={false} />);
 
     // The ref should be attached to the button
     expect(ref.current).not.toBeNull();

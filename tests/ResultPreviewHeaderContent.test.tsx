@@ -52,8 +52,8 @@ vi.mock('../app/components/ResultPreview/ViewControls', () => ({
   },
 }));
 
-vi.mock('../app/components/ResultPreview/PublishButton', () => ({
-  PublishButton: vi
+vi.mock('../app/components/ResultPreview/ShareButton', () => ({
+  ShareButton: vi
     .fn()
     .mockImplementation(
       ({
@@ -392,7 +392,7 @@ describe('ResultPreviewHeaderContent', () => {
     // The functionality is already covered by other tests
   });
 
-  it('passes publishedAppUrl to PublishButton when available', () => {
+  it('passes publishedAppUrl to ShareButton when available', () => {
     // Skip this test since we've encountered issues with the mocking of the ref
     // The functionality is already covered by other tests
   });

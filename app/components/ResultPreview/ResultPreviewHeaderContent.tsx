@@ -5,7 +5,7 @@ import type { ViewType, ViewControlsType } from '../../utils/ViewState';
 // import { useViewState } from '../../utils/ViewState'; // useViewState is now lifted to home.tsx
 import { BackButton } from './BackButton';
 import { ViewControls } from './ViewControls';
-import { PublishButton } from './PublishButton';
+import { ShareButton } from './ShareButton';
 import { usePublish } from './usePublish';
 import { ShareModal } from './ShareModal';
 
@@ -102,7 +102,7 @@ const ResultPreviewHeaderContent: React.FC<ResultPreviewHeaderContentProps> = ({
         <div className="flex items-center">
           {showViewControls && previewReady && (
             <div className="mr-2">
-              <PublishButton
+              <ShareButton
                 ref={publishButtonRef}
                 onClick={toggleShareModal}
                 isPublishing={isPublishing}
