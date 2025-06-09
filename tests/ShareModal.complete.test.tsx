@@ -148,13 +148,13 @@ describe('ShareModal', () => {
       />
     );
 
-    // Should show the loading spinner
-    const spinner = screen.getByLabelText('Publishing in progress');
-    expect(spinner).toBeInTheDocument();
+    // Should show animated gradient class
+    const publishButton = screen.getByRole('menuitem', { name: /publish app/i });
+    expect(publishButton).toHaveClass('animate-gradient-x');
 
     // Publish button should be disabled
-    const publishButton = screen.getByRole('menuitem', { name: /publish app/i });
-    expect(publishButton).toBeDisabled();
+    const publishButtonDisabled = screen.getByRole('menuitem', { name: /publish app/i });
+    expect(publishButtonDisabled).toBeDisabled();
   });
 
   it('shows loading state when updating', () => {
@@ -169,13 +169,13 @@ describe('ShareModal', () => {
       />
     );
 
-    // Should show the loading spinner
-    const spinner = screen.getByLabelText('Publishing in progress');
-    expect(spinner).toBeInTheDocument();
+    // Should show animated gradient class
+    const updateButton = screen.getByText('Update Code').closest('button');
+    expect(updateButton).toHaveClass('animate-gradient-x');
 
     // Update button should be disabled
-    const updateButton = screen.getByText('Update Code').closest('button');
-    expect(updateButton).toBeDisabled();
+    const updateButtonDisabled = screen.getByText('Update Code').closest('button');
+    expect(updateButtonDisabled).toBeDisabled();
   });
 
   it('calls onClose when clicking outside the modal', () => {

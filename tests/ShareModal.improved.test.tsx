@@ -155,12 +155,10 @@ describe('ShareModal', () => {
     const publishButton = screen.getByText('Publish App').closest('button');
     expect(publishButton).toBeInTheDocument();
 
-    // Spinner should be inside the button
-    const spinnerInButton = publishButton?.querySelector('svg');
-    expect(spinnerInButton).not.toBeNull();
-
     // Publish button should be disabled
     expect(publishButton).toBeDisabled();
+
+    expect(publishButton).toHaveClass('animate-gradient-x');
   });
 
   it('shows loading state when updating', () => {
@@ -182,9 +180,7 @@ describe('ShareModal', () => {
     // Update button should be disabled
     expect(updateButton).toBeDisabled();
 
-    // Should have a spinner
-    const spinner = document.querySelector('svg.animate-spin');
-    expect(spinner).not.toBeNull();
+    expect(updateButton).toHaveClass('animate-gradient-x');
   });
 
   it('calls onClose when clicking outside the modal', () => {
