@@ -212,13 +212,17 @@ export function ShareModal({
               type="button"
               onClick={handlePublish}
               disabled={isPublishing}
-              className={`flex w-full items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-indigo-500 via-violet-500 to-fuchsia-500 px-4 py-2 text-sm md:text-base font-bold text-white shadow-lg transition-all duration-300 hover:from-violet-500 hover:via-pink-500 hover:to-orange-500 hover:shadow-xl hover:scale-105 focus:outline-none focus:ring-4 focus:ring-violet-400/50 disabled:cursor-not-allowed disabled:opacity-60 dark:from-indigo-400 dark:via-violet-400 dark:to-fuchsia-400 ${isPublishing ? 'animate-gradient-x' : ''}`}
+              className={`flex w-full items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-indigo-500 via-violet-500 to-fuchsia-500 px-4 py-2 text-sm font-bold text-white shadow-lg transition-all duration-300 hover:scale-105 hover:from-violet-500 hover:via-pink-500 hover:to-orange-500 hover:shadow-xl focus:ring-4 focus:ring-violet-400/50 focus:outline-none disabled:cursor-not-allowed disabled:opacity-60 md:text-base dark:from-indigo-400 dark:via-violet-400 dark:to-fuchsia-400 ${isPublishing ? 'animate-gradient-x' : ''}`}
               role="menuitem"
             >
               <span className="flex items-center gap-3">
-                <span role="img" aria-label="disk">💽</span>
+                <span role="img" aria-label="disk">
+                  💽
+                </span>
                 Publish App
-                <span role="img" aria-label="disk">💽</span>
+                <span role="img" aria-label="disk">
+                  💽
+                </span>
               </span>
               {/* animated background indicates progress */}
             </button>
