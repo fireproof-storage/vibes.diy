@@ -188,6 +188,7 @@ describe('usePublish Hook', () => {
       prompt: 'Create a test app', // First user message
       updatePublishedUrl: mockUpdatePublishedUrl,
       userId: 'test-user-id',
+      token: 'test-token',
     });
 
     // Verify state updates

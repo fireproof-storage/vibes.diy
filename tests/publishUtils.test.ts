@@ -1,6 +1,6 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { publishApp } from '../app/utils/publishUtils';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { normalizeComponentExports } from '../app/utils/normalizeComponentExports';
+import { publishApp } from '../app/utils/publishUtils';
 
 // Mock dependencies
 vi.mock('use-fireproof');
@@ -107,6 +107,7 @@ describe('publishApp', () => {
       userId,
       prompt: testPrompt,
       updatePublishedUrl,
+      token: 'test-jwt-token',
     });
 
     // Assert: Check that fetch was called and included remixOf in the payload
@@ -138,6 +139,7 @@ describe('publishApp', () => {
       title: testTitle,
       userId: 'test-user-id',
       prompt: 'Create an original app',
+      token: null,
     });
 
     // Assert: Check that fetch was called with null remixOf
@@ -161,6 +163,7 @@ describe('publishApp', () => {
       code: testCode,
       userId: 'test-user-id',
       prompt: 'Create an app with screenshot',
+      token: 'test-token',
     });
 
     // Assert: Check that the screenshot was included
@@ -171,5 +174,50 @@ describe('publishApp', () => {
 
     // Verify screenshot is included in the payload
     expect(payload).toHaveProperty('screenshot', 'mockScreenshotBase64Data');
+  });
+
+  it('includes Authorization header when token is provided', async () => {
+    // Arrange
+    const sessionId = 'test-session-id';
+    const testCode = 'const App = () => <div>Authenticated App</div>; export default App;';
+    const testToken = 'test-jwt-token-123';
+
+    // Act: Call the publishApp function with token
+    await publishApp({
+      sessionId,
+      code: testCode,
+      userId: 'test-user-id',
+      prompt: 'Create an app with authentication',
+      token: testToken,
+    });
+
+    // Assert: Check that the Authorization header was included
+    expect(mockFetch).toHaveBeenCalled();
+
+    const [_url, options] = mockFetch.mock.calls[0];
+    expect(options.headers).toHaveProperty('Authorization', `Bearer ${testToken}`);
+    expect(options.headers).toHaveProperty('Content-Type', 'application/json');
+  });
+
+  it('does not include Authorization header when token is null', async () => {
+    // Arrange
+    const sessionId = 'test-session-id';
+    const testCode = 'const App = () => <div>Unauthenticated App</div>; export default App;';
+
+    // Act: Call the publishApp function without token
+    await publishApp({
+      sessionId,
+      code: testCode,
+      userId: 'test-user-id',
+      prompt: 'Create an app without authentication',
+      token: null,
+    });
+
+    // Assert: Check that no Authorization header was included
+    expect(mockFetch).toHaveBeenCalled();
+
+    const [_url, options] = mockFetch.mock.calls[0];
+    expect(options.headers).not.toHaveProperty('Authorization');
+    expect(options.headers).toHaveProperty('Content-Type', 'application/json');
   });
 });

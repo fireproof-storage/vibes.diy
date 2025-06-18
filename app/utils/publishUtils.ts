@@ -3,9 +3,9 @@
  */
 
 import { fireproof } from 'use-fireproof';
-import { normalizeComponentExports } from './normalizeComponentExports';
-import { getSessionDatabaseName, updateUserVibespaceDoc } from './databaseManager';
 import { API_BASE_URL } from '../config/env';
+import { getSessionDatabaseName, updateUserVibespaceDoc } from './databaseManager';
+import { normalizeComponentExports } from './normalizeComponentExports';
 
 /**
  * Transform bare import statements to use esm.sh URLs
@@ -39,6 +39,7 @@ export async function publishApp({
   userId,
   prompt,
   updatePublishedUrl,
+  token,
 }: {
   sessionId?: string;
   code: string;
@@ -46,6 +47,7 @@ export async function publishApp({
   userId?: string;
   prompt?: string;
   updatePublishedUrl?: (url: string) => Promise<void>;
+  token?: string | null;
 }): Promise<string | undefined> {
   try {
     if (!code || !sessionId) {
@@ -110,11 +112,19 @@ export async function publishApp({
     // Transform imports to use esm.sh
     const transformedCode = transformImports(normalizeComponentExports(normalizedCode));
 
+    // Prepare headers with optional Authorization
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+    };
+
+    // Add Authorization header if token is provided
+    if (token) {
+      headers.Authorization = `Bearer ${token}`;
+    }
+
     const response = await fetch(`${API_BASE_URL}/api/apps`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers,
       body: JSON.stringify({
         chatId: sessionId,
         userId,
@@ -134,7 +144,7 @@ export async function publishApp({
     const data = await response.json();
     if (data.success && data.app?.slug) {
       // Construct the app URL from the response data
-      const appUrl = data.appUrl || `https://${data.app.slug}.vibecode.garden`;
+      const appUrl = data.appUrl || `https://${data.app.slug}.${new URL(API_BASE_URL).hostname}`;
 
       // Get the user's vibespace database to check for existing data
       const userVibespaceDb = fireproof(`vu-${userId}`);

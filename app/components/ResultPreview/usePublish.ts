@@ -27,7 +27,7 @@ export const usePublish = ({
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
   const [publishedAppUrl, setPublishedAppUrl] = useState<string | undefined>(initialPublishedUrl);
 
-  const { userPayload } = useAuth();
+  const { userPayload, token } = useAuth();
 
   // Update publishedAppUrl when the initial URL changes
   useEffect(() => {
@@ -67,6 +67,7 @@ export const usePublish = ({
         prompt,
         updatePublishedUrl,
         userId: userPayload?.userId,
+        token,
       });
 
       if (appUrl) {
