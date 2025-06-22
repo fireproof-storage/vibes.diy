@@ -741,10 +741,11 @@ beforeEach(() => {
   });
 
   vi.mocked(getCredits).mockImplementation(async () => {
+    // Provide ample credits to avoid triggering needsNewKey in tests
     return {
-      available: 0.005,
-      usage: 0.005,
-      limit: 0.01,
+      available: 100,
+      usage: 0,
+      limit: 100,
     };
   });
 
