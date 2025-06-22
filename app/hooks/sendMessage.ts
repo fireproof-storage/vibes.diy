@@ -77,9 +77,9 @@ export async function sendMessage(
     setNeedsLogin(true, 'sendMessage not authenticated');
   }
 
-  if (typeof textOverride === 'string') {
+  if (typeof textOverride === 'string' && !skipSubmit) {
     // Update the transient userMessage state so UI reflects any override text
-
+    // Only update when we are not in retry mode (skipSubmit === false)
     mergeUserMessage({ text: textOverride });
   }
 
@@ -92,6 +92,8 @@ export async function sendMessage(
   // message (e.g. after login / API key refresh)
   if (!skipSubmit) {
     await submitUserMessage();
+    // Clear the chat input once the user message has been submitted
+    setInput('');
   }
 
   setIsStreaming(true);
