@@ -33,7 +33,7 @@ export const quickSuggestions: Suggestion[] = [
   },
   {
     label: 'Cook',
-    text: 'Make an AI receipe generator that uses emoji for ingredients. Give me an AI critic who will taste the recipes and score them.'
+    text: 'Make an AI receipe generator that uses emoji for ingredients. Give me an AI critic who will taste the recipes and score them.',
   },
   {
     label: 'Schedule',
@@ -57,15 +57,15 @@ export const quickSuggestions: Suggestion[] = [
   },
   {
     label: 'Color Picker',
-    text: 'Give me a color picker specifically for maritime and ocean colors. When I\'m happy with a color, use AI to name it. Also let me type in a color name and have AI pick an actual color.',
+    text: "Give me a color picker specifically for maritime and ocean colors. When I'm happy with a color, use AI to name it. Also let me type in a color name and have AI pick an actual color.",
   },
   {
     label: 'Landscape',
-    text: "Show me three quotes of famous landscape descriptions from American literature. Give me the option to render those landscapes with images using AI."
+    text: 'Show me three quotes of famous landscape descriptions from American literature. Give me the option to render those landscapes with images using AI.',
   },
   {
     label: 'Cat Portrait',
-    text: 'Let me pick an emoji from a small board. Generate a photorealistic portrait of orange Persian tabby cat incorporating the selected emoji.'
+    text: 'Let me pick an emoji from a small board. Generate a photorealistic portrait of orange Persian tabby cat incorporating the selected emoji.',
   },
   {
     label: 'Music',
@@ -93,7 +93,7 @@ export const quickSuggestions: Suggestion[] = [
   },
   {
     label: '3D',
-    text: 'Use three js to create a 3D scene of Paul Cézanne\'s The Basket of Apples.'
+    text: "Use three js to create a 3D scene of Paul Cézanne's The Basket of Apples.",
   },
   {
     label: 'Wildcard',

@@ -1,7 +1,7 @@
-import { useState, useCallback, useRef } from 'react';
-import { createOrUpdateKeyViaEdgeFunction } from '../services/apiKeyService';
-
+import { useCallback, useRef, useState } from 'react';
+import { useAuth } from '../contexts/AuthContext';
 import type { ApiKeyResponse } from '../services/apiKeyService';
+import { createOrUpdateKeyViaEdgeFunction } from '../services/apiKeyService';
 
 /**
  * Hook for API key management that uses dynamic key provisioning
@@ -12,6 +12,8 @@ export function useApiKey(userId?: string) {
   const [apiKey, setApiKey] = useState<{ key: string; hash: string } | null>(null);
   const [error, setError] = useState<Error | null>(null);
   const loadingPromiseRef = useRef<Promise<{ key: string; hash: string }> | null>(null);
+  const { token } = useAuth(); // Get the auth token
+
   // Always use a consistent storage key regardless of user ID
   const storageKey = 'vibes-openrouter-key';
 
@@ -51,7 +53,11 @@ export function useApiKey(userId?: string) {
         }
       }
 
-      const apiResponse: ApiKeyResponse = await createOrUpdateKeyViaEdgeFunction(userId, hashToUse);
+      const apiResponse: ApiKeyResponse = await createOrUpdateKeyViaEdgeFunction(
+        userId,
+        hashToUse,
+        token
+      );
 
       if (!apiResponse.success) {
         const err = new Error(apiResponse.error || 'Failed to obtain API key');
@@ -89,7 +95,7 @@ export function useApiKey(userId?: string) {
       setApiKey(resultingKey);
       return resultingKey;
     },
-    [userId, apiKey, storageKey, setApiKey, setError]
+    [userId, apiKey, storageKey, setApiKey, setError, token]
   );
 
   const ensureApiKey = useCallback(async (): Promise<{ key: string; hash: string }> => {

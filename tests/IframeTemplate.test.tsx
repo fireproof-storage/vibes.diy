@@ -20,6 +20,16 @@ vi.mock('../app/hooks/useApiKey', () => ({
   }),
 }));
 
+vi.mock('../app/contexts/AuthContext', () => ({
+  useAuth: () => ({
+    token: 'test-auth-token',
+    userPayload: { userId: 'test-user-id' },
+    isAuthenticated: true,
+    login: vi.fn(),
+    logout: vi.fn(),
+  }),
+}));
+
 describe('Iframe Template', () => {
   it('contains proper APP_CODE placeholder format', () => {
     // Verify the template contains the correct APP_CODE placeholder pattern
