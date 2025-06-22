@@ -2,33 +2,12 @@ import { renderHook, act, waitFor } from '@testing-library/react';
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { createWrapper } from './setup';
 
-// --- Dynamic mocks for AuthContext and useApiKey ---------------------------
-import * as AuthModule from '../../app/contexts/AuthContext';
+// --- Dynamic mocks for useApiKey ---------------------------
 import * as ApiKeyModule from '../../app/hooks/useApiKey';
 
 // Track mutable auth state between renders
 let isAuthenticated = false;
 const setNeedsLoginMock = vi.fn();
-
-// Spy on useAuth so we can control return values in each test
-vi.spyOn(AuthModule, 'useAuth').mockImplementation(() => ({
-  token: 'mock-token',
-  isAuthenticated,
-  isLoading: false,
-  userPayload: {
-    userId: 'test-user-id',
-    exp: 0,
-    iat: 0,
-    iss: '',
-    aud: '',
-    tenants: [],
-    ledgers: [],
-  },
-  needsLogin: !isAuthenticated,
-  setNeedsLogin: setNeedsLoginMock,
-  checkAuthStatus: vi.fn(),
-  processToken: vi.fn(),
-}));
 
 // Control refreshKey success / failure
 let refreshKeySucceeds = true;
@@ -50,6 +29,7 @@ vi.spyOn(ApiKeyModule, 'useApiKey').mockImplementation(
 
 // Import the hook *after* mocks are set up
 import { useSimpleChat } from '../../app/hooks/useSimpleChat';
+import * as AuthModule from '../../app/contexts/AuthContext';
 
 // ---------------------------------------------------------------------------
 
@@ -57,6 +37,29 @@ describe('useSimpleChat handlePostLogin effect', () => {
   beforeEach(() => {
     setNeedsLoginMock.mockReset();
     refreshKeyMock.mockClear();
+    // Reset flags to default state
+    isAuthenticated = false;
+    refreshKeySucceeds = true;
+
+    // Override the setup mock with our dynamic mock
+    vi.spyOn(AuthModule, 'useAuth').mockImplementation(() => ({
+      token: 'mock-token',
+      isAuthenticated,
+      isLoading: false,
+      userPayload: {
+        userId: 'test-user-id',
+        exp: 0,
+        iat: 0,
+        iss: '',
+        aud: '',
+        tenants: [],
+        ledgers: [],
+      },
+      needsLogin: !isAuthenticated,
+      setNeedsLogin: setNeedsLoginMock,
+      checkAuthStatus: vi.fn(),
+      processToken: vi.fn(),
+    }));
   });
 
   afterEach(() => {
@@ -88,10 +91,10 @@ describe('useSimpleChat handlePostLogin effect', () => {
   });
 
   it('shows login again when refreshKey fails after authentication', async () => {
+    // Simulate refreshKey throwing BEFORE rendering the hook
+    refreshKeySucceeds = false;
     // user is logged IN
     isAuthenticated = true;
-    // Simulate refreshKey throwing
-    refreshKeySucceeds = false;
 
     const { result } = renderHook(() => useSimpleChat('test-session-id'), {
       wrapper: createWrapper(),
