@@ -8,11 +8,12 @@ import { createOrUpdateKeyViaEdgeFunction } from '../services/apiKeyService';
  * @param userId - Optional user ID for associating keys with specific users
  * @returns Object containing apiKey, error, refreshKey, and ensureApiKey states
  */
-export function useApiKey(userId?: string) {
+export function useApiKey() {
   const [apiKey, setApiKey] = useState<{ key: string; hash: string } | null>(null);
   const [error, setError] = useState<Error | null>(null);
   const loadingPromiseRef = useRef<Promise<{ key: string; hash: string }> | null>(null);
-  const { token } = useAuth(); // Get the auth token
+  const { token, userPayload } = useAuth(); // Get auth token and payload
+  const userId = userPayload?.userId;
 
   // Always use a consistent storage key regardless of user ID
   const storageKey = 'vibes-openrouter-key';
@@ -51,6 +52,10 @@ export function useApiKey(userId?: string) {
             /* ignore JSON parse errors */
           }
         }
+      }
+
+      if (!token || !userId) {
+        throw new Error('User not authenticated');
       }
 
       const apiResponse: ApiKeyResponse = await createOrUpdateKeyViaEdgeFunction(

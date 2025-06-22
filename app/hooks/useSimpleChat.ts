@@ -40,7 +40,7 @@ export function useSimpleChat(sessionId: string | undefined): ChatState {
   // and logged-in users will get proper credit assignment based on their ID
   // Using the useApiKey hook to get API key related functionality
   // Note: ensureApiKey is the key function we need for lazy loading
-  const { ensureApiKey, refreshKey } = useApiKey(userId);
+  const { ensureApiKey, refreshKey } = useApiKey();
 
   // Get session data
   const {
