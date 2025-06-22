@@ -15,7 +15,12 @@ async function createApiKey() {
   try {
     // Mock user ID for testing
     const testUserId = `test-${Date.now()}`;
-    const { key: keyData } = await createOrUpdateKeyViaEdgeFunction(testUserId);
+    // Pass undefined for hash and a dummy token for testing purposes
+    const { key: keyData } = await createOrUpdateKeyViaEdgeFunction(
+      testUserId,
+      undefined,
+      'test-token'
+    );
 
     console.log('API key created successfully:');
     console.log(`- Hash: ${keyData.hash}`);

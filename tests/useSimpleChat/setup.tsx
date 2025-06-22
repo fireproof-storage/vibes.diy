@@ -1,6 +1,16 @@
 import { cleanup } from '@testing-library/react';
 import type { ReactNode } from 'react';
 import { afterEach, beforeEach, vi } from 'vitest';
+
+// IMPORTANT: Mock call-ai BEFORE any modules that might import it
+let callCount = 0;
+vi.mock('call-ai', () => ({
+  callAI: vi.fn(async () => {
+    // Return a different value on subsequent calls to simulate state change
+    callCount += 1;
+    return callCount === 1 ? 'Mock Title' : 'Updated Mock Title';
+  }),
+}));
 import { AuthProvider } from '../../app/contexts/AuthContext';
 
 // Mock AuthContext to avoid state updates during tests
@@ -61,6 +71,24 @@ import { createOrUpdateKeyViaEdgeFunction } from '../../app/services/apiKeyServi
 
 // Mock the apiKeyService module
 vi.mock('../../app/services/apiKeyService');
+
+// Mock the utils/streamHandler to avoid real streaming and loops
+vi.mock('../../app/utils/streamHandler', () => ({
+  streamAI: vi.fn(
+    async (
+      _model: string,
+      _sys: string,
+      _hist: any[],
+      _user: string,
+      onContent: (c: string) => void
+    ) => {
+      // simulate streaming updates
+      onContent('Mock stream part 1');
+      onContent('Mock stream part 2');
+      return 'Mock stream part 1Mock stream part 2';
+    }
+  ),
+}));
 
 // Mock the env module
 vi.mock('../../app/config/env', () => ({
