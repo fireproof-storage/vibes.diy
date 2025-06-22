@@ -172,7 +172,7 @@ export function useSimpleChat(sessionId: string | undefined): ChatState {
    * @param textOverride Optional text to use instead of the current userMessage
    */
   const sendMessage = useCallback(
-    (textOverride?: string) => {
+    (textOverride?: string, skipSubmit: boolean = false) => {
       const ctx: SendMessageContext = {
         userMessage,
         mergeUserMessage,
@@ -199,7 +199,7 @@ export function useSimpleChat(sessionId: string | undefined): ChatState {
         titleModel: TITLE_MODEL,
         isAuthenticated,
       };
-      return sendChatMessage(ctx, textOverride);
+      return sendChatMessage(ctx, textOverride, skipSubmit);
     },
     [
       userMessage.text,
@@ -240,8 +240,8 @@ export function useSimpleChat(sessionId: string | undefined): ChatState {
 
         // If we have a pending user doc that hasn't been processed, retry send
         if (pendingUserDoc?.text.trim()) {
-          // Resend the message using current userMessage contents
-          sendMessage();
+          // Resend the message using the pending user message text but skip resubmitting it to the DB
+          sendMessage(pendingUserDoc.text, true);
         }
       } catch (error) {
         console.error('Failed to refresh API key after login:', error);

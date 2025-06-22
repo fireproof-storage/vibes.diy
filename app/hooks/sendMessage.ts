@@ -35,7 +35,11 @@ export interface SendMessageContext {
   isAuthenticated: boolean;
 }
 
-export async function sendMessage(ctx: SendMessageContext, textOverride?: string): Promise<void> {
+export async function sendMessage(
+  ctx: SendMessageContext,
+  textOverride?: string,
+  skipSubmit: boolean = false
+): Promise<void> {
   const {
     userMessage,
     mergeUserMessage,
@@ -63,7 +67,7 @@ export async function sendMessage(ctx: SendMessageContext, textOverride?: string
     isAuthenticated,
   } = ctx;
 
-  const promptText = textOverride || userMessage.text;
+  const promptText = typeof textOverride === 'string' ? textOverride : userMessage.text;
   trackChatInputClick(promptText.length);
 
   if (!promptText.trim()) return;
@@ -73,7 +77,9 @@ export async function sendMessage(ctx: SendMessageContext, textOverride?: string
     setNeedsLogin(true, 'sendMessage not authenticated');
   }
 
-  if (textOverride) {
+  if (typeof textOverride === 'string') {
+    // Update the transient userMessage state so UI reflects any override text
+
     mergeUserMessage({ text: textOverride });
   }
 
@@ -82,8 +88,11 @@ export async function sendMessage(ctx: SendMessageContext, textOverride?: string
     text: promptText,
   });
 
-  // Always submit the user message first
-  await submitUserMessage();
+  // Always submit the user message first unless we are retrying the same
+  // message (e.g. after login / API key refresh)
+  if (!skipSubmit) {
+    await submitUserMessage();
+  }
 
   setIsStreaming(true);
 
