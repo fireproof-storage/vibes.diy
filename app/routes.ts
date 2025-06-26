@@ -17,6 +17,9 @@ export default [
   route('vibe/:vibeSlug', './routes/vibe.tsx', { id: 'vibe-iframe' }),
   route('legal/privacy', './routes/legal/privacy.tsx', { id: 'privacy-policy' }),
   route('legal/tos', './routes/legal/tos.tsx', { id: 'terms-of-service' }),
-  // This should be last since it's a catch-all with a prefix
-  route(':prefixUserId', './routes/space.tsx', { id: 'user-space' }),
+  // User space routes for usernames starting with ~ or @
+  route('~:userId', './routes/space.tsx', { id: 'user-space-tilde' }),
+  route('@:userId', './routes/space.tsx', { id: 'user-space-at' }),
+  // 404 catch-all route - must be last
+  route('*', './routes/$.tsx', { id: 'not-found' }),
 ] satisfies RouteConfig;
