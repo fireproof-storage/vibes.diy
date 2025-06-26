@@ -4,6 +4,7 @@ export default [
   index('./routes/home.tsx'),
   // This route is only needed for dev server to prevent 404 flash
   route('index.html', './routes/home.tsx', { id: 'index-html' }),
+
   route('chat/:sessionId/:title', './routes/home.tsx', { id: 'chat' }),
   route('chat/:sessionId/:title/app', './routes/home.tsx', { id: 'chat-app' }),
   route('chat/:sessionId/:title/code', './routes/home.tsx', { id: 'chat-code' }),
@@ -17,9 +18,6 @@ export default [
   route('vibe/:vibeSlug', './routes/vibe.tsx', { id: 'vibe-iframe' }),
   route('legal/privacy', './routes/legal/privacy.tsx', { id: 'privacy-policy' }),
   route('legal/tos', './routes/legal/tos.tsx', { id: 'terms-of-service' }),
-  // User space routes for usernames starting with ~ or @
-  route('~:userId', './routes/space.tsx', { id: 'user-space-tilde' }),
-  route('@:userId', './routes/space.tsx', { id: 'user-space-at' }),
   // 404 catch-all route - must be last
   route('*', './routes/$.tsx', { id: 'not-found' }),
 ] satisfies RouteConfig;

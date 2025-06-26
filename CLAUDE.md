@@ -7,7 +7,11 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ### Development
 
 - `pnpm dev` - Start development server with Netlify functions (primary dev command)
-- `pnpm check` - Format and test
+- `pnpm check` - Format, typecheck, and test (use this for general development)
+- `pnpm test -- filename.test.tsx` - Run a specific test file
+- `pnpm typecheck` - Run TypeScript type checking only
+
+**Important**: Always run `pnpm check` unless you are targeting a single specific test file.
 
 ## Architecture Overview
 
