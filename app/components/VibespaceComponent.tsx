@@ -1,3 +1,4 @@
+import React, { useEffect, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
 import SimpleAppLayout from './SimpleAppLayout';
 import VibesDIYLogo from './VibesDIYLogo';
@@ -28,127 +29,280 @@ interface VibespaceComponentProps {
 }
 
 function StarfieldEmpty({ userId, prefix, userExists }: { userId: string; prefix: string; userExists: boolean }) {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const animationRef = useRef<number>(null);
+  const starsRef = useRef<any[]>([]);
+  
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+    
+    // Set canvas size
+    const resizeCanvas = () => {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    };
+    resizeCanvas();
+    window.addEventListener('resize', resizeCanvas);
+    
+    // Initialize star field - 3000 stars with shapes
+    const initStars = () => {
+      starsRef.current = [];
+      for (let i = 0; i < 3000; i++) {
+        starsRef.current.push({
+          x: (Math.random() - 0.5) * 3000,
+          y: (Math.random() - 0.5) * 3000,
+          z: Math.random() * 1500 + 1,
+          prevX: 0,
+          prevY: 0,
+          color: Math.random() > 0.7 ? 'color' : 'white',
+          hue: Math.random() * 360,
+          shape: ['circle', 'triangle', 'star'][Math.floor(Math.random() * 3)],
+          rotation: Math.random() * Math.PI * 2
+        });
+      }
+    };
+    initStars();
+    
+    // Shape drawing functions
+    const drawTriangle = (ctx: CanvasRenderingContext2D, x: number, y: number, size: number) => {
+      ctx.beginPath();
+      ctx.moveTo(x, y - size);
+      ctx.lineTo(x - size * 0.866, y + size * 0.5);
+      ctx.lineTo(x + size * 0.866, y + size * 0.5);
+      ctx.closePath();
+      ctx.fill();
+    };
+    
+    const drawStar = (ctx: CanvasRenderingContext2D, x: number, y: number, size: number) => {
+      const spikes = 5;
+      const outerRadius = size;
+      const innerRadius = size * 0.4;
+      
+      ctx.beginPath();
+      for (let i = 0; i < spikes * 2; i++) {
+        const radius = i % 2 === 0 ? outerRadius : innerRadius;
+        const angle = (i * Math.PI) / spikes;
+        const xPos = x + Math.cos(angle) * radius;
+        const yPos = y + Math.sin(angle) * radius;
+        if (i === 0) ctx.moveTo(xPos, yPos);
+        else ctx.lineTo(xPos, yPos);
+      }
+      ctx.closePath();
+      ctx.fill();
+    };
+    
+    // Hyperdrive animation loop
+    const animate = () => {
+      // Subtle color-tinted fade
+      ctx.fillStyle = 'rgba(2, 2, 8, 0.08)';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      
+      const centerX = canvas.width / 2;
+      const centerY = canvas.height / 2;
+      
+      starsRef.current.forEach(star => {
+        star.prevX = (star.x / star.z) * canvas.width + centerX;
+        star.prevY = (star.y / star.z) * canvas.height + centerY;
+        
+        // Variable speed - closer stars move faster
+        const speed = 20 + (1000 - star.z) / 50;
+        star.z -= speed;
+        star.rotation += 0.1;
+        
+        if (star.z <= 1) {
+          star.x = (Math.random() - 0.5) * 3000;
+          star.y = (Math.random() - 0.5) * 3000;
+          star.z = 1500;
+          star.color = Math.random() > 0.7 ? 'color' : 'white';
+          star.hue = Math.random() * 360;
+          star.shape = ['circle', 'triangle', 'star'][Math.floor(Math.random() * 3)];
+          star.rotation = Math.random() * Math.PI * 2;
+        }
+        
+        const x = (star.x / star.z) * canvas.width + centerX;
+        const y = (star.y / star.z) * canvas.height + centerY;
+        
+        // Dynamic sizing based on speed and distance
+        const size = Math.max(0.1, (1500 - star.z) / 300 * 4);
+        const opacity = Math.min((1500 - star.z) / 1500, 1);
+        const intensity = Math.min(speed / 40, 1);
+        
+        // Epic trail effects
+        const trailLength = size * 2;
+        const trailOpacity = opacity * intensity * 0.8;
+        
+        if (star.color === 'color') {
+          // Very subtle colored star trails
+          const trailColor = `hsla(${star.hue}, 8%, 85%, ${trailOpacity})`;
+          ctx.strokeStyle = trailColor;
+          ctx.lineWidth = Math.max(1, trailLength * 0.6);
+          ctx.lineCap = 'round';
+          ctx.beginPath();
+          ctx.moveTo(star.prevX, star.prevY);
+          ctx.lineTo(x, y);
+          ctx.stroke();
+          
+          // Subtle colored star core
+          const starColor = `hsla(${star.hue}, 6%, 90%, ${opacity})`;
+          ctx.fillStyle = starColor;
+          ctx.shadowBlur = size * 2;
+          ctx.shadowColor = starColor;
+        } else {
+          // White star trails
+          ctx.strokeStyle = `rgba(200, 220, 255, ${trailOpacity})`;
+          ctx.lineWidth = Math.max(1, trailLength * 0.4);
+          ctx.lineCap = 'round';
+          ctx.beginPath();
+          ctx.moveTo(star.prevX, star.prevY);
+          ctx.lineTo(x, y);
+          ctx.stroke();
+          
+          // White star core with subtle blue tint
+          ctx.fillStyle = `rgba(255, 255, 255, ${opacity})`;
+          ctx.shadowBlur = size * 1.5;
+          ctx.shadowColor = `rgba(210, 220, 255, ${opacity * 0.8})`;
+        }
+        
+        // Save ctx for rotation
+        ctx.save();
+        ctx.translate(x, y);
+        ctx.rotate(star.rotation);
+        ctx.translate(-x, -y);
+        
+        // Draw the star shape
+        switch (star.shape) {
+          case 'circle':
+            ctx.beginPath();
+            ctx.arc(x, y, size, 0, Math.PI * 2);
+            ctx.fill();
+            break;
+          case 'triangle':
+            drawTriangle(ctx, x, y, size);
+            break;
+          case 'star':
+            drawStar(ctx, x, y, size);
+            break;
+        }
+        
+        ctx.restore();
+        ctx.shadowBlur = 0;
+      });
+      
+      animationRef.current = requestAnimationFrame(animate);
+    };
+    
+    animate();
+    
+    return () => {
+      window.removeEventListener('resize', resizeCanvas);
+      if (animationRef.current) {
+        cancelAnimationFrame(animationRef.current);
+      }
+    };
+  }, []);
+
   return (
-    <div className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden bg-black">
-      {/* Starfield animation */}
-      <div className="absolute inset-0">
-        {Array.from({ length: 100 }).map((_, i) => (
-          <div
-            key={i}
-            className="absolute rounded-full bg-white opacity-80"
-            style={{
-              left: `${Math.random() * 100}%`,
-              top: `${Math.random() * 100}%`,
-              width: `${Math.random() * 3 + 1}px`,
-              height: `${Math.random() * 3 + 1}px`,
-              animation: `starMove ${Math.random() * 20 + 10}s linear infinite`,
-              animationDelay: `${Math.random() * 10}s`,
-            }}
-          />
-        ))}
-      </div>
-
-      {/* Zooming effect overlay */}
-      <div
-        className="absolute inset-0"
-        style={{
-          background: `
-          radial-gradient(circle at center, transparent 0%, rgba(0,0,0,0.3) 50%, rgba(0,0,0,0.8) 100%),
-          radial-gradient(ellipse at center, rgba(255,255,255,0.1) 0%, transparent 70%)
-        `,
-          animation: 'zoom 8s ease-in-out infinite alternate',
-        }}
+    <div className="relative w-screen h-screen bg-black overflow-hidden">
+      {/* White overlay that fades out */}
+      <div className="absolute inset-0 bg-white animate-[fadeOut_0.5s_ease-out_forwards] z-10"></div>
+      
+      <canvas
+        ref={canvasRef}
+        className="absolute inset-0 w-full h-full"
       />
-
-      {/* Content */}
-      <div className="relative z-10 text-center">
-        <div className="mb-8">
-          <VibesDIYLogo height={60} />
-        </div>
-
-        <div className="space-y-6">
-          <h1
-            className="text-4xl font-bold text-white"
-            style={{
-              textShadow: '0 0 20px rgba(255, 255, 255, 0.5), 0 0 40px rgba(255, 255, 255, 0.3)',
-              fontFamily: 'Impact, Arial Black, sans-serif',
-              letterSpacing: '0.1em',
-            }}
-          >
-            {userExists ? 'EMPTY SPACE' : 'SPACE'}
-          </h1>
-          <h2
-            className="text-4xl font-bold text-white"
-            style={{
-              textShadow: '0 0 20px rgba(255, 255, 255, 0.5), 0 0 40px rgba(255, 255, 255, 0.3)',
-              fontFamily: 'Impact, Arial Black, sans-serif',
-              letterSpacing: '0.1em',
-            }}
-          >
-            {userExists ? 'NO VIBES YET' : 'NOT FOUND'}
-          </h2>
-          <div
-            className="mt-8 text-lg text-gray-300"
-            style={{
-              fontFamily: 'Courier New, monospace',
-              textShadow: '0 0 10px rgba(255, 255, 255, 0.3)',
-            }}
-          >
-            {prefix}
-            {userId}
-          </div>
-          {userExists && (
-            <div
-              className="mt-4 text-sm text-gray-400"
-              style={{
-                fontFamily: 'Courier New, monospace',
-                textShadow: '0 0 5px rgba(255, 255, 255, 0.2)',
-              }}
-            >
-              This user exists but hasn't created any vibes yet
-            </div>
-          )}
-        </div>
-
-        <div className="mt-12">
-          <a
-            href="/"
-            className="text-lg tracking-wide text-gray-300 transition-all duration-300 hover:text-white"
-            style={{
-              fontFamily: 'Courier New, monospace',
-              textShadow: '0 0 10px rgba(255, 255, 255, 0.5)',
-            }}
-          >
-            → HOME
-          </a>
+      
+      {/* EMPTY SPACE Text - Black with white shadow */}
+      <div className="absolute inset-0 flex items-center justify-center pointer-events-none overflow-hidden">
+        <div className="whitespace-nowrap animate-[epicMarquee_24s_linear_infinite]">
+          <span className="font-black text-black
+                         [text-shadow:0_0_40px_rgba(255,255,255,1),0_0_80px_rgba(255,255,255,0.9),0_0_120px_rgba(255,255,255,0.8),0_0_200px_rgba(255,255,255,0.6)]
+                         tracking-[0.4em] transform-gpu"
+                style={{
+                  fontSize: 'clamp(8rem, 20vw, 30rem)',
+                  filter: 'brightness(1.3) contrast(1.2)',
+                  WebkitTextStroke: '4px rgba(255,255,255,0.3)'
+                }}>
+            {userExists ? 'EMPTY SPACE' : 'SPACE NOT FOUND'}
+          </span>
         </div>
       </div>
 
-      {/* CSS animations */}
-      <style>{`
-        @keyframes starMove {
+      {/* Instructions overlay */}
+      {userExists && (
+        <div className="absolute bottom-20 left-1/2 transform -translate-x-1/2 text-center pointer-events-none">
+          <div
+            className="text-white font-bold tracking-wider"
+            style={{
+              fontSize: 'clamp(1.5rem, 4vw, 3rem)',
+              textShadow: '0 0 20px rgba(255, 255, 255, 0.8), 0 0 40px rgba(255, 255, 255, 0.5)',
+              fontFamily: 'Impact, Arial Black, sans-serif',
+            }}
+          >
+            STAR ANY PUBLISHED VIBE ON{' '}
+            <a href="/vibes/mine" className="text-blue-200 hover:text-blue-100 pointer-events-auto">
+              /VIBES/MINE
+            </a>{' '}
+            TO LIST IT HERE
+          </div>
+        </div>
+      )}
+
+      {/* User ID display */}
+      <div className="absolute top-20 left-1/2 transform -translate-x-1/2 text-center pointer-events-none">
+        <div
+          className="text-gray-300 font-mono"
+          style={{
+            fontSize: 'clamp(1rem, 3vw, 2rem)',
+            textShadow: '0 0 10px rgba(255, 255, 255, 0.3)',
+          }}
+        >
+          {prefix}{userId}
+        </div>
+      </div>
+
+      {/* Home link */}
+      <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 pointer-events-none">
+        <a
+          href="/"
+          className="text-gray-300 hover:text-white transition-colors font-mono tracking-wide pointer-events-auto"
+          style={{
+            textShadow: '0 0 10px rgba(255, 255, 255, 0.5)',
+          }}
+        >
+          → HOME
+        </a>
+      </div>
+
+      {/* Epic marquee animation */}
+      <style jsx>{`
+        @keyframes epicMarquee {
           0% {
-            transform: translateZ(0) scale(1);
-            opacity: 0;
+            transform: translateX(100%) scale(1);
           }
-          10% {
-            opacity: 1;
+          25% {
+            transform: translateX(50%) scale(1.05);
           }
-          90% {
-            opacity: 1;
+          50% {
+            transform: translateX(0%) scale(1);
+          }
+          75% {
+            transform: translateX(-50%) scale(1.05);
           }
           100% {
-            transform: translateZ(1000px) scale(10);
-            opacity: 0;
+            transform: translateX(-100%) scale(1);
           }
         }
-
-        @keyframes zoom {
+        
+        @keyframes fadeOut {
           0% {
-            transform: scale(1);
+            opacity: 1;
           }
           100% {
-            transform: scale(1.1);
+            opacity: 0;
           }
         }
       `}</style>

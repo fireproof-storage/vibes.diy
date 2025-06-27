@@ -58,13 +58,15 @@ export function VibeCard({
             )}
           </div>
         </div>
-        <button
-          onClick={(e) => onToggleFavorite(vibe.id, e)}
-          className="text-accent-01 ml-2 hover:text-yellow-500 focus:outline-none"
-          aria-label={vibe.favorite ? 'Remove from favorites' : 'Add to favorites'}
-        >
-          <StarIcon filled={vibe.favorite} />
-        </button>
+        {vibe.publishedUrl && (
+          <button
+            onClick={(e) => onToggleFavorite(vibe.id, e)}
+            className="text-accent-01 ml-2 hover:text-yellow-500 focus:outline-none"
+            aria-label={vibe.favorite ? 'Remove from favorites' : 'Add to favorites'}
+          >
+            <StarIcon filled={vibe.favorite} />
+          </button>
+        )}
       </div>
       <div
         onClick={() => onEditClick(vibe.id, vibe.encodedTitle)}
@@ -99,12 +101,14 @@ export function VibeCard({
           {confirmDelete === vibe.id ? 'Are you Sure? No undo for this.' : 'Delete'}
         </button>
         <div className="flex-grow"></div>
-        <button
-          onClick={(e) => onRemixClick(vibe.slug, e)}
-          className="text-light-secondary dark:text-dark-secondary hover:bg-light-decorative-01 dark:hover:bg-dark-decorative-01 rounded-md px-3 py-1 text-sm"
-        >
-          Remix
-        </button>
+        {vibe.publishedUrl && (
+          <button
+            onClick={(e) => onRemixClick(vibe.slug, e)}
+            className="text-light-secondary dark:text-dark-secondary hover:bg-light-decorative-01 dark:hover:bg-dark-decorative-01 rounded-md px-3 py-1 text-sm"
+          >
+            Remix
+          </button>
+        )}
         <button
           onClick={(e) => {
             e.stopPropagation();
