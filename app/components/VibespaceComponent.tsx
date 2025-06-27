@@ -27,7 +27,7 @@ interface VibespaceComponentProps {
   atId?: string;
 }
 
-function StarfieldNotFound({ userId, prefix }: { userId: string; prefix: string }) {
+function StarfieldEmpty({ userId, prefix, userExists }: { userId: string; prefix: string; userExists: boolean }) {
   return (
     <div className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden bg-black">
       {/* Starfield animation */}
@@ -75,7 +75,7 @@ function StarfieldNotFound({ userId, prefix }: { userId: string; prefix: string 
               letterSpacing: '0.1em',
             }}
           >
-            SPACE
+            {userExists ? 'EMPTY SPACE' : 'SPACE'}
           </h1>
           <h2
             className="text-4xl font-bold text-white"
@@ -85,7 +85,7 @@ function StarfieldNotFound({ userId, prefix }: { userId: string; prefix: string 
               letterSpacing: '0.1em',
             }}
           >
-            NOT FOUND
+            {userExists ? 'NO VIBES YET' : 'NOT FOUND'}
           </h2>
           <div
             className="mt-8 text-lg text-gray-300"
@@ -97,6 +97,17 @@ function StarfieldNotFound({ userId, prefix }: { userId: string; prefix: string 
             {prefix}
             {userId}
           </div>
+          {userExists && (
+            <div
+              className="mt-4 text-sm text-gray-400"
+              style={{
+                fontFamily: 'Courier New, monospace',
+                textShadow: '0 0 5px rgba(255, 255, 255, 0.2)',
+              }}
+            >
+              This user exists but hasn't created any vibes yet
+            </div>
+          )}
         </div>
 
         <div className="mt-12">
@@ -175,12 +186,24 @@ export default function VibespaceComponent({
   // Type the documents properly
   const vibes = docs.sort((b, a) => (a.createdAt || 0) - (b.createdAt || 0)) as VibeDocument[];
 
-  // Check if user exists (has any data)
-  const userExists = !isLoading && (vibes.length > 0 || docs.length > 0);
+  // Debug logging
+  console.log('VibespaceComponent Debug:', {
+    userId,
+    dbName: `vu-${userId}`,
+    docsLength: docs.length,
+    vibesLength: vibes.length,
+    isLoading,
+    docs: docs.slice(0, 3) // First 3 docs for debugging
+  });
 
-  // If user doesn't exist, show starfield
-  if (!isLoading && !userExists) {
-    return <StarfieldNotFound userId={userId} prefix={prefix} />;
+  // If we have a userId from the path, assume the user exists
+  // The database will be created when they first create a vibe
+  const userExists = true;
+  const hasVibes = vibes.length > 0;
+
+  // If user has no vibes, show starfield
+  if (!isLoading && !hasVibes) {
+    return <StarfieldEmpty userId={userId} prefix={prefix} userExists={userExists} />;
   }
 
   // Create URL for theme switching
