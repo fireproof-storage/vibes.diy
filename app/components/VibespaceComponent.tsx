@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import { useEffect, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
 import SimpleAppLayout from './SimpleAppLayout';
 import VibesDIYLogo from './VibesDIYLogo';
@@ -28,18 +28,26 @@ interface VibespaceComponentProps {
   atId?: string;
 }
 
-function StarfieldEmpty({ userId, prefix, userExists }: { userId: string; prefix: string; userExists: boolean }) {
+function StarfieldEmpty({
+  userId,
+  prefix,
+  userExists,
+}: {
+  userId: string;
+  prefix: string;
+  userExists: boolean;
+}) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const animationRef = useRef<number>(null);
   const starsRef = useRef<any[]>([]);
-  
+
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
-    
+
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
-    
+
     // Set canvas size
     const resizeCanvas = () => {
       canvas.width = window.innerWidth;
@@ -47,7 +55,7 @@ function StarfieldEmpty({ userId, prefix, userExists }: { userId: string; prefix
     };
     resizeCanvas();
     window.addEventListener('resize', resizeCanvas);
-    
+
     // Initialize star field - 3000 stars with shapes
     const initStars = () => {
       starsRef.current = [];
@@ -61,12 +69,12 @@ function StarfieldEmpty({ userId, prefix, userExists }: { userId: string; prefix
           color: Math.random() > 0.7 ? 'color' : 'white',
           hue: Math.random() * 360,
           shape: ['circle', 'triangle', 'star'][Math.floor(Math.random() * 3)],
-          rotation: Math.random() * Math.PI * 2
+          rotation: Math.random() * Math.PI * 2,
         });
       }
     };
     initStars();
-    
+
     // Shape drawing functions
     const drawTriangle = (ctx: CanvasRenderingContext2D, x: number, y: number, size: number) => {
       ctx.beginPath();
@@ -76,12 +84,12 @@ function StarfieldEmpty({ userId, prefix, userExists }: { userId: string; prefix
       ctx.closePath();
       ctx.fill();
     };
-    
+
     const drawStar = (ctx: CanvasRenderingContext2D, x: number, y: number, size: number) => {
       const spikes = 5;
       const outerRadius = size;
       const innerRadius = size * 0.4;
-      
+
       ctx.beginPath();
       for (let i = 0; i < spikes * 2; i++) {
         const radius = i % 2 === 0 ? outerRadius : innerRadius;
@@ -94,25 +102,25 @@ function StarfieldEmpty({ userId, prefix, userExists }: { userId: string; prefix
       ctx.closePath();
       ctx.fill();
     };
-    
+
     // Hyperdrive animation loop
     const animate = () => {
       // Subtle color-tinted fade
       ctx.fillStyle = 'rgba(2, 2, 8, 0.08)';
       ctx.fillRect(0, 0, canvas.width, canvas.height);
-      
+
       const centerX = canvas.width / 2;
       const centerY = canvas.height / 2;
-      
-      starsRef.current.forEach(star => {
+
+      starsRef.current.forEach((star) => {
         star.prevX = (star.x / star.z) * canvas.width + centerX;
         star.prevY = (star.y / star.z) * canvas.height + centerY;
-        
+
         // Variable speed - closer stars move faster
         const speed = 20 + (1000 - star.z) / 50;
         star.z -= speed;
         star.rotation += 0.1;
-        
+
         if (star.z <= 1) {
           star.x = (Math.random() - 0.5) * 3000;
           star.y = (Math.random() - 0.5) * 3000;
@@ -122,19 +130,19 @@ function StarfieldEmpty({ userId, prefix, userExists }: { userId: string; prefix
           star.shape = ['circle', 'triangle', 'star'][Math.floor(Math.random() * 3)];
           star.rotation = Math.random() * Math.PI * 2;
         }
-        
+
         const x = (star.x / star.z) * canvas.width + centerX;
         const y = (star.y / star.z) * canvas.height + centerY;
-        
+
         // Dynamic sizing based on speed and distance
-        const size = Math.max(0.1, (1500 - star.z) / 300 * 4);
+        const size = Math.max(0.1, ((1500 - star.z) / 300) * 4);
         const opacity = Math.min((1500 - star.z) / 1500, 1);
         const intensity = Math.min(speed / 40, 1);
-        
+
         // Epic trail effects
         const trailLength = size * 2;
         const trailOpacity = opacity * intensity * 0.8;
-        
+
         if (star.color === 'color') {
           // Very subtle colored star trails
           const trailColor = `hsla(${star.hue}, 8%, 85%, ${trailOpacity})`;
@@ -145,7 +153,7 @@ function StarfieldEmpty({ userId, prefix, userExists }: { userId: string; prefix
           ctx.moveTo(star.prevX, star.prevY);
           ctx.lineTo(x, y);
           ctx.stroke();
-          
+
           // Subtle colored star core
           const starColor = `hsla(${star.hue}, 6%, 90%, ${opacity})`;
           ctx.fillStyle = starColor;
@@ -160,19 +168,19 @@ function StarfieldEmpty({ userId, prefix, userExists }: { userId: string; prefix
           ctx.moveTo(star.prevX, star.prevY);
           ctx.lineTo(x, y);
           ctx.stroke();
-          
+
           // White star core with subtle blue tint
           ctx.fillStyle = `rgba(255, 255, 255, ${opacity})`;
           ctx.shadowBlur = size * 1.5;
           ctx.shadowColor = `rgba(210, 220, 255, ${opacity * 0.8})`;
         }
-        
+
         // Save ctx for rotation
         ctx.save();
         ctx.translate(x, y);
         ctx.rotate(star.rotation);
         ctx.translate(-x, -y);
-        
+
         // Draw the star shape
         switch (star.shape) {
           case 'circle':
@@ -187,16 +195,16 @@ function StarfieldEmpty({ userId, prefix, userExists }: { userId: string; prefix
             drawStar(ctx, x, y, size);
             break;
         }
-        
+
         ctx.restore();
         ctx.shadowBlur = 0;
       });
-      
+
       animationRef.current = requestAnimationFrame(animate);
     };
-    
+
     animate();
-    
+
     return () => {
       window.removeEventListener('resize', resizeCanvas);
       if (animationRef.current) {
@@ -206,26 +214,23 @@ function StarfieldEmpty({ userId, prefix, userExists }: { userId: string; prefix
   }, []);
 
   return (
-    <div className="relative w-screen h-screen bg-black overflow-hidden">
+    <div className="relative h-screen w-screen overflow-hidden bg-black">
       {/* White overlay that fades out */}
-      <div className="absolute inset-0 bg-white animate-[fadeOut_0.5s_ease-out_forwards] z-10"></div>
-      
-      <canvas
-        ref={canvasRef}
-        className="absolute inset-0 w-full h-full"
-      />
-      
+      <div className="absolute inset-0 z-10 animate-[fadeOut_0.5s_ease-out_forwards] bg-white"></div>
+
+      <canvas ref={canvasRef} className="absolute inset-0 h-full w-full" />
+
       {/* EMPTY SPACE Text - Black with white shadow */}
-      <div className="absolute inset-0 flex items-center justify-center pointer-events-none overflow-hidden">
-        <div className="whitespace-nowrap animate-[epicMarquee_24s_linear_infinite]">
-          <span className="font-black text-black
-                         [text-shadow:0_0_40px_rgba(255,255,255,1),0_0_80px_rgba(255,255,255,0.9),0_0_120px_rgba(255,255,255,0.8),0_0_200px_rgba(255,255,255,0.6)]
-                         tracking-[0.4em] transform-gpu"
-                style={{
-                  fontSize: 'clamp(8rem, 20vw, 30rem)',
-                  filter: 'brightness(1.3) contrast(1.2)',
-                  WebkitTextStroke: '4px rgba(255,255,255,0.3)'
-                }}>
+      <div className="pointer-events-none absolute inset-0 flex items-center justify-center overflow-hidden">
+        <div className="animate-[epicMarquee_24s_linear_infinite] whitespace-nowrap">
+          <span
+            className="transform-gpu font-black tracking-[0.4em] text-black [text-shadow:0_0_40px_rgba(255,255,255,1),0_0_80px_rgba(255,255,255,0.9),0_0_120px_rgba(255,255,255,0.8),0_0_200px_rgba(255,255,255,0.6)]"
+            style={{
+              fontSize: 'clamp(8rem, 20vw, 30rem)',
+              filter: 'brightness(1.3) contrast(1.2)',
+              WebkitTextStroke: '4px rgba(255,255,255,0.3)',
+            }}
+          >
             {userExists ? 'EMPTY SPACE' : 'SPACE NOT FOUND'}
           </span>
         </div>
@@ -233,9 +238,9 @@ function StarfieldEmpty({ userId, prefix, userExists }: { userId: string; prefix
 
       {/* Instructions overlay */}
       {userExists && (
-        <div className="absolute bottom-20 left-1/2 transform -translate-x-1/2 text-center pointer-events-none">
+        <div className="pointer-events-none absolute bottom-20 left-1/2 -translate-x-1/2 transform text-center">
           <div
-            className="text-white font-bold tracking-wider"
+            className="font-bold tracking-wider text-white"
             style={{
               fontSize: 'clamp(1.5rem, 4vw, 3rem)',
               textShadow: '0 0 20px rgba(255, 255, 255, 0.8), 0 0 40px rgba(255, 255, 255, 0.5)',
@@ -243,7 +248,7 @@ function StarfieldEmpty({ userId, prefix, userExists }: { userId: string; prefix
             }}
           >
             STAR ANY PUBLISHED VIBE ON{' '}
-            <a href="/vibes/mine" className="text-blue-200 hover:text-blue-100 pointer-events-auto">
+            <a href="/vibes/mine" className="pointer-events-auto text-blue-200 hover:text-blue-100">
               /VIBES/MINE
             </a>{' '}
             TO LIST IT HERE
@@ -252,23 +257,24 @@ function StarfieldEmpty({ userId, prefix, userExists }: { userId: string; prefix
       )}
 
       {/* User ID display */}
-      <div className="absolute top-20 left-1/2 transform -translate-x-1/2 text-center pointer-events-none">
+      <div className="pointer-events-none absolute top-20 left-1/2 -translate-x-1/2 transform text-center">
         <div
-          className="text-gray-300 font-mono"
+          className="font-mono text-gray-300"
           style={{
             fontSize: 'clamp(1rem, 3vw, 2rem)',
             textShadow: '0 0 10px rgba(255, 255, 255, 0.3)',
           }}
         >
-          {prefix}{userId}
+          {prefix}
+          {userId}
         </div>
       </div>
 
       {/* Home link */}
-      <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 pointer-events-none">
+      <div className="pointer-events-none absolute bottom-8 left-1/2 -translate-x-1/2 transform">
         <a
           href="/"
-          className="text-gray-300 hover:text-white transition-colors font-mono tracking-wide pointer-events-auto"
+          className="pointer-events-auto font-mono tracking-wide text-gray-300 transition-colors hover:text-white"
           style={{
             textShadow: '0 0 10px rgba(255, 255, 255, 0.5)',
           }}
@@ -278,7 +284,7 @@ function StarfieldEmpty({ userId, prefix, userExists }: { userId: string; prefix
       </div>
 
       {/* Epic marquee animation */}
-      <style jsx>{`
+      <style>{`
         @keyframes epicMarquee {
           0% {
             transform: translateX(100%) scale(1);
@@ -296,7 +302,7 @@ function StarfieldEmpty({ userId, prefix, userExists }: { userId: string; prefix
             transform: translateX(-100%) scale(1);
           }
         }
-        
+
         @keyframes fadeOut {
           0% {
             opacity: 1;
@@ -339,16 +345,6 @@ export default function VibespaceComponent({
 
   // Type the documents properly
   const vibes = docs.sort((b, a) => (a.createdAt || 0) - (b.createdAt || 0)) as VibeDocument[];
-
-  // Debug logging
-  console.log('VibespaceComponent Debug:', {
-    userId,
-    dbName: `vu-${userId}`,
-    docsLength: docs.length,
-    vibesLength: vibes.length,
-    isLoading,
-    docs: docs.slice(0, 3) // First 3 docs for debugging
-  });
 
   // If we have a userId from the path, assume the user exists
   // The database will be created when they first create a vibe

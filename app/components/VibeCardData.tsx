@@ -33,12 +33,12 @@ export function VibeCardData({ vibeId }: VibeCardDataProps) {
   const handleToggleFavorite = async (vibeId: string, e: React.MouseEvent) => {
     e.stopPropagation();
     e.preventDefault();
-    
+
     // Optimistically update local state immediately for instant UI feedback
     if (vibe) {
       setVibe({ ...vibe, favorite: !vibe.favorite });
     }
-    
+
     try {
       await toggleFavorite(vibeId);
     } catch (error) {
