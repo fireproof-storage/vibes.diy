@@ -35,6 +35,30 @@ vi.mock('../app/components/vibespace/Cyberpunk', () => ({
   ),
 }));
 
+// Mock Canvas API for jsdom
+Object.defineProperty(HTMLCanvasElement.prototype, 'getContext', {
+  value: vi.fn(() => ({
+    fillStyle: '',
+    fillRect: vi.fn(),
+    strokeStyle: '',
+    lineWidth: 0,
+    lineCap: '',
+    beginPath: vi.fn(),
+    moveTo: vi.fn(),
+    lineTo: vi.fn(),
+    stroke: vi.fn(),
+    fill: vi.fn(),
+    arc: vi.fn(),
+    closePath: vi.fn(),
+    save: vi.fn(),
+    restore: vi.fn(),
+    translate: vi.fn(),
+    rotate: vi.fn(),
+    shadowBlur: 0,
+    shadowColor: '',
+  })),
+});
+
 // Mock VibesDIYLogo
 vi.mock('../app/components/VibesDIYLogo', () => ({
   default: ({ height }: { height: number }) => (
@@ -65,22 +89,26 @@ const renderWithRouter = (component: React.ReactElement, initialEntries = ['/'])
 };
 
 describe('VibespaceComponent', () => {
-  it('should render starfield for non-existent user with tildeId', () => {
+  it('should render starfield for user with no vibes (tildeId)', () => {
     renderWithRouter(<VibespaceComponent tildeId="nonexistentuser" />);
 
-    expect(screen.getByText('SPACE')).toBeInTheDocument();
-    expect(screen.getByText('NOT FOUND')).toBeInTheDocument();
+    expect(screen.getByText('EMPTY SPACE')).toBeInTheDocument();
     expect(screen.getByText('~nonexistentuser')).toBeInTheDocument();
     expect(screen.getByText('→ HOME')).toBeInTheDocument();
+    expect(screen.getByText(/STAR ANY PUBLISHED VIBE ON/i)).toBeInTheDocument();
+    expect(screen.getByText('/VIBES/MINE')).toBeInTheDocument();
+    expect(screen.getByText(/TO LIST IT HERE/i)).toBeInTheDocument();
   });
 
-  it('should render starfield for non-existent user with atId', () => {
+  it('should render starfield for user with no vibes (atId)', () => {
     renderWithRouter(<VibespaceComponent atId="nonexistentuser" />);
 
-    expect(screen.getByText('SPACE')).toBeInTheDocument();
-    expect(screen.getByText('NOT FOUND')).toBeInTheDocument();
+    expect(screen.getByText('EMPTY SPACE')).toBeInTheDocument();
     expect(screen.getByText('@nonexistentuser')).toBeInTheDocument();
     expect(screen.getByText('→ HOME')).toBeInTheDocument();
+    expect(screen.getByText(/STAR ANY PUBLISHED VIBE ON/i)).toBeInTheDocument();
+    expect(screen.getByText('/VIBES/MINE')).toBeInTheDocument();
+    expect(screen.getByText(/TO LIST IT HERE/i)).toBeInTheDocument();
   });
 
   it('should render invalid user space message when no ID provided', () => {
@@ -95,6 +123,7 @@ describe('VibespaceComponent', () => {
 
     // Should show the clean ID with the appropriate prefix in the starfield
     expect(screen.getByText('~z2KBppKuUFKYxQvuj9')).toBeInTheDocument();
+    expect(screen.getByText('EMPTY SPACE')).toBeInTheDocument();
   });
 
   it('should handle @ prefix correctly', () => {
@@ -102,19 +131,22 @@ describe('VibespaceComponent', () => {
 
     // Should show the clean ID with @ prefix
     expect(screen.getByText('@someuser123')).toBeInTheDocument();
+    expect(screen.getByText('EMPTY SPACE')).toBeInTheDocument();
   });
 
-  it('should render Vibes DIY logo in starfield', () => {
-    renderWithRouter(<VibespaceComponent tildeId="testuser" />);
+  it('should render canvas element for starfield animation', () => {
+    const { container } = renderWithRouter(<VibespaceComponent tildeId="testuser" />);
 
-    expect(screen.getByTestId('vibes-logo')).toBeInTheDocument();
+    const canvas = container.querySelector('canvas');
+    expect(canvas).toBeInTheDocument();
+    expect(canvas).toHaveClass('absolute', 'inset-0', 'h-full', 'w-full');
   });
 
   it('should have starfield animation styles', () => {
     renderWithRouter(<VibespaceComponent tildeId="testuser" />);
 
     // Check that starfield container has the right classes
-    const starfieldContainer = screen.getByText('SPACE').closest('.min-h-screen');
+    const starfieldContainer = screen.getByText('EMPTY SPACE').closest('.h-screen');
     expect(starfieldContainer).toHaveClass('bg-black');
   });
 });

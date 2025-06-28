@@ -23,7 +23,14 @@ vi.stubGlobal('import', {
 // Mock global fetch
 const mockFetch = vi.fn().mockImplementation(async () => ({
   ok: true,
-  json: async () => ({ url: 'https://test-app.vibesdiy.app' }),
+  status: 200,
+  json: async () => ({
+    success: true,
+    app: {
+      slug: 'test-app-slug',
+    },
+    appUrl: 'https://test-app-slug.vibesdiy.app',
+  }),
 }));
 global.fetch = mockFetch;
 
@@ -83,7 +90,20 @@ describe('publishApp', () => {
     (fireproof as any).mockReturnValue(mockFireproofDb);
     (getSessionDatabaseName as any).mockReturnValue('test-session-db');
     (normalizeComponentExports as any).mockImplementation((code: string) => code);
-    mockFetch.mockClear();
+
+    // Re-setup fetch mock after reset
+    mockFetch.mockImplementation(async () => ({
+      ok: true,
+      status: 200,
+      json: async () => ({
+        success: true,
+        app: {
+          slug: 'test-app-slug',
+        },
+        appUrl: 'https://test-app-slug.vibesdiy.app',
+      }),
+    }));
+    global.fetch = mockFetch;
   });
 
   afterEach(() => {
