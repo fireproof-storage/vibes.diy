@@ -1,4 +1,4 @@
-import { useFireproof, rt, toCloud } from 'use-fireproof';
+import { useFireproof, toCloud } from 'use-fireproof';
 import { useEffect } from 'react';
 import type { LocalVibe } from '../utils/vibeUtils';
 
@@ -34,10 +34,10 @@ export function useSync(userId: string, vibes: Array<LocalVibe>) {
 
   const { database, useAllDocs } = useFireproof(`vibesync-${userId}`, {
     attach: toCloud({
-      urls: { base: 'fpcloud://fireproof-v2-cloud-dev.jchris.workers.dev' },
-      strategy: new rt.gw.cloud.SimpleTokenStrategy(getToken()),
-      tenant: 'zGoxECs2hPjDM2bf4',
-      ledger: 'z4mMTj7yRtstWBVNtg',
+      // urls: { base: 'fpcloud://fireproof-v2-cloud-dev.jchris.workers.dev' },
+      // strategy: new rt.gw.cloud.SimpleTokenStrategy(getToken()),
+      // tenant: 'zGoxECs2hPjDM2bf4',
+      // ledger: 'z4mMTj7yRtstWBVNtg',
     }),
   });
 
