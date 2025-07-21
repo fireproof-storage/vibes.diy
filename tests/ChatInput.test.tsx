@@ -34,8 +34,6 @@ describe('ChatInput Component', () => {
       addScreenshot: vi.fn().mockResolvedValue(undefined),
       setSelectedResponseId: vi.fn(),
       selectedSegments: [],
-      needsNewKey: false,
-      setNeedsNewKey: vi.fn(),
       immediateErrors: [],
       advisoryErrors: [],
       addError: vi.fn(),

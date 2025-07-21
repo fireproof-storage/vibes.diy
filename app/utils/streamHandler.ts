@@ -2,7 +2,8 @@
  * Utility functions for working with AI models via call-ai library
  */
 
-import { type Message, callAI } from 'call-ai';
+import { type CallAIOptions, type Message, callAI } from 'call-ai';
+import { CALLAI_ENDPOINT } from '../config/env';
 
 /**
  * Stream AI responses with accumulated content callback
@@ -23,7 +24,7 @@ export async function streamAI(
   messageHistory: Array<{ role: 'user' | 'assistant' | 'system'; content: string }>,
   userMessage: string,
   onContent: (content: string) => void,
-  apiKey: string,
+  apiKey: string, // API key (can be dummy key for proxy)
   userId?: string,
   setNeedsLogin?: (value: boolean, reason: string) => void
 ): Promise<string> {
@@ -37,8 +38,9 @@ export async function streamAI(
   ];
   // Configure call-ai options with default maximum token limit
   const defaultMaxTokens = userId ? 150000 : 75000;
-  const options = {
-    apiKey: apiKey,
+  const options: CallAIOptions = {
+    endpoint: CALLAI_ENDPOINT,
+    apiKey: apiKey, // Pass through the API key (including dummy keys)
     model: model,
     transforms: ['middle-out'],
     stream: true,
@@ -47,32 +49,11 @@ export async function streamAI(
     headers: {
       'HTTP-Referer': 'https://vibes.diy',
       'X-Title': 'Vibes DIY',
+      'X-VIBES-Token': localStorage.getItem('auth_token') || '',
     },
   };
 
-  // If available, check if credits should constrain max_tokens
-  try {
-    const { getCredits } = await import('../config/provisioning');
-    const credits = await getCredits(apiKey);
-    if (credits && credits.available) {
-      // Convert available credits to tokens (rough approximation)
-      const tokensFromCredits = Math.floor(credits.available * 1000000); // Each credit roughly equals 1M tokens
-      // Only reduce max_tokens if credits constrain it below the default maximum
-      if (tokensFromCredits < defaultMaxTokens) {
-        options.max_tokens = tokensFromCredits;
-        console.log(
-          `Constraining max_tokens to ${options.max_tokens} based on available credits: ${credits.available}`
-        );
-      } else {
-        console.log(
-          `Using default max_tokens: ${defaultMaxTokens} (credits available: ${credits.available})`
-        );
-      }
-    }
-  } catch (error) {
-    // If we can't check credits, just use the default max_tokens
-    console.warn('Could not check credits for max_tokens adjustment:', error);
-  }
+  // Credit checking no longer needed - proxy handles it
 
   try {
     const response = await callAI(messages, options);
@@ -103,20 +84,11 @@ export async function streamAI(
         // const toastMsg = `Error during AI response: ${errorMsg}`;
         // console.log('[TOAST MESSAGE]', toastMsg);
 
-        // Check if this is an authentication error
-        // if (
-        //   errorMsg.includes('authentication') ||
-        //   errorMsg.includes('key') ||
-        //   errorMsg.includes('token') ||
-        //   errorMsg.includes('credits')
-        // ) {
-        //   if (setNeedsLogin) {
-        //     setNeedsLogin(true, 'streamAI authentication error');
-        //   }
-        // }
-
-        // Don't return any message to the chat, let the caller handle it
-        return '';
+        // Authentication errors no longer need special handling - proxy manages auth
+        console.error('Streaming error:', streamError);
+        const errorMsg = streamError instanceof Error ? streamError.message : String(streamError);
+        // Return error message for debugging
+        return `Error: ${errorMsg}. If using proxy, ensure it's running at ${CALLAI_ENDPOINT}`;
       }
     } else {
       throw new Error('Unexpected response type from callAI');
@@ -142,7 +114,10 @@ export async function streamAI(
     //   }
     // }
 
-    // Don't return any message to the chat, let the caller handle it
-    return '';
+    // Log the error for debugging
+    console.error('Initial callAI error:', initialError);
+    const errorMsg = initialError instanceof Error ? initialError.message : String(initialError);
+    // Return error message for debugging
+    return `Error: ${errorMsg}. If using proxy, ensure it's running at ${CALLAI_ENDPOINT}`;
   }
 }

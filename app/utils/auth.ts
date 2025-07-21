@@ -150,7 +150,10 @@ export async function pollForAuthToken(
     try {
       const res = await fetch(endpoint, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'X-VIBES-Token': localStorage.getItem('auth_token') || '',
+        },
         body: JSON.stringify({ resultId, type: 'reqTokenByResultId' }),
       });
       if (!res.ok) throw new Error('Network error');
@@ -242,7 +245,10 @@ export async function extendToken(currentToken: string): Promise<string | null> 
 
     const res = await fetch(endpoint, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        'X-VIBES-Token': localStorage.getItem('auth_token') || '',
+      },
       body: JSON.stringify({ token: currentToken, type: 'reqExtendToken' }),
     });
 

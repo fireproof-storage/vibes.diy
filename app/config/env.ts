@@ -52,6 +52,10 @@ export const CLOUD_SESSION_TOKEN_PUBLIC_KEY = import.meta.env.VITE_CLOUD_SESSION
 // Vibes Service API
 export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://vibesdiy.app';
 
+// CallAI Endpoint
+export const CALLAI_ENDPOINT =
+  import.meta.env.VITE_CALLAI_ENDPOINT || 'https://openrouter.ai/api/v1/chat/completions';
+
 // Chat History Database
 export const SETTINGS_DBNAME =
   (import.meta.env.VITE_VIBES_CHAT_HISTORY || 'vibes-chats') + getVersionSuffix();

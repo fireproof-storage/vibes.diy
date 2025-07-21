@@ -1,6 +1,6 @@
 {
   "name": "ai-app-builder",
-  "packageManager": "pnpm@10.7.1",
+  "packageManager": "pnpm@10.13.1",
   "version": "0.2.0",
   "type": "module",
   "scripts": {

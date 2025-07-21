@@ -46,7 +46,11 @@ export default function Remix() {
 
         // Fetch the app code
         const appUrl = `https://${appName}.vibesdiy.app/App.jsx`;
-        const response = await fetch(appUrl);
+        const response = await fetch(appUrl, {
+          headers: {
+            'X-VIBES-Token': localStorage.getItem('auth_token') || '',
+          },
+        });
 
         if (!response.ok) {
           throw new Error(`Error fetching app code: ${response.status}`);

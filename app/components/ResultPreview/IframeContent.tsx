@@ -1,11 +1,11 @@
-import React, { useEffect, useRef, useState } from 'react';
-import type { IframeFiles } from './ResultPreviewTypes';
 import Editor from '@monaco-editor/react';
-import { useApiKey } from '~/hooks/useApiKey';
+import React, { useEffect, useRef } from 'react';
+import type { IframeFiles } from './ResultPreviewTypes';
+// API key import removed - proxy handles authentication
+import { normalizeComponentExports } from '../../utils/normalizeComponentExports';
+import { DatabaseListView } from './DataView';
 import { setupMonacoEditor } from './setupMonacoEditor';
 import { transformImports } from './transformImports';
-import { DatabaseListView } from './DataView';
-import { normalizeComponentExports } from '../../utils/normalizeComponentExports';
 
 // Import the iframe template using Vite's ?raw import option
 import iframeTemplateRaw from './templates/iframe-template.html?raw';
@@ -27,8 +27,7 @@ const IframeContent: React.FC<IframeContentProps> = ({
   isDarkMode,
   sessionId,
 }) => {
-  const { ensureApiKey } = useApiKey();
-  const [apiKey, setApiKey] = useState('');
+  // API key no longer needed - proxy handles authentication
   const iframeRef = useRef<HTMLIFrameElement>(null);
   // Theme state is now received from parent via props
   const contentLoadedRef = useRef(false);
@@ -79,19 +78,11 @@ const IframeContent: React.FC<IframeContentProps> = ({
 
   // This effect is now managed at the ResultPreview component level
 
-  // Get API key on component mount
-  useEffect(() => {
-    const getApiKey = async () => {
-      const keyData = await ensureApiKey();
-      setApiKey(keyData.key);
-    };
+  // API key management removed - proxy handles authentication
 
-    getApiKey();
-  }, [ensureApiKey]);
-
-  // Update iframe when code is ready and API key is available
+  // Update iframe when code is ready
   useEffect(() => {
-    if (codeReady && apiKey && iframeRef.current) {
+    if (codeReady && iframeRef.current) {
       // Skip if content hasn't changed
       if (contentLoadedRef.current && appCode === lastContentRef.current) {
         return;
@@ -110,7 +101,7 @@ const IframeContent: React.FC<IframeContentProps> = ({
 
       // Use the template and replace placeholders
       const htmlContent = iframeTemplateRaw
-        .replace('{{API_KEY}}', apiKey)
+        .replace('{{API_KEY}}', 'sk-vibes-proxy-managed')
         .replace('{{APP_CODE}}', transformedCode)
         .replace('{{SESSION_ID}}', sessionIdValue);
 
@@ -132,7 +123,7 @@ const IframeContent: React.FC<IframeContentProps> = ({
         window.removeEventListener('message', handleMessage);
       };
     }
-  }, [appCode, apiKey, codeReady]);
+  }, [appCode, codeReady]);
 
   // Determine which view to show based on URL path - gives more stable behavior on refresh
   const getViewFromPath = () => {
