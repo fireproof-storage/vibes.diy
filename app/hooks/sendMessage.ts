@@ -15,9 +15,6 @@ export interface SendMessageContext {
   setIsStreaming: (v: boolean) => void;
   ensureApiKey: () => Promise<{ key: string } | null>;
   setNeedsLogin: (v: boolean, reason: string) => void;
-  setNeedsNewKey: (v: boolean) => void;
-  addError: (err: any) => void;
-  checkCredits: (key: string) => Promise<boolean>;
   ensureSystemPrompt: () => Promise<string>;
   submitUserMessage: () => Promise<any>;
   buildMessageHistory: () => any[];
@@ -47,9 +44,6 @@ export async function sendMessage(
     setIsStreaming,
     ensureApiKey,
     setNeedsLogin,
-    setNeedsNewKey,
-    addError,
-    checkCredits,
     ensureSystemPrompt,
     submitUserMessage,
     buildMessageHistory,
@@ -98,33 +92,19 @@ export async function sendMessage(
 
   setIsStreaming(true);
 
-  let currentApiKey: string;
+  // Get API key - will return dummy key for proxy-managed auth
+  let currentApiKey = '';
   try {
     const keyObject = await ensureApiKey();
-    if (!keyObject?.key) {
-      throw new Error('API key not found after ensureApiKey call.');
-    }
-    currentApiKey = keyObject.key;
+    // Always use the key from ensureApiKey (will be dummy key 'sk-vibes-proxy-managed')
+    currentApiKey = keyObject?.key || '';
   } catch (err) {
-    console.warn('sendMessage: Failed to ensure API key:', err);
-    setNeedsLogin(true, 'sendMessage failed to ensure API key');
-    setNeedsNewKey(true);
-    addError({
-      type: 'error',
-      message: 'API key is required. Please log in or ensure your key is valid.',
-      errorType: 'Other',
-      source: 'sendMessage',
-      timestamp: new Date().toISOString(),
-    });
-    setIsStreaming(false);
-    return;
+    console.warn('Error getting API key:', err);
+    // This should not happen with the new useApiKey implementation
+    currentApiKey = 'sk-vibes-proxy-managed';
   }
 
-  const hasSufficientCredits = await checkCredits(currentApiKey);
-  if (!hasSufficientCredits) {
-    setIsStreaming(false);
-    return;
-  }
+  // Credit checking no longer needed - proxy handles it
 
   const currentSystemPrompt = await ensureSystemPrompt();
 
@@ -150,7 +130,6 @@ export async function sendMessage(
             const parsedContent = JSON.parse(finalContent);
 
             if (parsedContent.error) {
-              setNeedsNewKey(true);
               setInput(promptText);
               finalContent = `Error: ${JSON.stringify(parsedContent.error)}`;
             } else {
@@ -161,12 +140,14 @@ export async function sendMessage(
           }
         }
 
-        if (
-          !finalContent ||
-          (typeof finalContent === 'string' && finalContent.trim().length === 0)
-        ) {
-          setNeedsLogin(true, 'empty response');
-          return;
+        if (!finalContent) {
+          console.warn('No response from AI');
+          finalContent = 'Error: No response from AI service.';
+        } else if (typeof finalContent === 'string' && finalContent.trim().length === 0) {
+          console.warn('Empty response from AI, this might indicate an API issue');
+          // Save an error message instead of returning early
+          finalContent =
+            'Error: Empty response from AI service. This might be due to missing API key or proxy issues.';
         }
 
         if (aiMessage?.text !== finalContent) {
@@ -204,10 +185,6 @@ export async function sendMessage(
     })
     .finally(() => {
       setIsStreaming(false);
-      if (currentApiKey) {
-        checkCredits(currentApiKey).catch((err) => {
-          console.warn('Failed to check credits in finally block:', err);
-        });
-      }
+      // Credit checking no longer needed
     });
 }

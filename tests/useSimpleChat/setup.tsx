@@ -22,8 +22,6 @@ vi.mock('../../app/contexts/AuthContext', () => {
       isAuthenticated: true,
       isLoading: false,
       userPayload: { userId: 'test-user-id', exp: 0, tenants: [], ledgers: [] },
-      needsLogin: false,
-      setNeedsLogin: vi.fn(),
       checkAuthStatus: vi.fn(),
       processToken: vi.fn(),
     }),
@@ -62,15 +60,7 @@ vi.mock('../../app/prompts', () => ({
   makeBaseSystemPrompt: vi.fn().mockResolvedValue('Mocked system prompt'),
 }));
 
-// Mock the provisioning module
-vi.mock('../../app/config/provisioning');
-
-// Import the mocked module
-import { getCredits } from '../../app/config/provisioning';
-import { createOrUpdateKeyViaEdgeFunction } from '../../app/services/apiKeyService';
-
-// Mock the apiKeyService module
-vi.mock('../../app/services/apiKeyService');
+// Credit checking mocks no longer needed
 
 // Mock the utils/streamHandler to avoid real streaming and loops
 vi.mock('../../app/utils/streamHandler', () => ({
@@ -723,31 +713,7 @@ const createWrapper = () => {
 const testJwt =
   'eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0=.eyJ1c2VySWQiOiJ0ZXN0LXVzZXItaWQiLCJleHAiOjI1MzQwMjMwMDc5OX0=.';
 beforeEach(() => {
-  vi.mocked(createOrUpdateKeyViaEdgeFunction).mockImplementation(async () => {
-    return {
-      success: true,
-      key: {
-        key: 'mock-api-key-for-testing',
-        hash: 'mock-hash',
-        name: 'Mock Session Key',
-        label: 'mock-session',
-        limit: 0.01,
-        disabled: false,
-        usage: 0,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      },
-    };
-  });
-
-  vi.mocked(getCredits).mockImplementation(async () => {
-    // Provide ample credits to avoid triggering needsNewKey in tests
-    return {
-      available: 100,
-      usage: 0,
-      limit: 100,
-    };
-  });
+  // Credit checking mocks no longer needed
 
   vi.spyOn(window, 'fetch').mockImplementation(async () => {
     const stream = new ReadableStream({

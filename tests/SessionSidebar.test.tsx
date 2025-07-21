@@ -144,35 +144,7 @@ describe('SessionSidebar component', () => {
     expect(trackAuthClick).toHaveBeenCalledTimes(1);
   });
 
-  it('should show "Log in for credits" when needsLogin is true', () => {
-    // Mock useAuth to return authenticated state
-    setMockAuthState({
-      isAuthenticated: false,
-      isLoading: false,
-      needsLogin: true,
-    });
-
-    const props = {
-      ...mockSessionSidebarProps,
-    };
-
-    render(
-      <MockThemeProvider>
-        <SessionSidebar {...props} />
-      </MockThemeProvider>
-    );
-
-    // Check that the menu items are rendered
-    expect(screen.getByText('Home')).toBeInTheDocument();
-    expect(screen.getByText('My Vibes')).toBeInTheDocument();
-    expect(screen.getByText('About')).toBeInTheDocument();
-
-    // Now look for the 'Log in for credits' text
-    const loginCreditsBtn = screen.getByText('Log in for credits');
-    fireEvent.click(loginCreditsBtn);
-    expect(initiateAuthFlow).toHaveBeenCalled();
-    expect(trackAuthClick).toHaveBeenCalled();
-  });
+  // Test removed - needsLogin functionality no longer exists
 
   it('should render navigation links with correct labels', () => {
     const props = {
