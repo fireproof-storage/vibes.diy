@@ -34,7 +34,7 @@ function ChatInput({ chatState, onSend }: ChatInputProps) {
 
   return (
     <div className="px-4 py-2">
-      <div className="relative">
+      <div className="space-y-2">
         <textarea
           ref={chatState.inputRef}
           value={chatState.input}
@@ -57,24 +57,23 @@ function ChatInput({ chatState, onSend }: ChatInputProps) {
           }
           rows={2}
         />
-        <button
-          type="button"
-          onClick={handleSendMessage}
-          disabled={chatState.isStreaming}
-          className={`light-gradient border-glimmer hover:border-light-decorative-01 dark:hover:border-dark-decorative-01 absolute flex items-center justify-center overflow-hidden rounded-xl border shadow-sm transition-all duration-300 hover:shadow-md active:shadow-inner ${
-            chatState.isStreaming
-              ? 'border-light-decorative-01 dark:border-dark-decorative-01'
-              : 'border-light-decorative-01 dark:border-dark-decorative-00'
-          } right-0 -bottom-1 -mr-0 w-[96px] py-1`}
-          style={{
-            backdropFilter: 'blur(1px)',
-          }}
-          aria-label={chatState.isStreaming ? 'Generating' : 'Send message'}
-        >
-          <div className="relative z-10">
-            <VibesDIYLogo className="mr-2 mb-0.5 ml-5 pt-6 pb-2 pl-1.5" width={100} height={12} />
-          </div>
-        </button>
+        <div className="flex justify-end">
+          <button
+            type="button"
+            onClick={handleSendMessage}
+            disabled={chatState.isStreaming}
+            className={`bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 disabled:bg-gray-400 dark:disabled:bg-gray-600 flex items-center justify-center rounded-lg px-4 py-2 text-white font-medium transition-colors duration-200 ${
+              chatState.isStreaming ? 'cursor-not-allowed' : 'cursor-pointer'
+            }`}
+            aria-label={chatState.isStreaming ? 'Generating' : 'Send message'}
+          >
+            {chatState.isStreaming ? (
+              <span className="text-sm">•••</span>
+            ) : (
+              <span className="text-sm">Send</span>
+            )}
+          </button>
+        </div>
       </div>
     </div>
   );
