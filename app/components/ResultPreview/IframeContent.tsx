@@ -2,6 +2,7 @@ import Editor from '@monaco-editor/react';
 import React, { useEffect, useRef } from 'react';
 import type { IframeFiles } from './ResultPreviewTypes';
 // API key import removed - proxy handles authentication
+import { API_BASE_URL, CALLAI_ENDPOINT } from '../../config/env';
 import { normalizeComponentExports } from '../../utils/normalizeComponentExports';
 import { DatabaseListView } from './DataView';
 import { setupMonacoEditor } from './setupMonacoEditor';
@@ -101,7 +102,9 @@ const IframeContent: React.FC<IframeContentProps> = ({
 
       // Use the template and replace placeholders
       const htmlContent = iframeTemplateRaw
-        .replace('{{API_KEY}}', 'sk-vibes-proxy-managed')
+        .replaceAll('{{API_KEY}}', 'sk-vibes-proxy-managed')
+        .replaceAll('{{PROXY_BASE_URL}}', API_BASE_URL)
+        .replaceAll('{{CALLAI_ENDPOINT}}', CALLAI_ENDPOINT)
         .replace('{{APP_CODE}}', transformedCode)
         .replace('{{SESSION_ID}}', sessionIdValue);
 

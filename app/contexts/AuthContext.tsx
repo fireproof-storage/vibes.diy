@@ -112,16 +112,19 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const isAuthenticated = !!token && !!userPayload; // Check both token and payload
 
   // Function to set needsLogin with a reason
-  const setNeedsLogin = useCallback((value: boolean, reason: string) => {
-    console.log(`Setting needsLogin to ${value} due to: ${reason}`);
-    setNeedsLoginState(value);
-    
-    // If user is already authenticated, don't set needsLogin to true
-    if (value && isAuthenticated) {
-      console.log('User is already authenticated, not setting needsLogin');
-      setNeedsLoginState(false);
-    }
-  }, [isAuthenticated]);
+  const setNeedsLogin = useCallback(
+    (value: boolean, reason: string) => {
+      console.log(`Setting needsLogin to ${value} due to: ${reason}`);
+      setNeedsLoginState(value);
+
+      // If user is already authenticated, don't set needsLogin to true
+      if (value && isAuthenticated) {
+        console.log('User is already authenticated, not setting needsLogin');
+        setNeedsLoginState(false);
+      }
+    },
+    [isAuthenticated]
+  );
 
   // Reset needsLogin when user becomes authenticated
   useEffect(() => {
