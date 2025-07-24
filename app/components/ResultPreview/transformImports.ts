@@ -4,7 +4,6 @@ export const coreImportMap = [
   'react-dom/client',
   'use-fireproof',
   'call-ai',
-  'use-vibes',
 ];
 
 export function transformImports(code: string): string {
