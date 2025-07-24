@@ -6,6 +6,7 @@
   "scripts": {
     "build": "react-router build",
     "dev": "netlify dev --offline",
+    "dev:fplog": "FP_DEBUG='Loader,KeyBag' netlify dev --offline",
     "dev:router": "react-router dev",
     "start": "serve -s build/client",
     "typecheck": "react-router typegen && tsc",
