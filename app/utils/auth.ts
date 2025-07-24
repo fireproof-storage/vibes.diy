@@ -247,7 +247,6 @@ export async function extendToken(currentToken: string): Promise<string | null> 
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'X-VIBES-Token': localStorage.getItem('auth_token') || '',
       },
       body: JSON.stringify({ token: currentToken, type: 'reqExtendToken' }),
     });
