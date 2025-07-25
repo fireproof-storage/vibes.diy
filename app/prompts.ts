@@ -73,13 +73,12 @@ ${
 
 Provide a title and brief explanation followed by the component code. The component should demonstrate proper Fireproof integration with real-time updates and proper data persistence. Follow it with a short description of the app's purpose and instructions how to use it (with occasional bold or italic for emphasis). Then suggest some additional features that could be added to the app.
 
-Begin the component with the import statements. Use react, use-fireproof, call-ai, and use-vibes:
+Begin the component with the import statements. Use react, use-fireproof, and call-ai:
 
 \`\`\`js
 import React, { ... } from "react"
 import { useFireproof } from "use-fireproof"
 import { callAI } from "call-ai"
-import { ImgGen } from "use-vibes"
 
 // other imports only when requested
 \`\`\`
