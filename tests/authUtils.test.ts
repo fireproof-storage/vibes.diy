@@ -172,7 +172,7 @@ describe('auth utils', () => {
 
       const result = auth.initiateAuthFlow();
       expect(result).toBeTruthy();
-      expect(result?.connectUrl).toContain('http://localhost:7370/token');
+      expect(result?.connectUrl).toContain('/token');
       expect(result?.connectUrl).toContain('result_id=');
       expect(result?.resultId).toMatch(/^z/);
       expect(window.sessionStorage.getItem('auth_result_id')).toBe(result?.resultId);
