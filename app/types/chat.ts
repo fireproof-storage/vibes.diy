@@ -133,8 +133,6 @@ export interface ChatState {
   selectedResponseDoc?: ChatMessageDocument;
   selectedSegments?: Segment[];
   selectedCode?: Segment;
-  needsNewKey?: boolean;
-  setNeedsNewKey: (value: boolean) => void;
 
   // Error tracking
   immediateErrors: RuntimeError[];

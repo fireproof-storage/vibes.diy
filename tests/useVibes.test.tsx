@@ -52,10 +52,10 @@ const createWrapper = () => {
     isAuthenticated: true,
     isLoading: false,
     userPayload: mockUserPayload,
-    needsLogin: false,
-    setNeedsLogin: vi.fn(),
     checkAuthStatus: vi.fn(),
     processToken: vi.fn(),
+    needsLogin: false,
+    setNeedsLogin: vi.fn(),
   };
 
   return ({ children }: { children: ReactNode }) => (

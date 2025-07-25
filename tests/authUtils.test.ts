@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, afterEach } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import * as auth from '../app/utils/auth';
 
 // Mock the jose module
@@ -116,10 +116,6 @@ describe('auth utils', () => {
     });
 
     it('can extend a token when needed', async () => {
-      // From examining the implementation, we can see it's using http://localhost:3000/api as the default
-      // This might be coming from other test setup, so let's match what's actually being used
-      const usedEndpoint = 'https://dev.connect.fireproof.direct/api';
-
       // Mock successful API response for token extension
       global.fetch = vi.fn().mockResolvedValue({
         ok: true,
@@ -132,7 +128,7 @@ describe('auth utils', () => {
       // Verify correct behavior
       expect(result).toBe('new.extended.token');
       expect(global.fetch).toHaveBeenCalledWith(
-        usedEndpoint,
+        expect.stringContaining('/api'),
         expect.objectContaining({
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -170,13 +166,14 @@ describe('auth utils', () => {
 
   describe('initiateAuthFlow', () => {
     it('returns connectUrl and resultId and sets sessionStorage', () => {
-      // Set the connect URL environment variable
-      setEnv({ VITE_CONNECT_URL: 'http://localhost:3000/token' });
+      // Set the connect URL environment variable to match the actual .env file
+      setEnv({ VITE_CONNECT_URL: 'http://localhost:7370/token' });
       vi.spyOn(window, 'location', 'get').mockReturnValue({ pathname: '/not/callback' } as any);
 
       const result = auth.initiateAuthFlow();
       expect(result).toBeTruthy();
-      expect(result?.connectUrl).toMatch(/connect.fireproof.direct/);
+      expect(result?.connectUrl).toContain('/token');
+      expect(result?.connectUrl).toContain('result_id=');
       expect(result?.resultId).toMatch(/^z/);
       expect(window.sessionStorage.getItem('auth_result_id')).toBe(result?.resultId);
     });

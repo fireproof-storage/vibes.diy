@@ -6,7 +6,7 @@ import { useAuthPopup } from '../hooks/useAuthPopup';
 
 /**
  * A modal that appears when the user needs to login to get more credits
- * This listens for the 'needsLoginTriggered' event from useSimpleChat
+ * This listens for the needsLogin state from AuthContext
  */
 export function NeedsLoginModal() {
   const [isOpen, setIsOpen] = useState(false);

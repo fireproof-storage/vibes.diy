@@ -42,15 +42,9 @@ function ResultPreview({
     const handleMessage = ({ data }: MessageEvent) => {
       if (data) {
         if (data.type === 'preview-ready' || data.type === 'preview-loaded') {
-          // respond with the API key
-          const storedKey = localStorage.getItem('vibes-openrouter-key');
-          if (storedKey) {
-            const keyData = JSON.parse(storedKey);
-            const iframe = document.querySelector('iframe') as HTMLIFrameElement;
-            iframe?.contentWindow?.postMessage({ type: 'callai-api-key', key: keyData.key }, '*');
-            setMobilePreviewShown(true);
-            onPreviewLoaded();
-          }
+          // No API key needed - proxy handles authentication
+          setMobilePreviewShown(true);
+          onPreviewLoaded();
         } else if (data.type === 'streaming' && data.state !== undefined) {
           if (setIsIframeFetching) {
             setIsIframeFetching(data.state);

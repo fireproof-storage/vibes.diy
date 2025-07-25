@@ -57,7 +57,7 @@ importers:
         version: 7.5.3(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
       use-fireproof:
         specifier: 0.20.5
-        version: 0.20.5(@fireproof/core@0.20.5-dev-preview-7(@adviser/cement@0.4.14(typescript@5.8.3))(@fireproof/vendor@2.0.2(vitest@3.1.2(@types/debug@4.1.12)(@types/node@22.15.3)(jiti@2.4.2)(jsdom@26.1.0)(lightningcss@1.29.2)(tsx@4.19.4)(yaml@2.7.1)))(react@19.1.0))(react@19.1.0)
+        version: 0.20.5(@fireproof/core@0.20.5(@adviser/cement@0.4.20(typescript@5.8.3))(@fireproof/vendor@3.0.0)(react@19.1.0))(react@19.1.0)
     devDependencies:
       '@improvements/vite-plugin-devtools-json':
         specifier: ^0.0.3
@@ -142,10 +142,10 @@ packages:
         integrity: sha512-baYZExFpsdkBNuvGKTKWCwKH57HRZLVtycZS05WTQNVOiXVSeAki3nU35zlRbToeMW8aHlJfyS+1C4BOv27q0A==,
       }
 
-  '@adviser/cement@0.4.14':
+  '@adviser/cement@0.4.20':
     resolution:
       {
-        integrity: sha512-6iPOJrDDglRsixXCMQe6vMlrpZ4L2z5881LQ0awXTK1DIzY3ZTVR8+pFeTqcMz2oYZTDcKm31XSHl2q9JiRT1w==,
+        integrity: sha512-d19VRq/9EbnqRdiHnxbIRNoVC1WAbmI3mDMD/ZZcyTIIKRgpxePdJTsgmCeHL1vTA576Lmanref27CSBeiC2Ng==,
       }
     engines: { node: '>=20' }
 
@@ -1291,10 +1291,10 @@ packages:
         integrity: sha512-p2uKtaf8BMOZWLs6wu+Ihg7bWNBdjNgCwDza4MJtTqg+5ovKmcbgbR9Xs5/smZ1YISfzKOCNYmZV8LaCj+eJ1Q==,
       }
 
-  '@fireproof/core@0.20.5-dev-preview-7':
+  '@fireproof/core@0.20.5':
     resolution:
       {
-        integrity: sha512-wpcePoH5D6FUtkr0YB2a/ksFr+6w8ac0oq9C0p13cmhsTGzfbXgEvBPOPOBoTlV5kNwjLTOZ8u3akZQW/erphw==,
+        integrity: sha512-Cro5AKbJDOim8VrVL/fTTghnKrEFyxHV3pPxIx2qY0HLaO3c05rwJYFSJQXwoRI7V3hgBbk7JKnCneBUGo/oeA==,
       }
     hasBin: true
     peerDependencies:
@@ -1302,10 +1302,10 @@ packages:
       '@fireproof/vendor': ~2.0.0
       react: '>=18.0.0'
 
-  '@fireproof/vendor@2.0.2':
+  '@fireproof/vendor@3.0.0':
     resolution:
       {
-        integrity: sha512-kwsVSmKspItkajvSnjgLWzJgApKc4cqOi03hBKE7BF+S2eKQugsJ9FW9Ob9ZPVD2XMypYVndemZfunMy+Bd1kw==,
+        integrity: sha512-d2aoTkxWN9wYQ6pOafGxifxIijEvTpX3sBIJSaTrEqhorxRWdIZm8PC84kNV6qQqMr2GNfCUfgqn1mgR54M2rQ==,
       }
 
   '@floating-ui/core@1.6.9':
@@ -1362,24 +1362,24 @@ packages:
     peerDependencies:
       vite: ^2.7.0 || ^3.0.0 || ^4.0.0 || ^5.0.0 || ^6.0.0
 
-  '@ipld/car@5.4.0':
+  '@ipld/car@5.4.2':
     resolution:
       {
-        integrity: sha512-FiGxOhTUh3fn/kkA+YvNYQjA/T8T5DcKG0NZwAi3aXrizN1qm99HzdYTccEwcX/rUCtI8wTUCKDNPBLUb7pBIQ==,
+        integrity: sha512-gfyrJvePyXnh2Fbj8mPg4JYvEZ3izhk8C9WgAle7xIYbrJNSXmNQ6BxAls8Gof97vvGbCROdxbTWRmHJtTCbcg==,
       }
     engines: { node: '>=16.0.0', npm: '>=7.0.0' }
 
-  '@ipld/dag-cbor@9.2.2':
+  '@ipld/dag-cbor@9.2.4':
     resolution:
       {
-        integrity: sha512-uIEOuruCqKTP50OBWwgz4Js2+LhiBQaxc57cnP71f45b1mHEAo1OCR1Zn/TbvSW/mV1x+JqhacIktkKyaYqhCw==,
+        integrity: sha512-GbDWYl2fdJgkYtIJN0HY9oO0o50d1nB4EQb7uYWKUd2ztxCjxiEW3PjwGG0nqUpN1G4Cug6LX8NzbA7fKT+zfA==,
       }
     engines: { node: '>=16.0.0', npm: '>=7.0.0' }
 
-  '@ipld/dag-json@10.2.3':
+  '@ipld/dag-json@10.2.5':
     resolution:
       {
-        integrity: sha512-itacv1j1hvYgLox2B42Msn70QLzcr0MEo5yGIENuw2SM/lQzq9bmBiMky+kDsIrsqqblKTXcHBZnnmK7D4a6ZQ==,
+        integrity: sha512-Q4Fr3IBDEN8gkpgNefynJ4U/ZO5Kwr7WSUMBDbZx0c37t0+IwQCTM9yJh8l5L4SRFjm31MuHwniZ/kM+P7GQ3Q==,
       }
     engines: { node: '>=16.0.0', npm: '>=7.0.0' }
 
@@ -4102,10 +4102,10 @@ packages:
         integrity: sha512-2YwFg5Kxs2tqVCJv7sthWbYoUpALCYBBfTdpQcpicV7ipi6bBb1h9M4MNb1vm+724f39lUNp5VWhW43IFxfPlA==,
       }
 
-  cborg@4.2.10:
+  cborg@4.2.12:
     resolution:
       {
-        integrity: sha512-ZVA0xrVn8uBfDJYgfKKZzB/93z/Uiz7YtRdBPsZi/gyHNyqFdHMLHURVEk9dejOHepaX0zhcMyNva2/vF972SA==,
+        integrity: sha512-z126yLoavS75cdTuiKu61RC3Y3trqtDAgQRa5Q0dpHn1RmqhIedptWXKnk0lQ5yo/GmcV9myvIkzFgZ8GnqSog==,
       }
     hasBin: true
 
@@ -6696,10 +6696,10 @@ packages:
       }
     engines: { node: '>=0.10.0' }
 
-  idb@8.0.2:
+  idb@8.0.3:
     resolution:
       {
-        integrity: sha512-CX70rYhx7GDDQzwwQMDwF6kDRQi5vVs6khHUumDrMecBylKkwvZ8HWvKV08AGb7VbpoGCWUQ4aHzNDgoUiOIUg==,
+        integrity: sha512-LtwtVyVYO5BqRvcsKuB2iUMnHwPVByPCXFXOpuU96IZPPoPN6xjOGxZQ74pgSVVLQWtUOYgyeL4GE98BY5D3wg==,
       }
 
   ieee754@1.2.1:
@@ -7223,6 +7223,12 @@ packages:
     resolution:
       {
         integrity: sha512-skIAxZqcMkOrSwjJvplIPYrlXGpxTPnro2/QWTDCxAdWQrSTV5/KqspMWmi5WAx5+ULswASJiZ0a+1B/Lxt9cw==,
+      }
+
+  jose@6.0.12:
+    resolution:
+      {
+        integrity: sha512-T8xypXs8CpmiIi78k0E+Lk7T2zlK4zDyg+o1CZ4AkOHgDg98ogdP2BeZ61lTFKFyoEwJ9RgAgN+SdM3iPgNonQ==,
       }
 
   js-beautify@1.15.4:
@@ -8354,10 +8360,10 @@ packages:
         integrity: sha512-6FlzubTLZG3J2a/NVCAleEhjzq5oxgHyaCU9yYXvcLsvoVaHJq/s5xXI6/XXP6tz7R9xAOtHnSO/tXtF3WRTlA==,
       }
 
-  multiformats@13.3.2:
+  multiformats@13.3.7:
     resolution:
       {
-        integrity: sha512-qbB0CQDt3QKfiAzZ5ZYjLFOs+zW43vA4uyM8g27PeEuXZybUOFyjrVdP93HPBHMoglibwfkdVwbzfUq8qGcH6g==,
+        integrity: sha512-meL9DERHj+fFVWoOX9fXqfcYcSpUfSYJPcFvDPKrxitICbwAoWR+Ut4j5NO9zAT917HUHLQmqzQbAsGNHlDcxQ==,
       }
 
   multiparty@4.2.3:
@@ -11890,6 +11896,21 @@ packages:
       utf-8-validate:
         optional: true
 
+  ws@8.18.3:
+    resolution:
+      {
+        integrity: sha512-PEIGCY5tSlUt50cqyMXfCzX+oOPqN0vuGqWzbcJ2xvnkzkq46oOpz7dQaTDBdfICb4N14+GARUDw2XV2N4tvzg==,
+      }
+    engines: { node: '>=10.0.0' }
+    peerDependencies:
+      bufferutil: ^4.0.1
+      utf-8-validate: '>=5.0.2'
+    peerDependenciesMeta:
+      bufferutil:
+        optional: true
+      utf-8-validate:
+        optional: true
+
   xdg-basedir@5.1.0:
     resolution:
       {
@@ -12022,7 +12043,7 @@ packages:
 snapshots:
   '@adobe/css-tools@4.4.2': {}
 
-  '@adviser/cement@0.4.14(typescript@5.8.3)':
+  '@adviser/cement@0.4.20(typescript@5.8.3)':
     dependencies:
       ts-essentials: 10.0.4(typescript@5.8.3)
       yaml: 2.7.1
@@ -12648,38 +12669,32 @@ snapshots:
       fastq: 1.19.1
       glob: 10.4.5
 
-  '@fireproof/core@0.20.5-dev-preview-7(@adviser/cement@0.4.14(typescript@5.8.3))(@fireproof/vendor@2.0.2(vitest@3.1.2(@types/debug@4.1.12)(@types/node@22.15.3)(jiti@2.4.2)(jsdom@26.1.0)(lightningcss@1.29.2)(tsx@4.19.4)(yaml@2.7.1)))(react@19.1.0)':
+  '@fireproof/core@0.20.5(@adviser/cement@0.4.20(typescript@5.8.3))(@fireproof/vendor@3.0.0)(react@19.1.0)':
     dependencies:
-      '@adviser/cement': 0.4.14(typescript@5.8.3)
-      '@fireproof/vendor': 2.0.2(vitest@3.1.2(@types/debug@4.1.12)(@types/node@22.15.3)(jiti@2.4.2)(jsdom@26.1.0)(lightningcss@1.29.2)(tsx@4.19.4)(yaml@2.7.1))
-      '@ipld/car': 5.4.0
-      '@ipld/dag-cbor': 9.2.2
-      '@ipld/dag-json': 10.2.3
+      '@adviser/cement': 0.4.20(typescript@5.8.3)
+      '@fireproof/vendor': 3.0.0
+      '@ipld/car': 5.4.2
+      '@ipld/dag-cbor': 9.2.4
+      '@ipld/dag-json': 10.2.5
       '@web3-storage/pail': 0.6.2
-      cborg: 4.2.10
+      cborg: 4.2.12
       charwise: 3.0.1
-      idb: 8.0.2
-      jose: 6.0.10
-      multiformats: 13.3.2
+      idb: 8.0.3
+      jose: 6.0.12
+      multiformats: 13.3.7
       p-limit: 6.2.0
       p-map: 7.0.3
       p-retry: 6.2.1
       prolly-trees: 1.0.4
       react: 19.1.0
-      ws: 8.18.1
+      ws: 8.18.3
     transitivePeerDependencies:
       - bufferutil
       - utf-8-validate
 
-  '@fireproof/vendor@2.0.2(vitest@3.1.2(@types/debug@4.1.12)(@types/node@22.15.3)(jiti@2.4.2)(jsdom@26.1.0)(lightningcss@1.29.2)(tsx@4.19.4)(yaml@2.7.1))':
+  '@fireproof/vendor@3.0.0':
     dependencies:
-      '@ipld/dag-cbor': 9.2.2
-      '@vitest/coverage-v8': 3.1.2(vitest@3.1.2(@types/debug@4.1.12)(@types/node@22.15.3)(jiti@2.4.2)(jsdom@26.1.0)(lightningcss@1.29.2)(tsx@4.19.4)(yaml@2.7.1))
-      multiformats: 13.3.2
-    transitivePeerDependencies:
-      - '@vitest/browser'
-      - supports-color
-      - vitest
+      yocto-queue: 1.2.1
 
   '@floating-ui/core@1.6.9':
     dependencies:
@@ -12709,22 +12724,22 @@ snapshots:
       uuid: 11.1.0
       vite: 6.3.4(@types/node@22.15.3)(jiti@2.4.2)(lightningcss@1.29.2)(tsx@4.19.4)(yaml@2.7.1)
 
-  '@ipld/car@5.4.0':
+  '@ipld/car@5.4.2':
     dependencies:
-      '@ipld/dag-cbor': 9.2.2
-      cborg: 4.2.10
-      multiformats: 13.3.2
+      '@ipld/dag-cbor': 9.2.4
+      cborg: 4.2.12
+      multiformats: 13.3.7
       varint: 6.0.0
 
-  '@ipld/dag-cbor@9.2.2':
+  '@ipld/dag-cbor@9.2.4':
     dependencies:
-      cborg: 4.2.10
-      multiformats: 13.3.2
+      cborg: 4.2.12
+      multiformats: 13.3.7
 
-  '@ipld/dag-json@10.2.3':
+  '@ipld/dag-json@10.2.5':
     dependencies:
-      cborg: 4.2.10
-      multiformats: 13.3.2
+      cborg: 4.2.12
+      multiformats: 13.3.7
 
   '@isaacs/cliui@8.0.2':
     dependencies:
@@ -14104,12 +14119,12 @@ snapshots:
 
   '@web3-storage/pail@0.6.2':
     dependencies:
-      '@ipld/car': 5.4.0
-      '@ipld/dag-cbor': 9.2.2
+      '@ipld/car': 5.4.2
+      '@ipld/dag-cbor': 9.2.4
       archy: 1.0.0
       carstream: 2.3.0
       cli-color: 2.0.4
-      multiformats: 13.3.2
+      multiformats: 13.3.7
       sade: 1.8.1
 
   '@xhmikosr/archive-type@6.0.1':
@@ -14650,11 +14665,11 @@ snapshots:
 
   carstream@2.3.0:
     dependencies:
-      '@ipld/dag-cbor': 9.2.2
-      multiformats: 13.3.2
+      '@ipld/dag-cbor': 9.2.4
+      multiformats: 13.3.7
       uint8arraylist: 2.4.8
 
-  cborg@4.2.10: {}
+  cborg@4.2.12: {}
 
   ccount@2.0.1: {}
 
@@ -16283,7 +16298,7 @@ snapshots:
     dependencies:
       safer-buffer: 2.1.2
 
-  idb@8.0.2: {}
+  idb@8.0.3: {}
 
   ieee754@1.2.1: {}
 
@@ -16552,6 +16567,8 @@ snapshots:
   jiti@2.4.2: {}
 
   jose@6.0.10: {}
+
+  jose@6.0.12: {}
 
   js-beautify@1.15.4:
     dependencies:
@@ -17284,7 +17301,7 @@ snapshots:
 
   ms@2.1.3: {}
 
-  multiformats@13.3.2: {}
+  multiformats@13.3.7: {}
 
   multiparty@4.2.3:
     dependencies:
@@ -19088,7 +19105,7 @@ snapshots:
 
   uint8arrays@5.1.0:
     dependencies:
-      multiformats: 13.3.2
+      multiformats: 13.3.7
 
   ulid@2.3.0: {}
 
@@ -19218,9 +19235,9 @@ snapshots:
     optionalDependencies:
       '@types/react': 19.1.2
 
-  use-fireproof@0.20.5(@fireproof/core@0.20.5-dev-preview-7(@adviser/cement@0.4.14(typescript@5.8.3))(@fireproof/vendor@2.0.2(vitest@3.1.2(@types/debug@4.1.12)(@types/node@22.15.3)(jiti@2.4.2)(jsdom@26.1.0)(lightningcss@1.29.2)(tsx@4.19.4)(yaml@2.7.1)))(react@19.1.0))(react@19.1.0):
+  use-fireproof@0.20.5(@fireproof/core@0.20.5(@adviser/cement@0.4.20(typescript@5.8.3))(@fireproof/vendor@3.0.0)(react@19.1.0))(react@19.1.0):
     dependencies:
-      '@fireproof/core': 0.20.5-dev-preview-7(@adviser/cement@0.4.14(typescript@5.8.3))(@fireproof/vendor@2.0.2(vitest@3.1.2(@types/debug@4.1.12)(@types/node@22.15.3)(jiti@2.4.2)(jsdom@26.1.0)(lightningcss@1.29.2)(tsx@4.19.4)(yaml@2.7.1)))(react@19.1.0)
+      '@fireproof/core': 0.20.5(@adviser/cement@0.4.20(typescript@5.8.3))(@fireproof/vendor@3.0.0)(react@19.1.0)
       react: 19.1.0
 
   use-sidecar@1.1.3(@types/react@19.1.2)(react@19.1.0):
@@ -19515,6 +19532,8 @@ snapshots:
   ws@8.18.0: {}
 
   ws@8.18.1: {}
+
+  ws@8.18.3: {}
 
   xdg-basedir@5.1.0: {}
 

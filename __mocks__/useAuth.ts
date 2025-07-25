@@ -40,8 +40,6 @@ export const mockUseAuth = vi.fn().mockImplementation(() => defaultAuthenticated
 export const setMockAuthState = (state: Partial<AuthContextType>) => {
   mockUseAuth.mockImplementation(() => ({
     ...defaultAuthenticatedState,
-    needsLogin: false,
-    setNeedsLogin: vi.fn(),
     ...state,
   }));
 };

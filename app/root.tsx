@@ -82,8 +82,6 @@ export function Layout({ children }: { children: React.ReactNode }) {
               <Scripts data-testid="scripts" />
             </PostHogProvider>
           </AuthProvider>
-          <ScrollRestoration data-testid="scroll-restoration" />
-          <Scripts data-testid="scripts" />
         </body>
       </html>
     </ThemeProvider>
