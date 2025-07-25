@@ -1,5 +1,6 @@
-import type { Segment } from '../types/chat';
 import { callAI, type Message } from 'call-ai';
+import type { Segment } from '../types/chat';
+import { CALLAI_ENDPOINT } from '~/config/env';
 
 /**
  * Generate a title based on the first two segments (markdown and code)
@@ -45,6 +46,7 @@ export async function generateTitle(
 
   // Configure callAI options
   const options = {
+    endpoint: CALLAI_ENDPOINT,
     apiKey: apiKey || 'sk-vibes-proxy-managed', // Use dummy key if no key provided
     model: model,
     headers: {
