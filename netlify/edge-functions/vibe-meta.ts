@@ -19,14 +19,15 @@ export default async (request: Request) => {
   }
 
   try {
-    const metadata = await fetchVibeMetadata(vibeSlug);
+    const searchParams = url.search;
+    const metadata = await fetchVibeMetadata(vibeSlug, searchParams);
 
     // Override canonical URL for firehose route
     if (url.pathname === '/firehose') {
       metadata.canonicalUrl = 'https://vibes.diy/firehose';
     }
 
-    const html = generateMetaHTML(metadata);
+    const html = generateMetaHTML(metadata, searchParams);
 
     return new Response(html, {
       headers: {

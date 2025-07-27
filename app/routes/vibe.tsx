@@ -1,8 +1,7 @@
 import { useParams } from 'react-router-dom';
 
 export function VibeIframeContainerComponent({ vibeSlug }: { vibeSlug: string }) {
-  const iframeUrl = `https://${vibeSlug}.vibesdiy.app/`;
-
+  const iframeUrl = `https://${vibeSlug}.vibesdiy.app${location.search}`;
   return (
     <iframe
       src={iframeUrl}
