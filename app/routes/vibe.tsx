@@ -1,7 +1,8 @@
 import { useParams } from 'react-router-dom';
 
 export function VibeIframeContainerComponent({ vibeSlug }: { vibeSlug: string }) {
-  const iframeUrl = `https://${vibeSlug}.vibesdiy.app${location.search}`;
+  // Ensure trailing slash so root path resolves correctly and tests expect it
+  const iframeUrl = `https://${vibeSlug}.vibesdiy.app/${location.search}`;
   return (
     <iframe
       src={iframeUrl}

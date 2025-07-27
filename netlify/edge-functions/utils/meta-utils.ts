@@ -9,7 +9,10 @@ export interface VibeMetadata {
   canonicalUrl: string;
 }
 
-export async function fetchVibeMetadata(vibeSlug: string, searchParams?: string): Promise<VibeMetadata> {
+export async function fetchVibeMetadata(
+  vibeSlug: string,
+  searchParams?: string
+): Promise<VibeMetadata> {
   const sourceUrl = `https://${vibeSlug}.vibesdiy.app/${searchParams || ''}`;
   const sourceResponse = await fetch(sourceUrl, {
     headers: {
