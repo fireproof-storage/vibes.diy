@@ -1,7 +1,7 @@
 import { useParams } from 'react-router-dom';
+import { useEffect } from 'react';
 
 export function VibeIframeContainerComponent({ vibeSlug }: { vibeSlug: string }) {
-  // Ensure trailing slash so root path resolves correctly and tests expect it
   const iframeUrl = `https://${vibeSlug}.vibesdiy.app/${location.search}`;
   return (
     <iframe
@@ -18,9 +18,16 @@ export function VibeIframeContainerComponent({ vibeSlug }: { vibeSlug: string })
 export default function VibeIframeContainer() {
   const { vibeSlug } = useParams<{ vibeSlug: string }>();
 
+  useEffect(() => {
+    if (vibeSlug) {
+      const redirectUrl = `https://${vibeSlug}.vibesdiy.app/${location.search}`;
+      window.location.replace(redirectUrl);
+    }
+  }, [vibeSlug]);
+
   if (!vibeSlug) {
     return <div>No vibe slug provided</div>;
   }
 
-  return <VibeIframeContainerComponent vibeSlug={vibeSlug} />;
+  return <div>Redirecting...</div>;
 }

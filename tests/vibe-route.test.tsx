@@ -1,7 +1,17 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { MemoryRouter, Routes, Route } from 'react-router-dom';
 import VibeIframeContainer from '../app/routes/vibe';
+
+// Mock window.location.replace to prevent navigation errors
+const mockReplace = vi.fn();
+Object.defineProperty(window, 'location', {
+  value: {
+    replace: mockReplace,
+    search: '',
+  },
+  writable: true,
+});
 
 // Mock the useParams hook to return a vibeSlug
 vi.mock('react-router-dom', async () => {
@@ -13,22 +23,11 @@ vi.mock('react-router-dom', async () => {
 });
 
 describe('Vibe Route', () => {
-  it('renders the iframe with the correct src URL', () => {
-    render(
-      <MemoryRouter initialEntries={['/vibe/sound-panda-9086']}>
-        <Routes>
-          <Route path="/vibe/:vibeSlug" element={<VibeIframeContainer />} />
-        </Routes>
-      </MemoryRouter>
-    );
-
-    // Check that the iframe has the correct src attribute
-    const iframe = screen.getByTitle('Vibe: sound-panda-9086');
-    expect(iframe).toBeInTheDocument();
-    expect(iframe.getAttribute('src')).toBe('https://sound-panda-9086.vibesdiy.app/');
+  beforeEach(() => {
+    mockReplace.mockClear();
   });
 
-  it('renders just the iframe without header', () => {
+  it('redirects to the correct vibe subdomain URL', () => {
     render(
       <MemoryRouter initialEntries={['/vibe/sound-panda-9086']}>
         <Routes>
@@ -37,13 +36,30 @@ describe('Vibe Route', () => {
       </MemoryRouter>
     );
 
-    // Check that the iframe has the correct src attribute
-    const iframe = screen.getByTitle('Vibe: sound-panda-9086');
-    expect(iframe).toBeInTheDocument();
-    expect(iframe.getAttribute('src')).toBe('https://sound-panda-9086.vibesdiy.app/');
+    // Check that it shows redirecting message
+    expect(screen.getByText('Redirecting...')).toBeInTheDocument();
+
+    // Check that window.location.replace was called with correct URL
+    expect(mockReplace).toHaveBeenCalledWith('https://sound-panda-9086.vibesdiy.app/');
+  });
+
+  it('redirects without showing header content', () => {
+    render(
+      <MemoryRouter initialEntries={['/vibe/sound-panda-9086']}>
+        <Routes>
+          <Route path="/vibe/:vibeSlug" element={<VibeIframeContainer />} />
+        </Routes>
+      </MemoryRouter>
+    );
+
+    // Check that it shows redirecting message
+    expect(screen.getByText('Redirecting...')).toBeInTheDocument();
 
     // Check that there's no header or formatted title
     expect(screen.queryByText('Sound Panda 9086')).not.toBeInTheDocument();
     expect(screen.queryByText('Remix')).not.toBeInTheDocument();
+
+    // Ensure redirect was called
+    expect(mockReplace).toHaveBeenCalledWith('https://sound-panda-9086.vibesdiy.app/');
   });
 });

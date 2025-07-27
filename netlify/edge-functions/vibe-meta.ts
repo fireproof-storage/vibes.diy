@@ -1,7 +1,5 @@
 import { fetchVibeMetadata, generateMetaHTML } from './utils/meta-utils.ts';
 
-// Import the hardcoded firehose slug
-// Note: This import path works for edge functions accessing app config
 const FIREHOSE_SLUG = 'satie-trumpet-8293';
 
 export default async (request: Request) => {
@@ -12,12 +10,25 @@ export default async (request: Request) => {
   const vibeMatch = url.pathname.match(/^\/vibe\/([^\/]+)$/);
   if (vibeMatch) {
     vibeSlug = vibeMatch[1];
+
+    // Redirect /vibe/* routes to the vibe subdomain
+    const searchParams = url.search;
+    const redirectUrl = `https://${vibeSlug}.vibesdiy.app/${searchParams}`;
+
+    return new Response(null, {
+      status: 302,
+      headers: {
+        Location: redirectUrl,
+        'Cache-Control': 'no-cache',
+      },
+    });
   } else if (url.pathname === '/firehose') {
     vibeSlug = FIREHOSE_SLUG;
   } else {
     return; // Let other handlers deal with it
   }
 
+  // Generate metadata HTML for firehose
   try {
     const searchParams = url.search;
     const metadata = await fetchVibeMetadata(vibeSlug, searchParams);
