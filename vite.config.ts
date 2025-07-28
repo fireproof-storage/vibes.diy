@@ -1,9 +1,9 @@
+import devtoolsJson from '@improvements/vite-plugin-devtools-json';
 import { reactRouter } from '@react-router/dev/vite';
 import tailwindcss from '@tailwindcss/vite';
 import type { ConfigEnv, UserConfig } from 'vite';
 import { defineConfig } from 'vite';
 import tsconfigPaths from 'vite-tsconfig-paths';
-import devtoolsJson from '@improvements/vite-plugin-devtools-json';
 
 export default defineConfig(({ command, mode }: ConfigEnv): UserConfig => {
   // Disable React Router plugin for tests or when explicitly disabled
@@ -24,7 +24,7 @@ export default defineConfig(({ command, mode }: ConfigEnv): UserConfig => {
     // Server configuration for local development
     server: {
       host: '0.0.0.0', // Listen on all local IPs
-      allowedHosts: ['.ngrok-free.app'], // Specific ngrok hostname
+      allowedHosts: ['devserver-main--fireproof-ai-builder.netlify.app'], // Specific ngrok hostname
       cors: true, // Enable CORS for all origins
       hmr: true, // Use default HMR settings for local development
       // Ignore test directory changes to prevent unnecessary reloads during development
