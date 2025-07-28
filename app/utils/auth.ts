@@ -152,7 +152,6 @@ export async function pollForAuthToken(
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'X-VIBES-Token': localStorage.getItem('auth_token') || '',
         },
         body: JSON.stringify({ resultId, type: 'reqTokenByResultId' }),
       });
