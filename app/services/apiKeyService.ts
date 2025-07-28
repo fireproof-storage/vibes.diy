@@ -37,6 +37,7 @@ export async function createOrUpdateKeyViaEdgeFunction(
 
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
+    'X-VIBES-Token': token,
   };
 
   headers.Authorization = `Bearer ${token}`;
