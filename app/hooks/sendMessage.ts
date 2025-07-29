@@ -178,14 +178,19 @@ export async function sendMessage(
         setPendingAiMessage({ ...aiMessage, _id: id });
         setSelectedResponseId(id);
 
-        const { segments } = parseContent(aiMessage?.text || '');
-        try {
-          const title = await generateTitle(segments, titleModel, currentApiKey);
-          if (title) {
-            updateTitle(title);
+        // Skip title generation if the response is an error
+        const isErrorResponse =
+          typeof finalContent === 'string' && finalContent.startsWith('Error:');
+        if (!isErrorResponse) {
+          const { segments } = parseContent(aiMessage?.text || '');
+          try {
+            const title = await generateTitle(segments, titleModel, currentApiKey);
+            if (title) {
+              updateTitle(title);
+            }
+          } catch (titleError) {
+            console.warn('Failed to generate title:', titleError);
           }
-        } catch (titleError) {
-          console.warn('Failed to generate title:', titleError);
         }
       } finally {
         isProcessingRef.current = false;
