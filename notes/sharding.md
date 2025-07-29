@@ -190,7 +190,6 @@ const saveUserMessage = async (text: string) => {
 ### 4. Migration Plan
 
 1. Create a migration utility to move existing data:
-
    - Read all data from SETTINGS_DBNAME
    - For each session, create a new session-specific database
    - Move all related data (messages, screenshots) to the new database

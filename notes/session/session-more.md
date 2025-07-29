@@ -28,20 +28,17 @@ I'll avoid code snippets and focus on API names and file references.
 Our application's data model revolves around a clear separation of document types in Fireproof:
 
 1. **Session Documents** (`type: 'session'`)
-
    - Created via `useDocument()` in `useSession` hook on @home.tsx
    - Contains metadata like `title` and `created_at` timestamp
    - Also initial `prompt` field with user's first message
    - Represents the container for a conversation
 
 2. **AI Message Documents** (`type: 'ai-message'`)
-
    - Created via `database.put()` in `useSessionMessages` hook
    - Contains the `rawMessage` field with complete AI response
    - Linked to a session via `session_id`
 
 3. **User Message Documents** (`type: 'user-message'`)
-
    - Created via `database.put()` in `useSessionMessages` hook
    - Contains the `prompt` field with user input
    - Linked to a session via `session_id`
@@ -61,14 +58,12 @@ This separation brings several benefits:
 ## User Input Flow (home.tsx)
 
 1. **Session Creation**
-
    - When a user first visits `home.tsx`, the component creates a new session document
    - `useSession(null)` initializes a blank session via `useDocument`
    - `createSession('New Chat')` is called to persist the session
    - The resulting `sessionId` is stored in component state
 
 2. **AI Response Handling**
-
    - After user prompt storage, `sendMessage()` initiates the OpenRouter API call
    - Sets `streamingState` to `true` for UI feedback
    - Buffers the streaming response in memory via `streamBufferRef.current`
@@ -77,7 +72,6 @@ This separation brings several benefits:
    - Sets `streamingState` to `false` to update UI
 
 3. **User Message Handling**
-
    - User types into the chat input (managed by `ChatInterface`)
    - When submitted, `chatState.sendMessage()` from `useSimpleChat` is called
    - This calls `addUserMessage(input)` from `useSessionMessages`
@@ -86,7 +80,6 @@ This separation brings several benefits:
    - This message is immediately visible in the message list via live query
 
 4. **Title Generation**
-
    - After the initial AI response is available, fetch is used to get the title
    - Calls `updateTitle()` from `useSession` to update the session document
    - this is also a useDocument merge() and save()
@@ -111,12 +104,10 @@ The `SessionSidebar` component uses Fireproof's reactivity to display sessions:
 (Move these live queries to useSession as a helper hook)
 
 1. **Session Loading**
-
    - Uses `useLiveQuery('type', { key: 'session' })` to get all sessions
    - Automatically updates when new sessions are created or titles change
 
 2. **Screenshot Association**
-
    - Uses `useLiveQuery('type', { key: 'screenshot' })` to get all screenshots
    - Groups screenshots by session via their `session_id` field
    - Displays the most recent screenshot for each session
@@ -138,13 +129,11 @@ This approach eliminates the need for manual state management or event listeners
 The `MessageList` component displays the conversation thread:
 
 1. **Message Loading**
-
    - Uses `useSessionMessages(sessionId)` hook which internally uses `useLiveQuery`
    - Gets all messages (`'user-message'` and `'ai-message'`) for the current session
    - Sorts messages by `created_at` timestamp for chronological display
 
 2. **Message Rendering**
-
    - Maps message documents to appropriate UI components
    - For AI messages, parses `rawMessage` field into `segments` for rich display
    - Groups consecutive messages by sender for better UX
@@ -165,19 +154,16 @@ This approach provides:
 Our architecture follows a strict "update on completion" pattern:
 
 1. **Session Updates**
-
    - Initial creation: Via `useDocument` in `useSession`
    - Title updates: Only when AI generates a final title or user edits it
    - No updates during streaming
 
 2. **AI Message Updates**
-
    - Created only when streaming is complete
    - Contains the full response in a single document
    - No interim updates during streaming (buffer held in memory)
 
 3. **User Message Updates**
-
    - Created immediately when user submits input
    - Never updated after creation (immutable)
 
@@ -195,19 +181,16 @@ Benefits of this approach:
 ## Performance Benefits
 
 1. **Reduced Database Operations**
-
    - No per-token updates during streaming
    - Single document creation per user/AI message
    - Leverages Fireproof's efficient indexing
 
 2. **Optimized React Rendering**
-
    - UI state derived directly from database documents
    - Minimal local state management
    - Clean props flow between components
 
 3. **Efficient Queries**
-
    - Type-based queries enable fast lookups
    - Fireproof indexing optimizes for common access patterns
 
@@ -221,12 +204,10 @@ Benefits of this approach:
 This architecture supports future enhancements:
 
 1. **Collaborative Editing**
-
    - Multiple users can view the same session via the same document IDs
    - Real-time updates via LiveQuery
 
 2. **Additional Document Types**
-
    - File attachments as separate documents with `session_id`
    - User annotations or reactions
    - References to external resources
@@ -448,13 +429,11 @@ const { docs: aiMessages } = useLiveQuery((doc) => [doc.type, doc.session_id], {
 1. **Indexes:** Fireproof automatically creates indexes on each field, but compound indexes (like `type+session_id`) would need to be explicitly defined for optimal performance.
 
 2. **Query Parameters:**
-
    - `limit` - Always include reasonable limits to prevent loading too many documents
    - `descending` - Use for chronological display (newest first)
    - `startkey`/`endkey` - Could be used for pagination or date range filters
 
 3. **Post-Query Processing:**
-
    - Filtering: Further filter results by `session_id` in application code
    - Sorting: Sort by `created_at` field for chronological message display
    - Grouping: Group messages by sender for improved UX
@@ -473,13 +452,11 @@ To understand and implement the described architecture, review these key files:
 ### Core Session Management
 
 1. **app/hooks/useSession.ts**
-
    - Examine the `useDocument()` implementation for session creation
    - Look for `createSession()` and `updateTitle()` functions
    - Check how session state is exposed to components
 
 2. **app/routes/home.tsx**
-
    - Understand the entry point and session initialization
    - Trace how `sessionId` is managed in component state
    - Identify event handlers for chat interactions
@@ -491,7 +468,6 @@ To understand and implement the described architecture, review these key files:
 ### Message Management
 
 4. **app/hooks/useSessionMessages.ts**
-
    - Examine `database.put()` calls for message creation
    - Look for the filtering of messages by `session_id`
    - Check message structure and how they link to sessions
@@ -504,13 +480,11 @@ To understand and implement the described architecture, review these key files:
 ### UI Components
 
 6. **app/components/SessionSidebar.tsx**
-
    - Find the `useLiveQuery` implementation for sessions and screenshots
    - Study the grouping logic that associates screenshots with sessions
    - Look for sort order implementation (newest first)
 
 7. **app/components/MessageList.tsx**
-
    - Examine how messages are fetched and filtered
    - Check the rendering logic for different message types
    - Look for handling of streaming vs. completed messages

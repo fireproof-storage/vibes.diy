@@ -110,13 +110,11 @@ This refactoring lays a solid foundation for future enhancements like real-time 
 ### Issues to address:
 
 1. **Chat Header Icon**:
-
    - Revert the New Chat button icon back to the pencil icon
    - Update ChatHeader.tsx to use the original SVG path for consistency with the design system
    - Verify button accessibility is maintained during this change
 
 2. **Message List Empty State**:
-
    - Revert to the "Apps are sharable" version of the empty state in MessageList.tsx
    - Restore the original content including links to Fireproof documentation
    - Ensure the layout remains consistent with the updated component structure
@@ -135,7 +133,6 @@ Currently, we have several live queries implemented directly in components:
 #### Plan for Live Query Consolidation:
 
 1. **Create new custom hooks**:
-
    - `useSessionList` - For retrieving all sessions with metadata and screenshots (for sidebar)
    - `useSessionSearch` - For implementing session searching/filtering
 

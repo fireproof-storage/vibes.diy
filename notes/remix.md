@@ -7,25 +7,21 @@ Create a new route at `/remix` that enables users to remix code from vibesdiy.ap
 ## Implementation Steps
 
 1. **Create new route file**
-
    - Create `/app/routes/remix.tsx`
    - Set up the basic route component structure
 
 2. **Client-side functionality**
-
    - Use `useEffect` to get `document.referrer` on the client side
    - Extract the app domain from the referrer
    - Verify the referrer is from a `*.vibesdiy.app` domain
    - Display loading state while fetching
 
 3. **Fetch app code**
-
    - Fetch the App.jsx content using the pattern: `https://{app-domain}.vibesdiy.app/App.jsx`
    - Handle fetch errors appropriately
    - Parse and prepare the code content for the AI session
 
 4. **Create new session**
-
    - Create a dummy exchange with AI:
      ```
      user: Please help me remix {app-domain}.vibesdiy.app

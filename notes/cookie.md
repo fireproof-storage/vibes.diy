@@ -25,19 +25,16 @@ Google gave me this:
 </script>
 
 2. **Implement Cookie Consent Banner**
-
    - Add the consent banner to app layout
    - Configure with accept/decline options
    - Set appropriate cookie expiration (e.g., 365 days)
 
 3. **Conditional GA Loading**
-
    - Create utility to check for consent before loading GA
    - Implement GA tracking only after consent is given
    - Use the onAccept event handler to initialize GA
 
 4. **Layout Integration**
-
    - Add the consent banner to app layout component
    - Ensure banner displays prominently but doesn't interfere with UI
    - Use default package styles initially
@@ -50,13 +47,11 @@ Google gave me this:
 ## Code Implementation Plan
 
 1. **Add Cookie Consent Component to Layout**
-
    - Integrate into the main app layout
    - Configure with proper styling and text
    - Set up accept/decline callbacks
 
 2. **Create GA Utility**
-
    - Create a utility file for GA functions
    - Implement initialization and tracking methods
    - Add consent check before any tracking
