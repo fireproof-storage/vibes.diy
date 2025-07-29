@@ -23,12 +23,19 @@ export function useApiKey() {
     if (storedKey) {
       try {
         const keyData = JSON.parse(storedKey);
-        // Make sure we have a valid key object
-        if (keyData.key && typeof keyData.key === 'string' && keyData.hash) {
-          return keyData; // Return the full stored object if valid
+        const epochStart = 1753813877752; // 2025-07-29T00:00:00.000Z
+
+        const isValid = keyData.key && typeof keyData.key === 'string' && keyData.hash;
+        const isFromBefore = keyData.createdAt && keyData.createdAt < epochStart;
+
+        if (!isValid) {
+          throw new Error('Invalid key data');
         }
-        // If key is invalid, remove it
-        localStorage.removeItem(storageKey);
+        if (isFromBefore) {
+          throw new Error('Key is from before the current epoch');
+        }
+
+        return keyData;
       } catch (e) {
         localStorage.removeItem(storageKey); // Corrupted data
       }
