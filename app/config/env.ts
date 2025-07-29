@@ -54,6 +54,8 @@ export const CLOUD_SESSION_TOKEN_PUBLIC_KEY =
 // Vibes Service API
 export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://vibes-diy-api.com';
 
+export const APP_HOST_BASE_URL = import.meta.env.VITE_APP_HOST_BASE_URL || 'https://vibesdiy.app';
+
 // CallAI Endpoint
 export const CALLAI_ENDPOINT = import.meta.env.VITE_CALLAI_ENDPOINT || API_BASE_URL;
 
