@@ -52,8 +52,7 @@ export const CLOUD_SESSION_TOKEN_PUBLIC_KEY =
   'zeWndr5LEoaySgKSo2aZniYqWtx2vKfVz4dd5GQwAuby3fPKcNyLp6mFpf9nCRFYbUcPiN2YT1ZApJ6f3WipiVjuMvyP1JYgHwkaoxDBpJiLoz1grRYkbao9ntukNNo2TQ4uSznUmNPrr4ZxjihoavHwB1zLhLNp5Qj78fBkjgEMA';
 
 // Vibes Service API
-export const API_BASE_URL =
-  import.meta.env.VITE_API_BASE_URL || 'https://4c72680c-ai-builder-hosting.jchris.workers.dev';
+export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://vibes-diy-api.com';
 
 // CallAI Endpoint
 export const CALLAI_ENDPOINT = import.meta.env.VITE_CALLAI_ENDPOINT || API_BASE_URL;
