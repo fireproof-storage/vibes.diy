@@ -23,7 +23,7 @@ export function useApiKey() {
     if (storedKey) {
       try {
         const keyData = JSON.parse(storedKey);
-        const epochStart = 1753813877752; // 2025-07-29T00:00:00.000Z
+        const epochStart = 1753747200000; // 2025-07-29T00:00:00.000Z
 
         const isValid = keyData.key && typeof keyData.key === 'string' && keyData.hash;
         const isFromBefore = keyData.createdAt && keyData.createdAt < epochStart;
