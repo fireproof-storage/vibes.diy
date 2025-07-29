@@ -16,7 +16,7 @@ export interface AuthContextType {
   isLoading: boolean;
   userPayload: TokenPayload | null; // Changed from userEmail
   needsLogin: boolean;
-  setNeedsLogin: (value: boolean) => void;
+  setNeedsLogin: (value: boolean, reason: string) => void;
   checkAuthStatus: () => Promise<void>;
   processToken: (token: string | null) => Promise<void>;
 }
@@ -37,7 +37,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [token, setToken] = useState<string | null>(null);
   const [userPayload, setUserPayload] = useState<TokenPayload | null>(null); // Changed state
   const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [needsLogin, setNeedsLogin] = useState<boolean>(false);
+  const [needsLogin, setNeedsLoginState] = useState<boolean>(false);
 
   // Updated function to process token using verifyToken
   const processToken = useCallback(async (newToken: string | null) => {
@@ -47,7 +47,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         // Valid token and payload
         setToken(newToken);
         setUserPayload(payload.payload); // Store the full payload
-        setNeedsLogin(false); // user is authenticated
       } else {
         // Token is invalid or expired
         localStorage.removeItem('auth_token');
@@ -70,7 +69,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     } catch (error) {
       console.error('Error reading auth token from storage:', error);
       await processToken(null); // Ensure state is cleared on error
-      setNeedsLogin(true); // trigger login requirement on error
     } finally {
       setIsLoading(false);
     }
@@ -98,7 +96,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         } catch (error) {
           console.error('Error processing token from popup message:', error);
           await processToken(null); // Clear state on error
-          setNeedsLogin(true); // trigger login requirement on error
         } finally {
           setIsLoading(false);
         }
@@ -114,8 +111,31 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const isAuthenticated = !!token && !!userPayload; // Check both token and payload
 
+  // Function to set needsLogin with a reason
+  const setNeedsLogin = useCallback(
+    (value: boolean, reason: string) => {
+      console.log(`Setting needsLogin to ${value} due to: ${reason}`);
+      setNeedsLoginState(value);
+
+      // If user is already authenticated, don't set needsLogin to true
+      if (value && isAuthenticated) {
+        console.log('User is already authenticated, not setting needsLogin');
+        setNeedsLoginState(false);
+      }
+    },
+    [isAuthenticated]
+  );
+
+  // Reset needsLogin when user becomes authenticated
+  useEffect(() => {
+    if (isAuthenticated && needsLogin) {
+      console.log('User authenticated, resetting needsLogin');
+      setNeedsLoginState(false);
+    }
+  }, [isAuthenticated, needsLogin]);
+
   // Value provided by the context
-  const value = {
+  const value: AuthContextType = {
     token,
     isAuthenticated,
     isLoading,

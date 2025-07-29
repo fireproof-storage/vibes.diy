@@ -75,10 +75,10 @@ const createWrapper = (contextValue?: Partial<AuthContextType>) => {
     isAuthenticated: false,
     isLoading: false,
     userPayload: null,
-    needsLogin: false,
-    setNeedsLogin: vi.fn(),
     checkAuthStatus: vi.fn(),
     processToken: vi.fn(),
+    needsLogin: false,
+    setNeedsLogin: vi.fn(),
   };
   const valueToProvide = { ...defaultContextValue, ...contextValue };
   return ({ children }: { children: ReactNode }) => (

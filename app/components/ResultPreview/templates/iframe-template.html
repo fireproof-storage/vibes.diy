@@ -238,6 +238,8 @@
     <script>
       window.CALLAI_API_KEY = '{{API_KEY}}';
       window.SESSION_ID = '{{SESSION_ID}}';
+      window.CALLAI_CHAT_URL = '{{CALLAI_ENDPOINT}}';
+      window.CALLAI_IMG_URL = '{{CALLAI_ENDPOINT}}';
     </script>
     <script type="importmap">
       {
@@ -409,8 +411,6 @@
     </script>
 
     <script type="text/babel" data-type="module">
-      window.CALLAI_IMG_URL = 'https://vibesdiy.app';
-
       import ReactDOMClient from 'react-dom/client';
 
       // App runs normally without our interference, but the iframe loads our script to modify use-fireproof

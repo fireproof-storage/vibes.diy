@@ -66,7 +66,6 @@ vi.mock('use-fireproof', () => ({
 // Mock the useSimpleChat hook
 vi.mock('../app/hooks/useSimpleChat', () => ({
   useSimpleChat: () => ({
-    needsLogin: false,
     docs: [],
     isStreaming: false,
     codeReady: false,

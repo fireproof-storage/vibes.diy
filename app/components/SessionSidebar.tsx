@@ -17,7 +17,7 @@ import { dark, light } from './colorways';
  */
 function SessionSidebar({ isVisible, onClose }: SessionSidebarProps) {
   const sidebarRef = useRef<HTMLDivElement>(null);
-  const { isAuthenticated, isLoading, needsLogin, setNeedsLogin } = useAuth();
+  const { isAuthenticated, isLoading } = useAuth();
   const { isPolling, pollError, initiateLogin } = useAuthPopup();
   const { isDarkMode } = useTheme();
 
@@ -169,7 +169,6 @@ function SessionSidebar({ isVisible, onClose }: SessionSidebarProps) {
                       type="button"
                       onClick={async () => {
                         await initiateLogin();
-                        setNeedsLogin(false);
                         onClose();
                       }}
                       style={{
@@ -182,7 +181,7 @@ function SessionSidebar({ isVisible, onClose }: SessionSidebarProps) {
                           color: rando.diyText,
                         }}
                       >
-                        Log in {needsLogin ? 'for credits' : ''}
+                        Log in
                       </span>
                     </button>
                   </li>

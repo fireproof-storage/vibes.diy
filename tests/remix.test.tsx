@@ -43,10 +43,10 @@ const renderWithAuthContext = (
     isAuthenticated,
     isLoading: false,
     userPayload,
-    needsLogin: false,
-    setNeedsLogin: vi.fn(),
     checkAuthStatus: vi.fn(() => Promise.resolve()),
     processToken: vi.fn(),
+    needsLogin: false,
+    setNeedsLogin: vi.fn(),
   };
 
   return render(<AuthContext.Provider value={authValue}>{ui}</AuthContext.Provider>);

@@ -1,5 +1,6 @@
-import type { Segment } from '../types/chat';
 import { callAI, type Message } from 'call-ai';
+import { CALLAI_ENDPOINT } from '~/config/env';
+import type { Segment } from '../types/chat';
 
 /**
  * Generate a title based on the first two segments (markdown and code)
@@ -13,7 +14,7 @@ import { callAI, type Message } from 'call-ai';
 export async function generateTitle(
   segments: Segment[],
   model: string,
-  apiKey: string
+  apiKey: string = ''
 ): Promise<string> {
   // Get first markdown segment and first code segment (if they exist)
   const firstMarkdown = segments.find((seg) => seg.type === 'markdown');
@@ -45,11 +46,13 @@ export async function generateTitle(
 
   // Configure callAI options
   const options = {
-    apiKey: apiKey,
+    chatUrl: CALLAI_ENDPOINT,
+    apiKey: apiKey || 'sk-vibes-proxy-managed', // Use dummy key if no key provided
     model: model,
     headers: {
       'HTTP-Referer': 'https://vibes.diy',
       'X-Title': 'Vibes DIY',
+      'X-VIBES-Token': localStorage.getItem('auth_token') || '',
     },
   };
 

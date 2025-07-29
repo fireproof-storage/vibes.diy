@@ -3,7 +3,7 @@
  */
 
 import { fireproof } from 'use-fireproof';
-import { API_BASE_URL } from '../config/env';
+import { APP_HOST_BASE_URL, API_BASE_URL } from '../config/env';
 import { getSessionDatabaseName, updateUserVibespaceDoc } from './databaseManager';
 import { normalizeComponentExports } from './normalizeComponentExports';
 
@@ -99,6 +99,7 @@ export async function publishApp({
     // Prepare headers with optional Authorization
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
+      'X-VIBES-Token': localStorage.getItem('auth_token') || '',
     };
 
     // Add Authorization header if token is provided
@@ -129,7 +130,8 @@ export async function publishApp({
     const data = await response.json();
     if (data.success && data.app?.slug) {
       // Construct the app URL from the response data
-      const appUrl = data.appUrl || `https://${data.app.slug}.${new URL(API_BASE_URL).hostname}`;
+      const appUrl =
+        data.appUrl || `https://${data.app.slug}.${new URL(APP_HOST_BASE_URL).hostname}`;
 
       // Get the user's vibespace database to check for existing data
       const userVibespaceDb = fireproof(`vu-${userId}`);
