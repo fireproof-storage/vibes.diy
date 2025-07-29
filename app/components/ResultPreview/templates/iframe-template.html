@@ -239,6 +239,7 @@
       window.CALLAI_API_KEY = '{{API_KEY}}';
       window.SESSION_ID = '{{SESSION_ID}}';
       window.CALLAI_CHAT_URL = '{{CALLAI_ENDPOINT}}';
+      window.CALLAI_IMG_URL = '{{CALLAI_ENDPOINT}}';
     </script>
     <script type="importmap">
       {
@@ -410,10 +411,6 @@
     </script>
 
     <script type="text/babel" data-type="module">
-      // Configure proxy endpoints for generated apps
-      window.CALLAI_IMG_URL = '{{PROXY_BASE_URL}}';
-      window.CALLAI_CHAT_URL = '{{CALLAI_ENDPOINT}}';
-
       import ReactDOMClient from 'react-dom/client';
 
       // App runs normally without our interference, but the iframe loads our script to modify use-fireproof

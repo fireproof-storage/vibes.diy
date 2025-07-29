@@ -44,17 +44,19 @@ export const APP_MODE = import.meta.env.MODE || 'production'; // typically 'deve
 
 // Fireproof Connect & Auth
 export const CONNECT_URL =
-  import.meta.env.VITE_CONNECT_URL || 'https://dev.connect.fireproof.direct/token';
+  import.meta.env.VITE_CONNECT_URL || 'https://connect.fireproof.direct/token';
 export const CONNECT_API_URL =
-  import.meta.env.VITE_CONNECT_API_URL || 'https://dev.connect.fireproof.direct/api';
-export const CLOUD_SESSION_TOKEN_PUBLIC_KEY = import.meta.env.VITE_CLOUD_SESSION_TOKEN_PUBLIC || '';
+  import.meta.env.VITE_CONNECT_API_URL || 'https://connect.fireproof.direct/api';
+export const CLOUD_SESSION_TOKEN_PUBLIC_KEY =
+  import.meta.env.VITE_CLOUD_SESSION_TOKEN_PUBLIC ||
+  'zeWndr5LEoaySgKSo2aZniYqWtx2vKfVz4dd5GQwAuby3fPKcNyLp6mFpf9nCRFYbUcPiN2YT1ZApJ6f3WipiVjuMvyP1JYgHwkaoxDBpJiLoz1grRYkbao9ntukNNo2TQ4uSznUmNPrr4ZxjihoavHwB1zLhLNp5Qj78fBkjgEMA';
 
 // Vibes Service API
-export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://vibesdiy.app';
+export const API_BASE_URL =
+  import.meta.env.VITE_API_BASE_URL || 'https://4c72680c-ai-builder-hosting.jchris.workers.dev';
 
 // CallAI Endpoint
-export const CALLAI_ENDPOINT =
-  import.meta.env.VITE_CALLAI_ENDPOINT || 'https://openrouter.ai/api/v1/chat/completions';
+export const CALLAI_ENDPOINT = import.meta.env.VITE_CALLAI_ENDPOINT || API_BASE_URL;
 
 // Chat History Database
 export const SETTINGS_DBNAME =

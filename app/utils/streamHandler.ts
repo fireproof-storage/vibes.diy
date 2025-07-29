@@ -39,7 +39,7 @@ export async function streamAI(
   // Configure call-ai options with default maximum token limit
   const defaultMaxTokens = userId ? 150000 : 75000;
   const options: CallAIOptions = {
-    endpoint: CALLAI_ENDPOINT,
+    chatUrl: CALLAI_ENDPOINT,
     apiKey: apiKey, // Pass through the API key (including dummy keys)
     model: model,
     transforms: ['middle-out'],
