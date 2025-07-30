@@ -31,6 +31,17 @@ export default defineConfig({
       // Note: normalizeComponentExports-named-app.test.tsx uses Node path/fs - keep in jsdom
       // Note: segmentParser.test.ts uses Node path/fs - keep in jsdom
       'tests/useSegmentParser.test.tsx',
+      // Simple hook tests - next phase of migration
+      'tests/useRuntimeErrors.test.ts',
+      'tests/useMessageSelection.test.ts',
+      'tests/ViewState.coverage.test.tsx',
+      // Simple component tests with minimal dependencies
+      'tests/ViewControls.test.tsx',
+      // Hook tests with managed dependencies - continued migration
+      'tests/useSession.test.ts',
+      'tests/useViewState.test.tsx',
+      'tests/usePublish.test.tsx',
+      'tests/useVibes.test.tsx',
       // Add more tests as needed
     ],
     exclude: ['node_modules', 'dist', '.idea', '.git', '.cache'],

@@ -76,6 +76,17 @@ export default defineConfig(({ mode }: ConfigEnv): UserConfig => {
         'tests/settings-prompt.test.ts',
         'tests/normalizeComponentExports.test.tsx',
         'tests/useSegmentParser.test.tsx',
+        // Simple hook tests migrated to Chromium - next phase
+        'tests/useRuntimeErrors.test.ts',
+        'tests/useMessageSelection.test.ts',
+        'tests/ViewState.coverage.test.tsx',
+        // Simple component tests migrated to Chromium
+        'tests/ViewControls.test.tsx',
+        // Hook tests with managed dependencies - continued migration
+        'tests/useSession.test.ts',
+        'tests/useViewState.test.tsx',
+        'tests/usePublish.test.tsx',
+        'tests/useVibes.test.tsx',
       ],
       deps: {
         inline: ['react-router', '@react-router/dev'],
