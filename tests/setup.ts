@@ -91,6 +91,45 @@ Object.assign(navigator, {
   },
 });
 
+// Mock HTMLCanvasElement for tests that use canvas
+Object.defineProperty(HTMLCanvasElement.prototype, 'getContext', {
+  value: vi.fn().mockImplementation((contextType: string) => {
+    if (contextType === '2d') {
+      return {
+        fillStyle: '',
+        fillRect: vi.fn(),
+        clearRect: vi.fn(),
+        strokeStyle: '',
+        lineWidth: 1,
+        beginPath: vi.fn(),
+        moveTo: vi.fn(),
+        lineTo: vi.fn(),
+        stroke: vi.fn(),
+        arc: vi.fn(),
+        fill: vi.fn(),
+        save: vi.fn(),
+        restore: vi.fn(),
+        translate: vi.fn(),
+        rotate: vi.fn(),
+        scale: vi.fn(),
+        drawImage: vi.fn(),
+        createImageData: vi.fn().mockImplementation((width: number, height: number) => ({
+          data: new Uint8ClampedArray(width * height * 4),
+          width,
+          height,
+        })),
+        getImageData: vi.fn(),
+        putImageData: vi.fn(),
+        canvas: {
+          width: 300,
+          height: 150,
+        },
+      };
+    }
+    return null;
+  }),
+});
+
 // Mock TextEncoder if needed
 if (typeof TextEncoder === 'undefined') {
   // @ts-ignore - We're mocking TextEncoder for the test environment
