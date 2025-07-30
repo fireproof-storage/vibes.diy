@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, afterEach, type Mock } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach, type Mock } from 'vitest';
 import * as auth from '../app/utils/auth';
 
 // Mock the jose module
@@ -12,28 +12,27 @@ vi.mock('react-hot-toast', () => ({
   default: { success: vi.fn() },
 }));
 
-// Using 'any' for mocked functions since vitest doesn't export its mock types easily
-
 // Import jose after mocking to get the mocked version
 import * as jose from 'jose';
 
-// Helper for setting up import.meta.env
-function setEnv(vars: Record<string, string>) {
-  (import.meta as { env: Record<string, string> }).env = { ...vars };
-}
-
 describe('auth utils', () => {
+  beforeEach(() => {
+    // Set up environment variables for auth tests
+    import.meta.env.VITE_CLOUD_SESSION_TOKEN_PUBLIC = 'zabc123def456ghi789jkl';
+  });
+
   afterEach(() => {
     vi.restoreAllMocks();
-    // Clear storage
+    // Clear storage  
     window.localStorage.clear();
     window.sessionStorage.clear();
+    // Clean up environment
+    delete import.meta.env.VITE_CLOUD_SESSION_TOKEN_PUBLIC;
   });
 
   describe('verifyToken', () => {
     it('returns payload for a valid token', async () => {
-      // Setup environment and mocks
-      setEnv({ VITE_CLOUD_SESSION_TOKEN_PUBLIC: 'zabc' });
+      // Environment already set in beforeEach
 
       // Setup the jwt verification result with a token that won't trigger token extension
       // (far from expiration)
@@ -59,7 +58,7 @@ describe('auth utils', () => {
     });
 
     it('returns null for invalid token', async () => {
-      setEnv({ VITE_CLOUD_SESSION_TOKEN_PUBLIC: 'zabc' });
+      // Environment already set in beforeEach
       (jose.jwtVerify as Mock).mockRejectedValueOnce(new Error('bad token'));
 
       const result = await auth.verifyToken('bad.token');
@@ -67,7 +66,7 @@ describe('auth utils', () => {
     });
 
     it('returns null for expired token', async () => {
-      setEnv({ VITE_CLOUD_SESSION_TOKEN_PUBLIC: 'zabc' });
+      // Environment already set in beforeEach
       (jose.jwtVerify as Mock).mockResolvedValueOnce({
         protectedHeader: { alg: 'ES256' },
         payload: {
@@ -89,10 +88,7 @@ describe('auth utils', () => {
     // Instead of testing the exact token extension mechanism in verifyToken,
     // we'll test that the key integration points work as expected
     it('successfully returns extended token payload', async () => {
-      // Setup environment
-      setEnv({
-        VITE_CLOUD_SESSION_TOKEN_PUBLIC: 'zabc',
-      });
+      // Environment already set in beforeEach
 
       // Setup basic JWT verification for a valid token
       (jose.jwtVerify as Mock).mockResolvedValue({
@@ -145,7 +141,7 @@ describe('auth utils', () => {
 
   describe('extendToken', () => {
     it('returns new token and stores it', async () => {
-      setEnv({ VITE_CONNECT_API_URL: 'https://api' });
+      import.meta.env.VITE_CONNECT_API_URL = 'https://api';
       global.fetch = vi.fn().mockResolvedValue({
         ok: true,
         json: async () => ({ token: 'newtoken123' }),
@@ -155,13 +151,13 @@ describe('auth utils', () => {
       expect(window.localStorage.getItem('auth_token')).toBe('newtoken123');
     });
     it('returns null on network error', async () => {
-      setEnv({ VITE_CONNECT_API_URL: 'https://api' });
+      import.meta.env.VITE_CONNECT_API_URL = 'https://api';
       global.fetch = vi.fn().mockRejectedValue(new Error('fail')) 
       const result = await auth.extendToken('token');
       expect(result).toBeNull();
     });
     it('returns null on invalid response', async () => {
-      setEnv({ VITE_CONNECT_API_URL: 'https://api' });
+      import.meta.env.VITE_CONNECT_API_URL = 'https://api';
       global.fetch = vi.fn().mockResolvedValue({ ok: true, json: async () => ({}) })
       const result = await auth.extendToken('token');
       expect(result).toBeNull();
@@ -171,7 +167,7 @@ describe('auth utils', () => {
   describe('initiateAuthFlow', () => {
     it('returns connectUrl and resultId and sets sessionStorage', () => {
       // Set the connect URL environment variable
-      setEnv({ VITE_CONNECT_URL: 'http://localhost:3000/token' });
+      import.meta.env.VITE_CONNECT_URL = 'http://localhost:3000/token';
       vi.spyOn(window, 'location', 'get').mockReturnValue({ pathname: '/not/callback' } as typeof window.location );
 
       const result = auth.initiateAuthFlow();
@@ -190,7 +186,7 @@ describe('auth utils', () => {
 
   describe('pollForAuthToken', () => {
     it('returns token if found', async () => {
-      setEnv({ VITE_CONNECT_API_URL: 'https://api' });
+      import.meta.env.VITE_CONNECT_API_URL = 'https://api';
       let called = 0;
       global.fetch = vi.fn().mockImplementation(() => {
         called++;
@@ -207,7 +203,7 @@ describe('auth utils', () => {
     });
 
     it('returns null if timed out', async () => {
-      setEnv({ VITE_CONNECT_API_URL: 'https://api' });
+      import.meta.env.VITE_CONNECT_API_URL = 'https://api';
       global.fetch = vi.fn().mockResolvedValue({ ok: true, json: async () => ({}) })
 
       const token = await auth.pollForAuthToken('resultid', 1, 5);

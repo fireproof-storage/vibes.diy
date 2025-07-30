@@ -38,6 +38,12 @@ export default defineConfig(({ mode }: ConfigEnv): UserConfig => {
     },
     test: {
       environment: 'jsdom',
+      browser: {
+        enabled: false, // Enable only for specific tests
+        name: 'chromium',
+        provider: 'playwright',
+        headless: true,
+      },
       coverage: {
         provider: 'v8',
         reporter: ['text', 'json', 'html'],
