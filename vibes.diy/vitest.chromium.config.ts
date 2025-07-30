@@ -42,6 +42,14 @@ export default defineConfig({
       'tests/useViewState.test.tsx',
       'tests/usePublish.test.tsx',
       'tests/useVibes.test.tsx',
+      // Simple component tests - Phase 1 migration (selective)
+      'tests/ShareButton.test.tsx',
+      'tests/NavigationFix.test.tsx',
+      // Route/page tests - Phase 2 migration (selective)
+      'tests/about-route.test.tsx',
+      // Streaming/content utility tests - Phase 3 migration (selective)
+      'tests/streaming-content.test.tsx',
+      'tests/useViewStateStreaming.test.tsx',
       // Add more tests as needed
     ],
     exclude: ['node_modules', 'dist', '.idea', '.git', '.cache'],
