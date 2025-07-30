@@ -130,7 +130,7 @@ class LazyDB {
         if (['put', 'bulk', 'putAttachment', 'createIndex', 'removeIndex'].includes(prop)) {
           this.ensureReal();
         }
-        return (this.inner as unknown as Record<string, unknown>)[prop](...args);
+        return (this.inner as any)[prop](...args);
       };
     }
 
@@ -200,7 +200,7 @@ export function useLazyFireproof(
   // Custom hook that handles database transitions for LiveQuery
   function useEnhancedLiveQuery<
     T extends DocTypes,
-    K extends IndexKeyType = unknown,
+    K extends IndexKeyType = any,
     R extends DocFragment = T,
   >(mapFnOrField: string | MapFn<T>, options?: any): LiveQueryResult<T, K, R> {
     // Use a state counter to trigger refreshes when the database transitions
@@ -311,7 +311,7 @@ export function useLazyFireproof(
 
     // Call the original useChanges with our params and refresh counter as deps
     const result = useMemo(() => {
-      return api.useChanges<T>(since, { ...options, _refreshKey: refreshCounter });
+      return api.useChanges<T>(since, { ...options, _refreshKey: refreshCounter } as any);
     }, [since, options, refreshCounter]);
 
     // Set up effect to listen for database transition events

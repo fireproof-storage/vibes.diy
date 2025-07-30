@@ -80,12 +80,12 @@ describe('ChatInput Component', () => {
   });
 
   it('disables send button when isStreaming is true', () => {
-    // Set isStreaming to true for this test
-    mockChatState.isStreaming = true;
+    // Create a new state object with isStreaming set to true
+    const streamingChatState = { ...mockChatState, isStreaming: true };
 
     render(
       <MockThemeProvider>
-        <ChatInput chatState={mockChatState} onSend={onSend} />
+        <ChatInput chatState={streamingChatState} onSend={onSend} />
       </MockThemeProvider>
     );
 
@@ -128,12 +128,12 @@ describe('ChatInput Component', () => {
   });
 
   it('does not call sendMessage or onSend when Enter is pressed while streaming', () => {
-    // Set isStreaming to true for this test
-    mockChatState.isStreaming = true;
+    // Create a new state object with isStreaming set to true
+    const streamingChatState = { ...mockChatState, isStreaming: true };
 
     render(
       <MockThemeProvider>
-        <ChatInput chatState={mockChatState} onSend={onSend} />
+        <ChatInput chatState={streamingChatState} onSend={onSend} />
       </MockThemeProvider>
     );
 
@@ -145,11 +145,11 @@ describe('ChatInput Component', () => {
   });
 
   it('does not call sendMessage or onSend when button is clicked while streaming', () => {
-    mockChatState.isStreaming = true;
+    const streamingChatState = { ...mockChatState, isStreaming: true };
 
     render(
       <MockThemeProvider>
-        <ChatInput chatState={mockChatState} onSend={onSend} />
+        <ChatInput chatState={streamingChatState} onSend={onSend} />
       </MockThemeProvider>
     );
 

@@ -23,6 +23,14 @@ export default defineConfig({
       // Migrated failing tests from jsdom
       'tests/authUtils.test.ts',
       'tests/MessageList-very-early-streaming.test.tsx',
+      // Simple utility tests - baby steps migration
+      'tests/prompts.test.ts',
+      'tests/publishUtils.test.ts',
+      'tests/settings-prompt.test.ts',
+      'tests/normalizeComponentExports.test.tsx',
+      // Note: normalizeComponentExports-named-app.test.tsx uses Node path/fs - keep in jsdom
+      // Note: segmentParser.test.ts uses Node path/fs - keep in jsdom
+      'tests/useSegmentParser.test.tsx',
       // Add more tests as needed
     ],
     exclude: ['node_modules', 'dist', '.idea', '.git', '.cache'],

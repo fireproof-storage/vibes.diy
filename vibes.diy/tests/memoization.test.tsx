@@ -22,19 +22,13 @@ import ChatHeader from '../app/components/ChatHeaderContent';
 import MessageList from '../app/components/MessageList';
 import type { ChatMessageDocument } from '../app/types/chat';
 
-// Mock component that tracks renders
-function createRenderTracker(
-  Component: React.Component<{
-    onOpenSidebar: () => void;
-    onNewChat: () => void;
-    isStreaming: () => boolean;
-  }>
-) {
+// Generic render tracker that works with any component
+function createRenderTracker<T extends React.ComponentType<any>>(Component: T) {
   let renderCount = 0;
 
   // Create a wrapped component that uses the original memoized component
   // but tracks renders of the wrapper
-  const TrackedComponent = (props: { isStreaming: () => boolean }) => {
+  const TrackedComponent = (props: React.ComponentProps<T>) => {
     renderCount++;
     // Use the original component directly
     return <Component {...props} />;
@@ -73,10 +67,6 @@ describe('Component Memoization', () => {
       const onOpenSidebar = () => {
         /* no-op */
       };
-      const onNewChat = () => {
-        /* no-op */
-      };
-      const isStreaming = () => false;
 
       function TestWrapper() {
         const [, forceUpdate] = React.useState({});
@@ -92,8 +82,9 @@ describe('Component Memoization', () => {
             {/* Pass required props */}
             <TrackedHeader
               onOpenSidebar={onOpenSidebar}
-              onNewChat={onNewChat}
-              isStreaming={isStreaming}
+              title="Test Title"
+              isStreaming={false}
+              codeReady={false}
             />
           </div>
         );
@@ -160,9 +151,13 @@ describe('Component Memoization', () => {
       function TestWrapper() {
         const [, forceUpdate] = React.useState({});
 
-        // Memoize the messages array and function inside the component
+        // Memoize the messages array inside the component
         const memoizedMessages = React.useMemo(() => initialMessages, []);
-        const isStreamingFn = React.useCallback(() => false, []);
+
+        // Memoize callback functions to prevent re-renders
+        const setSelectedResponseId = React.useCallback(() => {}, []);
+        const setMobilePreviewShown = React.useCallback(() => {}, []);
+        const navigateToView = React.useCallback(() => {}, []);
 
         // Force parent re-render without changing props
         const triggerRerender = () => forceUpdate({});
@@ -174,8 +169,11 @@ describe('Component Memoization', () => {
             </button>
             <TrackedMessageList
               messages={memoizedMessages}
-              isStreaming={isStreamingFn}
-              sessionId="test-session"
+              isStreaming={false}
+              setSelectedResponseId={setSelectedResponseId}
+              selectedResponseId=""
+              setMobilePreviewShown={setMobilePreviewShown}
+              navigateToView={navigateToView}
             />
           </div>
         );
@@ -208,6 +206,11 @@ describe('Component Memoization', () => {
       function TestWrapper() {
         const [messages, setMessages] = React.useState(initialMessages);
 
+        // Memoize callback functions to prevent unnecessary re-renders
+        const setSelectedResponseId = React.useCallback(() => {}, []);
+        const setMobilePreviewShown = React.useCallback(() => {}, []);
+        const navigateToView = React.useCallback(() => {}, []);
+
         const addMessage = () => {
           setMessages([
             ...messages,
@@ -226,7 +229,14 @@ describe('Component Memoization', () => {
             <button data-testid="add-message" onClick={addMessage}>
               Add Message
             </button>
-            <TrackedMessageList messages={messages} isStreaming={() => false} />
+            <TrackedMessageList
+              messages={messages}
+              isStreaming={false}
+              setSelectedResponseId={setSelectedResponseId}
+              selectedResponseId=""
+              setMobilePreviewShown={setMobilePreviewShown}
+              navigateToView={navigateToView}
+            />
           </div>
         );
       }

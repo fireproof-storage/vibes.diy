@@ -62,14 +62,20 @@ export default defineConfig(({ mode }: ConfigEnv): UserConfig => {
       globals: true,
       setupFiles: ['./tests/setup.ts'],
       exclude: [
-        'node_modules', 
-        'dist', 
-        '.idea', 
-        '.git', 
+        'node_modules',
+        'dist',
+        '.idea',
+        '.git',
         '.cache',
         // Exclude tests that have been migrated to Chromium
         'tests/authUtils.test.ts',
         'tests/MessageList-very-early-streaming.test.tsx',
+        // Utility tests migrated to Chromium for baby steps approach
+        'tests/prompts.test.ts',
+        'tests/publishUtils.test.ts',
+        'tests/settings-prompt.test.ts',
+        'tests/normalizeComponentExports.test.tsx',
+        'tests/useSegmentParser.test.tsx',
       ],
       deps: {
         inline: ['react-router', '@react-router/dev'],

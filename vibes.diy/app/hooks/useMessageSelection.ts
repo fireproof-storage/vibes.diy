@@ -110,7 +110,9 @@ export function useMessageSelection({
     // Sort by document ID - this is more reliable than timestamps
     // when determining the most recent message, especially since IDs often have
     // chronological information encoded in them
-    const sortedDocsWithCode = docsWithCode.sort((a, b) => b._id.localeCompare(a._id));
+    const sortedDocsWithCode = docsWithCode.sort((a, b) =>
+      (b._id || '').localeCompare(a._id || '')
+    );
 
     const latestAiDocWithCode = sortedDocsWithCode[0];
     return latestAiDocWithCode;

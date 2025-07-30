@@ -5,7 +5,7 @@ import { GA_TRACKING_ID } from '../config/env';
 import { useCookieConsent } from '../contexts/CookieConsentContext';
 import { useTheme } from '../contexts/ThemeContext';
 import { initGA, pageview } from '../utils/analytics';
-import { CookieConsent as CookieConsentType } from 'react-cookie-consent';
+// import { CookieConsent as CookieConsentType } from 'react-cookie-consent';
 // import type { CookieConsentProps } from 'react-cookie-consent/dist/CookieConsent.props';
 
 // We'll use any type for dynamic imports to avoid TypeScript errors with the cookie consent component
@@ -17,9 +17,7 @@ export default function CookieBanner() {
   const { isDarkMode } = useTheme();
 
   // Dynamic import for client-side only
-  const [CookieConsent, setCookieConsent] = useState<React.Component<
-    (typeof CookieConsentType)['defaultProps']
-  > | null>(null);
+  const [CookieConsent, setCookieConsent] = useState<React.ComponentType<any> | null>(null);
   const [getCookieConsentValue, setGetCookieConsentValue] = useState<
     ((name?: string) => string | undefined) | null
   >(null);
@@ -31,7 +29,7 @@ export default function CookieBanner() {
   // Load the cookie consent library on client side only
   useEffect(() => {
     import('react-cookie-consent').then((module) => {
-      setCookieConsent(() => module.default);
+      setCookieConsent(() => module.default as React.ComponentType<any>);
       setGetCookieConsentValue(() => module.getCookieConsentValue);
     });
   }, []);

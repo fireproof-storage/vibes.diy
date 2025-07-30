@@ -20,7 +20,8 @@ describe('auth utils', () => {
     // Environment variables are set in chromium-setup.ts for Chromium tests
     // For jsdom tests, set them here
     if (typeof window !== 'undefined' && !window.navigator.userAgent.includes('HeadlessChrome')) {
-      import.meta.env.VITE_CLOUD_SESSION_TOKEN_PUBLIC = 'z2VbCuXVUi2VZRpXcSMgMhYzT1tLvV7JQ6PY1pHYoRGVGSKEfb4Gp9w6P8d8eEQrQV';
+      import.meta.env.VITE_CLOUD_SESSION_TOKEN_PUBLIC =
+        'z2VbCuXVUi2VZRpXcSMgMhYzT1tLvV7JQ6PY1pHYoRGVGSKEfb4Gp9w6P8d8eEQrQV';
       import.meta.env.VITE_CONNECT_API_URL = 'https://dev.connect.fireproof.direct/api';
       import.meta.env.VITE_CONNECT_URL = 'https://dev.connect.fireproof.direct/token';
     }
@@ -177,7 +178,7 @@ describe('auth utils', () => {
     it('returns connectUrl and resultId and sets sessionStorage', () => {
       // Set the connect URL environment variable
       import.meta.env.VITE_CONNECT_URL = 'http://localhost:3000/token';
-      
+
       // Use history API to simulate being on a different path
       // This works better in real browser environments
       window.history.pushState({}, '', '/not/callback');
@@ -187,7 +188,7 @@ describe('auth utils', () => {
       expect(result?.connectUrl).toMatch(/connect.fireproof.direct/);
       expect(result?.resultId).toMatch(/^z/);
       expect(window.sessionStorage.getItem('auth_result_id')).toBe(result?.resultId);
-      
+
       // Restore original path
       window.history.pushState({}, '', '/');
     });
@@ -195,10 +196,10 @@ describe('auth utils', () => {
     it('returns null if already on callback page', () => {
       // Use history API to simulate being on callback path
       window.history.pushState({}, '', '/auth/callback');
-      
+
       const result = auth.initiateAuthFlow();
       expect(result).toBeNull();
-      
+
       // Restore original path
       window.history.pushState({}, '', '/');
     });

@@ -20,7 +20,7 @@ vi.stubGlobal('import', {
   },
 });
 
-// Mock global fetch
+// Mock fetch - use window.fetch in browser, global.fetch in Node
 const mockFetch = vi.fn().mockImplementation(async () => ({
   ok: true,
   status: 200,
@@ -32,7 +32,13 @@ const mockFetch = vi.fn().mockImplementation(async () => ({
     appUrl: 'https://test-app-slug.vibesdiy.app',
   }),
 }));
-global.fetch = mockFetch;
+
+// Set fetch on the appropriate global object
+if (typeof window !== 'undefined') {
+  window.fetch = mockFetch;
+} else {
+  global.fetch = mockFetch;
+}
 
 // Setup mock FileReader for screenshot processing
 class MockFileReader {
@@ -46,7 +52,12 @@ class MockFileReader {
   }
 }
 
-global.FileReader = MockFileReader as typeof FileReader; // as any;
+// Set FileReader on the appropriate global object
+if (typeof window !== 'undefined') {
+  window.FileReader = MockFileReader as typeof FileReader;
+} else {
+  global.FileReader = MockFileReader as typeof FileReader;
+}
 
 // Setup mock Fireproof database and query results
 const mockVibeDoc = {
@@ -103,7 +114,13 @@ describe('publishApp', () => {
         appUrl: 'https://test-app-slug.vibesdiy.app',
       }),
     }));
-    global.fetch = mockFetch;
+
+    // Set fetch on the appropriate global object
+    if (typeof window !== 'undefined') {
+      window.fetch = mockFetch;
+    } else {
+      global.fetch = mockFetch;
+    }
   });
 
   afterEach(() => {

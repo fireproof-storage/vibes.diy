@@ -82,7 +82,9 @@ export async function publishApp({
       if (screenshotDoc?._files && screenshotDoc._files.screenshot) {
         try {
           // Get the File object using the file() method - Fireproof specific API
-          const screenshotFile = await screenshotDoc._files.screenshot?.file();
+          const screenshotFile =
+            (await (screenshotDoc._files.screenshot as any)?.file?.()) ||
+            screenshotDoc._files.screenshot;
 
           // Read the file as a buffer using FileReader
           const buffer = await new Promise<string>((resolve, reject) => {

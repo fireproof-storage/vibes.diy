@@ -19,7 +19,7 @@
     "test:file-issues": "scripts/test-issues.sh",
     "test:api-key": "node scripts/test-api-key.js",
     "test:credits": "node scripts/test-credits.js",
-    "check": "pnpm format && pnpm typecheck && pnpm test"
+    "check": "pnpm format && pnpm typecheck && pnpm test && pnpm test:chromium"
   },
   "dependencies": {
     "@monaco-editor/react": "^4.7.0",

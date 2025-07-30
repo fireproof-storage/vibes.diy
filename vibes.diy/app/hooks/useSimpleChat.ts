@@ -181,7 +181,7 @@ export function useSimpleChat(sessionId: string | undefined): ChatState {
         ensureApiKey,
         setNeedsLogin,
         setNeedsNewKey,
-        addError,
+        addError: (err: RuntimeError) => addError(err),
         checkCredits: boundCheckCredits,
         ensureSystemPrompt,
         submitUserMessage,

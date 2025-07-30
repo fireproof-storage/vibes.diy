@@ -19,12 +19,12 @@ vi.mock('../app/config/env', () => ({
 // Define shared state and reset function *outside* the mock factory
 interface MockDoc {
   _id?: string;
-  type: string;
-  text: string;
-  session_id: string;
+  type?: string;
+  text?: string;
+  session_id?: string;
   timestamp?: number;
   created_at?: number;
-  segments?: AiChatMessage['segments'][];
+  segments?: AiChatMessage['segments'];
   dependenciesString?: string;
   isStreaming?: boolean;
   model?: string;

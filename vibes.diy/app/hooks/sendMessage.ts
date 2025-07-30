@@ -7,6 +7,7 @@ import { trackChatInputClick } from '../utils/analytics';
 import { parseContent } from '../utils/segmentParser';
 import { streamAI } from '../utils/streamHandler';
 import { generateTitle } from '../utils/titleGenerator';
+import type { RuntimeError } from './useRuntimeErrors';
 
 export interface SendMessageContext {
   readonly userMessage: ChatMessageDocument;
@@ -16,7 +17,7 @@ export interface SendMessageContext {
   ensureApiKey(): Promise<{ key: string } | null>;
   setNeedsLogin(v: boolean, reason: string): void;
   setNeedsNewKey(v: boolean): void;
-  addError(err: Error): void;
+  addError(err: RuntimeError): void;
   checkCredits(key: string): Promise<boolean>;
   ensureSystemPrompt(): Promise<string>;
   submitUserMessage(): Promise<any>;
@@ -115,7 +116,7 @@ export async function sendMessage(
       errorType: 'Other',
       source: 'sendMessage',
       timestamp: new Date().toISOString(),
-    });
+    } as RuntimeError);
     setIsStreaming(false);
     return;
   }
@@ -138,8 +139,7 @@ export async function sendMessage(
     promptText,
     (content) => throttledMergeAiMessage(content),
     currentApiKey,
-    userId,
-    setNeedsLogin
+    userId
   )
     .then(async (finalContent) => {
       isProcessingRef.current = true;
@@ -170,10 +170,10 @@ export async function sendMessage(
         }
 
         if (aiMessage?.text !== finalContent) {
-          aiMessage.text = finalContent;
+          (aiMessage as any).text = finalContent;
         }
 
-        aiMessage.model = modelToUse;
+        (aiMessage as any).model = modelToUse;
         const { id } = (await sessionDatabase.put(aiMessage)) as { id: string };
         setPendingAiMessage({ ...aiMessage, _id: id });
         setSelectedResponseId(id);

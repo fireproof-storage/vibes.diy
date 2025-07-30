@@ -23,9 +23,9 @@ describe('useSimpleChat', () => {
       result.current.setSelectedResponseId('');
     });
     const mockPendingPut = vi.fn(async () => {
-      return Promise.resolve({ id: pendingId });
+      return Promise.resolve({ id: pendingId, clock: Date.now() });
     });
-    vi.mocked(useSession)(undefined).sessionDatabase.put = mockPendingPut;
+    vi.mocked(useSession)(undefined).sessionDatabase.put = mockPendingPut as any;
 
     act(() => {
       result.current.setInput('trigger pending');
@@ -36,9 +36,9 @@ describe('useSimpleChat', () => {
 
     const originalPut = vi.fn(async (doc) => {
       const id = doc._id || `ai-message-${Date.now()}`;
-      return Promise.resolve({ id });
+      return Promise.resolve({ id, clock: Date.now() });
     });
-    vi.mocked(useSession)(undefined).sessionDatabase.put = originalPut;
+    vi.mocked(useSession)(undefined).sessionDatabase.put = originalPut as any;
 
     await act(async () => {
       result.current.setSelectedResponseId('');

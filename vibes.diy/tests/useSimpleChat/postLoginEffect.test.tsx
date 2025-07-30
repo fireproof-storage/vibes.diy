@@ -20,6 +20,9 @@ const refreshKeyMock = vi.fn(async () => {
 
 // Spy on useApiKey so we can inject our custom refreshKey
 vi.spyOn(ApiKeyModule, 'useApiKey').mockImplementation(() => ({
+  apiKey: 'mock-api-key',
+  apiKeyObject: { key: 'mock-api-key', hash: 'mock-hash' },
+  error: null,
   ensureApiKey: vi.fn(),
   refreshKey: refreshKeyMock,
 }));
