@@ -46,7 +46,7 @@ class MockFileReader {
   }
 }
 
-global.FileReader = MockFileReader as typeof FileReader;// as any;
+global.FileReader = MockFileReader as typeof FileReader; // as any;
 
 // Setup mock Fireproof database and query results
 const mockVibeDoc = {

@@ -84,9 +84,7 @@ export function useMessageSelection({
   const selectedResponseDoc = useMemo(() => {
     // Priority 1: Explicit user selection (from confirmed docs)
     if (selectedResponseId) {
-      const foundInDocs = docs.find(
-        (doc) => doc.type === 'ai' && doc._id === selectedResponseId
-      );
+      const foundInDocs = docs.find((doc) => doc.type === 'ai' && doc._id === selectedResponseId);
       if (foundInDocs) return foundInDocs;
     }
 

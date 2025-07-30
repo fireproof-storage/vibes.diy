@@ -17,8 +17,12 @@ export default function CookieBanner() {
   const { isDarkMode } = useTheme();
 
   // Dynamic import for client-side only
-  const [CookieConsent, setCookieConsent] = useState<(React.Component<typeof CookieConsentType["defaultProps"]>)|null>(null);
-  const [getCookieConsentValue, setGetCookieConsentValue] = useState<((name?: string) => string|undefined)|null>(null);
+  const [CookieConsent, setCookieConsent] = useState<React.Component<
+    (typeof CookieConsentType)['defaultProps']
+  > | null>(null);
+  const [getCookieConsentValue, setGetCookieConsentValue] = useState<
+    ((name?: string) => string | undefined) | null
+  >(null);
 
   const posthog = usePostHog();
 

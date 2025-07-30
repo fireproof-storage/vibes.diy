@@ -19,13 +19,10 @@ const refreshKeyMock = vi.fn(async () => {
 });
 
 // Spy on useApiKey so we can inject our custom refreshKey
-vi.spyOn(ApiKeyModule, 'useApiKey').mockImplementation(
-  () =>
-    ({
-      ensureApiKey: vi.fn(),
-      refreshKey: refreshKeyMock,
-    }) 
-);
+vi.spyOn(ApiKeyModule, 'useApiKey').mockImplementation(() => ({
+  ensureApiKey: vi.fn(),
+  refreshKey: refreshKeyMock,
+}));
 
 // Import the hook *after* mocks are set up
 import { useSimpleChat } from '../../app/hooks/useSimpleChat';

@@ -30,7 +30,9 @@ describe('useSimpleChat', () => {
     const mockPut = vi.fn(async () => {
       return Promise.resolve({ id: generatedId });
     });
-    (vi.mocked(useSession)(undefined)).sessionDatabase.put = mockPut as unknown as ReturnType<typeof useSession>['sessionDatabase']['put'];
+    vi.mocked(useSession)(undefined).sessionDatabase.put = mockPut as unknown as ReturnType<
+      typeof useSession
+    >['sessionDatabase']['put'];
 
     act(() => {
       result.current.setInput('Trigger stream');
@@ -41,7 +43,7 @@ describe('useSimpleChat', () => {
 
     act(() => {
       const sessionHookResult = vi.mocked(useSession)(undefined);
-      const mockDocs = (sessionHookResult).docs 
+      const mockDocs = sessionHookResult.docs;
       const docToAdd = {
         _id: generatedId,
         type: 'ai',

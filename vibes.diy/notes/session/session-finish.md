@@ -141,7 +141,6 @@ For reference, here are key architectural changes in the unified session approac
 1. **Architecture Change**: We've consolidated home.tsx and session.tsx into a single unified-session.tsx component. This means all streaming functionality now needs to work through the same code path.
 
 2. **Database and State Changes**:
-
    - Messages are now stored in Fireproof as individual documents with session_id fields
    - The useSessionMessages hook fetches messages directly rather than receiving them via props
    - Messages have an explicit isStreaming flag that UI components should check
@@ -171,7 +170,6 @@ For reference, here are key architectural changes in the unified session approac
    ```
 
 4. **API Changes**:
-
    - ResultPreview: `isStreaming` prop removed, uses `streamingCode` existence check instead
    - MessageList: `messages` prop replaced with `sessionId`, `isGenerating` replaced with `isStreaming()`
    - ChatHeader: `isGenerating` prop replaced with `isStreaming` function prop
@@ -189,21 +187,17 @@ These changes are essential to understand when implementing the streaming fixes 
 After reviewing the codebase, there are several places where the `isStreaming` flag is used for legitimate purposes that can't be easily replaced by content presence checks. Here's an inventory of these usages:
 
 1. **UI Controls and User Interaction**:
-
    - ✅ **Chat Input**: In `ChatInterface.tsx`, the Enter key submission is disabled during streaming to prevent sending new messages while a response is still being generated.
    - ❌ **New Chat Button**: Currently disabled during streaming in `ChatHeader.tsx`, but this can be removed to allow users to start a new chat at any time, even during streaming.
 
 2. **Sandpack and Code Preview Behavior**:
-
    - ✅ **SandpackScrollController**: Needs the streaming state to enable auto-scrolling behavior and line highlighting during code generation. This is critical for user experience as it tracks new code being added.
    - ✅ **SandpackEventListener**: Uses streaming state to determine when to reset/initialize the sandbox and when to pause event processing.
 
 3. **Message Rendering Logic**:
-
    - ✅ **AITyping Indicator**: In `MessageList.tsx`, the typing indicator should only show when streaming has started but no content has arrived yet. This requires both the global streaming state and message content checks.
 
 4. **State Management**:
-
    - ✅ **Streaming State Reset**: At the end of streaming, we need an explicit flag to be turned off to trigger cleanup actions that wouldn't be triggered by content changes alone. These cleanup actions include:
 
      a. **Title Generation**: When streaming completes, we check for code in the generated response and trigger title generation if needed.

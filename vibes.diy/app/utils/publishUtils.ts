@@ -55,7 +55,7 @@ export async function publishApp({
     // Try to get the vibe document which might contain remixOf information
     let remixOf = null;
     try {
-      const vibeDoc = (await sessionDb.get<PublishDoc>('vibe')) 
+      const vibeDoc = await sessionDb.get<PublishDoc>('vibe');
       if (vibeDoc && vibeDoc.remixOf) {
         remixOf = vibeDoc.remixOf;
       }
@@ -76,7 +76,7 @@ export async function publishApp({
 
     // Check if we have a screenshot document
     if (result.rows.length > 0) {
-      const screenshotDoc = result.rows[0].doc
+      const screenshotDoc = result.rows[0].doc;
 
       // Check if the screenshot document has a file in _files.screenshot
       if (screenshotDoc?._files && screenshotDoc._files.screenshot) {
@@ -146,7 +146,7 @@ export async function publishApp({
       const docId = `app-${data.app.slug}`;
 
       // Try to get the existing document to preserve metadata like favorite status
-      const existingDoc = (await userVibespaceDb.get<PublishDoc>(docId).catch(() => null))
+      const existingDoc = await userVibespaceDb.get<PublishDoc>(docId).catch(() => null);
 
       // Use the shared utility function to update the user's vibespace
       if (userId) {

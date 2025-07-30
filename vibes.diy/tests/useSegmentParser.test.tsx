@@ -24,7 +24,7 @@ interface MockDoc {
   session_id: string;
   timestamp?: number;
   created_at?: number;
-  segments?: AiChatMessage["segments"][];
+  segments?: AiChatMessage['segments'][];
   dependenciesString?: string;
   isStreaming?: boolean;
   model?: string;
@@ -32,8 +32,8 @@ interface MockDoc {
 }
 const mockDocs: MockDoc[] = [];
 
-const currentUserMessage: Partial<MockDoc> = {} 
-const currentAiMessage: Partial<MockDoc> = {}
+const currentUserMessage: Partial<MockDoc> = {};
+const currentAiMessage: Partial<MockDoc> = {};
 
 // Define the mergeUserMessage implementation separately
 const mergeUserMessageImpl = (data: Partial<ChatMessage>) => {
@@ -419,7 +419,7 @@ export default HelloWorld;`,
                 dependenciesString: '{"react": "^18.2.0", "react-dom": "^18.2.0"}}',
                 isStreaming,
                 timestamp: now,
-              } ;
+              };
             }
             // Special case for the dependencies test
             else if (rawContent.includes('function Timer()') && rawContent.includes('useEffect')) {

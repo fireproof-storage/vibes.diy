@@ -146,11 +146,36 @@ export function normalizeComponentExports(code: string): string {
   // Include the direct export patterns for compatibility with the rest of the code
   const patterns = {
     // Add stubs for direct patterns to prevent TypeScript errors
-    hoc: { test: /^$/, process: () => { /* no-op */ } } as PatternWithRegexTest,
-    functionDeclaration: { test: /^$/, process: () => { /* no-op */ } } as PatternWithRegexTest,
-    classDeclaration: { test: /^$/, process: () => { /* no-op */ } } as PatternWithRegexTest,
-    arrowFunction: { test: /^$/, process: () => { /* no-op */ } } as PatternWithRegexTest,
-    objectLiteral: { test: /^$/, process: () => { /* no-op */ } } as PatternWithRegexTest,
+    hoc: {
+      test: /^$/,
+      process: () => {
+        /* no-op */
+      },
+    } as PatternWithRegexTest,
+    functionDeclaration: {
+      test: /^$/,
+      process: () => {
+        /* no-op */
+      },
+    } as PatternWithRegexTest,
+    classDeclaration: {
+      test: /^$/,
+      process: () => {
+        /* no-op */
+      },
+    } as PatternWithRegexTest,
+    arrowFunction: {
+      test: /^$/,
+      process: () => {
+        /* no-op */
+      },
+    } as PatternWithRegexTest,
+    objectLiteral: {
+      test: /^$/,
+      process: () => {
+        /* no-op */
+      },
+    } as PatternWithRegexTest,
 
     // Named declarations with default export
     namedFunctionDefault: {

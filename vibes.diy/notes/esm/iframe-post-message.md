@@ -5,13 +5,11 @@
 The current approach with ESM.sh in the import map provides an elegant solution for dynamic imports. Here's how it would work in a rapid App.jsx switcher:
 
 1. **Initial Setup**: Create the iframe once with all static content, including:
-
    - Import map (React, ReactDOM, use-fireproof, call-ai)
    - html2canvas and other utilities
    - Event listeners for postMessage
 
 2. **Dynamic App.jsx Updates**: When new App.jsx content arrives:
-
    - Send just the component code via postMessage
    - Use `eval()` or a more controlled approach to update the React component
    - Re-render without reloading the entire iframe
@@ -29,24 +27,20 @@ The beauty of ESM is that new modules can be imported on demand. You can either:
 ## Addressing the Top 5 Technical Debt Items
 
 1. **Inefficient Iframe Reloading**:
-
    - Keep a single iframe instance alive throughout the session
    - Use a module evaluation approach rather than rebuilding the entire iframe
    - Implement content-only updates via postMessage
 
 2. **Inconsistent API Key Handling**:
-
    - Standardize on the direct embedding approach if security isn't a concern
    - Remove legacy postMessage code for API keys
 
 3. **Broken Screenshot Functionality**:
-
    - Include html2canvas in the initial iframe setup
    - Ensure screenshot capture functions are present in the template
    - Properly wire up event listeners in both parent and iframe
 
 4. **Dual Code Paths and Dead Code**:
-
    - Clean up commented-out code
    - Standardize on one selector approach (either generic iframe or specific class)
    - Remove the unused timeout mechanism

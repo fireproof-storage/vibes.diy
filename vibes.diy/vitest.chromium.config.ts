@@ -15,7 +15,7 @@ export default defineConfig({
     include: [
       // Only include specific tests that benefit from real browser
       'tests/vibeUtils.test.ts',
-      'tests/encodeTitle.test.ts', 
+      'tests/encodeTitle.test.ts',
       'tests/routes.test.ts',
       'tests/mock-check.test.ts',
       'tests/chatWithLegends.test.tsx',

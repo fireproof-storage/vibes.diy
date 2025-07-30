@@ -16,7 +16,6 @@ The primary goal is to refactor the database interaction logic to:
 We've made significant progress with the implementation of three key components:
 
 1. **useSession** - ✅ Complete & Enhanced
-
    - Updated to use Fireproof's `useDocument` hook for reactive session management
    - Handles session metadata (title, etc.)
    - Provides access to the database
@@ -24,7 +23,6 @@ We've made significant progress with the implementation of three key components:
    - Added comprehensive test suite
 
 2. **useSessionMessages** - ✅ Complete
-
    - Stores messages as separate documents with session_id field
    - Uses different document structures for user vs. AI messages
    - Preserves raw AI message content for future reparsing
@@ -105,13 +103,11 @@ The implementation has several issues that need to be addressed:
 ## Next Steps
 
 1. **Update UI Components**:
-
    - Refactor MessageList to use useSessionMessages
    - Update session.tsx and home.tsx routes to use the new hooks
    - Remove any direct database access from components
 
 2. **Data Model Migration**:
-
    - Create a migration function to convert existing sessions to the new format
    - Add a compatibility layer for reading legacy session format
 
@@ -125,12 +121,10 @@ The implementation has several issues that need to be addressed:
 This architecture sets us up for several future improvements:
 
 1. **Real-time Collaboration**:
-
    - Multiple users can interact with the same session
    - Changes are synchronized across clients
 
 2. **Advanced Document Types**:
-
    - File attachments linked to sessions
 
 3. **Enhanced UI Features**:
@@ -145,36 +139,30 @@ The session-based architecture with individual message documents provides a soli
 Based on the changes implemented so far, these are the specific steps required to complete the session management refactoring before merging:
 
 1. **Update MessageList Component**:
-
    - Refactor the MessageList component to use useSessionMessages instead of receiving props
    - Implement real-time message updates with useLiveQuery results
    - Handle message ordering and grouping
 
 2. **Migrate Session & Home Routes**:
-
    - Update the session.tsx route to use useSession and useSessionMessages directly
    - Update the home.tsx route to handle new session creation with the new pattern
    - Remove legacy handleScrollToBottom references and other direct database access
 
 3. **Update ChatInterface**:
-
    - Remove the deprecated SessionDocument interface from ChatInterface.tsx
    - Use the proper imported types from app/types/chat.ts
    - Migrate to the new hook pattern for session management
 
 4. **No Migration Strategy**:
-
    - There is no legacy data to migrate
 
 5. **Comprehensive Testing**:
-
    - Complete test suite for useSessionMessages
    - Test the migration strategy with various session formats
    - Test the complete flow from UI to database and back
    - Verify real-time updates across components
 
 6. **Performance Optimization**:
-
    - Its fast enough for now, get it simple first
 
 7. **Clean Up**:
@@ -245,19 +233,16 @@ We will replace the `isGenerating` boolean flag with direct checks against messa
 ### Implementation Plan
 
 1. **Remove `isGenerating` from `useSimpleChat` Return Value**:
-
    - No longer expose this as part of the hook's public API
    - Rely on the presence of streaming messages instead
 
 2. **Update UI Components**:
-
    - Replace all instances of `isGenerating` with segment-based checks
    - For showing typing indicators: `messages.some(msg => msg.type === 'ai' && (msg as AiChatMessage).isStreaming)`
    - For input disabling: Same as above
    - For ResultPreview: `currentSegments().length > 0`
 
 3. **Improve Content Display**:
-
    - Show content in ResultPreview as soon as segments are available
    - Transition smoothly from "Thinking" to content display
    - Maintain visual feedback during ongoing streaming

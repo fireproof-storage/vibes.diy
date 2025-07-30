@@ -97,8 +97,10 @@ class LazyDB {
   allDocs = async <T extends DocTypes>(options?: AllDocsQueryOpts): Promise<AllDocsResponse<T>> =>
     this.inner.allDocs<T>(options);
 
-  changes = async <T extends DocTypes>(since?: ClockHead, options?: ChangesOptions): Promise<ChangesResponse<T>> =>
-    this.inner.changes<T>(since, options);
+  changes = async <T extends DocTypes>(
+    since?: ClockHead,
+    options?: ChangesOptions
+  ): Promise<ChangesResponse<T>> => this.inner.changes<T>(since, options);
 
   query = async <K extends IndexKeyType, T extends DocTypes, R extends DocFragment = T>(
     field: string,
@@ -300,7 +302,10 @@ export function useLazyFireproof(
   }
 
   // Custom hook that handles database transitions for Changes
-  function useEnhancedChanges<T extends DocTypes>(since: ClockHead, options?: ChangesOptions): ChangesResult<T> {
+  function useEnhancedChanges<T extends DocTypes>(
+    since: ClockHead,
+    options?: ChangesOptions
+  ): ChangesResult<T> {
     // Use a state counter to trigger refreshes when the database transitions
     const [refreshCounter, setRefreshCounter] = useState(0);
 
@@ -349,7 +354,9 @@ export function useLazyFireproof(
     (callback: (db: Database) => void) => {
       if (!ref.current) {
         console.warn('Cannot subscribe to database transitions: database not initialized');
-        return () => { /* no-op */ };
+        return () => {
+          /* no-op */
+        };
       }
       return ref.current.onTransition(callback);
     },
@@ -360,7 +367,9 @@ export function useLazyFireproof(
   useEffect(() => {
     // This ensures that when hooks subscribe to LiveQuery or document on mount
     // they'll get the right database immediately if open() was called synchronously
-    const timeout = setTimeout(() => { /* no-op */ }, 0);
+    const timeout = setTimeout(() => {
+      /* no-op */
+    }, 0);
     return () => clearTimeout(timeout);
   }, []);
 

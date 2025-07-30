@@ -32,6 +32,8 @@ describe('useSimpleChat', () => {
       await result.current.sendMessage();
     });
 
-    await act(async () => { /* no-op */ });
+    await act(async () => {
+      /* no-op */
+    });
   });
 });

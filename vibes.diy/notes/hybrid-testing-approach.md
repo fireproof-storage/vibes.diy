@@ -10,11 +10,13 @@ Based on the test results, we've implemented a **hybrid approach** that gets the
 ## Results
 
 ### jsdom Tests (Primary)
+
 - **323 tests passing, 3 failed** (vs original 262 failed)
 - Most component tests work perfectly with proper mocking
 - Fast execution and reliable for established patterns
 
-### Chromium Tests (Selected) 
+### Chromium Tests (Selected)
+
 - **13 tests passing, 0 failed** in real browser
 - Perfect for utility functions and simple components
 - No mocking complexity, real browser behavior
@@ -33,12 +35,14 @@ vibes.diy/
 ## Test Categories
 
 ### ✅ jsdom Tests (Keep These)
+
 - Component tests with React Router: `ChatInput`, `QuickSuggestions`
 - Hook tests with complex mocking: `useSimpleChat/*`
 - Integration tests: `SessionSidebar`, `ResultPreview`
 - Tests requiring extensive browser API simulation
 
 ### 🌐 Chromium Tests (These)
+
 - Pure utility functions: `vibeUtils.test.ts`, `encodeTitle.test.ts`
 - Simple component rendering: `vibe-route.test.tsx`, `chatWithLegends.test.tsx`
 - Configuration tests: `routes.test.ts`, `mock-check.test.ts`
@@ -63,16 +67,19 @@ pnpm test && pnpm test:chromium
 ## Migration Strategy
 
 ### Phase 1: Stabilize Current ✅
+
 - jsdom tests working well (323/326 passing)
 - Chromium tests working perfectly (13/13 passing)
 - Both environments properly configured
 
 ### Phase 2: Gradual Migration (Future)
+
 - Move tests to Chromium **only when they fail in jsdom**
 - Focus on tests that need real browser APIs
 - Keep complex mocked tests in jsdom for now
 
 ### Phase 3: Optimization (Long-term)
+
 - Consider consolidating when Vitest browser support matures
 - Evaluate performance vs reliability trade-offs
 
