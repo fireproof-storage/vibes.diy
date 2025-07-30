@@ -3,7 +3,7 @@ import { useLocation, useNavigate, useParams } from 'react-router';
 import { encodeTitle } from '~/components/SessionSidebar/utils';
 import AppLayout from '../components/AppLayout';
 import ChatHeaderContent from '../components/ChatHeaderContent';
-import ChatInput from '../components/ChatInput';
+import ChatInput, { type ChatInputRef } from '../components/ChatInput';
 import ChatInterface from '../components/ChatInterface';
 import QuickSuggestions from '../components/QuickSuggestions';
 import ResultPreview from '../components/ResultPreview/ResultPreview';
@@ -25,11 +25,52 @@ export default function UnifiedSession() {
   const navigate = useNavigate();
   const location = useLocation();
   const chatState = useSimpleChat(urlSessionId);
+  const hasAutoSentMessage = useRef(false);
+  const chatInputRef = useRef<ChatInputRef>(null);
 
   const { setMessageHasBeenSent } = useCookieConsent();
 
   // Track message submission events
   const [hasSubmittedMessage, setHasSubmittedMessage] = useState(false);
+
+  // Capture URL prompt on first render
+  const [capturedPrompt, setCapturedPrompt] = useState<string | null>(null);
+
+  // Capture URL prompt parameter once on mount
+  useEffect(() => {
+    const searchParams = new URLSearchParams(location.search);
+    const promptParam = searchParams.get('prompt');
+    if (promptParam && promptParam.trim()) {
+      setCapturedPrompt(promptParam);
+    }
+  }, []); // Empty dependency array - runs only on mount
+
+  // Handle captured prompt by setting input and focusing
+  useEffect(() => {
+    if (capturedPrompt && !hasAutoSentMessage.current) {
+      chatState.setInput(capturedPrompt);
+
+      // Focus the input element and place cursor at the end after a short delay
+      setTimeout(() => {
+        if (chatState.inputRef.current) {
+          chatState.inputRef.current.focus();
+
+          // Place cursor at the end of the text
+          const inputLength = chatState.inputRef.current.value.length;
+          chatState.inputRef.current.setSelectionRange(inputLength, inputLength);
+        }
+      }, 10);
+
+      hasAutoSentMessage.current = true;
+
+      // Click submit button after 2 seconds
+      setTimeout(() => {
+        if (chatInputRef.current) {
+          chatInputRef.current.clickSubmit();
+        }
+      }, 1000);
+    }
+  }, [capturedPrompt, chatState.setInput]);
 
   const [previewReady, setPreviewReady] = useState(false);
   const [mobilePreviewShown, setMobilePreviewShown] = useState(false);
@@ -105,32 +146,6 @@ export default function UnifiedSession() {
       }
     }
   }, [chatState.title, location.pathname, chatState.sessionId, navigate]);
-
-  // Check if there's a prompt parameter in the URL to prefill the chat input
-  useEffect(() => {
-    const searchParams = new URLSearchParams(location.search);
-
-    // Check for prompt parameter to prefill chat input
-    const promptParam = searchParams.get('prompt');
-    if (promptParam && promptParam.trim()) {
-      chatState.setInput(promptParam);
-
-      // Focus the input element and place cursor at the end after a short delay
-      // to ensure the input has been updated and DOM is ready
-      setTimeout(() => {
-        if (chatState.inputRef.current) {
-          chatState.inputRef.current.focus();
-
-          // Place cursor at the end of the text
-          const inputLength = chatState.inputRef.current.value.length;
-          chatState.inputRef.current.setSelectionRange(inputLength, inputLength);
-        }
-      }, 100);
-      // setTimeout(() => {
-      //   chatState.sendMessage(promptParam);
-      // }, 200);
-    }
-  }, [location.search, chatState.setInput]);
 
   // We're now passing chatState directly to ChatInput
 
@@ -260,6 +275,7 @@ export default function UnifiedSession() {
         }
         chatInput={
           <ChatInput
+            ref={chatInputRef}
             chatState={chatState}
             onSend={() => {
               setMessageHasBeenSent(true);

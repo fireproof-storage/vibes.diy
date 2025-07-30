@@ -1,5 +1,5 @@
 import type { ChangeEvent, KeyboardEvent } from 'react';
-import { useEffect, memo, useCallback } from 'react';
+import { useEffect, memo, useCallback, useRef, forwardRef, useImperativeHandle } from 'react';
 import type { ChatState } from '../types/chat';
 import VibesDIYLogo from './VibesDIYLogo';
 
@@ -8,7 +8,23 @@ interface ChatInputProps {
   onSend: () => void;
 }
 
-function ChatInput({ chatState, onSend }: ChatInputProps) {
+export interface ChatInputRef {
+  clickSubmit: () => void;
+}
+
+const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(({ chatState, onSend }, ref) => {
+  // Ref for the submit button
+  const submitButtonRef = useRef<HTMLButtonElement>(null);
+
+  // Expose the click function to parent components
+  useImperativeHandle(ref, () => ({
+    clickSubmit: () => {
+      if (submitButtonRef.current) {
+        submitButtonRef.current.click();
+      }
+    },
+  }));
+
   // Internal callback to handle sending messages
   const handleSendMessage = useCallback(() => {
     if (chatState.sendMessage && !chatState.isStreaming) {
@@ -58,6 +74,7 @@ function ChatInput({ chatState, onSend }: ChatInputProps) {
           rows={2}
         />
         <button
+          ref={submitButtonRef}
           type="button"
           onClick={handleSendMessage}
           disabled={chatState.isStreaming}
@@ -78,7 +95,9 @@ function ChatInput({ chatState, onSend }: ChatInputProps) {
       </div>
     </div>
   );
-}
+});
+
+ChatInput.displayName = 'ChatInput';
 
 // Use memo to optimize rendering
 export default memo(ChatInput);
