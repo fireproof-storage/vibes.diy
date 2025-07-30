@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, afterEach, type Mock } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach, type Mock } from 'vitest';
 import * as auth from '../app/utils/auth';
 
 // Mock the jose module
@@ -12,28 +12,37 @@ vi.mock('react-hot-toast', () => ({
   default: { success: vi.fn() },
 }));
 
-// Using 'any' for mocked functions since vitest doesn't export its mock types easily
-
 // Import jose after mocking to get the mocked version
 import * as jose from 'jose';
 
-// Helper for setting up import.meta.env
-function setEnv(vars: Record<string, string>) {
-  (import.meta as { env: Record<string, string> }).env = { ...vars };
-}
-
 describe('auth utils', () => {
+  beforeEach(() => {
+    // Environment variables are set in chromium-setup.ts for Chromium tests
+    // For jsdom tests, set them here
+    if (typeof window !== 'undefined' && !window.navigator.userAgent.includes('HeadlessChrome')) {
+      import.meta.env.VITE_CLOUD_SESSION_TOKEN_PUBLIC =
+        'z2VbCuXVUi2VZRpXcSMgMhYzT1tLvV7JQ6PY1pHYoRGVGSKEfb4Gp9w6P8d8eEQrQV';
+      import.meta.env.VITE_CONNECT_API_URL = 'https://dev.connect.fireproof.direct/api';
+      import.meta.env.VITE_CONNECT_URL = 'https://dev.connect.fireproof.direct/token';
+    }
+  });
+
   afterEach(() => {
     vi.restoreAllMocks();
     // Clear storage
     window.localStorage.clear();
     window.sessionStorage.clear();
+    // Clean up environment for jsdom tests
+    if (typeof window !== 'undefined' && !window.navigator.userAgent.includes('HeadlessChrome')) {
+      delete import.meta.env.VITE_CLOUD_SESSION_TOKEN_PUBLIC;
+      delete import.meta.env.VITE_CONNECT_API_URL;
+      delete import.meta.env.VITE_CONNECT_URL;
+    }
   });
 
   describe('verifyToken', () => {
     it('returns payload for a valid token', async () => {
-      // Setup environment and mocks
-      setEnv({ VITE_CLOUD_SESSION_TOKEN_PUBLIC: 'zabc' });
+      // Environment already set in beforeEach
 
       // Setup the jwt verification result with a token that won't trigger token extension
       // (far from expiration)
@@ -59,7 +68,7 @@ describe('auth utils', () => {
     });
 
     it('returns null for invalid token', async () => {
-      setEnv({ VITE_CLOUD_SESSION_TOKEN_PUBLIC: 'zabc' });
+      // Environment already set in beforeEach
       (jose.jwtVerify as Mock).mockRejectedValueOnce(new Error('bad token'));
 
       const result = await auth.verifyToken('bad.token');
@@ -67,7 +76,7 @@ describe('auth utils', () => {
     });
 
     it('returns null for expired token', async () => {
-      setEnv({ VITE_CLOUD_SESSION_TOKEN_PUBLIC: 'zabc' });
+      // Environment already set in beforeEach
       (jose.jwtVerify as Mock).mockResolvedValueOnce({
         protectedHeader: { alg: 'ES256' },
         payload: {
@@ -89,10 +98,7 @@ describe('auth utils', () => {
     // Instead of testing the exact token extension mechanism in verifyToken,
     // we'll test that the key integration points work as expected
     it('successfully returns extended token payload', async () => {
-      // Setup environment
-      setEnv({
-        VITE_CLOUD_SESSION_TOKEN_PUBLIC: 'zabc',
-      });
+      // Environment already set in beforeEach
 
       // Setup basic JWT verification for a valid token
       (jose.jwtVerify as Mock).mockResolvedValue({
@@ -121,17 +127,17 @@ describe('auth utils', () => {
       const usedEndpoint = 'https://dev.connect.fireproof.direct/api';
 
       // Mock successful API response for token extension
-      global.fetch = vi.fn().mockResolvedValue({
+      window.fetch = vi.fn().mockResolvedValue({
         ok: true,
         json: async () => ({ token: 'new.extended.token' }),
-      })
+      });
 
       // Test the extendToken function directly
       const result = await auth.extendToken('old.token');
 
       // Verify correct behavior
       expect(result).toBe('new.extended.token');
-      expect(global.fetch).toHaveBeenCalledWith(
+      expect(window.fetch).toHaveBeenCalledWith(
         usedEndpoint,
         expect.objectContaining({
           method: 'POST',
@@ -145,24 +151,24 @@ describe('auth utils', () => {
 
   describe('extendToken', () => {
     it('returns new token and stores it', async () => {
-      setEnv({ VITE_CONNECT_API_URL: 'https://api' });
-      global.fetch = vi.fn().mockResolvedValue({
+      import.meta.env.VITE_CONNECT_API_URL = 'https://api';
+      window.fetch = vi.fn().mockResolvedValue({
         ok: true,
         json: async () => ({ token: 'newtoken123' }),
-      }) 
+      });
       const result = await auth.extendToken('oldtoken');
       expect(result).toBe('newtoken123');
       expect(window.localStorage.getItem('auth_token')).toBe('newtoken123');
     });
     it('returns null on network error', async () => {
-      setEnv({ VITE_CONNECT_API_URL: 'https://api' });
-      global.fetch = vi.fn().mockRejectedValue(new Error('fail')) 
+      import.meta.env.VITE_CONNECT_API_URL = 'https://api';
+      window.fetch = vi.fn().mockRejectedValue(new Error('fail'));
       const result = await auth.extendToken('token');
       expect(result).toBeNull();
     });
     it('returns null on invalid response', async () => {
-      setEnv({ VITE_CONNECT_API_URL: 'https://api' });
-      global.fetch = vi.fn().mockResolvedValue({ ok: true, json: async () => ({}) })
+      import.meta.env.VITE_CONNECT_API_URL = 'https://api';
+      window.fetch = vi.fn().mockResolvedValue({ ok: true, json: async () => ({}) });
       const result = await auth.extendToken('token');
       expect(result).toBeNull();
     });
@@ -171,34 +177,45 @@ describe('auth utils', () => {
   describe('initiateAuthFlow', () => {
     it('returns connectUrl and resultId and sets sessionStorage', () => {
       // Set the connect URL environment variable
-      setEnv({ VITE_CONNECT_URL: 'http://localhost:3000/token' });
-      vi.spyOn(window, 'location', 'get').mockReturnValue({ pathname: '/not/callback' } as typeof window.location );
+      import.meta.env.VITE_CONNECT_URL = 'http://localhost:3000/token';
+
+      // Use history API to simulate being on a different path
+      // This works better in real browser environments
+      window.history.pushState({}, '', '/not/callback');
 
       const result = auth.initiateAuthFlow();
       expect(result).toBeTruthy();
       expect(result?.connectUrl).toMatch(/connect.fireproof.direct/);
       expect(result?.resultId).toMatch(/^z/);
       expect(window.sessionStorage.getItem('auth_result_id')).toBe(result?.resultId);
+
+      // Restore original path
+      window.history.pushState({}, '', '/');
     });
 
     it('returns null if already on callback page', () => {
-      vi.spyOn(window, 'location', 'get').mockReturnValue({ pathname: '/auth/callback' } as typeof window.location );
+      // Use history API to simulate being on callback path
+      window.history.pushState({}, '', '/auth/callback');
+
       const result = auth.initiateAuthFlow();
       expect(result).toBeNull();
+
+      // Restore original path
+      window.history.pushState({}, '', '/');
     });
   });
 
   describe('pollForAuthToken', () => {
     it('returns token if found', async () => {
-      setEnv({ VITE_CONNECT_API_URL: 'https://api' });
+      import.meta.env.VITE_CONNECT_API_URL = 'https://api';
       let called = 0;
-      global.fetch = vi.fn().mockImplementation(() => {
+      window.fetch = vi.fn().mockImplementation(() => {
         called++;
         return Promise.resolve({
           ok: true,
           json: async () => (called < 2 ? {} : { token: 'tok123' }),
         });
-      })
+      });
 
       // Toast is already mocked at the top of the file
 
@@ -207,8 +224,8 @@ describe('auth utils', () => {
     });
 
     it('returns null if timed out', async () => {
-      setEnv({ VITE_CONNECT_API_URL: 'https://api' });
-      global.fetch = vi.fn().mockResolvedValue({ ok: true, json: async () => ({}) })
+      import.meta.env.VITE_CONNECT_API_URL = 'https://api';
+      window.fetch = vi.fn().mockResolvedValue({ ok: true, json: async () => ({}) });
 
       const token = await auth.pollForAuthToken('resultid', 1, 5);
       expect(token).toBeNull();

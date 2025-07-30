@@ -9,7 +9,6 @@ This document tracks progress on implementing the data tab feature as outlined i
 ### Phase 1: Add Data Tab UI (COMPLETED)
 
 - ✅ Updated type definitions to include 'data' alongside 'code' and 'preview'
-
   - Modified ResultPreviewTypes.ts with updated type definitions
   - Updated typing in IframeContent.tsx, ResultPreview.tsx
   - Updated home.tsx to handle the new 'data' view type
@@ -25,13 +24,11 @@ This document tracks progress on implementing the data tab feature as outlined i
 ### Phase 2: Database Access Implementation (IN PROGRESS)
 
 - ✅ Created database discovery mechanism
-
   - Implemented functionality to scan code for useFireproof() calls
   - Added support for detecting template-based database names (with sessionId variables)
   - Included fallback to common database names
 
 - ✅ Added initial database display components
-
   - Created DatabaseListView component to display discovered databases
   - Created DatabaseData component to fetch and display database contents
   - Added IndexedDB direct access to query database contents

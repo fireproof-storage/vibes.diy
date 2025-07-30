@@ -183,7 +183,7 @@ describe('useViewState', () => {
     } as ReturnType<typeof useLocation>);
 
     // We need to create a fresh instance for each test to ensure refs start clean
-    let hookResult: ViewState | null = null;
+    let hookResult: Partial<ViewState> | null = null;
 
     // Initialize with preview not ready - first render creates the refs
     const { unmount } = renderHook(
@@ -244,7 +244,7 @@ describe('useViewState', () => {
     } as ReturnType<typeof useLocation>);
 
     // We need to create a fresh instance to ensure refs are properly tracked
-    let hookResult: ViewState | null = null;
+    let hookResult: Partial<ViewState> | null = null;
 
     // Initialize with preview not ready - first render to set up refs
     const { unmount } = renderHook(

@@ -50,10 +50,16 @@ describe('MessageList Real-World Streaming Tests', () => {
         <MessageList
           messages={messages}
           isStreaming={true}
-          setSelectedResponseId={() => { /* no-op */ }}
+          setSelectedResponseId={() => {
+            /* no-op */
+          }}
           selectedResponseId=""
-          setMobilePreviewShown={() => { /* no-op */ }}
-          navigateToView={() => { /* no-op */ }}
+          setMobilePreviewShown={() => {
+            /* no-op */
+          }}
+          navigateToView={() => {
+            /* no-op */
+          }}
         />
       </MockThemeProvider>
     );
@@ -102,10 +108,16 @@ describe('MessageList Real-World Streaming Tests', () => {
         <MessageList
           messages={messages}
           isStreaming={true}
-          setSelectedResponseId={() => { /* no-op */ }}
+          setSelectedResponseId={() => {
+            /* no-op */
+          }}
           selectedResponseId=""
-          setMobilePreviewShown={() => { /* no-op */ }}
-          navigateToView={() => { /* no-op */ }}
+          setMobilePreviewShown={() => {
+            /* no-op */
+          }}
+          navigateToView={() => {
+            /* no-op */
+          }}
         />
       </MockThemeProvider>
     );
@@ -148,10 +160,16 @@ describe('MessageList Real-World Streaming Tests', () => {
         <MessageList
           messages={messages}
           isStreaming={true}
-          setSelectedResponseId={() => { /* no-op */ }}
+          setSelectedResponseId={() => {
+            /* no-op */
+          }}
           selectedResponseId=""
-          setMobilePreviewShown={() => { /* no-op */ }}
-          navigateToView={() => { /* no-op */ }}
+          setMobilePreviewShown={() => {
+            /* no-op */
+          }}
+          navigateToView={() => {
+            /* no-op */
+          }}
         />
       </MockThemeProvider>
     );
@@ -183,10 +201,16 @@ describe('MessageList Real-World Streaming Tests', () => {
         <MessageList
           messages={messages}
           isStreaming={true}
-          setSelectedResponseId={() => { /* no-op */ }}
+          setSelectedResponseId={() => {
+            /* no-op */
+          }}
           selectedResponseId=""
-          setMobilePreviewShown={() => { /* no-op */ }}
-          navigateToView={() => { /* no-op */ }}
+          setMobilePreviewShown={() => {
+            /* no-op */
+          }}
+          navigateToView={() => {
+            /* no-op */
+          }}
         />
       </MockThemeProvider>
     );

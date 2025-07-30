@@ -212,7 +212,9 @@ describe('usePublish Hook', () => {
     // Mock a failure in publishApp
     (publishApp as Mock).mockRejectedValue(new Error('Failed to publish'));
 
-    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => { /* no-op */ });
+    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {
+      /* no-op */
+    });
 
     const { result } = renderHook(
       () =>

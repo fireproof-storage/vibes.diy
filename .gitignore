@@ -1,1 +1,28 @@
 node_modules
+
+# Lock files (monorepo managed at root)
+pnpm-lock.yaml
+package-lock.json
+yarn.lock
+
+# VS Code settings
+.vscode/
+
+# Environment files
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Build outputs
+build/
+dist/
+coverage/
+
+# Local development
+.netlify/
+.DS_Store
+
+# Test artifacts  
+test-results/

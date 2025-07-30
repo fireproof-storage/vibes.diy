@@ -5,12 +5,10 @@
 ### First Message Behavior
 
 1. **Initial State**:
-
    - Path: Base path without app/code/data suffixes
    - Default view: Code preview (without altering URL path)
 
 2. **When Code Starts Streaming**:
-
    - Display: Code view
    - Path: Should remain at base path (no /code suffix)
    - This allows the automatic transition to app view later
@@ -23,7 +21,6 @@
 ### Subsequent Messages & User Interaction
 
 1. **After First Message**:
-
    - Default view: App view
    - When preview becomes ready again, should navigate to app view
    - But never override explicit user navigation to /code or /data
@@ -35,12 +32,10 @@
 ## Implementation Requirements
 
 1. **URL Path Based Determination**:
-
    - Active view should be determined primarily by URL path
    - Fallback to state only when URL doesn't specify a view
 
 2. **No View Parameter in Initial URL**:
-
    - The initial URL should not contain any view suffix
    - This is critical to enable auto-navigation to app view when ready
 

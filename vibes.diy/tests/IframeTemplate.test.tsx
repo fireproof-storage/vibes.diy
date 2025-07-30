@@ -76,7 +76,11 @@ describe('Iframe Template', () => {
     // Store original methods
     const originalCreateObjectURL = URL.createObjectURL;
     // Make sure revokeObjectURL exists to avoid cleanup errors
-    const originalRevokeObjectURL = URL.revokeObjectURL || (() => { /* no-op */ });
+    const originalRevokeObjectURL =
+      URL.revokeObjectURL ||
+      (() => {
+        /* no-op */
+      });
     const originalGetItem = Storage.prototype.getItem;
     let messageEventHandlers: ((event: MessageEvent) => void)[] = [];
 
@@ -105,7 +109,7 @@ describe('Iframe Template', () => {
         if (event === 'message') {
           messageEventHandlers.push(handler as (x: MessageEvent) => void);
         }
-        return undefined
+        return undefined;
       });
 
       // Create a realistic iframe mock that can receive and send messages
@@ -149,9 +153,15 @@ describe('Iframe Template', () => {
                   timeStamp: Date.now(),
                   type: 'message',
                   composedPath: () => [],
-                  preventDefault: () => { /* no-op */ },
-                  stopImmediatePropagation: () => { /* no-op */ },
-                  stopPropagation: () => { /* no-op */ },
+                  preventDefault: () => {
+                    /* no-op */
+                  },
+                  stopImmediatePropagation: () => {
+                    /* no-op */
+                  },
+                  stopPropagation: () => {
+                    /* no-op */
+                  },
                   AT_TARGET: 0,
                   BUBBLING_PHASE: 0,
                   CAPTURING_PHASE: 0,

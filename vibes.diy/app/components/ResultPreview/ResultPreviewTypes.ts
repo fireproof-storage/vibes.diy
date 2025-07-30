@@ -17,8 +17,11 @@ export interface ResultPreviewProps {
   addError?: (error: RuntimeError) => void; // Single error handler for all types of errors
 }
 
-export type IframeFiles = Record<string, {
+export type IframeFiles = Record<
+  string,
+  {
     code: string;
     hidden?: boolean;
     active?: boolean;
-  }>;
+  }
+>;

@@ -7,7 +7,9 @@ export default function DynamicTable({
   rows,
   th = '_id',
   // link = ['_id'],
-  onRowClick = () => { /* no-op */ },
+  onRowClick = () => {
+    /* no-op */
+  },
 }: any) {
   return (
     <div className="relative mt-[40px] max-h-[calc(100vh-140px)] overflow-x-auto overflow-y-auto">

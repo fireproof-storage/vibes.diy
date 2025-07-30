@@ -7,7 +7,6 @@ The `jchris/lazy-key3` branch implements a more optimized approach to API key ha
 ## Current Analysis
 
 - `selem/auth` branch already has ~90% of the "lazy-key3" logic:
-
   - Rate-limit back-off mechanism
   - Shared `pendingKeyRequest` for deduplication
   - Hash continuity for key tracking

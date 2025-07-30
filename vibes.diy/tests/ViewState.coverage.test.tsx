@@ -1,4 +1,4 @@
-import { renderHook , act } from '@testing-library/react';
+import { renderHook, act } from '@testing-library/react';
 import { useViewState, type ViewState } from '../app/utils/ViewState';
 import { vi, describe, test, expect, beforeEach } from 'vitest';
 

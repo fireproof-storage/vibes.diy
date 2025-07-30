@@ -222,9 +222,15 @@ export default function UnifiedSession() {
           // Only render the header content when we have code content or a completed session
           chatState.selectedCode?.content || urlSessionId ? (
             <ResultPreviewHeaderContent
-              displayView={displayView}
-              navigateToView={navigateToView}
-              viewControls={viewControls}
+              displayView={displayView || 'code'}
+              navigateToView={navigateToView || (() => {})}
+              viewControls={
+                viewControls || {
+                  preview: { enabled: false, icon: 'app-icon', label: 'App' },
+                  code: { enabled: true, icon: 'code-icon', label: 'Code' },
+                  data: { enabled: false, icon: 'data-icon', label: 'Data' },
+                }
+              }
               showViewControls={!!showViewControls}
               setMobilePreviewShown={setMobilePreviewShown}
               setUserClickedBack={setUserClickedBack} // Keep this for BackButton logic
@@ -241,7 +247,7 @@ export default function UnifiedSession() {
           <ChatInterface
             {...chatState}
             setMobilePreviewShown={setMobilePreviewShown}
-            navigateToView={navigateToView}
+            navigateToView={navigateToView || (() => {})}
           />
         }
         previewPanel={
@@ -251,7 +257,7 @@ export default function UnifiedSession() {
             isStreaming={chatState.isStreaming}
             codeReady={chatState.codeReady}
             onScreenshotCaptured={chatState.addScreenshot}
-            displayView={displayView}
+            displayView={displayView || 'code'}
             onPreviewLoaded={handlePreviewLoaded}
             setMobilePreviewShown={setMobilePreviewShown}
             setIsIframeFetching={setIsIframeFetching}

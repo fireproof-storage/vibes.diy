@@ -33,7 +33,9 @@ vi.mock('use-fireproof', () => ({
     useFind: () => [[]],
     useLiveFind: () => [[]],
     useIndex: () => [[]],
-    useSubscribe: () => { /* no-op */ },
+    useSubscribe: () => {
+      /* no-op */
+    },
     database: {
       put: vi.fn().mockResolvedValue({ id: 'test-id' }),
       get: vi.fn().mockResolvedValue({ _id: 'test-id', title: 'Test Document' }),

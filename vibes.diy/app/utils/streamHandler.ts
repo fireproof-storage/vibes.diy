@@ -24,7 +24,7 @@ export async function streamAI(
   userMessage: string,
   onContent: (content: string) => void,
   apiKey: string,
-  userId?: string,
+  userId?: string
   // setNeedsLogin?: (value: boolean, reason: string) => void
 ): Promise<string> {
   // Stream process starts

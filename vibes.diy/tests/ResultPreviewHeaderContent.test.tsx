@@ -30,7 +30,13 @@ vi.mock('../app/components/ResultPreview/BackButton', () => ({
 }));
 
 vi.mock('../app/components/ResultPreview/ViewControls', () => ({
-  ViewControls: ({ viewControls, currentView }: { viewControls: ViewState; currentView: string }) => {
+  ViewControls: ({
+    viewControls,
+    currentView,
+  }: {
+    viewControls: ViewState;
+    currentView: string;
+  }) => {
     // Handle both the old array format and the new object format
     const controls = Array.isArray(viewControls)
       ? viewControls
@@ -84,34 +90,32 @@ vi.mock('../app/components/ResultPreview/ShareButton', () => ({
 }));
 
 vi.mock('../app/components/ResultPreview/ShareModal', () => ({
-  ShareModal: vi
-    .fn()
-    .mockImplementation(
-      ({
-        isOpen,
-        onClose,
-        publishedAppUrl,
-        onPublish,
-        isPublishing,
-        // buttonRef,
-      }: {
-        isOpen: boolean;
-        onClose: () => void;
-        publishedAppUrl?: string;
-        onPublish: () => void;
-        isPublishing: boolean;
-        buttonRef?: React.RefObject<HTMLButtonElement>;
-      }) =>
-        isOpen ? (
-          <div data-testid="share-modal">
-            <span>URL: {publishedAppUrl || 'none'}</span>
-            <button onClick={onClose}>Close</button>
-            <button onClick={onPublish} disabled={isPublishing} data-testid="modal-publish-button">
-              {isPublishing ? 'Publishing...' : 'Publish'}
-            </button>
-          </div>
-        ) : null
-    ),
+  ShareModal: vi.fn().mockImplementation(
+    ({
+      isOpen,
+      onClose,
+      publishedAppUrl,
+      onPublish,
+      isPublishing,
+      // buttonRef,
+    }: {
+      isOpen: boolean;
+      onClose: () => void;
+      publishedAppUrl?: string;
+      onPublish: () => void;
+      isPublishing: boolean;
+      buttonRef?: React.RefObject<HTMLButtonElement>;
+    }) =>
+      isOpen ? (
+        <div data-testid="share-modal">
+          <span>URL: {publishedAppUrl || 'none'}</span>
+          <button onClick={onClose}>Close</button>
+          <button onClick={onPublish} disabled={isPublishing} data-testid="modal-publish-button">
+            {isPublishing ? 'Publishing...' : 'Publish'}
+          </button>
+        </div>
+      ) : null
+  ),
 }));
 
 // Import after all mocks are set up

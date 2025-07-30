@@ -38,6 +38,12 @@ export default defineConfig(({ mode }: ConfigEnv): UserConfig => {
     },
     test: {
       environment: 'jsdom',
+      browser: {
+        enabled: false, // Enable only for specific tests
+        name: 'chromium',
+        provider: 'playwright',
+        headless: true,
+      },
       coverage: {
         provider: 'v8',
         reporter: ['text', 'json', 'html'],
@@ -55,7 +61,41 @@ export default defineConfig(({ mode }: ConfigEnv): UserConfig => {
       },
       globals: true,
       setupFiles: ['./tests/setup.ts'],
-      exclude: ['node_modules', 'dist', '.idea', '.git', '.cache'],
+      exclude: [
+        'node_modules',
+        'dist',
+        '.idea',
+        '.git',
+        '.cache',
+        // Exclude tests that have been migrated to Chromium
+        'tests/authUtils.test.ts',
+        'tests/MessageList-very-early-streaming.test.tsx',
+        // Utility tests migrated to Chromium for baby steps approach
+        'tests/prompts.test.ts',
+        'tests/publishUtils.test.ts',
+        'tests/settings-prompt.test.ts',
+        'tests/normalizeComponentExports.test.tsx',
+        'tests/useSegmentParser.test.tsx',
+        // Simple hook tests migrated to Chromium - next phase
+        'tests/useRuntimeErrors.test.ts',
+        'tests/useMessageSelection.test.ts',
+        'tests/ViewState.coverage.test.tsx',
+        // Simple component tests migrated to Chromium
+        'tests/ViewControls.test.tsx',
+        // Hook tests with managed dependencies - continued migration
+        'tests/useSession.test.ts',
+        'tests/useViewState.test.tsx',
+        'tests/usePublish.test.tsx',
+        'tests/useVibes.test.tsx',
+        // Simple component tests - Phase 1 migration (selective)
+        'tests/ShareButton.test.tsx',
+        'tests/NavigationFix.test.tsx',
+        // Route/page tests - Phase 2 migration (selective)
+        'tests/about-route.test.tsx',
+        // Streaming/content utility tests - Phase 3 migration (selective)
+        'tests/streaming-content.test.tsx',
+        'tests/useViewStateStreaming.test.tsx',
+      ],
       deps: {
         inline: ['react-router', '@react-router/dev'],
       },

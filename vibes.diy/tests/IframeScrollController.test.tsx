@@ -4,9 +4,15 @@ import IframeScrollController from '../app/components/ResultPreview/IframeScroll
 
 // Mock ResizeObserver since it's not available in the test environment
 class MockResizeObserver {
-  observe() { /* noop */ }
-  unobserve() { /* noop */ }
-  disconnect() { /* noop */ }
+  observe() {
+    /* noop */
+  }
+  unobserve() {
+    /* noop */
+  }
+  disconnect() {
+    /* noop */
+  }
 }
 
 global.ResizeObserver = MockResizeObserver;

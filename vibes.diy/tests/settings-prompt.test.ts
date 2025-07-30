@@ -15,7 +15,10 @@ vi.mock('../app/prompts', async () => {
 
   // Return the actual implementation with our mocked modules
   return {
-    makeBaseSystemPrompt: async (model: string, sessionDoc?: { stylePrompt?: string; userPrompt?: string }) => {
+    makeBaseSystemPrompt: async (
+      model: string,
+      sessionDoc?: { stylePrompt?: string; userPrompt?: string }
+    ) => {
       let concatenatedLlmsTxt = '';
       const llmsList = Object.values(llmsModules).map((mod) => mod.default);
 

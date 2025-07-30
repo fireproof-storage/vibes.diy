@@ -1,5 +1,5 @@
 import { vi } from 'vitest';
-import type { AuthContextType } from '../app/contexts/AuthContext';
+import type { AuthContextType } from '../../app/contexts/AuthContext';
 
 // Default authenticated state
 export const defaultAuthenticatedState: AuthContextType = {

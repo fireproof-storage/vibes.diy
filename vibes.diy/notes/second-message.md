@@ -7,21 +7,17 @@ Make it so when the user sends a second message, the view stays on the same tab.
 The key state transition flow during code generation and preview:
 
 1. `isStreaming=true`: When a chat message is being processed
-
    - Streaming begins for all message segments (code and non-code)
 
 2. `codeReady=true`: When the complete code segment has been received
-
    - This can happen while other parts of the message are still streaming
    - At this point, we have the full, valid code to work with
 
 3. Iframe Update: Triggered in IframeContent when `codeReady` is true
-
    - The iframe can start working with the new code even while post-code segments continue streaming
    - This allows the new app to load in parallel with remaining message content
 
 4. `previewReady=true`: Signaled by the iframe via the 'preview-ready' message
-
    - The iframe sends this when its DOM content is loaded with the new app
    - This tells us the new app is fully rendered and interactive
 
@@ -33,14 +29,12 @@ The correct sequence is often: `isStreaming=true → codeReady=true → iframe u
 ## Current Behavior Issues
 
 1. When a second message is sent:
-
    - Code resets to length zero
    - `isStreaming` becomes true
    - The view automatically changes to `/code` (line 45-46 in ResultPreview.tsx)
    - This forces a view change even if the user was viewing the preview or data tab
 
 2. Spinning animation behavior:
-
    - The code icon spin animation is currently tied to `bundlingComplete && !previewReady`
    - Should instead spin whenever `isStreaming` is true and there are no segments after the code segment
 
@@ -122,13 +116,11 @@ This ensures the spinning stops once the iframe has loaded and rendered the new 
 After investigating the code flow:
 
 1. **Code loading process**:
-
    - In IframeContent.tsx (line 87-101), there's a check to load the iframe content only when `!isStreaming && codeReady`
    - This means the iframe only gets updated with new code when streaming is complete and code is ready
    - The component also checks if content has changed before reloading (`lastContentRef.current === appCode`)
 
 2. **Preview ready event**:
-
    - The iframe template has a `pageIsLoaded()` function that sends a 'preview-ready' message to the parent when the DOM content is loaded
    - This event is captured in ResultPreview.tsx to set `previewReady` to true
    - This is a key signal that the new app has loaded and rendered
@@ -159,13 +151,11 @@ After investigating the code flow:
 ### Key Files to Modify
 
 1. **ResultPreview.tsx**
-
    - This component manages the view state (preview/code/data)
    - Contains key useEffect that currently switches to code view when streaming starts
    - Houses the message handler for the iframe's 'preview-ready' event
 
 2. **ResultPreviewHeaderContent.tsx**
-
    - Contains the code icon that needs the spinning animation
    - Update the condition to use `isStreaming && !codeReady`
    - Make sure codeReady is passed as a prop from parent component
@@ -184,16 +174,13 @@ After investigating the code flow:
 ### Important Considerations
 
 1. **Prop Passing Chain**
-
    - Make sure codeReady is correctly passed down from home.tsx → ResultPreview → ResultPreviewHeaderContent
 
 2. **Race Conditions**
-
    - Be careful of race conditions where previewReady or codeReady states are updated out of sync
    - Add appropriate guards in useEffects to handle all possible state combinations
 
 3. **Edge Cases**
-
    - First message vs second message behavior might differ
    - Empty code edge case should be handled (e.g., when there's no code to display)
    - Handle case where user switches tabs manually during streaming

@@ -298,7 +298,7 @@ describe('useViewState during streaming', () => {
     // Initial phase has no sessionId or title in params
     vi.mocked(useParams).mockReturnValue({});
 
-    let hookResult: Partial<ViewState> = {}
+    let hookResult: Partial<ViewState> = {};
 
     // Initialize at root with streaming starting
     const { unmount } = renderHook(
@@ -419,7 +419,7 @@ describe('useViewState during streaming', () => {
         },
       }
     );
-       if (!hookResult) {
+    if (!hookResult) {
       throw new Error('Hook result is null');
     }
     hookResult = hookResult as ViewState;
@@ -446,7 +446,6 @@ describe('useViewState during streaming', () => {
         },
       }
     );
- 
 
     // During initial streaming, currentView should remain preview
     // (The UI component will show code view based on isStreaming flag)
@@ -508,7 +507,7 @@ describe('useViewState during streaming', () => {
           code: '',
           isStreaming: true,
           previewReady: false,
-        } as ViewStateProps
+        } as ViewStateProps,
       }
     );
 

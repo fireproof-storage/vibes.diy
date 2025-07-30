@@ -107,7 +107,9 @@ vi.mock('use-fireproof', () => ({
     useFind: () => [[]],
     useLiveFind: () => [[]],
     useIndex: () => [[]],
-    useSubscribe: () => { /* no-op */ },
+    useSubscribe: () => {
+      /* no-op */
+    },
     database: {
       put: vi.fn().mockResolvedValue({ id: 'test-id' }),
       get: vi.fn().mockResolvedValue({ _id: 'test-id', title: 'Test Document' }),
@@ -122,9 +124,9 @@ vi.mock('use-fireproof', () => ({
 // Define shared state and reset function *outside* the mock factory
 interface MockDoc {
   _id?: string;
-  type: string;
-  text: string;
-  session_id: string;
+  type?: string;
+  text?: string;
+  session_id?: string;
   timestamp?: number;
   created_at?: number;
   segments?: unknown[];
@@ -157,8 +159,8 @@ const initialMockDocs: MockDoc[] = [
     timestamp: Date.now() - 2000,
   },
 ];
-let currentUserMessage: AiChatMessage;
-let currentAiMessage: AiChatMessage;
+let currentUserMessage: Partial<AiChatMessage> & { text?: string };
+let currentAiMessage: Partial<AiChatMessage> & { text?: string };
 
 const resetMockState = () => {
   mockDocs = [...initialMockDocs]; // Reset docs to initial state

@@ -40,7 +40,7 @@ export const event = (category: string, action: string, label?: string, value?: 
 
 type WindowWithGtag = typeof window & {
   gtag: (...args: unknown[]) => void;
-}
+};
 /**
  * Track a Google Ads conversion event
  * @param eventName - Name of the event
@@ -58,7 +58,7 @@ export const trackEvent = (eventName: string, eventParams?: Record<string, unkno
 
   // Only fire the event if both conditions are met (which implies consent was given)
   if (hasGTagScript && hasGTagFunction) {
-    const gtag = (window as WindowWithGtag).gtag
+    const gtag = (window as WindowWithGtag).gtag;
     gtag('event', eventName, eventParams);
   }
 };

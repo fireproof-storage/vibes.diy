@@ -30,11 +30,17 @@ describe('Early Streaming Content Display', () => {
         <StructuredMessage
           segments={segments}
           isStreaming={true}
-          setSelectedResponseId={() => { /* no-op */ }}
+          setSelectedResponseId={() => {
+            /* no-op */
+          }}
           selectedResponseId=""
-          setMobilePreviewShown={() => { /* no-op */ }}
+          setMobilePreviewShown={() => {
+            /* no-op */
+          }}
           isLatestMessage={true}
-          navigateToView={() => { /* no-op */ }}
+          navigateToView={() => {
+            /* no-op */
+          }}
         />
       </MockThemeProvider>
     );
@@ -58,11 +64,17 @@ describe('Early Streaming Content Display', () => {
         <StructuredMessage
           segments={segments}
           isStreaming={true}
-          setSelectedResponseId={() => { /* no-op */ }}
+          setSelectedResponseId={() => {
+            /* no-op */
+          }}
           selectedResponseId=""
-          setMobilePreviewShown={() => { /* no-op */ }}
+          setMobilePreviewShown={() => {
+            /* no-op */
+          }}
           isLatestMessage={true}
-          navigateToView={() => { /* no-op */ }}
+          navigateToView={() => {
+            /* no-op */
+          }}
         />
       </MockThemeProvider>
     );
@@ -83,11 +95,17 @@ describe('Early Streaming Content Display', () => {
         <StructuredMessage
           segments={[]}
           isStreaming={true}
-          setSelectedResponseId={() => { /* no-op */ }}
+          setSelectedResponseId={() => {
+            /* no-op */
+          }}
           selectedResponseId=""
-          setMobilePreviewShown={() => { /* no-op */ }}
+          setMobilePreviewShown={() => {
+            /* no-op */
+          }}
           isLatestMessage={true}
-          navigateToView={() => { /* no-op */ }}
+          navigateToView={() => {
+            /* no-op */
+          }}
         />
       </MockThemeProvider>
     );
@@ -104,11 +122,17 @@ describe('Early Streaming Content Display', () => {
         <StructuredMessage
           segments={[{ type: 'markdown', content: '' }]}
           isStreaming={true}
-          setSelectedResponseId={() => { /* no-op */ }}
+          setSelectedResponseId={() => {
+            /* no-op */
+          }}
           selectedResponseId=""
-          setMobilePreviewShown={() => { /* no-op */ }}
+          setMobilePreviewShown={() => {
+            /* no-op */
+          }}
           isLatestMessage={true}
-          navigateToView={() => { /* no-op */ }}
+          navigateToView={() => {
+            /* no-op */
+          }}
         />
       </MockThemeProvider>
     );
@@ -125,11 +149,17 @@ describe('Early Streaming Content Display', () => {
         <StructuredMessage
           segments={[{ type: 'markdown', content: 'Hello' }]}
           isStreaming={true}
-          setSelectedResponseId={() => { /* no-op */ }}
+          setSelectedResponseId={() => {
+            /* no-op */
+          }}
           selectedResponseId=""
-          setMobilePreviewShown={() => { /* no-op */ }}
+          setMobilePreviewShown={() => {
+            /* no-op */
+          }}
           isLatestMessage={true}
-          navigateToView={() => { /* no-op */ }}
+          navigateToView={() => {
+            /* no-op */
+          }}
         />
       </MockThemeProvider>
     );
@@ -149,11 +179,17 @@ describe('Early Streaming Content Handling', () => {
         <StructuredMessage
           segments={segments}
           isStreaming={true}
-          setSelectedResponseId={() => { /* no-op */ }}
+          setSelectedResponseId={() => {
+            /* no-op */
+          }}
           selectedResponseId=""
-          setMobilePreviewShown={() => { /* no-op */ }}
+          setMobilePreviewShown={() => {
+            /* no-op */
+          }}
           isLatestMessage={true}
-          navigateToView={() => { /* no-op */ }}
+          navigateToView={() => {
+            /* no-op */
+          }}
         />
       </MockThemeProvider>
     );
@@ -167,11 +203,17 @@ describe('Early Streaming Content Handling', () => {
         <StructuredMessage
           segments={segments}
           isStreaming={true}
-          setSelectedResponseId={() => { /* no-op */ }}
+          setSelectedResponseId={() => {
+            /* no-op */
+          }}
           selectedResponseId=""
-          setMobilePreviewShown={() => { /* no-op */ }}
+          setMobilePreviewShown={() => {
+            /* no-op */
+          }}
           isLatestMessage={true}
-          navigateToView={() => { /* no-op */ }}
+          navigateToView={() => {
+            /* no-op */
+          }}
         />
       </MockThemeProvider>
     );

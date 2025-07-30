@@ -44,32 +44,26 @@ Following this plan you'll merge ~10 small, low-stress diffs instead of one huge
 ## Key behavior-impacting changes spotted in the refactor
 
 1. View-state handling was **lifted from components to `home.tsx`**
-
    - `useViewState` now lives only in `home.tsx`; the local `activeView / setActiveView` state was removed from `home.tsx`, `ResultPreviewHeaderContent`, `ChatInterface`, `MessageList`, `Message`, etc.
    - All children now receive **`displayView` + `navigateToView`** instead of `activeView`/`setActiveView`.
 
 2. URL navigation logic simplified
-
    - `home.tsx` no longer sets `activeView` directly on URL changes; it relies on `useViewState` to interpret the path.
    - Auto-redirect to `/app` only fires when no `/app|/code|/data` suffix exists.
 
 3. **Header re-wiring** (`ResultPreviewHeaderContent`)
-
    - Removed internal `useEffect` that synced `activeView` ⇒ now trusts `displayView` prop.
    - `currentView` passed to `ViewControls` is now `displayView`.
    - Props trimmed / reordered; any forgotten prop in callers will alter publish / back button logic.
 
 4. `MessageList` / `Message` / `StructuredMessage`
-
    - Replaced `setActiveView` prop with `navigateToView`.
    - Memo comparison now checks `navigateToView`, not `setActiveView`.
 
 5. `ChatInterface`
-
    - Same prop swap; internals that once flipped tabs must be updated.
 
 6. Type changes (`chat.ts`, `ResultPreviewTypes.ts`)
-
    - Added `ViewType` import in several files—ensure consistent enum/string usage.
 
 7. Removed unused `useEffect`, imports, and cleaned boolean logic (`needsLogin === true`, etc.).

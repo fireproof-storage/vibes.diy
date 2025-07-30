@@ -58,7 +58,7 @@ export default function Remix() {
           return { _id: 'vibe', created_at: Date.now() } as VibeDocument;
         });
 
-        vibeDoc.remixOf = appName;
+        (vibeDoc as any).remixOf = appName;
         await sessionDatabase.put(vibeDoc);
 
         // Create and save user message directly with deterministic ID - always use the standard message

@@ -105,7 +105,7 @@ describe('useSession', () => {
     // Start with no session ID (first message scenario)
     const { rerender } = renderHook(
       // We use any to avoid TypeScript complexity with hook return types
-      ({ id }) => useSession(id),
+      ({ id }: { id?: string }) => useSession(id),
       { initialProps: { id: undefined } }
     );
 
@@ -113,7 +113,7 @@ describe('useSession', () => {
     mockOpen.mockClear();
 
     // Simulate URL update with new session ID (after first message response)
-    rerender({ id: 'new-session-id' });
+    rerender({ id: 'new-session-id' as any });
 
     // Verify our fix works: the database should be opened again with the new ID
     expect(mockOpen).toHaveBeenCalled();

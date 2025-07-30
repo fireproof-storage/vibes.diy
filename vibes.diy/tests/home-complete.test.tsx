@@ -125,7 +125,7 @@ vi.mock('../app/components/ChatInterface', () => ({
 }));
 
 vi.mock('../app/components/ResultPreview/ResultPreview', () => ({
-  default: ({ code, }: ResultPreviewProps) => (
+  default: ({ code }: ResultPreviewProps) => (
     <div data-testid="mock-result-preview">
       <div data-testid="code-line-count">{code.split('\n').length} lines of code</div>
       <div data-testid="code-content">{code.substring(0, 50)}...</div>

@@ -248,10 +248,16 @@ describe('Component Rendering', () => {
           <MessageList
             messages={[]}
             isStreaming={false}
-            setSelectedResponseId={() => { /* no-op */ }}
+            setSelectedResponseId={() => {
+              /* no-op */
+            }}
             selectedResponseId=""
-            setMobilePreviewShown={() => { /* no-op */ }}
-            navigateToView={() => { /* no-op */ }}
+            setMobilePreviewShown={() => {
+              /* no-op */
+            }}
+            navigateToView={() => {
+              /* no-op */
+            }}
           />
         </MockThemeProvider>
       );
@@ -286,10 +292,16 @@ describe('Component Rendering', () => {
           <MessageList
             messages={messages}
             isStreaming={false}
-            setSelectedResponseId={() => { /* no-op */ }}
+            setSelectedResponseId={() => {
+              /* no-op */
+            }}
             selectedResponseId=""
-            setMobilePreviewShown={() => { /* no-op */ }}
-            navigateToView={() => { /* no-op */ }}
+            setMobilePreviewShown={() => {
+              /* no-op */
+            }}
+            navigateToView={() => {
+              /* no-op */
+            }}
           />
         </MockThemeProvider>
       );
@@ -322,10 +334,16 @@ describe('Component Rendering', () => {
           <MessageList
             messages={messages}
             isStreaming={true}
-            setSelectedResponseId={() => { /* no-op */ }}
+            setSelectedResponseId={() => {
+              /* no-op */
+            }}
             selectedResponseId=""
-            setMobilePreviewShown={() => { /* no-op */ }}
-            navigateToView={() => { /* no-op */ }}
+            setMobilePreviewShown={() => {
+              /* no-op */
+            }}
+            navigateToView={() => {
+              /* no-op */
+            }}
           />
         </MockThemeProvider>
       );
@@ -352,10 +370,16 @@ describe('Component Rendering', () => {
           <MessageList
             messages={messages}
             isStreaming={true}
-            setSelectedResponseId={() => { /* no-op */ }}
+            setSelectedResponseId={() => {
+              /* no-op */
+            }}
             selectedResponseId=""
-            setMobilePreviewShown={() => { /* no-op */ }}
-            navigateToView={() => { /* no-op */ }}
+            setMobilePreviewShown={() => {
+              /* no-op */
+            }}
+            navigateToView={() => {
+              /* no-op */
+            }}
           />
         </MockThemeProvider>
       );
@@ -368,10 +392,16 @@ describe('Component Rendering', () => {
           <MessageList
             messages={[]}
             isStreaming={false}
-            setSelectedResponseId={() => { /* no-op */ }}
+            setSelectedResponseId={() => {
+              /* no-op */
+            }}
             selectedResponseId=""
-            setMobilePreviewShown={() => { /* no-op */ }}
-            navigateToView={() => { /* no-op */ }}
+            setMobilePreviewShown={() => {
+              /* no-op */
+            }}
+            navigateToView={() => {
+              /* no-op */
+            }}
           />
         </MockThemeProvider>
       );
@@ -396,10 +426,16 @@ describe('Component Rendering', () => {
           <MessageList
             messages={messages}
             isStreaming={false}
-            setSelectedResponseId={() => { /* no-op */ }}
+            setSelectedResponseId={() => {
+              /* no-op */
+            }}
             selectedResponseId=""
-            setMobilePreviewShown={() => { /* no-op */ }}
-            navigateToView={() => { /* no-op */ }}
+            setMobilePreviewShown={() => {
+              /* no-op */
+            }}
+            navigateToView={() => {
+              /* no-op */
+            }}
           />
         </MockThemeProvider>
       );
@@ -424,10 +460,16 @@ describe('Component Rendering', () => {
           <MessageList
             messages={messages}
             isStreaming={true}
-            setSelectedResponseId={() => { /* no-op */ }}
+            setSelectedResponseId={() => {
+              /* no-op */
+            }}
             selectedResponseId=""
-            setMobilePreviewShown={() => { /* no-op */ }}
-            navigateToView={() => { /* no-op */ }}
+            setMobilePreviewShown={() => {
+              /* no-op */
+            }}
+            navigateToView={() => {
+              /* no-op */
+            }}
           />
         </MockThemeProvider>
       );
@@ -451,10 +493,16 @@ describe('Component Rendering', () => {
           <MessageList
             messages={messages}
             isStreaming={true}
-            setSelectedResponseId={() => { /* no-op */ }}
+            setSelectedResponseId={() => {
+              /* no-op */
+            }}
             selectedResponseId=""
-            setMobilePreviewShown={() => { /* no-op */ }}
-            navigateToView={() => { /* no-op */ }}
+            setMobilePreviewShown={() => {
+              /* no-op */
+            }}
+            navigateToView={() => {
+              /* no-op */
+            }}
           />
         </MockThemeProvider>
       );
@@ -480,10 +528,16 @@ describe('Component Rendering', () => {
           <MessageList
             messages={messages}
             isStreaming={false}
-            setSelectedResponseId={() => { /* no-op */ }}
+            setSelectedResponseId={() => {
+              /* no-op */
+            }}
             selectedResponseId=""
-            setMobilePreviewShown={() => { /* no-op */ }}
-            navigateToView={() => { /* no-op */ }}
+            setMobilePreviewShown={() => {
+              /* no-op */
+            }}
+            navigateToView={() => {
+              /* no-op */
+            }}
           />
         </MockThemeProvider>
       );

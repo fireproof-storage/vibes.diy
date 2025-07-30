@@ -125,8 +125,8 @@ export function useSession(routedSessionId?: string): UseSession {
     async (title: string) => {
       const encodedTitle = encodeTitle(title);
 
-      vibeDoc.title = title;
-      vibeDoc.encodedTitle = encodedTitle;
+      (vibeDoc as any).title = title;
+      (vibeDoc as any).encodedTitle = encodedTitle;
 
       await sessionDatabase.put(vibeDoc);
       mergeVibeDoc(vibeDoc);
@@ -137,7 +137,7 @@ export function useSession(routedSessionId?: string): UseSession {
   // Update published URL using the vibe document
   const updatePublishedUrl = useCallback(
     async (publishedUrl: string) => {
-      vibeDoc.publishedUrl = publishedUrl;
+      (vibeDoc as any).publishedUrl = publishedUrl;
 
       await sessionDatabase.put(vibeDoc);
       mergeVibeDoc(vibeDoc);
@@ -148,7 +148,7 @@ export function useSession(routedSessionId?: string): UseSession {
   // Update firehose shared state using the vibe document
   const updateFirehoseShared = useCallback(
     async (firehoseShared: boolean) => {
-      vibeDoc.firehoseShared = firehoseShared;
+      (vibeDoc as any).firehoseShared = firehoseShared;
 
       await sessionDatabase.put(vibeDoc);
       mergeVibeDoc(vibeDoc);

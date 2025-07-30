@@ -2,12 +2,22 @@
 /node_modules/
 .env
 
+# Lock files (managed at monorepo root)
+pnpm-lock.yaml
+package-lock.json
+yarn.lock
+
 # React Router
 /.react-router/
 /build/
 /coverage/
+
 # Local Netlify folder
 .netlify
 
 # VS Code settings
-.vscode/settings.json
+.vscode/
+
+# Test screenshots
+tests/**/__screenshots__/
+__screenshots__/

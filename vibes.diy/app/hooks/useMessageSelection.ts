@@ -84,9 +84,7 @@ export function useMessageSelection({
   const selectedResponseDoc = useMemo(() => {
     // Priority 1: Explicit user selection (from confirmed docs)
     if (selectedResponseId) {
-      const foundInDocs = docs.find(
-        (doc) => doc.type === 'ai' && doc._id === selectedResponseId
-      );
+      const foundInDocs = docs.find((doc) => doc.type === 'ai' && doc._id === selectedResponseId);
       if (foundInDocs) return foundInDocs;
     }
 
@@ -112,7 +110,9 @@ export function useMessageSelection({
     // Sort by document ID - this is more reliable than timestamps
     // when determining the most recent message, especially since IDs often have
     // chronological information encoded in them
-    const sortedDocsWithCode = docsWithCode.sort((a, b) => b._id.localeCompare(a._id));
+    const sortedDocsWithCode = docsWithCode.sort((a, b) =>
+      (b._id || '').localeCompare(a._id || '')
+    );
 
     const latestAiDocWithCode = sortedDocsWithCode[0];
     return latestAiDocWithCode;
