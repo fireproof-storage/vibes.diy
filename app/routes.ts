@@ -9,6 +9,7 @@ export default [
   route('chat/:sessionId/:title/app', './routes/home.tsx', { id: 'chat-app' }),
   route('chat/:sessionId/:title/code', './routes/home.tsx', { id: 'chat-code' }),
   route('chat/:sessionId/:title/data', './routes/home.tsx', { id: 'chat-data' }),
+  route('chat/:sessionId/:title/chat', './routes/home.tsx', { id: 'chat-chat' }),
   route('vibes/mine', './routes/mine.tsx', { id: 'my-vibes' }),
 
   route('settings', './routes/settings.tsx', { id: 'settings' }),

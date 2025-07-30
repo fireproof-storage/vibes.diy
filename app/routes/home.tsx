@@ -67,6 +67,8 @@ export default function UnifiedSession() {
       setTimeout(() => {
         if (chatInputRef.current) {
           chatInputRef.current.clickSubmit();
+          // Clear the captured prompt to allow normal navigation behavior
+          setCapturedPrompt(null);
         }
       }, 1000);
     }
@@ -84,6 +86,7 @@ export default function UnifiedSession() {
     isStreaming: chatState.isStreaming,
     previewReady: previewReady,
     isIframeFetching: isIframeFetching,
+    capturedPrompt: capturedPrompt,
   });
 
   // Add a ref to track whether streaming was active previously
@@ -134,9 +137,12 @@ export default function UnifiedSession() {
         suffix = '/code';
       } else if (currentPath.endsWith('/data')) {
         suffix = '/data';
+      } else if (currentPath.endsWith('/chat')) {
+        suffix = '/chat';
       } else if (currentPath.includes(`/chat/${chatState.sessionId}`)) {
         // If it's the base chat URL without suffix, default to /app
-        suffix = '/app';
+        // Unless there's a captured prompt that hasn't been sent yet
+        suffix = capturedPrompt ? '' : '/app';
       }
 
       const newUrl = `/chat/${chatState.sessionId}/${encodeTitle(chatState.title)}${suffix}`;
@@ -205,11 +211,16 @@ export default function UnifiedSession() {
   // useViewState handles subsequent auto-navigation based on state changes (e.g. previewReady).
   useEffect(() => {
     const path = location?.pathname || '';
-    const hasTabSuffix = path.endsWith('/app') || path.endsWith('/code') || path.endsWith('/data');
+    const hasTabSuffix =
+      path.endsWith('/app') ||
+      path.endsWith('/code') ||
+      path.endsWith('/data') ||
+      path.endsWith('/chat');
     const encodedAppTitle = chatState.title ? encodeTitle(chatState.title) : '';
 
     // If there's a session and title, but no specific view suffix in the URL, navigate to the 'app' (preview) view.
-    if (!hasTabSuffix && chatState.sessionId && encodedAppTitle) {
+    // Skip navigation if there's a captured prompt that hasn't been sent yet.
+    if (!hasTabSuffix && chatState.sessionId && encodedAppTitle && !capturedPrompt) {
       navigate(`/chat/${chatState.sessionId}/${encodedAppTitle}/app`, {
         replace: true,
       });
@@ -288,7 +299,7 @@ export default function UnifiedSession() {
             <QuickSuggestions onSelectSuggestion={handleSelectSuggestion} />
           ) : undefined
         }
-        mobilePreviewShown={mobilePreviewShown}
+        mobilePreviewShown={displayView === 'chat' ? false : mobilePreviewShown}
       />
       <SessionSidebar
         isVisible={isSidebarVisible}

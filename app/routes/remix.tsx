@@ -108,7 +108,7 @@ export default function Remix() {
         await updateTitle(finalTitle);
 
         // Build the target URL, including the prompt parameter if it exists
-        let targetUrl = `/chat/${session._id}/${encodeTitle(finalTitle)}/app`;
+        let targetUrl = `/chat/${session._id}/${encodeTitle(finalTitle)}/chat`;
 
         // Forward the prompt parameter to the chat route if it exists
         if (promptParameter && promptParameter.trim()) {

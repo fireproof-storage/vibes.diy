@@ -7,10 +7,10 @@ export const isMobileViewport = () => {
   return typeof window !== 'undefined' && window.innerWidth < 768;
 };
 
-export type ViewType = 'preview' | 'code' | 'data';
+export type ViewType = 'preview' | 'code' | 'data' | 'chat';
 
 export type ViewControlsType = {
-  [key in ViewType]: {
+  [key in Exclude<ViewType, 'chat'>]: {
     enabled: boolean;
     icon: string;
     label: string;
@@ -26,6 +26,7 @@ export function useViewState(props: {
   previewReady: boolean;
   isIframeFetching?: boolean;
   initialLoad?: boolean;
+  capturedPrompt?: string | null;
 }) {
   const { sessionId: paramSessionId, title: paramTitle } = useParams<{
     sessionId: string;
@@ -44,6 +45,7 @@ export function useViewState(props: {
     if (location.pathname.endsWith('/app')) return 'preview';
     if (location.pathname.endsWith('/code')) return 'code';
     if (location.pathname.endsWith('/data')) return 'data';
+    if (location.pathname.endsWith('/chat')) return 'chat';
     return 'preview'; // Default
   };
 
@@ -85,10 +87,12 @@ export function useViewState(props: {
 
     // As soon as previewReady becomes true, jump to preview view (app), UNLESS user is explicitly in data or code view
     // Removed mobile check to allow consistent behavior across all devices
+    // Also skip if there's a capturedPrompt (URL prompt that hasn't been sent yet)
     if (props.previewReady && !wasPreviewReadyRef.current) {
       const isInDataView = location.pathname.endsWith('/data');
       const isInCodeView = location.pathname.endsWith('/code');
-      if (!isInDataView && !isInCodeView) {
+      const hasCapturedPrompt = props.capturedPrompt && props.capturedPrompt.trim().length > 0;
+      if (!isInDataView && !isInCodeView && !hasCapturedPrompt) {
         navigate(`/chat/${sessionId}/${encodedTitle}/app`, { replace: true });
       }
     }
@@ -126,6 +130,7 @@ export function useViewState(props: {
       label: 'Data',
       loading: false,
     },
+    // Note: chat view exists for routing but is not shown in UI controls
   };
 
   // Navigate to a view (explicit user action)
