@@ -17,8 +17,13 @@ import * as jose from 'jose';
 
 describe('auth utils', () => {
   beforeEach(() => {
-    // Set up environment variables for auth tests
-    import.meta.env.VITE_CLOUD_SESSION_TOKEN_PUBLIC = 'zabc123def456ghi789jkl';
+    // Environment variables are set in chromium-setup.ts for Chromium tests
+    // For jsdom tests, set them here
+    if (typeof window !== 'undefined' && !window.navigator.userAgent.includes('HeadlessChrome')) {
+      import.meta.env.VITE_CLOUD_SESSION_TOKEN_PUBLIC = 'z2VbCuXVUi2VZRpXcSMgMhYzT1tLvV7JQ6PY1pHYoRGVGSKEfb4Gp9w6P8d8eEQrQV';
+      import.meta.env.VITE_CONNECT_API_URL = 'https://dev.connect.fireproof.direct/api';
+      import.meta.env.VITE_CONNECT_URL = 'https://dev.connect.fireproof.direct/token';
+    }
   });
 
   afterEach(() => {
@@ -26,8 +31,12 @@ describe('auth utils', () => {
     // Clear storage
     window.localStorage.clear();
     window.sessionStorage.clear();
-    // Clean up environment
-    delete import.meta.env.VITE_CLOUD_SESSION_TOKEN_PUBLIC;
+    // Clean up environment for jsdom tests
+    if (typeof window !== 'undefined' && !window.navigator.userAgent.includes('HeadlessChrome')) {
+      delete import.meta.env.VITE_CLOUD_SESSION_TOKEN_PUBLIC;
+      delete import.meta.env.VITE_CONNECT_API_URL;
+      delete import.meta.env.VITE_CONNECT_URL;
+    }
   });
 
   describe('verifyToken', () => {
@@ -117,7 +126,7 @@ describe('auth utils', () => {
       const usedEndpoint = 'https://dev.connect.fireproof.direct/api';
 
       // Mock successful API response for token extension
-      global.fetch = vi.fn().mockResolvedValue({
+      window.fetch = vi.fn().mockResolvedValue({
         ok: true,
         json: async () => ({ token: 'new.extended.token' }),
       });
@@ -127,7 +136,7 @@ describe('auth utils', () => {
 
       // Verify correct behavior
       expect(result).toBe('new.extended.token');
-      expect(global.fetch).toHaveBeenCalledWith(
+      expect(window.fetch).toHaveBeenCalledWith(
         usedEndpoint,
         expect.objectContaining({
           method: 'POST',
@@ -142,7 +151,7 @@ describe('auth utils', () => {
   describe('extendToken', () => {
     it('returns new token and stores it', async () => {
       import.meta.env.VITE_CONNECT_API_URL = 'https://api';
-      global.fetch = vi.fn().mockResolvedValue({
+      window.fetch = vi.fn().mockResolvedValue({
         ok: true,
         json: async () => ({ token: 'newtoken123' }),
       });
@@ -152,13 +161,13 @@ describe('auth utils', () => {
     });
     it('returns null on network error', async () => {
       import.meta.env.VITE_CONNECT_API_URL = 'https://api';
-      global.fetch = vi.fn().mockRejectedValue(new Error('fail'));
+      window.fetch = vi.fn().mockRejectedValue(new Error('fail'));
       const result = await auth.extendToken('token');
       expect(result).toBeNull();
     });
     it('returns null on invalid response', async () => {
       import.meta.env.VITE_CONNECT_API_URL = 'https://api';
-      global.fetch = vi.fn().mockResolvedValue({ ok: true, json: async () => ({}) });
+      window.fetch = vi.fn().mockResolvedValue({ ok: true, json: async () => ({}) });
       const result = await auth.extendToken('token');
       expect(result).toBeNull();
     });
@@ -168,23 +177,30 @@ describe('auth utils', () => {
     it('returns connectUrl and resultId and sets sessionStorage', () => {
       // Set the connect URL environment variable
       import.meta.env.VITE_CONNECT_URL = 'http://localhost:3000/token';
-      vi.spyOn(window, 'location', 'get').mockReturnValue({
-        pathname: '/not/callback',
-      } as typeof window.location);
+      
+      // Use history API to simulate being on a different path
+      // This works better in real browser environments
+      window.history.pushState({}, '', '/not/callback');
 
       const result = auth.initiateAuthFlow();
       expect(result).toBeTruthy();
       expect(result?.connectUrl).toMatch(/connect.fireproof.direct/);
       expect(result?.resultId).toMatch(/^z/);
       expect(window.sessionStorage.getItem('auth_result_id')).toBe(result?.resultId);
+      
+      // Restore original path
+      window.history.pushState({}, '', '/');
     });
 
     it('returns null if already on callback page', () => {
-      vi.spyOn(window, 'location', 'get').mockReturnValue({
-        pathname: '/auth/callback',
-      } as typeof window.location);
+      // Use history API to simulate being on callback path
+      window.history.pushState({}, '', '/auth/callback');
+      
       const result = auth.initiateAuthFlow();
       expect(result).toBeNull();
+      
+      // Restore original path
+      window.history.pushState({}, '', '/');
     });
   });
 
@@ -192,7 +208,7 @@ describe('auth utils', () => {
     it('returns token if found', async () => {
       import.meta.env.VITE_CONNECT_API_URL = 'https://api';
       let called = 0;
-      global.fetch = vi.fn().mockImplementation(() => {
+      window.fetch = vi.fn().mockImplementation(() => {
         called++;
         return Promise.resolve({
           ok: true,
@@ -208,7 +224,7 @@ describe('auth utils', () => {
 
     it('returns null if timed out', async () => {
       import.meta.env.VITE_CONNECT_API_URL = 'https://api';
-      global.fetch = vi.fn().mockResolvedValue({ ok: true, json: async () => ({}) });
+      window.fetch = vi.fn().mockResolvedValue({ ok: true, json: async () => ({}) });
 
       const token = await auth.pollForAuthToken('resultid', 1, 5);
       expect(token).toBeNull();

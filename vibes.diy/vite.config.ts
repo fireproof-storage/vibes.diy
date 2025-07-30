@@ -61,7 +61,16 @@ export default defineConfig(({ mode }: ConfigEnv): UserConfig => {
       },
       globals: true,
       setupFiles: ['./tests/setup.ts'],
-      exclude: ['node_modules', 'dist', '.idea', '.git', '.cache'],
+      exclude: [
+        'node_modules', 
+        'dist', 
+        '.idea', 
+        '.git', 
+        '.cache',
+        // Exclude tests that have been migrated to Chromium
+        'tests/authUtils.test.ts',
+        'tests/MessageList-very-early-streaming.test.tsx',
+      ],
       deps: {
         inline: ['react-router', '@react-router/dev'],
       },

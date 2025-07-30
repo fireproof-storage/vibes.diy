@@ -20,6 +20,9 @@ export default defineConfig({
       'tests/mock-check.test.ts',
       'tests/chatWithLegends.test.tsx',
       'tests/vibe-route.test.tsx',
+      // Migrated failing tests from jsdom
+      'tests/authUtils.test.ts',
+      'tests/MessageList-very-early-streaming.test.tsx',
       // Add more tests as needed
     ],
     exclude: ['node_modules', 'dist', '.idea', '.git', '.cache'],
