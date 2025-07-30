@@ -12,7 +12,7 @@ import { transformImports } from './transformImports';
 import iframeTemplateRaw from './templates/iframe-template.html?raw';
 
 interface IframeContentProps {
-  activeView: 'preview' | 'code' | 'data';
+  activeView: 'preview' | 'code' | 'data' | 'chat';
   filesContent: IframeFiles;
   isStreaming: boolean;
   codeReady: boolean;
@@ -133,6 +133,7 @@ const IframeContent: React.FC<IframeContentProps> = ({
     if (path.endsWith('/code')) return 'code';
     if (path.endsWith('/data')) return 'data';
     if (path.endsWith('/app')) return 'preview';
+    if (path.endsWith('/chat')) return 'preview'; // Show preview for chat view
     return activeView; // Fall back to state if path doesn't have a suffix
   };
 

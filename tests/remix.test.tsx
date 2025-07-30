@@ -173,7 +173,7 @@ describe('Remix Route', () => {
       // Check that the URL contains the expected parts
       const callArg = navigateMock.mock.calls[0][0];
       expect(callArg).toContain('/chat/');
-      expect(callArg).toContain('/app?prompt=Make');
+      expect(callArg).toContain('/chat?prompt=Make');
     });
   });
 
@@ -186,7 +186,7 @@ describe('Remix Route', () => {
     // Wait for the navigation to occur without prompt parameter
     await waitFor(() => {
       expect(navigateMock).toHaveBeenCalled();
-      expect(navigateMock).toHaveBeenCalledWith(expect.stringMatching(/\/chat\/.*\/.*\/app$/));
+      expect(navigateMock).toHaveBeenCalledWith(expect.stringMatching(/\/chat\/.*\/.*\/chat$/));
       expect(navigateMock).not.toHaveBeenCalledWith(expect.stringMatching(/\?prompt=/));
     });
   });

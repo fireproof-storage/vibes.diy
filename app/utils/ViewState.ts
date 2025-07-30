@@ -130,7 +130,12 @@ export function useViewState(props: {
       label: 'Data',
       loading: false,
     },
-    // Note: chat view exists for routing but is not shown in UI controls
+    chat: {
+      enabled: false, // Chat view exists for routing but is not navigatable from UI
+      icon: 'chat-icon',
+      label: 'Chat',
+      loading: false,
+    },
   };
 
   // Navigate to a view (explicit user action)
