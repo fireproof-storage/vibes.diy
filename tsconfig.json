@@ -14,7 +14,7 @@
       "~/*": ["./app/*"]
     },
     "esModuleInterop": true,
-    "verbatimModuleSyntax": true,
+    "verbatimModuleSyntax": false,
     "noEmit": true,
     "resolveJsonModule": true,
     "skipLibCheck": true,

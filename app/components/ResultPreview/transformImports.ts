@@ -1,11 +1,4 @@
-export const coreImportMap = [
-  'react',
-  'react-dom',
-  'react-dom/client',
-  'use-fireproof',
-  'call-ai',
-  'use-vibes',
-];
+export const coreImportMap = ['react', 'react-dom', 'react-dom/client', 'use-fireproof', 'call-ai'];
 
 export function transformImports(code: string): string {
   return code.replace(
