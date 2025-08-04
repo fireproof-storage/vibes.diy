@@ -69,7 +69,7 @@ ${
 
 `
     : ''
-}IMPORTANT: You are working in one JavaScript file, use tailwind classes for styling.
+}IMPORTANT: You are working in one JavaScript file, use tailwind classes for styling. Remember to use brackets like bg-[#242424] for custom colors.
 
 Provide a title and brief explanation followed by the component code. The component should demonstrate proper Fireproof integration with real-time updates and proper data persistence. Follow it with a short description of the app's purpose and instructions how to use it (with occasional bold or italic for emphasis). Then suggest some additional features that could be added to the app.
 
