@@ -1,5 +1,5 @@
 import Editor from '@monaco-editor/react';
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import type { IframeFiles } from './ResultPreviewTypes';
 // API key import removed - proxy handles authentication
 import { CALLAI_ENDPOINT } from '../../config/env';
@@ -18,6 +18,7 @@ interface IframeContentProps {
   codeReady: boolean;
   isDarkMode: boolean;
   sessionId?: string;
+  onCodeSave?: (code: string) => void;
 }
 
 const IframeContent: React.FC<IframeContentProps> = ({
@@ -27,6 +28,7 @@ const IframeContent: React.FC<IframeContentProps> = ({
   codeReady,
   isDarkMode,
   sessionId,
+  onCodeSave,
 }) => {
   // API key no longer needed - proxy handles authentication
   const iframeRef = useRef<HTMLIFrameElement>(null);
@@ -47,6 +49,31 @@ const IframeContent: React.FC<IframeContentProps> = ({
 
   // Extract the current app code string
   const appCode = filesContent['/App.jsx']?.code || '';
+
+  // State for edited code
+  const [editedCode, setEditedCode] = useState(appCode);
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+
+  // Update edited code when app code changes
+  useEffect(() => {
+    setEditedCode(appCode);
+    setHasUnsavedChanges(false);
+  }, [appCode]);
+
+  // Handle code changes in the editor
+  const handleCodeChange = (value: string | undefined) => {
+    const newCode = value || '';
+    setEditedCode(newCode);
+    setHasUnsavedChanges(newCode !== appCode);
+  };
+
+  // Handle save button click
+  const handleSave = () => {
+    if (onCodeSave && hasUnsavedChanges) {
+      onCodeSave(editedCode);
+      setHasUnsavedChanges(false);
+    }
+  };
 
   // Theme detection is now handled in the parent component
 
@@ -174,15 +201,26 @@ const IframeContent: React.FC<IframeContentProps> = ({
           left: 0,
         }}
       >
+        {currentView === 'code' && hasUnsavedChanges && (
+          <div className="absolute top-2 right-2 z-10">
+            <button
+              onClick={handleSave}
+              className="rounded-md bg-blue-600 px-3 py-1 text-sm text-white shadow-sm transition-colors hover:bg-blue-700"
+            >
+              Save
+            </button>
+          </div>
+        )}
         <Editor
           height="100%"
           width="100%"
           path="file.jsx"
           defaultLanguage="jsx"
           theme={isDarkMode ? 'github-dark' : 'github-light'}
-          value={filesContent['/App.jsx']?.code || ''}
+          value={editedCode}
+          onChange={handleCodeChange}
           options={{
-            readOnly: true,
+            readOnly: false,
             minimap: { enabled: false },
             scrollBeyondLastLine: false,
             automaticLayout: true,

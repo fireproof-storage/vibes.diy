@@ -78,6 +78,25 @@ export default function UnifiedSession() {
   const [mobilePreviewShown, setMobilePreviewShown] = useState(false);
   const [isIframeFetching, setIsIframeFetching] = useState(false);
 
+  // Handle code save from the editor
+  const handleCodeSave = useCallback(
+    async (code: string) => {
+      try {
+        await chatState.saveCodeAsAiMessage(code);
+      } catch (error) {
+        console.error('Failed to save code:', error);
+        chatState.addError({
+          type: 'error',
+          message: error instanceof Error ? error.message : 'Failed to save code',
+          stack: error instanceof Error ? error.stack : undefined,
+          timestamp: Date.now().toString(),
+          errorType: 'Other',
+        });
+      }
+    },
+    [chatState]
+  );
+
   // Centralized view state management
   const { displayView, navigateToView, viewControls, showViewControls } = useViewState({
     sessionId: chatState.sessionId || undefined, // Handle null
@@ -282,6 +301,7 @@ export default function UnifiedSession() {
             setMobilePreviewShown={setMobilePreviewShown}
             setIsIframeFetching={setIsIframeFetching}
             addError={(error) => chatState.addError(error)}
+            onCodeSave={handleCodeSave}
           />
         }
         chatInput={

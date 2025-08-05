@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import type { ChatMessageDocument, ChatState } from '../types/chat';
+import type { AiChatMessageDocument, ChatMessageDocument, ChatState } from '../types/chat';
 import type { UserSettings } from '../types/settings';
 
 import { useFireproof } from 'use-fireproof';
@@ -237,6 +237,96 @@ export function useSimpleChat(sessionId: string | undefined): ChatState {
     setIsStreaming,
   });
 
+  // Function to save edited code as user edit + AI response
+  const saveCodeAsAiMessage = useCallback(
+    async (code: string) => {
+      console.log('🔧 saveCodeAsAiMessage called with code length:', code.length);
+      console.log(
+        '📝 Current docs:',
+        docs.map((d) => ({ id: d._id, type: d.type, text: d.text?.substring(0, 50) + '...' }))
+      );
+
+      // Find the most recent AI message with isEditedCode flag
+      const sortedDocs = [...docs].sort((a, b) => (a.created_at || 0) - (b.created_at || 0));
+      const lastAiMessage = sortedDocs.filter((doc) => doc.type === 'ai').pop() as
+        | AiChatMessageDocument
+        | undefined;
+
+      console.log('🔍 Recent messages analysis:');
+      console.log('  - Total docs:', sortedDocs.length);
+      console.log(
+        '  - Last 3 messages:',
+        sortedDocs.slice(-3).map((d) => ({
+          type: d.type,
+          text: d.text?.substring(0, 30) + '...',
+          isEditedCode: (d as AiChatMessageDocument).isEditedCode,
+          created_at: d.created_at,
+        }))
+      );
+      console.log(
+        '  - lastAiMessage:',
+        lastAiMessage
+          ? {
+              text: lastAiMessage.text?.substring(0, 50) + '...',
+              isEditedCode: lastAiMessage.isEditedCode,
+              id: lastAiMessage._id,
+            }
+          : 'none'
+      );
+
+      // Check if the most recent AI message was from code editing
+      const isLastFromEditing = lastAiMessage?.isEditedCode === true;
+
+      console.log('🤔 isLastFromEditing:', isLastFromEditing);
+      console.log('🤔 Will update existing message:', isLastFromEditing && !!lastAiMessage?._id);
+
+      const aiResponseText = `User changes:
+
+\`\`\`jsx
+${code}
+\`\`\``;
+
+      if (isLastFromEditing && lastAiMessage?._id) {
+        console.log('🔄 Updating existing AI message');
+        // Update the existing AI message with new code
+        await sessionDatabase.put({
+          ...lastAiMessage,
+          text: aiResponseText,
+          created_at: Date.now(),
+          isEditedCode: true,
+        });
+      } else {
+        console.log('✨ Creating new user + AI message pair');
+
+        // Create new user message directly in database
+        console.log('👤 Creating user message: "Edit by user"');
+        const userMessageDoc = {
+          type: 'user' as const,
+          session_id: session._id,
+          text: 'Edit by user',
+          created_at: Date.now(),
+        };
+        const userResult = await sessionDatabase.put(userMessageDoc);
+        console.log('👤 User message created with ID:', userResult.id);
+
+        // Create AI response directly in database
+        console.log('🤖 Creating AI response with code');
+        const aiMessageDoc = {
+          type: 'ai' as const,
+          session_id: session._id,
+          text: aiResponseText,
+          created_at: Date.now(),
+          isEditedCode: true,
+        };
+        const aiResult = await sessionDatabase.put(aiMessageDoc);
+        console.log('🤖 AI message created with ID:', aiResult.id);
+      }
+
+      console.log('✅ saveCodeAsAiMessage completed');
+    },
+    [docs, session._id, sessionDatabase]
+  );
+
   // Monitor advisory errors whenever they change (non-critical errors)
   useEffect(() => {
     // Advisories are handled through the system messages mechanism
@@ -257,6 +347,7 @@ export function useSimpleChat(sessionId: string | undefined): ChatState {
     isStreaming,
     codeReady,
     sendMessage,
+    saveCodeAsAiMessage,
     inputRef,
     title: vibeDoc?.title || '',
     // Error tracking

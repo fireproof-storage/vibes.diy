@@ -15,6 +15,7 @@ export interface ResultPreviewProps {
   setMobilePreviewShown: (shown: boolean) => void;
   setIsIframeFetching?: (fetching: boolean) => void;
   addError?: (error: RuntimeError) => void; // Single error handler for all types of errors
+  onCodeSave?: (code: string) => void;
 }
 
 export type IframeFiles = {
