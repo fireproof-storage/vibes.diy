@@ -17,6 +17,7 @@ export interface ResultPreviewProps {
   addError?: (error: RuntimeError) => void; // Single error handler for all types of errors
   onCodeSave?: (code: string) => void;
   onCodeChange?: (hasChanges: boolean, saveHandler: () => void) => void;
+  onSyntaxErrorChange?: (errorCount: number) => void;
 }
 
 export type IframeFiles = {

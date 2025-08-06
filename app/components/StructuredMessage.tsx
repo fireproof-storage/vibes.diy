@@ -12,6 +12,7 @@ interface StructuredMessageProps {
   rawText?: string; // Raw message text to be copied on shift+click
   navigateToView: (view: ViewType) => void; // Add ability to set active view
   isLatestMessage?: boolean; // Add prop to determine if this is the latest AI message
+  selectedCodeHasErrors?: boolean; // Whether the currently selected code has syntax errors
 }
 
 // Extracted CodeSegment as a separate component to avoid hooks in render functions
@@ -26,6 +27,7 @@ interface CodeSegmentProps {
   codeLines: number;
   rawText?: string; // Raw message text to be copied on shift+click
   navigateToView: (view: ViewType) => void; // Add ability to set active view
+  selectedCodeHasErrors?: boolean; // Whether the currently selected code has syntax errors
 }
 
 const CodeSegment = ({
@@ -39,6 +41,7 @@ const CodeSegment = ({
   codeLines,
   rawText,
   navigateToView,
+  selectedCodeHasErrors,
 }: CodeSegmentProps) => {
   const content = segment.content || '';
   const codeSegmentRef = useRef<HTMLDivElement>(null);
@@ -75,9 +78,11 @@ const CodeSegment = ({
         className={`absolute -top-1 left-1 text-lg ${
           !codeReady
             ? 'text-orange-500 dark:text-orange-400'
-            : isSelected
-              ? 'text-green-500 dark:text-green-400'
-              : 'text-accent-01 dark:text-accent-02'
+            : isSelected && selectedCodeHasErrors
+              ? 'text-red-500 dark:text-red-400'
+              : isSelected
+                ? 'text-green-500 dark:text-green-400'
+                : 'text-accent-01 dark:text-accent-02'
         }`}
       >
         •
@@ -152,6 +157,7 @@ const StructuredMessage = ({
   rawText,
   navigateToView,
   isLatestMessage = false, // Default to false if not provided
+  selectedCodeHasErrors,
 }: StructuredMessageProps) => {
   // Ensure segments is an array (defensive)
   const validSegments = Array.isArray(segments) ? segments : [];
@@ -238,6 +244,7 @@ const StructuredMessage = ({
                   codeLines={codeLines}
                   rawText={rawText}
                   navigateToView={navigateToView}
+                  selectedCodeHasErrors={selectedCodeHasErrors}
                 />
               );
             }

@@ -20,6 +20,7 @@ interface IframeContentProps {
   sessionId?: string;
   onCodeSave?: (code: string) => void;
   onCodeChange?: (hasChanges: boolean, saveHandler: () => void) => void;
+  onSyntaxErrorChange?: (errorCount: number) => void;
 }
 
 const IframeContent: React.FC<IframeContentProps> = ({
@@ -31,6 +32,7 @@ const IframeContent: React.FC<IframeContentProps> = ({
   sessionId,
   onCodeSave,
   onCodeChange,
+  onSyntaxErrorChange,
 }) => {
   // API key no longer needed - proxy handles authentication
   const iframeRef = useRef<HTMLIFrameElement>(null);
@@ -74,9 +76,24 @@ const IframeContent: React.FC<IframeContentProps> = ({
     const hasChanges = actualValue !== appCode;
     setHasUnsavedChanges(hasChanges);
 
-    // Notify parent about changes and provide save handler
+    // Check for syntax errors
+    let errorCount = 0;
+    if (monacoEditorRef.current && monacoApiRef.current) {
+      const model = monacoEditorRef.current.getModel();
+      if (model) {
+        const markers = monacoApiRef.current.editor.getModelMarkers({ resource: model.uri });
+        errorCount = markers.filter(
+          (marker: any) => marker.severity === monacoApiRef.current.MarkerSeverity.Error
+        ).length;
+      }
+    }
+
+    // Notify parent about changes and syntax errors
     if (onCodeChange) {
       onCodeChange(hasChanges, () => handleSave());
+    }
+    if (onSyntaxErrorChange) {
+      onSyntaxErrorChange(errorCount);
     }
   };
 
@@ -268,6 +285,30 @@ const IframeContent: React.FC<IframeContentProps> = ({
                 highlighterRef.current = h;
               },
             });
+
+            // Set up syntax error monitoring
+            const model = editor.getModel();
+            if (model) {
+              const checkSyntaxErrors = () => {
+                const markers = monaco.editor.getModelMarkers({ resource: model.uri });
+                const errorCount = markers.filter(
+                  (marker: any) => marker.severity === monaco.MarkerSeverity.Error
+                ).length;
+                if (onSyntaxErrorChange) {
+                  onSyntaxErrorChange(errorCount);
+                }
+              };
+
+              // Initial check
+              checkSyntaxErrors();
+
+              // Listen for marker changes
+              const disposable = monaco.editor.onDidChangeMarkers(() => {
+                checkSyntaxErrors();
+              });
+
+              disposablesRef.current.push(disposable);
+            }
           }}
         />
       </div>

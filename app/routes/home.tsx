@@ -81,6 +81,7 @@ export default function UnifiedSession() {
   // State for code editing
   const [hasCodeChanges, setHasCodeChanges] = useState(false);
   const [codeSaveHandler, setCodeSaveHandler] = useState<(() => void) | null>(null);
+  const [syntaxErrorCount, setSyntaxErrorCount] = useState(0);
 
   // Centralized view state management
   const { displayView, navigateToView, viewControls, showViewControls } = useViewState({
@@ -123,6 +124,18 @@ export default function UnifiedSession() {
     setHasCodeChanges(hasChanges);
     setCodeSaveHandler(() => saveHandler);
   }, []);
+
+  // Handle syntax error changes from editor
+  const handleSyntaxErrorChange = useCallback(
+    (errorCount: number) => {
+      setSyntaxErrorCount(errorCount);
+      // Update chat state with error status
+      if (chatState.setSelectedCodeHasErrors) {
+        chatState.setSelectedCodeHasErrors(errorCount > 0);
+      }
+    },
+    [chatState.setSelectedCodeHasErrors]
+  );
 
   // Add a ref to track whether streaming was active previously
   const wasStreamingRef = useRef(false);
@@ -298,6 +311,7 @@ export default function UnifiedSession() {
               // Props for code editing
               hasCodeChanges={hasCodeChanges}
               onCodeSave={codeSaveHandler || undefined}
+              syntaxErrorCount={syntaxErrorCount}
             />
           ) : null
         }
@@ -322,6 +336,7 @@ export default function UnifiedSession() {
             addError={(error) => chatState.addError(error)}
             onCodeSave={handleCodeSave}
             onCodeChange={handleCodeChange}
+            onSyntaxErrorChange={handleSyntaxErrorChange}
           />
         }
         chatInput={
