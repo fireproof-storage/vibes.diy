@@ -81,7 +81,14 @@ const IframeContent: React.FC<IframeContentProps> = ({
   };
 
   // Handle save button click
-  const handleSave = () => {
+  const handleSave = async () => {
+    // Format the code before saving
+    try {
+      await monacoEditorRef.current?.getAction('editor.action.formatDocument')?.run();
+    } catch (error) {
+      console.warn('Could not format document:', error);
+    }
+
     // Get the current value directly from Monaco editor to ensure we capture all keystrokes
     const currentValue = monacoEditorRef.current?.getValue() || editedCode;
 
@@ -243,6 +250,8 @@ const IframeContent: React.FC<IframeContentProps> = ({
             lineNumbers: 'on',
             wordWrap: 'on',
             padding: { top: 16 },
+            formatOnType: true,
+            formatOnPaste: true,
           }}
           onMount={async (editor, monaco) => {
             await setupMonacoEditor(editor, monaco, {
