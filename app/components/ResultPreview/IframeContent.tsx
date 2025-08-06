@@ -70,15 +70,6 @@ const IframeContent: React.FC<IframeContentProps> = ({
     const editorCurrentValue = monacoEditorRef.current?.getValue() || newCode;
     const actualValue = editorCurrentValue.length >= newCode.length ? editorCurrentValue : newCode;
 
-    console.log('🔄 Code changed:', {
-      newLength: newCode.length,
-      editorCurrentLength: editorCurrentValue.length,
-      actualLength: actualValue.length,
-      originalLength: appCode.length,
-      hasChanges: actualValue !== appCode,
-      lastChar: actualValue.slice(-1),
-    });
-
     setEditedCode(actualValue);
     const hasChanges = actualValue !== appCode;
     setHasUnsavedChanges(hasChanges);
@@ -93,14 +84,6 @@ const IframeContent: React.FC<IframeContentProps> = ({
   const handleSave = () => {
     // Get the current value directly from Monaco editor to ensure we capture all keystrokes
     const currentValue = monacoEditorRef.current?.getValue() || editedCode;
-
-    console.log('💾 Save button clicked:', {
-      hasUnsavedChanges,
-      editedCodeLength: editedCode.length,
-      currentValueLength: currentValue.length,
-      lastChar: currentValue.slice(-1),
-      valuesDiffer: currentValue !== editedCode,
-    });
 
     // Update our state with the actual current value
     if (currentValue !== editedCode) {

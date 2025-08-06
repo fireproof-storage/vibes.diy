@@ -145,25 +145,6 @@ export function useSimpleChat(sessionId: string | undefined): ChatState {
       pendingAiMessage,
     });
 
-  // Log processed messages when message count changes
-  useEffect(() => {
-    console.log('📱 PROCESSED MESSAGES LENGTH CHANGED - Count:', messages.length);
-    console.log(
-      JSON.stringify(
-        messages.map((d) => ({
-          _id: d._id,
-          type: d.type,
-          text: d.text?.substring(0, 100),
-          created_at: d.created_at,
-          session_id: d.session_id,
-          isEditedCode: (d as AiChatMessageDocument).isEditedCode,
-        })),
-        null,
-        2
-      )
-    );
-  }, [messages.length]); // Only log when messages length changes
-
   // Simple input handler
   const setInput = useCallback(
     (input: string) => {
@@ -259,28 +240,9 @@ export function useSimpleChat(sessionId: string | undefined): ChatState {
   // Function to save edited code as user edit + AI response
   const saveCodeAsAiMessage = useCallback(
     async (code: string, currentMessages: ChatMessageDocument[]) => {
-      console.log('💾 Save Code Called - Using UI Messages Array Order');
-
       // Use the current UI messages state AS-IS - trust the array order
       // No sorting needed - the messages array is already in the correct order from the UI
       const messages = currentMessages;
-
-      // DECISION TREE LOGGING: Show last 3 messages for context
-      console.log('📋 DECISION CONTEXT - Last 3 messages (array order):');
-      messages.slice(-3).forEach((msg, i) => {
-        const index = messages.length - 3 + i;
-        const marker =
-          index === messages.length - 1
-            ? '🔴 LAST'
-            : index === messages.length - 2
-              ? '🟡 2nd'
-              : '🟢 3rd';
-        const isEdit = (msg as AiChatMessageDocument).isEditedCode;
-        const type = msg.type === 'ai' && isEdit ? 'ai-edit' : msg.type;
-        console.log(
-          `  ${marker} [${msg._id?.substring(0, 8)}] ${type} | isEditedCode:${isEdit || false} | "${msg.text?.substring(0, 40)}..."`
-        );
-      });
 
       // SIMPLIFIED LOGIC: Just look at the last message in the array
       const lastMessage = messages[messages.length - 1];
@@ -289,20 +251,6 @@ export function useSimpleChat(sessionId: string | undefined): ChatState {
 
       // UPDATE if last message is AI with isEditedCode, otherwise CREATE
       const shouldUpdateExisting = isLastMessageFromUserEdit;
-
-      console.log('🎯 DECISION LOGIC:');
-      console.log(
-        `  Last message: ${lastMessage?.type} (ID: ${lastMessage?._id?.substring(0, 8)})`
-      );
-      console.log(
-        `  isEditedCode: ${(lastMessage as AiChatMessageDocument)?.isEditedCode || false}`
-      );
-      console.log(
-        `  Decision: ${shouldUpdateExisting ? 'UPDATE existing' : 'CREATE new'} messages`
-      );
-      console.log(
-        `  Reason: Last message is ${lastMessage?.type}${(lastMessage as AiChatMessageDocument)?.isEditedCode ? ' with isEditedCode=true' : ' without isEditedCode flag'}`
-      );
 
       const aiResponseText = `User changes:
 

@@ -153,18 +153,6 @@ const StructuredMessage = ({
   navigateToView,
   isLatestMessage = false, // Default to false if not provided
 }: StructuredMessageProps) => {
-  // Debug logging - log when segment count changes
-  useEffect(() => {
-    console.log('🎨 StructuredMessage SEGMENTS CHANGED:', {
-      messageId: messageId || 'no-id',
-      textPreview: rawText?.substring(0, 50) + '...',
-      segmentCount: segments?.length || 0,
-      isStreaming,
-      isLatestMessage,
-      hasContent: segments?.some((s) => s?.content && s.content.trim().length > 0),
-    });
-  }, [segments?.length]);
-
   // Ensure segments is an array (defensive)
   const validSegments = Array.isArray(segments) ? segments : [];
 
