@@ -86,7 +86,7 @@ export default function UnifiedSession() {
   const handleCodeSave = useCallback(
     async (code: string) => {
       try {
-        await chatState.saveCodeAsAiMessage(code);
+        await chatState.saveCodeAsAiMessage(code, chatState.docs);
       } catch (error) {
         console.error('Failed to save code:', error);
         chatState.addError({

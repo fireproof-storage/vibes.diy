@@ -37,7 +37,7 @@ export const SaveButton: React.FC<SaveButtonProps> = ({ onClick, hasChanges }) =
       {/* Desktop version */}
       <button
         onClick={onClick}
-        className="hidden items-center gap-2 rounded-md bg-blue-600 px-3 py-1.5 text-sm text-white transition-colors hover:bg-blue-700 sm:flex"
+        className="hidden items-center gap-2 rounded-md bg-blue-500 px-3 py-1.5 text-sm text-white transition-colors hover:bg-blue-600 sm:flex"
       >
         <MinidiscIcon className="h-4 w-4" />
         Save
@@ -46,7 +46,7 @@ export const SaveButton: React.FC<SaveButtonProps> = ({ onClick, hasChanges }) =
       {/* Mobile version - icon only */}
       <button
         onClick={onClick}
-        className="flex h-8 w-8 items-center justify-center rounded-md bg-blue-600 text-white transition-colors hover:bg-blue-700 sm:hidden"
+        className="flex h-8 w-8 items-center justify-center rounded-md bg-blue-500 text-white transition-colors hover:bg-blue-600 sm:hidden"
         title="Save changes"
       >
         <MinidiscIcon className="h-4 w-4" />

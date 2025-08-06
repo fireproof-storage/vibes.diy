@@ -145,6 +145,25 @@ export function useSimpleChat(sessionId: string | undefined): ChatState {
       pendingAiMessage,
     });
 
+  // Log processed messages when message count changes
+  useEffect(() => {
+    console.log('📱 PROCESSED MESSAGES LENGTH CHANGED - Count:', messages.length);
+    console.log(
+      JSON.stringify(
+        messages.map((d) => ({
+          _id: d._id,
+          type: d.type,
+          text: d.text?.substring(0, 100),
+          created_at: d.created_at,
+          session_id: d.session_id,
+          isEditedCode: (d as AiChatMessageDocument).isEditedCode,
+        })),
+        null,
+        2
+      )
+    );
+  }, [messages.length]); // Only log when messages length changes
+
   // Simple input handler
   const setInput = useCallback(
     (input: string) => {
@@ -239,46 +258,51 @@ export function useSimpleChat(sessionId: string | undefined): ChatState {
 
   // Function to save edited code as user edit + AI response
   const saveCodeAsAiMessage = useCallback(
-    async (code: string) => {
-      console.log('🔧 saveCodeAsAiMessage called with code length:', code.length);
+    async (code: string, currentMessages: ChatMessageDocument[]) => {
+      console.log('💾 Save Code Called - Using UI Messages Array Order');
+
+      // Use the current UI messages state AS-IS - trust the array order
+      // No sorting needed - the messages array is already in the correct order from the UI
+      const messages = currentMessages;
+
+      // DECISION TREE LOGGING: Show last 3 messages for context
+      console.log('📋 DECISION CONTEXT - Last 3 messages (array order):');
+      messages.slice(-3).forEach((msg, i) => {
+        const index = messages.length - 3 + i;
+        const marker =
+          index === messages.length - 1
+            ? '🔴 LAST'
+            : index === messages.length - 2
+              ? '🟡 2nd'
+              : '🟢 3rd';
+        const isEdit = (msg as AiChatMessageDocument).isEditedCode;
+        const type = msg.type === 'ai' && isEdit ? 'ai-edit' : msg.type;
+        console.log(
+          `  ${marker} [${msg._id?.substring(0, 8)}] ${type} | isEditedCode:${isEdit || false} | "${msg.text?.substring(0, 40)}..."`
+        );
+      });
+
+      // SIMPLIFIED LOGIC: Just look at the last message in the array
+      const lastMessage = messages[messages.length - 1];
+      const isLastMessageFromUserEdit =
+        lastMessage?.type === 'ai' && (lastMessage as AiChatMessageDocument)?.isEditedCode === true;
+
+      // UPDATE if last message is AI with isEditedCode, otherwise CREATE
+      const shouldUpdateExisting = isLastMessageFromUserEdit;
+
+      console.log('🎯 DECISION LOGIC:');
       console.log(
-        '📝 Current docs:',
-        docs.map((d) => ({ id: d._id, type: d.type, text: d.text?.substring(0, 50) + '...' }))
-      );
-
-      // Find the most recent AI message with isEditedCode flag
-      const sortedDocs = [...docs].sort((a, b) => (a.created_at || 0) - (b.created_at || 0));
-      const lastAiMessage = sortedDocs.filter((doc) => doc.type === 'ai').pop() as
-        | AiChatMessageDocument
-        | undefined;
-
-      console.log('🔍 Recent messages analysis:');
-      console.log('  - Total docs:', sortedDocs.length);
-      console.log(
-        '  - Last 3 messages:',
-        sortedDocs.slice(-3).map((d) => ({
-          type: d.type,
-          text: d.text?.substring(0, 30) + '...',
-          isEditedCode: (d as AiChatMessageDocument).isEditedCode,
-          created_at: d.created_at,
-        }))
+        `  Last message: ${lastMessage?.type} (ID: ${lastMessage?._id?.substring(0, 8)})`
       );
       console.log(
-        '  - lastAiMessage:',
-        lastAiMessage
-          ? {
-              text: lastAiMessage.text?.substring(0, 50) + '...',
-              isEditedCode: lastAiMessage.isEditedCode,
-              id: lastAiMessage._id,
-            }
-          : 'none'
+        `  isEditedCode: ${(lastMessage as AiChatMessageDocument)?.isEditedCode || false}`
       );
-
-      // Check if the most recent AI message was from code editing
-      const isLastFromEditing = lastAiMessage?.isEditedCode === true;
-
-      console.log('🤔 isLastFromEditing:', isLastFromEditing);
-      console.log('🤔 Will update existing message:', isLastFromEditing && !!lastAiMessage?._id);
+      console.log(
+        `  Decision: ${shouldUpdateExisting ? 'UPDATE existing' : 'CREATE new'} messages`
+      );
+      console.log(
+        `  Reason: Last message is ${lastMessage?.type}${(lastMessage as AiChatMessageDocument)?.isEditedCode ? ' with isEditedCode=true' : ' without isEditedCode flag'}`
+      );
 
       const aiResponseText = `User changes:
 
@@ -286,45 +310,37 @@ export function useSimpleChat(sessionId: string | undefined): ChatState {
 ${code}
 \`\`\``;
 
-      if (isLastFromEditing && lastAiMessage?._id) {
-        console.log('🔄 Updating existing AI message');
-        // Update the existing AI message with new code
-        await sessionDatabase.put({
-          ...lastAiMessage,
+      if (shouldUpdateExisting) {
+        const newTime = Date.now();
+        const updateDoc = {
+          ...(lastMessage as AiChatMessageDocument),
           text: aiResponseText,
-          created_at: Date.now(),
+          created_at: newTime,
           isEditedCode: true,
-        });
+        };
+        await sessionDatabase.put(updateDoc);
       } else {
-        console.log('✨ Creating new user + AI message pair');
+        const now = Date.now();
 
-        // Create new user message directly in database
-        console.log('👤 Creating user message: "Edit by user"');
         const userMessageDoc = {
           type: 'user' as const,
           session_id: session._id,
           text: 'Edit by user',
-          created_at: Date.now(),
+          created_at: now,
         };
-        const userResult = await sessionDatabase.put(userMessageDoc);
-        console.log('👤 User message created with ID:', userResult.id);
+        await sessionDatabase.put(userMessageDoc);
 
-        // Create AI response directly in database
-        console.log('🤖 Creating AI response with code');
         const aiMessageDoc = {
           type: 'ai' as const,
           session_id: session._id,
           text: aiResponseText,
-          created_at: Date.now(),
+          created_at: now + 1,
           isEditedCode: true,
         };
-        const aiResult = await sessionDatabase.put(aiMessageDoc);
-        console.log('🤖 AI message created with ID:', aiResult.id);
+        await sessionDatabase.put(aiMessageDoc);
       }
-
-      console.log('✅ saveCodeAsAiMessage completed');
     },
-    [docs, session._id, sessionDatabase]
+    [session._id, sessionDatabase]
   );
 
   // Monitor advisory errors whenever they change (non-critical errors)

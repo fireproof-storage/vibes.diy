@@ -127,7 +127,7 @@ export interface ChatState {
   codeReady: boolean;
   inputRef: React.RefObject<HTMLTextAreaElement | null>;
   sendMessage: (text?: string) => Promise<void>;
-  saveCodeAsAiMessage: (code: string) => Promise<void>;
+  saveCodeAsAiMessage: (code: string, currentMessages: ChatMessageDocument[]) => Promise<void>;
   title: string;
   addScreenshot: (screenshot: string | null) => Promise<void>;
   sessionId?: string | null;
