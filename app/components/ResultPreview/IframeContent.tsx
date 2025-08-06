@@ -1,5 +1,5 @@
 import Editor from '@monaco-editor/react';
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import type { IframeFiles } from './ResultPreviewTypes';
 // API key import removed - proxy handles authentication
 import { CALLAI_ENDPOINT } from '../../config/env';
@@ -18,6 +18,8 @@ interface IframeContentProps {
   codeReady: boolean;
   isDarkMode: boolean;
   sessionId?: string;
+  onCodeSave?: (code: string) => void;
+  onCodeChange?: (hasChanges: boolean, saveHandler: () => void) => void;
 }
 
 const IframeContent: React.FC<IframeContentProps> = ({
@@ -27,6 +29,8 @@ const IframeContent: React.FC<IframeContentProps> = ({
   codeReady,
   isDarkMode,
   sessionId,
+  onCodeSave,
+  onCodeChange,
 }) => {
   // API key no longer needed - proxy handles authentication
   const iframeRef = useRef<HTMLIFrameElement>(null);
@@ -47,6 +51,54 @@ const IframeContent: React.FC<IframeContentProps> = ({
 
   // Extract the current app code string
   const appCode = filesContent['/App.jsx']?.code || '';
+
+  // State for edited code
+  const [editedCode, setEditedCode] = useState(appCode);
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+
+  // Update edited code when app code changes
+  useEffect(() => {
+    setEditedCode(appCode);
+    setHasUnsavedChanges(false);
+  }, [appCode]);
+
+  // Handle code changes in the editor
+  const handleCodeChange = (value: string | undefined) => {
+    const newCode = value || '';
+
+    // Also check the editor's current value to be extra sure
+    const editorCurrentValue = monacoEditorRef.current?.getValue() || newCode;
+    const actualValue = editorCurrentValue.length >= newCode.length ? editorCurrentValue : newCode;
+
+    setEditedCode(actualValue);
+    const hasChanges = actualValue !== appCode;
+    setHasUnsavedChanges(hasChanges);
+
+    // Notify parent about changes and provide save handler
+    if (onCodeChange) {
+      onCodeChange(hasChanges, () => handleSave());
+    }
+  };
+
+  // Handle save button click
+  const handleSave = () => {
+    // Get the current value directly from Monaco editor to ensure we capture all keystrokes
+    const currentValue = monacoEditorRef.current?.getValue() || editedCode;
+
+    // Update our state with the actual current value
+    if (currentValue !== editedCode) {
+      setEditedCode(currentValue);
+    }
+
+    if (onCodeSave && (hasUnsavedChanges || currentValue !== appCode)) {
+      onCodeSave(currentValue);
+      setHasUnsavedChanges(false);
+      // Notify parent that changes are saved
+      if (onCodeChange) {
+        onCodeChange(false, () => handleSave());
+      }
+    }
+  };
 
   // Theme detection is now handled in the parent component
 
@@ -180,9 +232,10 @@ const IframeContent: React.FC<IframeContentProps> = ({
           path="file.jsx"
           defaultLanguage="jsx"
           theme={isDarkMode ? 'github-dark' : 'github-light'}
-          value={filesContent['/App.jsx']?.code || ''}
+          value={editedCode}
+          onChange={handleCodeChange}
           options={{
-            readOnly: true,
+            readOnly: false,
             minimap: { enabled: false },
             scrollBeyondLastLine: false,
             automaticLayout: true,

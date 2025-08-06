@@ -29,6 +29,7 @@ const mockChatState: ChatState & {
   isStreaming: false,
   inputRef: { current: null },
   sendMessage: vi.fn(),
+  saveCodeAsAiMessage: vi.fn().mockResolvedValue('test-message-id'),
   title: 'test title',
   sessionId: 'test-session-id',
   selectedResponseDoc: undefined,

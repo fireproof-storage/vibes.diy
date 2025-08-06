@@ -11,7 +11,6 @@ vi.mock('call-ai', () => ({
     return callCount === 1 ? 'Mock Title' : 'Updated Mock Title';
   }),
 }));
-import { AuthProvider } from '../../app/contexts/AuthContext';
 
 // Mock AuthContext to avoid state updates during tests
 vi.mock('../../app/contexts/AuthContext', () => {
@@ -707,7 +706,7 @@ export default Timer;`,
 
 // Wrapper definition
 const createWrapper = () => {
-  return ({ children }: { children: ReactNode }) => <AuthProvider>{children}</AuthProvider>;
+  return ({ children }: { children: ReactNode }) => <>{children}</>;
 };
 
 const testJwt =

@@ -38,6 +38,7 @@ export type UserChatMessageDocument = BaseChatMessageDocument & {
 export type AiChatMessageDocument = BaseChatMessageDocument & {
   type: 'ai';
   model?: string; // The model used to generate this message
+  isEditedCode?: boolean; // Flag to indicate this message contains edited code
 };
 
 export type SystemChatMessageDocument = BaseChatMessageDocument & {
@@ -126,6 +127,7 @@ export interface ChatState {
   codeReady: boolean;
   inputRef: React.RefObject<HTMLTextAreaElement | null>;
   sendMessage: (text?: string) => Promise<void>;
+  saveCodeAsAiMessage: (code: string, currentMessages: ChatMessageDocument[]) => Promise<string>;
   title: string;
   addScreenshot: (screenshot: string | null) => Promise<void>;
   sessionId?: string | null;

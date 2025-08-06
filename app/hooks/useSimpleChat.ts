@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import type { ChatMessageDocument, ChatState } from '../types/chat';
+import type { AiChatMessageDocument, ChatMessageDocument, ChatState } from '../types/chat';
 import type { UserSettings } from '../types/settings';
 
 import { useFireproof } from 'use-fireproof';
@@ -237,6 +237,62 @@ export function useSimpleChat(sessionId: string | undefined): ChatState {
     setIsStreaming,
   });
 
+  // Function to save edited code as user edit + AI response
+  const saveCodeAsAiMessage = useCallback(
+    async (code: string, currentMessages: ChatMessageDocument[]): Promise<string> => {
+      // Use the current UI messages state AS-IS - trust the array order
+      // No sorting needed - the messages array is already in the correct order from the UI
+      const messages = currentMessages;
+
+      // SIMPLIFIED LOGIC: Just look at the last message in the array
+      const lastMessage = messages[messages.length - 1];
+      const isLastMessageFromUserEdit =
+        lastMessage?.type === 'ai' && (lastMessage as AiChatMessageDocument)?.isEditedCode === true;
+
+      // UPDATE if last message is AI with isEditedCode, otherwise CREATE
+      const shouldUpdateExisting = isLastMessageFromUserEdit;
+
+      const aiResponseText = `Code changes:
+
+\`\`\`jsx
+${code}
+\`\`\``;
+
+      if (shouldUpdateExisting) {
+        const newTime = Date.now();
+        const updateDoc = {
+          ...(lastMessage as AiChatMessageDocument),
+          text: aiResponseText,
+          created_at: newTime,
+          isEditedCode: true,
+        };
+        await sessionDatabase.put(updateDoc);
+        return lastMessage._id || `updated-message-${Date.now()}`;
+      } else {
+        const now = Date.now();
+
+        const userMessageDoc = {
+          type: 'user' as const,
+          session_id: session._id,
+          text: 'Edited by user',
+          created_at: now,
+        };
+        await sessionDatabase.put(userMessageDoc);
+
+        const aiMessageDoc = {
+          type: 'ai' as const,
+          session_id: session._id,
+          text: aiResponseText,
+          created_at: now + 1,
+          isEditedCode: true,
+        };
+        const result = await sessionDatabase.put(aiMessageDoc);
+        return result.id || `ai-message-${Date.now()}`;
+      }
+    },
+    [session._id, sessionDatabase]
+  );
+
   // Monitor advisory errors whenever they change (non-critical errors)
   useEffect(() => {
     // Advisories are handled through the system messages mechanism
@@ -257,6 +313,7 @@ export function useSimpleChat(sessionId: string | undefined): ChatState {
     isStreaming,
     codeReady,
     sendMessage,
+    saveCodeAsAiMessage,
     inputRef,
     title: vibeDoc?.title || '',
     // Error tracking

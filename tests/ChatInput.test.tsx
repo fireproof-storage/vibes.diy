@@ -29,6 +29,7 @@ describe('ChatInput Component', () => {
       docs: [],
       setInput: setInput,
       sendMessage: sendMessage,
+      saveCodeAsAiMessage: vi.fn().mockResolvedValue('test-message-id'),
       codeReady: false,
       title: '',
       addScreenshot: vi.fn().mockResolvedValue(undefined),

@@ -78,6 +78,10 @@ export default function UnifiedSession() {
   const [mobilePreviewShown, setMobilePreviewShown] = useState(false);
   const [isIframeFetching, setIsIframeFetching] = useState(false);
 
+  // State for code editing
+  const [hasCodeChanges, setHasCodeChanges] = useState(false);
+  const [codeSaveHandler, setCodeSaveHandler] = useState<(() => void) | null>(null);
+
   // Centralized view state management
   const { displayView, navigateToView, viewControls, showViewControls } = useViewState({
     sessionId: chatState.sessionId || undefined, // Handle null
@@ -88,6 +92,37 @@ export default function UnifiedSession() {
     isIframeFetching: isIframeFetching,
     capturedPrompt: capturedPrompt,
   });
+
+  // Handle code save from the editor
+  const handleCodeSave = useCallback(
+    async (code: string) => {
+      try {
+        const newMessageId = await chatState.saveCodeAsAiMessage(code, chatState.docs);
+
+        // Select the newly created message
+        chatState.setSelectedResponseId(newMessageId);
+
+        // Navigate to app view to show the result
+        navigateToView('preview');
+      } catch (error) {
+        console.error('Failed to save code:', error);
+        chatState.addError({
+          type: 'error',
+          message: error instanceof Error ? error.message : 'Failed to save code',
+          stack: error instanceof Error ? error.stack : undefined,
+          timestamp: Date.now().toString(),
+          errorType: 'Other',
+        });
+      }
+    },
+    [chatState, navigateToView]
+  );
+
+  // Handle code change notifications from editor
+  const handleCodeChange = useCallback((hasChanges: boolean, saveHandler: () => void) => {
+    setHasCodeChanges(hasChanges);
+    setCodeSaveHandler(() => saveHandler);
+  }, []);
 
   // Add a ref to track whether streaming was active previously
   const wasStreamingRef = useRef(false);
@@ -260,6 +295,9 @@ export default function UnifiedSession() {
               sessionId={chatState.sessionId || undefined} // Handle null
               title={chatState.title || undefined} // Handle null
               previewReady={previewReady} // needed for publish button visibility logic
+              // Props for code editing
+              hasCodeChanges={hasCodeChanges}
+              onCodeSave={codeSaveHandler || undefined}
             />
           ) : null
         }
@@ -282,6 +320,8 @@ export default function UnifiedSession() {
             setMobilePreviewShown={setMobilePreviewShown}
             setIsIframeFetching={setIsIframeFetching}
             addError={(error) => chatState.addError(error)}
+            onCodeSave={handleCodeSave}
+            onCodeChange={handleCodeChange}
           />
         }
         chatInput={
