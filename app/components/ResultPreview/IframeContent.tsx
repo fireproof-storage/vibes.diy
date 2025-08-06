@@ -19,6 +19,7 @@ interface IframeContentProps {
   isDarkMode: boolean;
   sessionId?: string;
   onCodeSave?: (code: string) => void;
+  onCodeChange?: (hasChanges: boolean, saveHandler: () => void) => void;
 }
 
 const IframeContent: React.FC<IframeContentProps> = ({
@@ -29,6 +30,7 @@ const IframeContent: React.FC<IframeContentProps> = ({
   isDarkMode,
   sessionId,
   onCodeSave,
+  onCodeChange,
 }) => {
   // API key no longer needed - proxy handles authentication
   const iframeRef = useRef<HTMLIFrameElement>(null);
@@ -63,15 +65,55 @@ const IframeContent: React.FC<IframeContentProps> = ({
   // Handle code changes in the editor
   const handleCodeChange = (value: string | undefined) => {
     const newCode = value || '';
-    setEditedCode(newCode);
-    setHasUnsavedChanges(newCode !== appCode);
+
+    // Also check the editor's current value to be extra sure
+    const editorCurrentValue = monacoEditorRef.current?.getValue() || newCode;
+    const actualValue = editorCurrentValue.length >= newCode.length ? editorCurrentValue : newCode;
+
+    console.log('🔄 Code changed:', {
+      newLength: newCode.length,
+      editorCurrentLength: editorCurrentValue.length,
+      actualLength: actualValue.length,
+      originalLength: appCode.length,
+      hasChanges: actualValue !== appCode,
+      lastChar: actualValue.slice(-1),
+    });
+
+    setEditedCode(actualValue);
+    const hasChanges = actualValue !== appCode;
+    setHasUnsavedChanges(hasChanges);
+
+    // Notify parent about changes and provide save handler
+    if (onCodeChange) {
+      onCodeChange(hasChanges, () => handleSave());
+    }
   };
 
   // Handle save button click
   const handleSave = () => {
-    if (onCodeSave && hasUnsavedChanges) {
-      onCodeSave(editedCode);
+    // Get the current value directly from Monaco editor to ensure we capture all keystrokes
+    const currentValue = monacoEditorRef.current?.getValue() || editedCode;
+
+    console.log('💾 Save button clicked:', {
+      hasUnsavedChanges,
+      editedCodeLength: editedCode.length,
+      currentValueLength: currentValue.length,
+      lastChar: currentValue.slice(-1),
+      valuesDiffer: currentValue !== editedCode,
+    });
+
+    // Update our state with the actual current value
+    if (currentValue !== editedCode) {
+      setEditedCode(currentValue);
+    }
+
+    if (onCodeSave && (hasUnsavedChanges || currentValue !== appCode)) {
+      onCodeSave(currentValue);
       setHasUnsavedChanges(false);
+      // Notify parent that changes are saved
+      if (onCodeChange) {
+        onCodeChange(false, () => handleSave());
+      }
     }
   };
 
@@ -201,16 +243,6 @@ const IframeContent: React.FC<IframeContentProps> = ({
           left: 0,
         }}
       >
-        {currentView === 'code' && hasUnsavedChanges && (
-          <div className="absolute top-2 right-2 z-10">
-            <button
-              onClick={handleSave}
-              className="rounded-md bg-blue-600 px-3 py-1 text-sm text-white shadow-sm transition-colors hover:bg-blue-700"
-            >
-              Save
-            </button>
-          </div>
-        )}
         <Editor
           height="100%"
           width="100%"

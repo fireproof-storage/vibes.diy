@@ -21,6 +21,7 @@ function ResultPreview({
   children,
   title,
   onCodeSave,
+  onCodeChange,
 }: ResultPreviewProps & { children?: React.ReactNode }) {
   // Use the theme context instead of local state
   const { isDarkMode } = useTheme();
@@ -92,6 +93,7 @@ function ResultPreview({
       isDarkMode={isDarkMode}
       sessionId={sessionId}
       onCodeSave={onCodeSave}
+      onCodeChange={onCodeChange}
     />
   );
 

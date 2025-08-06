@@ -6,6 +6,7 @@ import type { ViewType, ViewControlsType } from '../../utils/ViewState';
 import { BackButton } from './BackButton';
 import { ViewControls } from './ViewControls';
 import { ShareButton } from './ShareButton';
+import { SaveButton } from './SaveButton';
 import { usePublish } from './usePublish';
 import { ShareModal } from './ShareModal';
 
@@ -24,6 +25,10 @@ interface ResultPreviewHeaderContentProps {
   isStreaming: boolean; // for BackButton logic
   sessionId?: string; // for useSession, usePublish
   title?: string; // for useSession, usePublish
+
+  // Props for code editing
+  hasCodeChanges?: boolean;
+  onCodeSave?: () => void;
 }
 
 const ResultPreviewHeaderContent: React.FC<ResultPreviewHeaderContentProps> = ({
@@ -38,6 +43,8 @@ const ResultPreviewHeaderContent: React.FC<ResultPreviewHeaderContentProps> = ({
   isStreaming,
   sessionId: propSessionId,
   title: propTitle,
+  hasCodeChanges,
+  onCodeSave,
 }) => {
   const { sessionId: urlSessionId, view: urlView } = useParams();
   const publishButtonRef = useRef<HTMLButtonElement>(null);
@@ -103,19 +110,22 @@ const ResultPreviewHeaderContent: React.FC<ResultPreviewHeaderContentProps> = ({
           />
         )}
       </div>
-      {/* Right side - Publish button */}
+      {/* Right side - Save and Publish buttons */}
       <div className="flex w-1/4 items-center justify-end">
-        <div className="flex items-center">
+        <div className="flex items-center gap-2">
+          {/* Save button - show when in code view and has changes */}
+          {displayView === 'code' && hasCodeChanges && onCodeSave && (
+            <SaveButton onClick={onCodeSave} hasChanges={hasCodeChanges} />
+          )}
+
           {showViewControls && previewReady && (
-            <div className="mr-2">
-              <ShareButton
-                ref={publishButtonRef}
-                onClick={toggleShareModal}
-                isPublishing={isPublishing}
-                urlCopied={urlCopied}
-                hasPublishedUrl={!!publishedAppUrl}
-              />
-            </div>
+            <ShareButton
+              ref={publishButtonRef}
+              onClick={toggleShareModal}
+              isPublishing={isPublishing}
+              urlCopied={urlCopied}
+              hasPublishedUrl={!!publishedAppUrl}
+            />
           )}
         </div>
       </div>

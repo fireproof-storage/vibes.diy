@@ -78,6 +78,10 @@ export default function UnifiedSession() {
   const [mobilePreviewShown, setMobilePreviewShown] = useState(false);
   const [isIframeFetching, setIsIframeFetching] = useState(false);
 
+  // State for code editing
+  const [hasCodeChanges, setHasCodeChanges] = useState(false);
+  const [codeSaveHandler, setCodeSaveHandler] = useState<(() => void) | null>(null);
+
   // Handle code save from the editor
   const handleCodeSave = useCallback(
     async (code: string) => {
@@ -96,6 +100,12 @@ export default function UnifiedSession() {
     },
     [chatState]
   );
+
+  // Handle code change notifications from editor
+  const handleCodeChange = useCallback((hasChanges: boolean, saveHandler: () => void) => {
+    setHasCodeChanges(hasChanges);
+    setCodeSaveHandler(() => saveHandler);
+  }, []);
 
   // Centralized view state management
   const { displayView, navigateToView, viewControls, showViewControls } = useViewState({
@@ -279,6 +289,9 @@ export default function UnifiedSession() {
               sessionId={chatState.sessionId || undefined} // Handle null
               title={chatState.title || undefined} // Handle null
               previewReady={previewReady} // needed for publish button visibility logic
+              // Props for code editing
+              hasCodeChanges={hasCodeChanges}
+              onCodeSave={codeSaveHandler || undefined}
             />
           ) : null
         }
@@ -302,6 +315,7 @@ export default function UnifiedSession() {
             setIsIframeFetching={setIsIframeFetching}
             addError={(error) => chatState.addError(error)}
             onCodeSave={handleCodeSave}
+            onCodeChange={handleCodeChange}
           />
         }
         chatInput={
