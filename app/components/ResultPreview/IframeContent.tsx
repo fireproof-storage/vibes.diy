@@ -290,10 +290,24 @@ const IframeContent: React.FC<IframeContentProps> = ({
             const model = editor.getModel();
             if (model) {
               const checkSyntaxErrors = () => {
-                const markers = monaco.editor.getModelMarkers({ resource: model.uri });
+                // Get markers specifically for our model and TypeScript errors
+                const markers = monaco.editor.getModelMarkers({
+                  resource: model.uri,
+                  owner: 'typescript', // Filter to TypeScript/JavaScript language service errors
+                });
                 const errorCount = markers.filter(
                   (marker: any) => marker.severity === monaco.MarkerSeverity.Error
                 ).length;
+
+                // Debug logging (remove after testing)
+                if (errorCount > 0) {
+                  console.log(
+                    'Monaco syntax errors detected:',
+                    errorCount,
+                    markers.map((m) => m.message)
+                  );
+                }
+
                 if (onSyntaxErrorChange) {
                   onSyntaxErrorChange(errorCount);
                 }
@@ -302,9 +316,12 @@ const IframeContent: React.FC<IframeContentProps> = ({
               // Initial check
               checkSyntaxErrors();
 
-              // Listen for marker changes
-              const disposable = monaco.editor.onDidChangeMarkers(() => {
-                checkSyntaxErrors();
+              // Listen for marker changes - more efficient than checking on content change
+              const disposable = monaco.editor.onDidChangeMarkers((uris) => {
+                // Only check if our model's URI is in the changed URIs
+                if (uris.some((uri) => uri.toString() === model.uri.toString())) {
+                  checkSyntaxErrors();
+                }
               });
 
               disposablesRef.current.push(disposable);

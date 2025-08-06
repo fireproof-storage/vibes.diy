@@ -34,6 +34,16 @@ export async function setupMonacoEditor(
     allowNonTsExtensions: true,
     allowJs: true,
     target: monaco.languages.typescript.ScriptTarget.Latest,
+    module: monaco.languages.typescript.ModuleKind.ESNext,
+    moduleResolution: monaco.languages.typescript.ModuleResolutionKind.NodeJs,
+    esModuleInterop: true,
+    skipLibCheck: true,
+  });
+
+  // Enable syntax error detection for JavaScript/JSX
+  monaco.languages.typescript.javascriptDefaults.setDiagnosticsOptions({
+    noSemanticValidation: false, // Enable semantic validation
+    noSyntaxValidation: false, // Enable syntax error detection
   });
 
   editor.updateOptions({
@@ -73,7 +83,7 @@ export async function setupMonacoEditor(
     monaco.editor.setTheme(currentTheme);
     const model = editor.getModel();
     if (model) {
-      monaco.editor.setModelLanguage(model, 'jsx');
+      monaco.editor.setModelLanguage(model, 'javascript');
     }
   } catch (error) {
     console.warn('Shiki highlighter setup failed:', error);
