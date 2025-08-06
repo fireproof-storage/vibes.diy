@@ -76,25 +76,13 @@ const IframeContent: React.FC<IframeContentProps> = ({
     const hasChanges = actualValue !== appCode;
     setHasUnsavedChanges(hasChanges);
 
-    // Check for syntax errors
-    let errorCount = 0;
-    if (monacoEditorRef.current && monacoApiRef.current) {
-      const model = monacoEditorRef.current.getModel();
-      if (model) {
-        const markers = monacoApiRef.current.editor.getModelMarkers({ resource: model.uri });
-        errorCount = markers.filter(
-          (marker: any) => marker.severity === monacoApiRef.current.MarkerSeverity.Error
-        ).length;
-      }
-    }
-
-    // Notify parent about changes and syntax errors
+    // Notify parent about changes
     if (onCodeChange) {
       onCodeChange(hasChanges, () => handleSave());
     }
-    if (onSyntaxErrorChange) {
-      onSyntaxErrorChange(errorCount);
-    }
+
+    // Note: Syntax error checking is handled by onDidChangeMarkers listener
+    // Don't check errors here as markers are updated asynchronously
   };
 
   // Handle save button click
@@ -300,15 +288,14 @@ const IframeContent: React.FC<IframeContentProps> = ({
                 ).length;
 
                 // Debug logging (remove after testing)
-                if (errorCount > 0) {
-                  console.log(
-                    'Monaco syntax errors detected:',
-                    errorCount,
-                    markers.map((m) => m.message)
-                  );
-                }
+                console.log(
+                  'Monaco error check:',
+                  errorCount,
+                  errorCount > 0 ? markers.map((m) => m.message) : 'No errors'
+                );
 
                 if (onSyntaxErrorChange) {
+                  console.log('Calling onSyntaxErrorChange with errorCount:', errorCount);
                   onSyntaxErrorChange(errorCount);
                 }
               };

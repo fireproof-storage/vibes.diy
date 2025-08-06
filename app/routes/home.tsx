@@ -128,9 +128,11 @@ export default function UnifiedSession() {
   // Handle syntax error changes from editor
   const handleSyntaxErrorChange = useCallback(
     (errorCount: number) => {
+      console.log('handleSyntaxErrorChange called with:', errorCount);
       setSyntaxErrorCount(errorCount);
       // Update chat state with error status
       if (chatState.setSelectedCodeHasErrors) {
+        console.log('Setting selectedCodeHasErrors to:', errorCount > 0);
         chatState.setSelectedCodeHasErrors(errorCount > 0);
       }
     },
