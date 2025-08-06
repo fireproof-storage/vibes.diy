@@ -239,7 +239,7 @@ export function useSimpleChat(sessionId: string | undefined): ChatState {
 
   // Function to save edited code as user edit + AI response
   const saveCodeAsAiMessage = useCallback(
-    async (code: string, currentMessages: ChatMessageDocument[]) => {
+    async (code: string, currentMessages: ChatMessageDocument[]): Promise<string> => {
       // Use the current UI messages state AS-IS - trust the array order
       // No sorting needed - the messages array is already in the correct order from the UI
       const messages = currentMessages;
@@ -252,7 +252,7 @@ export function useSimpleChat(sessionId: string | undefined): ChatState {
       // UPDATE if last message is AI with isEditedCode, otherwise CREATE
       const shouldUpdateExisting = isLastMessageFromUserEdit;
 
-      const aiResponseText = `User changes:
+      const aiResponseText = `Code changes:
 
 \`\`\`jsx
 ${code}
@@ -267,13 +267,14 @@ ${code}
           isEditedCode: true,
         };
         await sessionDatabase.put(updateDoc);
+        return lastMessage._id || `updated-message-${Date.now()}`;
       } else {
         const now = Date.now();
 
         const userMessageDoc = {
           type: 'user' as const,
           session_id: session._id,
-          text: 'Edit by user',
+          text: 'Edited by user',
           created_at: now,
         };
         await sessionDatabase.put(userMessageDoc);
@@ -285,7 +286,8 @@ ${code}
           created_at: now + 1,
           isEditedCode: true,
         };
-        await sessionDatabase.put(aiMessageDoc);
+        const result = await sessionDatabase.put(aiMessageDoc);
+        return result.id || `ai-message-${Date.now()}`;
       }
     },
     [session._id, sessionDatabase]

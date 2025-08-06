@@ -10,7 +10,7 @@ export const mockChatStateProps = {
   addScreenshot: () => Promise.resolve(),
   setSelectedResponseId: () => {},
   setNeedsNewKey: () => {},
-  saveCodeAsAiMessage: () => Promise.resolve(),
+  saveCodeAsAiMessage: () => Promise.resolve('test-message-id'),
   // Error tracking properties
   immediateErrors: [],
   advisoryErrors: [],
@@ -29,7 +29,7 @@ export const createMockChatState = (overrides = {}) => ({
   setInput: () => {},
   inputRef: { current: null },
   sendMessage: () => Promise.resolve(),
-  saveCodeAsAiMessage: () => Promise.resolve(),
+  saveCodeAsAiMessage: () => Promise.resolve('test-message-id'),
   isStreaming: false,
   title: 'Test Session',
   sessionId: 'test-session-id',

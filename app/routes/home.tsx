@@ -82,11 +82,28 @@ export default function UnifiedSession() {
   const [hasCodeChanges, setHasCodeChanges] = useState(false);
   const [codeSaveHandler, setCodeSaveHandler] = useState<(() => void) | null>(null);
 
+  // Centralized view state management
+  const { displayView, navigateToView, viewControls, showViewControls } = useViewState({
+    sessionId: chatState.sessionId || undefined, // Handle null
+    title: chatState.title || undefined, // Handle null
+    code: chatState.selectedCode?.content || '',
+    isStreaming: chatState.isStreaming,
+    previewReady: previewReady,
+    isIframeFetching: isIframeFetching,
+    capturedPrompt: capturedPrompt,
+  });
+
   // Handle code save from the editor
   const handleCodeSave = useCallback(
     async (code: string) => {
       try {
-        await chatState.saveCodeAsAiMessage(code, chatState.docs);
+        const newMessageId = await chatState.saveCodeAsAiMessage(code, chatState.docs);
+
+        // Select the newly created message
+        chatState.setSelectedResponseId(newMessageId);
+
+        // Navigate to app view to show the result
+        navigateToView('preview');
       } catch (error) {
         console.error('Failed to save code:', error);
         chatState.addError({
@@ -98,7 +115,7 @@ export default function UnifiedSession() {
         });
       }
     },
-    [chatState]
+    [chatState, navigateToView]
   );
 
   // Handle code change notifications from editor
@@ -106,17 +123,6 @@ export default function UnifiedSession() {
     setHasCodeChanges(hasChanges);
     setCodeSaveHandler(() => saveHandler);
   }, []);
-
-  // Centralized view state management
-  const { displayView, navigateToView, viewControls, showViewControls } = useViewState({
-    sessionId: chatState.sessionId || undefined, // Handle null
-    title: chatState.title || undefined, // Handle null
-    code: chatState.selectedCode?.content || '',
-    isStreaming: chatState.isStreaming,
-    previewReady: previewReady,
-    isIframeFetching: isIframeFetching,
-    capturedPrompt: capturedPrompt,
-  });
 
   // Add a ref to track whether streaming was active previously
   const wasStreamingRef = useRef(false);
