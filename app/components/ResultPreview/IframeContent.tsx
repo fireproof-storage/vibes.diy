@@ -20,6 +20,7 @@ interface IframeContentProps {
   sessionId?: string;
   onCodeSave?: (code: string) => void;
   onCodeChange?: (hasChanges: boolean, saveHandler: () => void) => void;
+  onSyntaxErrorChange?: (errorCount: number) => void;
 }
 
 const IframeContent: React.FC<IframeContentProps> = ({
@@ -31,6 +32,7 @@ const IframeContent: React.FC<IframeContentProps> = ({
   sessionId,
   onCodeSave,
   onCodeChange,
+  onSyntaxErrorChange,
 }) => {
   // API key no longer needed - proxy handles authentication
   const iframeRef = useRef<HTMLIFrameElement>(null);
@@ -74,14 +76,24 @@ const IframeContent: React.FC<IframeContentProps> = ({
     const hasChanges = actualValue !== appCode;
     setHasUnsavedChanges(hasChanges);
 
-    // Notify parent about changes and provide save handler
+    // Notify parent about changes
     if (onCodeChange) {
       onCodeChange(hasChanges, () => handleSave());
     }
+
+    // Note: Syntax error checking is handled by onDidChangeMarkers listener
+    // Don't check errors here as markers are updated asynchronously
   };
 
   // Handle save button click
-  const handleSave = () => {
+  const handleSave = async () => {
+    // Format the code before saving
+    try {
+      await monacoEditorRef.current?.getAction('editor.action.formatDocument')?.run();
+    } catch (error) {
+      console.warn('Could not format document:', error);
+    }
+
     // Get the current value directly from Monaco editor to ensure we capture all keystrokes
     const currentValue = monacoEditorRef.current?.getValue() || editedCode;
 
@@ -243,6 +255,8 @@ const IframeContent: React.FC<IframeContentProps> = ({
             lineNumbers: 'on',
             wordWrap: 'on',
             padding: { top: 16 },
+            formatOnType: true,
+            formatOnPaste: true,
           }}
           onMount={async (editor, monaco) => {
             await setupMonacoEditor(editor, monaco, {
@@ -259,6 +273,63 @@ const IframeContent: React.FC<IframeContentProps> = ({
                 highlighterRef.current = h;
               },
             });
+
+            // Set up syntax error monitoring
+            const model = editor.getModel();
+            if (model) {
+              // Holds the timeout id for pending syntax-error checks so we can cancel
+              // any previously scheduled run before queuing a new one. This acts as a
+              // lightweight, manual debounce without bringing in lodash or a similar
+              // utility.
+              let syntaxErrorCheckTimeoutId: ReturnType<typeof setTimeout> | null = null;
+
+              const scheduleSyntaxCheck = (delay: number) => {
+                if (syntaxErrorCheckTimeoutId !== null) {
+                  clearTimeout(syntaxErrorCheckTimeoutId);
+                }
+                syntaxErrorCheckTimeoutId = setTimeout(checkSyntaxErrors, delay);
+              };
+
+              const checkSyntaxErrors = () => {
+                // Get ALL markers for our model from all sources
+                const allMarkers = monaco.editor.getModelMarkers({
+                  resource: model.uri,
+                });
+
+                // Filter for error markers from any language service
+                const errorMarkers = allMarkers.filter(
+                  (marker: any) => marker.severity === monaco.MarkerSeverity.Error
+                );
+
+                const errorCount = errorMarkers.length;
+
+                if (onSyntaxErrorChange) {
+                  onSyntaxErrorChange(errorCount);
+                }
+              };
+
+              // Initial check after a short delay to allow language service to initialize
+              scheduleSyntaxCheck(100);
+
+              // Listen for marker changes - check every time markers change
+              const disposable = monaco.editor.onDidChangeMarkers((uris) => {
+                // Check if our model's URI is in the changed URIs
+                if (uris.some((uri) => uri.toString() === model.uri.toString())) {
+                  // Add a small delay to ensure markers are updated
+                  scheduleSyntaxCheck(50);
+                }
+              });
+
+              // Also listen for model content changes as a backup
+              const contentDisposable = editor.onDidChangeModelContent(() => {
+                // Queue a syntax check, cancelling any pending one, to avoid stacking
+                // up checks during rapid typing.
+                scheduleSyntaxCheck(500);
+              });
+
+              disposablesRef.current.push(disposable);
+              disposablesRef.current.push(contentDisposable);
+            }
           }}
         />
       </div>

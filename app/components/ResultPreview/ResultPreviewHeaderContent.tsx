@@ -29,6 +29,7 @@ interface ResultPreviewHeaderContentProps {
   // Props for code editing
   hasCodeChanges?: boolean;
   onCodeSave?: () => void;
+  syntaxErrorCount?: number;
 }
 
 const ResultPreviewHeaderContent: React.FC<ResultPreviewHeaderContentProps> = ({
@@ -45,6 +46,7 @@ const ResultPreviewHeaderContent: React.FC<ResultPreviewHeaderContentProps> = ({
   title: propTitle,
   hasCodeChanges,
   onCodeSave,
+  syntaxErrorCount,
 }) => {
   const { sessionId: urlSessionId, view: urlView } = useParams();
   const publishButtonRef = useRef<HTMLButtonElement>(null);
@@ -115,7 +117,11 @@ const ResultPreviewHeaderContent: React.FC<ResultPreviewHeaderContentProps> = ({
         <div className="flex items-center gap-2">
           {/* Save button - show when in code view and has changes */}
           {displayView === 'code' && hasCodeChanges && onCodeSave && (
-            <SaveButton onClick={onCodeSave} hasChanges={hasCodeChanges} />
+            <SaveButton
+              onClick={onCodeSave}
+              hasChanges={hasCodeChanges}
+              syntaxErrorCount={syntaxErrorCount}
+            />
           )}
 
           {showViewControls && previewReady && (
