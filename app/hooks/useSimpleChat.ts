@@ -95,7 +95,6 @@ export function useSimpleChat(sessionId: string | undefined): ChatState {
   // State hooks
   const [isStreaming, setIsStreaming] = useState<boolean>(false);
   const [selectedResponseId, setSelectedResponseId] = useState<string>('');
-  const [selectedCodeHasErrors, setSelectedCodeHasErrors] = useState<boolean>(false);
   const [pendingAiMessage, setPendingAiMessage] = useState<ChatMessageDocument | null>(null);
 
   // setNeedsLogin is now obtained from AuthContext above
@@ -306,7 +305,6 @@ ${code}
     addScreenshot,
     docs: messages,
     setSelectedResponseId,
-    setSelectedCodeHasErrors,
     selectedResponseDoc,
     selectedSegments,
     selectedCode,
@@ -322,7 +320,6 @@ ${code}
     immediateErrors,
     advisoryErrors,
     addError,
-    selectedCodeHasErrors,
     isEmpty: docs.length === 0,
   };
 }

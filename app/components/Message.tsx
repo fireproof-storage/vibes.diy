@@ -17,7 +17,6 @@ interface MessageProps {
   setMobilePreviewShown: (shown: boolean) => void;
   navigateToView: (view: ViewType) => void;
   isLatestMessage?: boolean; // Flag to indicate if this is the latest AI message for showing the streaming indicator
-  selectedCodeHasErrors?: boolean; // Whether the currently selected code has syntax errors
 }
 
 // AI Message component (simplified without animation handling)
@@ -31,7 +30,6 @@ const AIMessage = memo(
     setMobilePreviewShown,
     navigateToView,
     isLatestMessage,
-    selectedCodeHasErrors,
   }: {
     message: AiChatMessageDocument;
     model?: string;
@@ -41,7 +39,6 @@ const AIMessage = memo(
     setMobilePreviewShown: (shown: boolean) => void;
     navigateToView: (view: ViewType) => void;
     isLatestMessage?: boolean;
-    selectedCodeHasErrors?: boolean;
   }) => {
     const { segments } = parseContent(message.text);
     return (
@@ -85,7 +82,6 @@ const AIMessage = memo(
             rawText={message.text}
             navigateToView={navigateToView}
             isLatestMessage={isLatestMessage}
-            selectedCodeHasErrors={selectedCodeHasErrors}
           />
         </div>
       </div>

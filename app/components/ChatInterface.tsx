@@ -10,7 +10,6 @@ function ChatInterface({
   setSelectedResponseId,
   setMobilePreviewShown,
   navigateToView,
-  selectedCodeHasErrors,
 }: ChatInterfaceProps) {
   const messagesContainerRef = useRef<HTMLDivElement>(null);
 
@@ -34,7 +33,6 @@ function ChatInterface({
         selectedResponseId={selectedResponseDoc?._id || ''}
         setMobilePreviewShown={setMobilePreviewShown}
         navigateToView={navigateToView}
-        selectedCodeHasErrors={selectedCodeHasErrors}
       />
     );
   }, [
@@ -44,7 +42,6 @@ function ChatInterface({
     selectedResponseDoc,
     setMobilePreviewShown,
     navigateToView,
-    selectedCodeHasErrors,
   ]);
 
   return (

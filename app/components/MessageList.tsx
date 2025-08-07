@@ -9,7 +9,6 @@ interface MessageListProps {
   selectedResponseId: string;
   setMobilePreviewShown: (shown: boolean) => void;
   navigateToView: (view: ViewType) => void;
-  selectedCodeHasErrors?: boolean;
 }
 
 function MessageList({
@@ -19,7 +18,6 @@ function MessageList({
   selectedResponseId,
   setMobilePreviewShown,
   navigateToView,
-  selectedCodeHasErrors,
 }: MessageListProps) {
   // Create a special message list when there's only one user message
   const shouldShowWaitingIndicator = messages.length === 1 && messages[0]?.type === 'user';
@@ -38,7 +36,6 @@ function MessageList({
           selectedResponseId={selectedResponseId}
           setMobilePreviewShown={setMobilePreviewShown}
           navigateToView={navigateToView}
-          selectedCodeHasErrors={selectedCodeHasErrors}
         />,
         // Then show the waiting indicator
         <div key="waiting-indicator" className="mb-4 flex flex-row justify-start px-4">
@@ -105,7 +102,6 @@ function MessageList({
           setMobilePreviewShown={setMobilePreviewShown}
           navigateToView={navigateToView}
           isLatestMessage={isLatestAiMessage}
-          selectedCodeHasErrors={selectedCodeHasErrors}
         />
       );
     });

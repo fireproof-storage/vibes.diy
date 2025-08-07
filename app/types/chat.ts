@@ -132,7 +132,6 @@ export interface ChatState {
   addScreenshot: (screenshot: string | null) => Promise<void>;
   sessionId?: string | null;
   setSelectedResponseId: (id: string) => void;
-  setSelectedCodeHasErrors?: (hasErrors: boolean) => void;
   selectedResponseDoc?: ChatMessageDocument;
   selectedSegments?: Segment[];
   selectedCode?: Segment;
@@ -142,7 +141,6 @@ export interface ChatState {
   advisoryErrors: RuntimeError[];
   addError: (error: RuntimeError) => void;
   vibeDoc?: VibeDocument;
-  selectedCodeHasErrors?: boolean; // Whether the currently selected code has syntax errors
 }
 
 export interface ChatInterfaceProps extends ChatState {
