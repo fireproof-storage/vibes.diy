@@ -277,6 +277,19 @@ const IframeContent: React.FC<IframeContentProps> = ({
             // Set up syntax error monitoring
             const model = editor.getModel();
             if (model) {
+              // Holds the timeout id for pending syntax-error checks so we can cancel
+              // any previously scheduled run before queuing a new one. This acts as a
+              // lightweight, manual debounce without bringing in lodash or a similar
+              // utility.
+              let syntaxErrorCheckTimeoutId: ReturnType<typeof setTimeout> | null = null;
+
+              const scheduleSyntaxCheck = (delay: number) => {
+                if (syntaxErrorCheckTimeoutId !== null) {
+                  clearTimeout(syntaxErrorCheckTimeoutId);
+                }
+                syntaxErrorCheckTimeoutId = setTimeout(checkSyntaxErrors, delay);
+              };
+
               const checkSyntaxErrors = () => {
                 // Get ALL markers for our model from all sources
                 const allMarkers = monaco.editor.getModelMarkers({
@@ -296,21 +309,22 @@ const IframeContent: React.FC<IframeContentProps> = ({
               };
 
               // Initial check after a short delay to allow language service to initialize
-              setTimeout(checkSyntaxErrors, 100);
+              scheduleSyntaxCheck(100);
 
               // Listen for marker changes - check every time markers change
               const disposable = monaco.editor.onDidChangeMarkers((uris) => {
                 // Check if our model's URI is in the changed URIs
                 if (uris.some((uri) => uri.toString() === model.uri.toString())) {
                   // Add a small delay to ensure markers are updated
-                  setTimeout(checkSyntaxErrors, 50);
+                  scheduleSyntaxCheck(50);
                 }
               });
 
               // Also listen for model content changes as a backup
               const contentDisposable = editor.onDidChangeModelContent(() => {
-                // Debounce content changes to avoid excessive checks
-                setTimeout(checkSyntaxErrors, 500);
+                // Queue a syntax check, cancelling any pending one, to avoid stacking
+                // up checks during rapid typing.
+                scheduleSyntaxCheck(500);
               });
 
               disposablesRef.current.push(disposable);
