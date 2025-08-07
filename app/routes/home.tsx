@@ -127,7 +127,6 @@ export default function UnifiedSession() {
 
   // Handle syntax error changes from editor
   const handleSyntaxErrorChange = useCallback((errorCount: number) => {
-    console.log('handleSyntaxErrorChange called with:', errorCount);
     setSyntaxErrorCount(errorCount);
   }, []);
 

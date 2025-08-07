@@ -290,27 +290,7 @@ const IframeContent: React.FC<IframeContentProps> = ({
 
                 const errorCount = errorMarkers.length;
 
-                // Enhanced debug logging
-                console.log('Monaco marker check:', {
-                  totalMarkers: allMarkers.length,
-                  errorCount: errorCount,
-                  allMarkers: allMarkers.map((m: any) => ({
-                    owner: m.owner,
-                    severity: m.severity,
-                    message: m.message,
-                    severityName:
-                      m.severity === monaco.MarkerSeverity.Error
-                        ? 'Error'
-                        : m.severity === monaco.MarkerSeverity.Warning
-                          ? 'Warning'
-                          : m.severity === monaco.MarkerSeverity.Info
-                            ? 'Info'
-                            : 'Hint',
-                  })),
-                });
-
                 if (onSyntaxErrorChange) {
-                  console.log('Calling onSyntaxErrorChange with errorCount:', errorCount);
                   onSyntaxErrorChange(errorCount);
                 }
               };
