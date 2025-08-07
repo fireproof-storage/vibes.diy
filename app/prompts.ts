@@ -19,23 +19,20 @@ const llmsList = Object.values(llmsModules).map(
 const llmsTextCache: Record<string, string> = {};
 
 // Generate dynamic import statements from LLM configuration
-function generateImportStatements(
-  llmsList: Array<{
-    name: string;
-    label: string;
-    llmsTxtUrl: string;
-    module: string;
-    importModule: string;
-    importName: string;
-  }>
-) {
-  let imports = '';
-  for (const llm of llmsList) {
-    if (llm.importModule && llm.importName) {
-      imports += `\nimport { ${llm.importName} } from "${llm.importModule}"`;
-    }
-  }
-  return imports;
+function generateImportStatements(llms: typeof llmsList) {
+  const seen = new Set<string>();
+  return llms
+    .slice()
+    .sort((a, b) => a.importModule.localeCompare(b.importModule))
+    .filter((l) => l.importModule && l.importName)
+    .filter((l) => {
+      const key = `${l.importModule}:${l.importName}`;
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    })
+    .map((l) => `\nimport { ${l.importName} } from "${l.importModule}"`)
+    .join('');
 }
 
 // Base system prompt for the AI
