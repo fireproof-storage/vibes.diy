@@ -1,10 +1,42 @@
 const llmsModules = import.meta.glob('./llms/*.json', { eager: true });
 const llmsList = Object.values(llmsModules).map(
-  (mod) => (mod as { default: { llmsTxtUrl: string; label: string } }).default
+  (mod) =>
+    (
+      mod as {
+        default: {
+          name: string;
+          label: string;
+          llmsTxtUrl: string;
+          module: string;
+          importModule: string;
+          importName: string;
+        };
+      }
+    ).default
 );
 
 // Cache for LLM text documents to prevent redundant fetches
 const llmsTextCache: Record<string, string> = {};
+
+// Generate dynamic import statements from LLM configuration
+function generateImportStatements(
+  llmsList: Array<{
+    name: string;
+    label: string;
+    llmsTxtUrl: string;
+    module: string;
+    importModule: string;
+    importName: string;
+  }>
+) {
+  let imports = '';
+  for (const llm of llmsList) {
+    if (llm.importModule && llm.importName) {
+      imports += `\nimport { ${llm.importName} } from "${llm.importModule}"`;
+    }
+  }
+  return imports;
+}
 
 // Base system prompt for the AI
 export async function makeBaseSystemPrompt(model: string, sessionDoc?: any) {
@@ -73,13 +105,10 @@ ${
 
 Provide a title and brief explanation followed by the component code. The component should demonstrate proper Fireproof integration with real-time updates and proper data persistence. Follow it with a short description of the app's purpose and instructions how to use it (with occasional bold or italic for emphasis). Then suggest some additional features that could be added to the app.
 
-Begin the component with the import statements. Use react, use-fireproof, call-ai, and use-vibes:
+Begin the component with the import statements. Use react and the following libraries:
 
 \`\`\`js
-import React, { ... } from "react"
-import { useFireproof } from "use-fireproof"
-import { callAI } from "call-ai"
-import { ImgGen } from "use-vibes"
+import React, { ... } from "react"${generateImportStatements(llmsList)}
 
 // other imports only when requested
 \`\`\`
