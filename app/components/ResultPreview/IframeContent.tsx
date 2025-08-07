@@ -278,21 +278,36 @@ const IframeContent: React.FC<IframeContentProps> = ({
             const model = editor.getModel();
             if (model) {
               const checkSyntaxErrors = () => {
-                // Get markers specifically for our model and TypeScript errors
-                const markers = monaco.editor.getModelMarkers({
+                // Get ALL markers for our model from all sources
+                const allMarkers = monaco.editor.getModelMarkers({
                   resource: model.uri,
-                  owner: 'typescript', // Filter to TypeScript/JavaScript language service errors
                 });
-                const errorCount = markers.filter(
-                  (marker: any) => marker.severity === monaco.MarkerSeverity.Error
-                ).length;
 
-                // Debug logging (remove after testing)
-                console.log(
-                  'Monaco error check:',
-                  errorCount,
-                  errorCount > 0 ? markers.map((m) => m.message) : 'No errors'
+                // Filter for error markers from any language service
+                const errorMarkers = allMarkers.filter(
+                  (marker: any) => marker.severity === monaco.MarkerSeverity.Error
                 );
+
+                const errorCount = errorMarkers.length;
+
+                // Enhanced debug logging
+                console.log('Monaco marker check:', {
+                  totalMarkers: allMarkers.length,
+                  errorCount: errorCount,
+                  allMarkers: allMarkers.map((m: any) => ({
+                    owner: m.owner,
+                    severity: m.severity,
+                    message: m.message,
+                    severityName:
+                      m.severity === monaco.MarkerSeverity.Error
+                        ? 'Error'
+                        : m.severity === monaco.MarkerSeverity.Warning
+                          ? 'Warning'
+                          : m.severity === monaco.MarkerSeverity.Info
+                            ? 'Info'
+                            : 'Hint',
+                  })),
+                });
 
                 if (onSyntaxErrorChange) {
                   console.log('Calling onSyntaxErrorChange with errorCount:', errorCount);
@@ -300,18 +315,26 @@ const IframeContent: React.FC<IframeContentProps> = ({
                 }
               };
 
-              // Initial check
-              checkSyntaxErrors();
+              // Initial check after a short delay to allow language service to initialize
+              setTimeout(checkSyntaxErrors, 100);
 
-              // Listen for marker changes - more efficient than checking on content change
+              // Listen for marker changes - check every time markers change
               const disposable = monaco.editor.onDidChangeMarkers((uris) => {
-                // Only check if our model's URI is in the changed URIs
+                // Check if our model's URI is in the changed URIs
                 if (uris.some((uri) => uri.toString() === model.uri.toString())) {
-                  checkSyntaxErrors();
+                  // Add a small delay to ensure markers are updated
+                  setTimeout(checkSyntaxErrors, 50);
                 }
               });
 
+              // Also listen for model content changes as a backup
+              const contentDisposable = editor.onDidChangeModelContent(() => {
+                // Debounce content changes to avoid excessive checks
+                setTimeout(checkSyntaxErrors, 500);
+              });
+
               disposablesRef.current.push(disposable);
+              disposablesRef.current.push(contentDisposable);
             }
           }}
         />
