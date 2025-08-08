@@ -15,7 +15,9 @@ const meta = {
 - Shows error count and disables when there are syntax errors
 - Responsive design (text + icon on desktop, icon-only on mobile)
 - Custom minidisc icon for retro aesthetic
-- Proper accessibility with titles and disabled states`,
+- Proper accessibility with titles and disabled states
+
+**Testing responsive behavior:** Use the viewport selector in the Storybook toolbar to test different screen sizes. Try "Below SM (639px)" or "Small Mobile (440px)" to see the mobile icon-only version.`,
       },
     },
   },
@@ -42,8 +44,8 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-// Hidden state (no changes)
-export const Hidden: Story = {
+// No changes state
+export const NoChanges: Story = {
   args: {
     hasChanges: false,
     syntaxErrorCount: 0,
@@ -117,89 +119,3 @@ export const ManyErrors: Story = {
   },
 };
 
-// Mobile viewport demonstration  
-export const MobileViewport: Story = {
-  args: {
-    hasChanges: true,
-    syntaxErrorCount: 0,
-  },
-  parameters: {
-    viewport: {
-      defaultViewport: 'belowSm',
-    },
-    docs: {
-      description: {
-        story: 'Shows the SaveButton at 639px viewport (below sm: breakpoint) to demonstrate the mobile icon-only version.',
-      },
-    },
-  },
-};
-
-// Smallest render demonstration
-export const SmallestRender: Story = {
-  args: {
-    hasChanges: true,
-    syntaxErrorCount: 0,  
-  },
-  parameters: {
-    viewport: {
-      defaultViewport: 'small',
-    },
-    docs: {
-      description: {
-        story: 'Shows the SaveButton at 440px viewport - the smallest practical render showing the 32×32px icon-only button.',
-      },
-    },
-  },
-};
-
-// Tiny viewport (iPhone SE size)
-export const TinyViewport: Story = {
-  args: {
-    hasChanges: true,
-    syntaxErrorCount: 0,
-  },
-  parameters: {
-    viewport: {
-      defaultViewport: 'tiny',
-    },
-    docs: {
-      description: {
-        story: 'Shows the SaveButton at 375px viewport (iPhone SE width) - ultra-compact mobile view.',
-      },
-    },
-  },
-};
-
-// Viewport testing instructions
-export const ViewportTesting: Story = {
-  args: {
-    hasChanges: true,
-    syntaxErrorCount: 0,
-  },
-  decorators: [
-    (Story) => (
-      <div className="space-y-4">
-        <div className="rounded-lg bg-blue-50 p-4 dark:bg-blue-900/20">
-          <h3 className="mb-2 font-semibold text-blue-800 dark:text-blue-200">How to Test Responsive Behavior</h3>
-          <ol className="list-decimal list-inside space-y-1 text-sm text-blue-700 dark:text-blue-300">
-            <li>Use the <strong>viewport selector</strong> in the Storybook toolbar</li>
-            <li>Try: "Below SM (639px)" for mobile version</li>
-            <li>Try: "Small Mobile (440px)" for smallest render</li>
-            <li>Try: "Tiny (375px)" for iPhone SE size</li>
-            <li>Desktop shows: icon + "Save" text</li>
-            <li>Mobile shows: 32×32px icon only</li>
-          </ol>
-        </div>
-        <Story />
-      </div>
-    ),
-  ],
-  parameters: {
-    docs: {
-      description: {
-        story: 'Use the viewport toolbar to switch between different screen sizes and see the responsive behavior. The mobile version (below 640px) shows only a 32×32px icon.',
-      },
-    },
-  },
-};
