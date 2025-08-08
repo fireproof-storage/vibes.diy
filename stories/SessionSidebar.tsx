@@ -1,228 +1,9 @@
-import React, { memo, useEffect, useRef } from 'react';
-import { GearIcon } from '../app/components/SessionSidebar/GearIcon';
-import { HomeIcon } from '../app/components/SessionSidebar/HomeIcon';
-import { InfoIcon } from '../app/components/SessionSidebar/InfoIcon';
-import { StarIcon } from '../app/components/SessionSidebar/StarIcon';
-import { FirehoseIcon } from '../app/components/SessionSidebar/FirehoseIcon';
-import VibesDIYLogo, { randomColorway } from '../app/components/VibesDIYLogo';
-import { dark, light } from '../app/components/colorways';
+import React from 'react';
+import SessionSidebar from '../app/components/SessionSidebar';
+import { AuthProvider } from '../app/contexts/AuthContext';
+import { BrowserRouter } from 'react-router-dom';
 
-// Mock the Link component from React Router
-const MockLink: React.FC<{
-  to: string;
-  onClick?: () => void;
-  className?: string;
-  children: React.ReactNode;
-}> = ({ children, className, onClick, to }) => (
-  <a
-    href={to}
-    className={className}
-    onClick={(e) => {
-      e.preventDefault();
-      console.log(`Navigate to: ${to}`);
-      onClick?.();
-    }}
-  >
-    {children}
-  </a>
-);
-
-// Simplified SessionSidebar component for Storybook
-const StorybookSessionSidebar: React.FC<{
-  isVisible: boolean;
-  onClose: () => void;
-  isAuthenticated: boolean;
-  isLoading: boolean;
-  isPolling: boolean;
-  pollError?: string;
-}> = ({ isVisible, onClose, isAuthenticated, isLoading, isPolling, pollError }) => {
-  const sidebarRef = useRef<HTMLDivElement>(null);
-
-  const colorway = randomColorway();
-  // Use CSS-based dark mode detection like the rest of the UI
-  const isDarkMode =
-    typeof document !== 'undefined' ? document.documentElement.classList.contains('dark') : true; // Default to dark mode for SSR
-  const rando = isDarkMode ? dark[colorway] : light[colorway];
-
-  const mockInitiateLogin = async () => {
-    console.log('Initiating login...');
-  };
-
-  // Handle clicks outside the sidebar to close it
-  useEffect(() => {
-    if (!isVisible) return;
-
-    function handleClickOutside(event: MouseEvent) {
-      if (sidebarRef.current && !sidebarRef.current.contains(event.target as Node)) {
-        onClose();
-      }
-    }
-
-    // Add event listener
-    document.addEventListener('mousedown', handleClickOutside);
-
-    // Clean up event listener
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, [isVisible, onClose]);
-
-  return (
-    <div
-      ref={sidebarRef}
-      data-testid="session-sidebar"
-      className={`bg-light-background-00 dark:bg-dark-background-00 fixed top-0 left-0 z-10 h-full shadow-lg transition-all duration-300 ${
-        isVisible ? 'w-64 translate-x-0' : 'w-64 -translate-x-full'
-      }`}
-    >
-      <div className="flex h-full flex-col overflow-auto">
-        <div className="border-light-decorative-01 dark:border-dark-decorative-00 flex items-center justify-between border-b p-4">
-          <VibesDIYLogo width={100} className="pointer-events-none -mt-18 -mb-20 -ml-2" />
-
-          <button
-            type="button"
-            onClick={onClose}
-            className="text-light-primary dark:text-dark-primary hover:text-accent-02-light dark:hover:text-accent-02-dark"
-            aria-label="Close sidebar"
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="h-5 w-5"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-              aria-hidden="true"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M6 18L18 6M6 6l12 12"
-              />
-            </svg>
-          </button>
-        </div>
-
-        <nav className="flex-grow p-2">
-          <ul className="space-y-1">
-            <li>
-              <a
-                href="/"
-                className="hover:bg-light-background-01 dark:hover:bg-dark-background-01 flex items-center rounded-md px-4 py-3 text-sm font-medium"
-                onClick={(e) => {
-                  e.preventDefault();
-                  console.log('Navigate to: /');
-                }}
-              >
-                <HomeIcon className="text-accent-01 mr-3 h-5 w-5" />
-                <span>Home</span>
-              </a>
-            </li>
-            <li>
-              <MockLink
-                to="/vibes/mine"
-                onClick={() => onClose()}
-                className="hover:bg-light-background-01 dark:hover:bg-dark-background-01 flex items-center rounded-md px-4 py-3 text-sm font-medium"
-              >
-                <StarIcon className="text-accent-01 mr-3 h-5 w-5" />
-                <span>My Vibes</span>
-              </MockLink>
-            </li>
-            <li>
-              <MockLink
-                to="/firehose"
-                onClick={() => onClose()}
-                className="hover:bg-light-background-01 dark:hover:bg-dark-background-01 flex items-center rounded-md px-4 py-3 text-sm font-medium"
-              >
-                <FirehoseIcon className="text-accent-01 mr-3 h-5 w-5" />
-                <span>Firehose</span>
-              </MockLink>
-            </li>
-            <li>
-              {isAuthenticated ? (
-                // SETTINGS
-                <MockLink
-                  to="/settings"
-                  onClick={() => onClose()}
-                  className="hover:bg-light-background-01 dark:hover:bg-dark-background-01 flex items-center rounded-md px-4 py-3 text-sm font-medium"
-                >
-                  <GearIcon className="text-accent-01 mr-3 h-5 w-5" />
-                  <span>Settings</span>
-                </MockLink>
-              ) : null}
-            </li>
-            <li>
-              <MockLink
-                to="/about"
-                onClick={() => onClose()}
-                className="hover:bg-light-background-01 dark:hover:bg-dark-background-01 flex items-center rounded-md px-4 py-3 text-sm font-medium"
-              >
-                <InfoIcon className="text-accent-01 mr-3 h-5 w-5" />
-                <span>About</span>
-              </MockLink>
-            </li>
-          </ul>
-        </nav>
-
-        {/* Login Status Indicator */}
-        <div className="mt-auto">
-          <nav className="flex-grow p-2">
-            <ul className="space-y-1">
-              {isLoading ? (
-                // LOADING
-                <li className="flex items-center rounded-md px-4 py-3 text-sm font-medium text-gray-400">
-                  <span className="animate-pulse">Loading...</span>
-                </li>
-              ) : isAuthenticated ? null : isPolling ? (
-                <li>
-                  <div className="flex flex-col gap-1 px-4 py-3 text-sm font-medium">
-                    <span className="">Opening log in window...</span>
-                    <span className="font-small text-xs italic">
-                      Don't see it? Please check your browser for a blocked pop-up window
-                    </span>
-                  </div>
-                </li>
-              ) : (
-                <>
-                  <li>
-                    <div className="flex flex-col px-1 py-1 text-sm font-medium">
-                      {pollError && (
-                        <span className="font-small text-xs text-gray-400 italic">{pollError}</span>
-                      )}
-                    </div>
-                  </li>
-                  <li>
-                    <button
-                      type="button"
-                      onClick={async () => {
-                        await mockInitiateLogin();
-                        onClose();
-                      }}
-                      style={{
-                        backgroundColor: rando.diy,
-                      }}
-                      className={`flex w-full items-center rounded-md px-4 py-3 text-left text-sm font-bold transition-colors`}
-                    >
-                      <span
-                        style={{
-                          color: rando.diyText,
-                        }}
-                      >
-                        Log in
-                      </span>
-                    </button>
-                  </li>
-                </>
-              )}
-            </ul>
-          </nav>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-// Mock providers for the required contexts
+// Simple wrapper that provides the real SessionSidebar component
 export const MockSessionSidebar: React.FC<{
   isVisible: boolean;
   onClose: () => void;
@@ -233,69 +14,54 @@ export const MockSessionSidebar: React.FC<{
 }> = ({
   isVisible,
   onClose,
-  isAuthenticated = false,
-  isLoading = false,
-  isPolling = false,
-  pollError,
 }) => {
   return (
-    <div style={{ position: 'relative', height: '100vh', width: '100%' }}>
-      {/* Backdrop overlay when sidebar is visible */}
-      {isVisible && (
-        <div
-          className="bg-opacity-50 fixed inset-0 z-[5] bg-black"
-          onClick={onClose}
-          style={{ backdropFilter: 'blur(2px)' }}
-        />
-      )}
-
-      {/* The actual sidebar component */}
-      <StorybookSessionSidebar
-        isVisible={isVisible}
-        onClose={onClose}
-        isAuthenticated={isAuthenticated}
-        isLoading={isLoading}
-        isPolling={isPolling}
-        pollError={pollError}
-      />
-
-      {/* Mock main content area */}
-      <div className="pl-0 transition-all duration-300">
-        <div className="min-h-screen bg-gray-50 p-8 dark:bg-gray-900">
-          <h1 className="mb-4 text-2xl font-bold">Main Content Area</h1>
-          <p className="text-gray-600 dark:text-gray-400">
-            Click the hamburger menu or use the controls to open the sidebar.
-          </p>
-          <div className="mt-4 space-y-2">
-            <p>
-              <strong>isVisible:</strong> {isVisible.toString()}
-            </p>
-            <p>
-              <strong>isAuthenticated:</strong> {isAuthenticated.toString()}
-            </p>
-            <p>
-              <strong>isLoading:</strong> {isLoading.toString()}
-            </p>
-            <p>
-              <strong>isPolling:</strong> {isPolling.toString()}
-            </p>
-            {pollError && (
-              <p>
-                <strong>pollError:</strong> {pollError}
-              </p>
-            )}
-          </div>
-
-          {!isVisible && (
-            <button
-              onClick={() => console.log('This would normally open the sidebar')}
-              className="mt-4 rounded-md bg-blue-500 px-4 py-2 text-white hover:bg-blue-600"
-            >
-              Open Sidebar (use controls above)
-            </button>
+    <BrowserRouter>
+      <AuthProvider>
+        <div style={{ position: 'relative', height: '100vh', width: '100%' }}>
+          {/* Backdrop overlay when sidebar is visible */}
+          {isVisible && (
+            <div
+              className="bg-opacity-50 fixed inset-0 z-[5] bg-black"
+              onClick={onClose}
+              style={{ backdropFilter: 'blur(2px)' }}
+            />
           )}
+
+          {/* The real SessionSidebar component */}
+          <SessionSidebar 
+            isVisible={isVisible} 
+            onClose={onClose} 
+            sessionId="storybook-session" 
+          />
+
+          {/* Mock main content area */}
+          <div className="pl-0 transition-all duration-300">
+            <div className="min-h-screen bg-gray-50 p-8 dark:bg-gray-900">
+              <h1 className="mb-4 text-2xl font-bold">Main Content Area</h1>
+              <p className="text-gray-600 dark:text-gray-400">
+                Click the hamburger menu or use the controls to open the sidebar.
+              </p>
+              <div className="mt-4 space-y-2">
+                <p>
+                  <strong>isVisible:</strong> {isVisible.toString()}
+                </p>
+              </div>
+
+              {!isVisible && (
+                <button
+                  onClick={() => console.log('This would normally open the sidebar')}
+                  className="mt-4 rounded-md bg-blue-500 px-4 py-2 text-white hover:bg-blue-600"
+                >
+                  Open Sidebar (use controls above)
+                </button>
+              )}
+            </div>
+          </div>
         </div>
-      </div>
-    </div>
+      </AuthProvider>
+    </BrowserRouter>
   );
 };
+
+export default MockSessionSidebar;
