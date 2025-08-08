@@ -11,10 +11,7 @@ export const MockSessionSidebar: React.FC<{
   isLoading?: boolean;
   isPolling?: boolean;
   pollError?: string;
-}> = ({
-  isVisible,
-  onClose,
-}) => {
+}> = ({ isVisible, onClose }) => {
   return (
     <BrowserRouter>
       <AuthProvider>
@@ -29,11 +26,7 @@ export const MockSessionSidebar: React.FC<{
           )}
 
           {/* The real SessionSidebar component */}
-          <SessionSidebar 
-            isVisible={isVisible} 
-            onClose={onClose} 
-            sessionId="storybook-session" 
-          />
+          <SessionSidebar isVisible={isVisible} onClose={onClose} sessionId="storybook-session" />
 
           {/* Mock main content area */}
           <div className="pl-0 transition-all duration-300">

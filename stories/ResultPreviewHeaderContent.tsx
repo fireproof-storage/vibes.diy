@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import ResultPreviewHeaderContent from '../app/components/ResultPreview/ResultPreviewHeaderContent';
 import type { ViewType, ViewControlsType } from '../app/utils/ViewState';
+import { AuthProvider } from '../app/contexts/AuthContext';
+import { BrowserRouter } from 'react-router-dom';
 
 // Mock state provider for interactive demo
 export interface MockedHeaderProps {
@@ -86,24 +88,28 @@ export const MockedResultPreviewHeaderContent: React.FC<MockedHeaderProps> = ({
   };
 
   return (
-    <div className="border-b bg-white dark:bg-gray-900">
-      <ResultPreviewHeaderContent
-        displayView={displayView}
-        navigateToView={handleNavigateToView}
-        viewControls={viewControls}
-        showViewControls={showViewControls}
-        previewReady={previewReady}
-        setMobilePreviewShown={handleMobilePreviewShown}
-        setUserClickedBack={handleUserClickedBack}
-        code={initialCode}
-        isStreaming={isStreaming}
-        sessionId={initialSessionId}
-        title={initialTitle}
-        hasCodeChanges={hasCodeChanges}
-        onCodeSave={handleCodeSave}
-        syntaxErrorCount={syntaxErrorCount}
-      />
-    </div>
+    <BrowserRouter>
+      <AuthProvider>
+        <div className="border-b bg-white dark:bg-gray-900">
+          <ResultPreviewHeaderContent
+            displayView={displayView}
+            navigateToView={handleNavigateToView}
+            viewControls={viewControls}
+            showViewControls={showViewControls}
+            previewReady={previewReady}
+            setMobilePreviewShown={handleMobilePreviewShown}
+            setUserClickedBack={handleUserClickedBack}
+            code={initialCode}
+            isStreaming={isStreaming}
+            sessionId={initialSessionId}
+            title={initialTitle}
+            hasCodeChanges={hasCodeChanges}
+            onCodeSave={handleCodeSave}
+            syntaxErrorCount={syntaxErrorCount}
+          />
+        </div>
+      </AuthProvider>
+    </BrowserRouter>
   );
 };
 
