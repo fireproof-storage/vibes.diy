@@ -1,11 +1,48 @@
 import type { Meta, StoryObj } from '@storybook/react';
-import { useRef } from 'react';
-import ChatInput from './ChatInput';
-import type { ChatInputRef } from './ChatInput';
+import { useRef, useState } from 'react';
+import ChatInput from '../app/components/ChatInput';
+import type { ChatInputRef } from '../app/components/ChatInput';
+import type { ChatState } from '../app/types/chat';
+
+// Mock wrapper component for Storybook
+const ChatInputWrapper = ({
+  initialInput = '',
+  isStreaming = false,
+  placeholder = 'I want to build...',
+}: {
+  initialInput?: string;
+  isStreaming?: boolean;
+  placeholder?: string;
+}) => {
+  const [input, setInput] = useState(initialInput);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
+
+  const mockChatState: ChatState = {
+    isEmpty: input.length === 0,
+    docs: [],
+    input,
+    setInput,
+    isStreaming,
+    codeReady: false,
+    inputRef,
+    sendMessage: async (text?: string) => {
+      console.log('Mock sendMessage called with:', text || input);
+    },
+    saveCodeAsAiMessage: async () => 'mock-id',
+    title: '',
+    addScreenshot: async () => {},
+    sessionId: 'mock-session',
+    setSelectedResponseId: () => {},
+    immediateErrors: [],
+    advisoryErrors: [],
+  };
+
+  return <ChatInput chatState={mockChatState} onSend={() => console.log('onSend called')} />;
+};
 
 const meta = {
   title: 'Components/ChatInput',
-  component: ChatInput,
+  component: ChatInputWrapper,
   parameters: {
     layout: 'padded',
     docs: {
@@ -17,36 +54,20 @@ const meta = {
   },
   tags: ['autodocs'],
   argTypes: {
-    value: {
-      description: 'Controlled value for the input',
+    initialInput: {
+      description: 'Initial input text value',
       control: 'text',
+    },
+    isStreaming: {
+      description: 'Whether the component is in streaming/loading state',
+      control: 'boolean',
     },
     placeholder: {
       description: 'Placeholder text for the input',
       control: 'text',
     },
-    disabled: {
-      description: 'Whether the input is disabled',
-      control: 'boolean',
-    },
-    isLoading: {
-      description: 'Whether the component is in loading state',
-      control: 'boolean',
-    },
-    showLogo: {
-      description: 'Whether to show the submit button with logo',
-      control: 'boolean',
-    },
-    className: {
-      description: 'Additional CSS classes',
-      control: 'text',
-    },
   },
-  args: {
-    onChange: () => {},
-    onSubmit: () => {},
-  },
-} satisfies Meta<typeof ChatInput>;
+} satisfies Meta<typeof ChatInputWrapper>;
 
 export default meta;
 type Story = StoryObj<typeof meta>;
@@ -61,34 +82,17 @@ export const Default: Story = {
 // With initial value
 export const WithValue: Story = {
   args: {
-    value: 'Create a todo app with React',
+    initialInput: 'Create a todo app with React',
     placeholder: 'I want to build...',
   },
 };
 
-// Loading state
-export const Loading: Story = {
+// Streaming state
+export const Streaming: Story = {
   args: {
-    value: 'Building your app...',
-    isLoading: true,
+    initialInput: 'Building your app...',
+    isStreaming: true,
     placeholder: 'I want to build...',
-  },
-};
-
-// Disabled state
-export const Disabled: Story = {
-  args: {
-    value: 'This input is disabled',
-    disabled: true,
-    placeholder: 'I want to build...',
-  },
-};
-
-// Without logo/submit button
-export const WithoutLogo: Story = {
-  args: {
-    placeholder: 'Type your message...',
-    showLogo: false,
   },
 };
 
@@ -102,7 +106,7 @@ export const ContinueCoding: Story = {
 // Long text example
 export const LongText: Story = {
   args: {
-    value: `Create a comprehensive todo application with the following features:
+    initialInput: `Create a comprehensive todo application with the following features:
 - Add new tasks with categories
 - Mark tasks as complete/incomplete  
 - Filter tasks by status and category
@@ -119,6 +123,27 @@ export const LongText: Story = {
 export const WithRefActions: Story = {
   render: (args: any) => {
     const inputRef = useRef<ChatInputRef>(null);
+    const [input, setInput] = useState('');
+
+    const mockChatState: ChatState = {
+      isEmpty: input.length === 0,
+      docs: [],
+      input,
+      setInput,
+      isStreaming: args.isStreaming || false,
+      codeReady: false,
+      inputRef,
+      sendMessage: async (text?: string) => {
+        console.log('Mock sendMessage called with:', text || input);
+      },
+      saveCodeAsAiMessage: async () => 'mock-id',
+      title: '',
+      addScreenshot: async () => {},
+      sessionId: 'mock-session',
+      setSelectedResponseId: () => {},
+      immediateErrors: [],
+      advisoryErrors: [],
+    };
 
     const handleFocus = () => {
       inputRef.current?.focus();
@@ -144,7 +169,11 @@ export const WithRefActions: Story = {
             Click Submit
           </button>
         </div>
-        <ChatInput {...args} ref={inputRef} />
+        <ChatInput
+          chatState={mockChatState}
+          onSend={() => console.log('onSend called')}
+          ref={inputRef}
+        />
       </div>
     );
   },

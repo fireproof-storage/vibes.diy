@@ -11,12 +11,17 @@
   "workspace": {
     "packageJson": {
       "dependencies": [
+        "npm:@chromatic-com/storybook@^4.1.0",
         "npm:@improvements/vite-plugin-devtools-json@^0.0.3",
         "npm:@monaco-editor/react@^4.7.0",
         "npm:@react-router/dev@^7.7.1",
         "npm:@react-router/node@^7.7.1",
         "npm:@react-router/serve@^7.7.1",
         "npm:@shikijs/monaco@^3.8.1",
+        "npm:@storybook/addon-a11y@^9.1.1",
+        "npm:@storybook/addon-docs@^9.1.1",
+        "npm:@storybook/addon-onboarding@^9.1.1",
+        "npm:@storybook/react-vite@^9.1.1",
         "npm:@tailwindcss/typography@~0.5.16",
         "npm:@tailwindcss/vite@^4.1.11",
         "npm:@testing-library/jest-dom@^6.6.4",
@@ -46,6 +51,7 @@
         "npm:react@^19.1.1",
         "npm:serve@^14.2.4",
         "npm:shiki@^3.8.1",
+        "npm:storybook@^9.1.1",
         "npm:tailwindcss@^4.1.11",
         "npm:tsx@^4.20.3",
         "npm:typescript@^5.8.3",
