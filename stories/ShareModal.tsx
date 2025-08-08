@@ -60,10 +60,10 @@ export const MockShareModal: React.FC<MockShareModalProps> = ({
 
   // Ensure document.body exists for portal
   const [isClient, setIsClient] = useState(false);
-  
+
   useEffect(() => {
     setIsClient(true);
-    
+
     // Mock the button ref with a fake getBoundingClientRect
     if (buttonRef.current) {
       buttonRef.current.getBoundingClientRect = () => mockButtonRect as DOMRect;
@@ -71,13 +71,10 @@ export const MockShareModal: React.FC<MockShareModalProps> = ({
   }, []);
 
   return (
-    <div className="relative h-96 flex flex-col items-center pt-8">
+    <div className="relative flex h-96 flex-col items-center pt-8">
       {/* Visible reference button for context */}
       <div className="mb-4">
-        <button
-          ref={buttonRef}
-          className="rounded bg-blue-500 px-3 py-1.5 text-sm text-white"
-        >
+        <button ref={buttonRef} className="rounded bg-blue-500 px-3 py-1.5 text-sm text-white">
           Share Button (Reference)
         </button>
       </div>

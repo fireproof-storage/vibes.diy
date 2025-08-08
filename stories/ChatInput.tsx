@@ -8,7 +8,6 @@ import {
   useImperativeHandle,
   useState,
 } from 'react';
-import VibesDIYLogo from '../app/components/VibesDIYLogo';
 
 interface ChatInputProps {
   value?: string;
@@ -143,12 +142,8 @@ const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(
               }}
               aria-label={isLoading ? 'Processing...' : 'Send message'}
             >
-              <div className="relative z-10">
-                <VibesDIYLogo
-                  className="mr-2 mb-0.5 ml-5 pt-6 pb-2 pl-1.5"
-                  width={100}
-                  height={12}
-                />
+              <div className="text-light-primary dark:text-dark-primary relative z-10 px-2 py-1 text-xs font-medium">
+                Code
               </div>
             </button>
           )}
