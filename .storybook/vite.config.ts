@@ -4,10 +4,7 @@ import tsconfigPaths from 'vite-tsconfig-paths';
 
 // Separate Vite config for Storybook that excludes React Router
 export default defineConfig({
-  plugins: [
-    tailwindcss(),
-    tsconfigPaths(),
-  ],
+  plugins: [tailwindcss(), tsconfigPaths()],
   define: {
     'process.env.DISABLE_REACT_ROUTER': '"true"',
   },

@@ -32,7 +32,8 @@ const meta = {
       control: 'boolean',
     },
     syntaxErrorCount: {
-      description: 'Number of syntax errors. When > 0, button shows error count and becomes disabled.',
+      description:
+        'Number of syntax errors. When > 0, button shows error count and becomes disabled.',
       control: { type: 'number', min: 0, max: 10 },
     },
   },
@@ -83,7 +84,8 @@ export const SingleError: Story = {
   parameters: {
     docs: {
       description: {
-        story: 'When there is 1 syntax error, button shows "1 Error" and is disabled with red styling.',
+        story:
+          'When there is 1 syntax error, button shows "1 Error" and is disabled with red styling.',
       },
     },
   },
@@ -98,7 +100,8 @@ export const MultipleErrors: Story = {
   parameters: {
     docs: {
       description: {
-        story: 'When there are multiple syntax errors, button shows "5 Errors" (plural) and is disabled.',
+        story:
+          'When there are multiple syntax errors, button shows "5 Errors" (plural) and is disabled.',
       },
     },
   },
@@ -118,4 +121,3 @@ export const ManyErrors: Story = {
     },
   },
 };
-

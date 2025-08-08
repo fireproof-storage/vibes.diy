@@ -67,7 +67,7 @@ const preview: Preview = {
   decorators: [
     (Story, context) => {
       const theme = context.globals.theme || 'light';
-      
+
       // Apply theme to document for Tailwind dark mode
       if (typeof document !== 'undefined') {
         if (theme === 'dark') {

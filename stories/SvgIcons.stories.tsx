@@ -1,22 +1,23 @@
 import type { Meta, StoryObj } from '@storybook/react';
-import { 
-  HomeIcon, 
-  GearIcon, 
-  StarIcon, 
-  PreviewIcon, 
-  CodeIcon, 
-  DataIcon, 
-  ShareIcon, 
-  BackArrowIcon, 
-  UserIcon, 
-  PublishIcon 
+import {
+  HomeIcon,
+  GearIcon,
+  StarIcon,
+  PreviewIcon,
+  CodeIcon,
+  DataIcon,
+  ShareIcon,
+  BackArrowIcon,
+  UserIcon,
+  PublishIcon,
+  MinidiscIcon,
 } from '../app/components/HeaderContent/SvgIcons';
 
 // Wrapper component for better story display
 const IconWrapper = ({ children, label }: { children: React.ReactNode; label: string }) => (
-  <div className="flex flex-col items-center gap-2 p-4 border border-gray-200 rounded-lg">
+  <div className="flex flex-col items-center gap-2 rounded-lg border border-gray-200 p-4">
     <div className="text-gray-600">{children}</div>
-    <span className="text-xs font-mono text-gray-500">{label}</span>
+    <span className="font-mono text-xs text-gray-500">{label}</span>
   </div>
 );
 
@@ -38,7 +39,7 @@ const meta = {
 **Icon Categories:**
 - **Navigation**: Home, Gear (settings), Back Arrow
 - **Content Views**: Preview, Code, Data icons with loading states
-- **User Actions**: Share, Publish, Star (favoriting)
+- **User Actions**: Share, Publish, Star (favoriting), Save (retro minidisc)
 - **User Status**: User icon with authentication states
 
 **Testing animations:** Icons with loading states will show spin animations when enabled.`,
@@ -53,7 +54,7 @@ export default meta;
 // Icon Gallery - Shows all icons at once
 export const IconGallery = {
   render: () => (
-    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4">
+    <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-5">
       <IconWrapper label="HomeIcon">
         <HomeIcon className="h-6 w-6" />
       </IconWrapper>
@@ -83,6 +84,9 @@ export const IconGallery = {
       </IconWrapper>
       <IconWrapper label="PublishIcon">
         <PublishIcon className="h-6 w-6" />
+      </IconWrapper>
+      <IconWrapper label="MinidiscIcon">
+        <MinidiscIcon className="h-6 w-6" />
       </IconWrapper>
     </div>
   ),
@@ -352,6 +356,33 @@ export const PublishIcon_Story: StoryObj<typeof PublishIcon> = {
   },
 };
 
+export const MinidiscIcon_Story: StoryObj<typeof MinidiscIcon> = {
+  ...ActionMeta,
+  render: (args) => <MinidiscIcon {...args} />,
+  args: {
+    className: 'h-6 w-6',
+    title: 'Save icon (minidisc)',
+  },
+  argTypes: {
+    className: {
+      description: 'CSS classes for styling the icon',
+      control: 'text',
+    },
+    title: {
+      description: 'Accessibility title for the icon',
+      control: 'text',
+    },
+  },
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Retro minidisc icon used for the save button. Features detailed disc design with label area and inner ring.',
+      },
+    },
+  },
+};
+
 // User Status Icons
 export const UserIcon_Story: StoryObj<typeof UserIcon> = {
   render: (args) => <UserIcon {...args} />,
@@ -377,7 +408,8 @@ export const UserIcon_Story: StoryObj<typeof UserIcon> = {
   parameters: {
     docs: {
       description: {
-        story: 'User icon with authentication states. Shows pulse animation during verification and filled state when authenticated.',
+        story:
+          'User icon with authentication states. Shows pulse animation during verification and filled state when authenticated.',
       },
     },
   },
@@ -408,7 +440,8 @@ export const SizeVariations = {
   parameters: {
     docs: {
       description: {
-        story: 'Common size variations for icons. Most components use responsive sizing (sm:h-4 sm:w-4).',
+        story:
+          'Common size variations for icons. Most components use responsive sizing (sm:h-4 sm:w-4).',
       },
     },
   },
@@ -435,7 +468,8 @@ export const LoadingAnimations = {
   parameters: {
     docs: {
       description: {
-        story: 'Icons with animated loading states. Preview and Code icons use slow spin, User icon uses pulse.',
+        story:
+          'Icons with animated loading states. Preview and Code icons use slow spin, User icon uses pulse.',
       },
     },
   },

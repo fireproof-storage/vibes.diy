@@ -197,7 +197,8 @@ export const NoControls: Story = {
   parameters: {
     docs: {
       description: {
-        story: 'Minimal header with only back button, no view controls (used in chat-only contexts).',
+        story:
+          'Minimal header with only back button, no view controls (used in chat-only contexts).',
       },
     },
   },
@@ -277,9 +278,9 @@ export const InteractivePublishingDemo: Story = {
   parameters: {
     docs: {
       description: {
-        story: 'Interactive demo of the full publishing workflow. Click the Share button to open the modal, then click "Publish App" to see the complete flow.',
+        story:
+          'Interactive demo of the full publishing workflow. Click the Share button to open the modal, then click "Publish App" to see the complete flow.',
       },
     },
   },
 };
-

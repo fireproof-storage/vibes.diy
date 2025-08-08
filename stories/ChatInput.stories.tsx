@@ -10,7 +10,8 @@ const meta = {
     layout: 'padded',
     docs: {
       description: {
-        component: 'A chat input component with auto-resizing textarea and submit functionality. Supports both controlled and uncontrolled usage.',
+        component:
+          'A chat input component with auto-resizing textarea and submit functionality. Supports both controlled and uncontrolled usage.',
       },
     },
   },
@@ -118,11 +119,11 @@ export const LongText: Story = {
 export const WithRefActions: Story = {
   render: (args) => {
     const inputRef = useRef<ChatInputRef>(null);
-    
+
     const handleFocus = () => {
       inputRef.current?.focus();
     };
-    
+
     const handleClickSubmit = () => {
       inputRef.current?.clickSubmit();
     };
@@ -132,13 +133,13 @@ export const WithRefActions: Story = {
         <div className="flex gap-2">
           <button
             onClick={handleFocus}
-            className="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600"
+            className="rounded bg-blue-500 px-3 py-1 text-white hover:bg-blue-600"
           >
             Focus Input
           </button>
           <button
             onClick={handleClickSubmit}
-            className="px-3 py-1 bg-green-500 text-white rounded hover:bg-green-600"
+            className="rounded bg-green-500 px-3 py-1 text-white hover:bg-green-600"
           >
             Click Submit
           </button>

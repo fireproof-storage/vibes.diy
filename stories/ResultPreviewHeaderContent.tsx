@@ -17,7 +17,7 @@ const mockMessages: ChatMessageDocument[] = [
     created_at: Date.now() - 1000,
   },
   {
-    _id: '2', 
+    _id: '2',
     session_id: 'test-session',
     text: 'Here is a todo app with React...',
     type: 'ai',
@@ -50,7 +50,7 @@ const useMockState = () => {
 };
 
 // Mock state provider
-const MockStateProvider: React.FC<{ 
+const MockStateProvider: React.FC<{
   children: React.ReactNode;
   initialState?: Partial<MockStateContextType>;
 }> = ({ children, initialState = {} }) => {
@@ -61,18 +61,20 @@ const MockStateProvider: React.FC<{
   const [firehoseShared, setFirehoseShared] = useState(initialState.firehoseShared ?? false);
 
   return (
-    <MockStateContext.Provider value={{
-      isPublishing,
-      setIsPublishing,
-      urlCopied,
-      setUrlCopied,
-      publishedUrl,
-      setPublishedUrl,
-      isShareModalOpen,
-      setIsShareModalOpen,
-      firehoseShared,
-      setFirehoseShared,
-    }}>
+    <MockStateContext.Provider
+      value={{
+        isPublishing,
+        setIsPublishing,
+        urlCopied,
+        setUrlCopied,
+        publishedUrl,
+        setPublishedUrl,
+        isShareModalOpen,
+        setIsShareModalOpen,
+        firehoseShared,
+        setFirehoseShared,
+      }}
+    >
       {children}
     </MockStateContext.Provider>
   );
@@ -84,19 +86,19 @@ export interface MockedHeaderProps {
   displayView?: ViewType;
   showViewControls?: boolean;
   previewReady?: boolean;
-  
+
   // Code state props
   hasCodeChanges?: boolean;
   syntaxErrorCount?: number;
   isStreaming?: boolean;
-  
+
   // Mock state controls (for interactive demos)
   initialPublishedUrl?: string;
   initialIsPublishing?: boolean;
   initialUrlCopied?: boolean;
   initialIsShareModalOpen?: boolean;
   initialFirehoseShared?: boolean;
-  
+
   // Event handlers
   onNavigateToView?: (view: ViewType) => void;
   onCodeSave?: () => void;
@@ -120,7 +122,7 @@ export const MockedResultPreviewHeaderContent: React.FC<MockedHeaderProps> = ({
   onBackClick,
 }) => {
   const publishButtonRef = React.useRef<HTMLButtonElement>(null);
-  
+
   // Create view controls based on current state
   const viewControls: ViewControlsType = {
     preview: {
@@ -131,7 +133,7 @@ export const MockedResultPreviewHeaderContent: React.FC<MockedHeaderProps> = ({
     },
     code: {
       enabled: true,
-      icon: 'code', 
+      icon: 'code',
       label: 'Code',
     },
     data: {
@@ -157,13 +159,15 @@ export const MockedResultPreviewHeaderContent: React.FC<MockedHeaderProps> = ({
   };
 
   return (
-    <MockStateProvider initialState={{
-      publishedUrl: initialPublishedUrl,
-      isPublishing: initialIsPublishing,
-      urlCopied: initialUrlCopied,
-      isShareModalOpen: initialIsShareModalOpen,
-      firehoseShared: initialFirehoseShared,
-    }}>
+    <MockStateProvider
+      initialState={{
+        publishedUrl: initialPublishedUrl,
+        isPublishing: initialIsPublishing,
+        urlCopied: initialUrlCopied,
+        isShareModalOpen: initialIsShareModalOpen,
+        firehoseShared: initialFirehoseShared,
+      }}
+    >
       <MockedHeaderContent
         displayView={displayView}
         viewControls={viewControls}
@@ -216,7 +220,7 @@ const MockedHeaderContent: React.FC<MockedHeaderContentProps> = ({
     console.log('Mock handlePublish called with shareToFirehose:', shareToFirehose);
     mockState.setIsPublishing(true);
     mockState.setUrlCopied(false);
-    
+
     // Simulate async publishing
     setTimeout(() => {
       const mockUrl = 'https://vibes.diy/published-app-' + Date.now();
@@ -257,7 +261,7 @@ const MockedHeaderContent: React.FC<MockedHeaderContentProps> = ({
           />
         )}
       </div>
-      
+
       {/* Right side - Save and Publish buttons */}
       <div className="flex w-1/4 items-center justify-end">
         <div className="flex items-center gap-2">
@@ -281,7 +285,7 @@ const MockedHeaderContent: React.FC<MockedHeaderContentProps> = ({
           )}
         </div>
       </div>
-      
+
       {/* Share Modal */}
       {mockState.isShareModalOpen && (
         <ShareModal
