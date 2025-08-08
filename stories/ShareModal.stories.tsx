@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react';
 import { MockShareModal } from './ShareModal';
 
 const meta = {
-  title: 'Production Components/ShareModal',
+  title: 'Components/ShareModal',
   component: MockShareModal,
   parameters: {
     layout: 'fullscreen',

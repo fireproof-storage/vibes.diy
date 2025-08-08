@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react';
 import { SaveButton } from '../app/components/ResultPreview/SaveButton';
 
 const meta = {
-  title: 'Production Components/SaveButton',
+  title: 'Components/SaveButton',
   component: SaveButton,
   parameters: {
     layout: 'padded',

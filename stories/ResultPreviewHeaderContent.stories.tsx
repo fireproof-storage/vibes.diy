@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react';
 import { MockedResultPreviewHeaderContent } from './ResultPreviewHeaderContent';
 
 const meta = {
-  title: 'Production Components/ResultPreviewHeaderContent',
+  title: 'Components/ResultPreviewHeaderContent',
   component: MockedResultPreviewHeaderContent,
   parameters: {
     layout: 'fullscreen',
