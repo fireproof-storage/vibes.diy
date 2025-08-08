@@ -214,7 +214,7 @@ function ResultPreview({
                       onChange={(e) => setEditedName(e.target.value)}
                       onKeyDown={handleNameKeyDown}
                       onBlur={handleNameSave}
-                      className="bg-light-background-00 dark:bg-dark-background-00 border-light-decorative-01 dark:border-dark-decorative-01 text-light-primary dark:text-dark-primary focus:ring-light-primary/20 dark:focus:ring-dark-primary/20 flex-1 rounded border px-3 py-2 text-sm focus:ring-2 focus:outline-none"
+                      className="dark:bg-dark-background-00 text-light-primary dark:text-dark-primary flex-1 rounded border-2 border-blue-500 bg-white px-3 py-2 text-sm shadow-sm transition-colors focus:border-blue-600 focus:ring-2 focus:ring-blue-500/30 focus:outline-none dark:border-blue-400 dark:focus:border-blue-300 dark:focus:ring-blue-400/30"
                       placeholder="Enter app name"
                     />
                     <button
@@ -258,7 +258,7 @@ function ResultPreview({
                   </div>
                 ) : (
                   <div className="flex items-center gap-2">
-                    <div className="bg-light-background-00 dark:bg-dark-background-00 border-light-decorative-01 dark:border-dark-decorative-01 text-light-primary dark:text-dark-primary flex-1 rounded border px-3 py-2">
+                    <div className="dark:bg-dark-background-01 dark:border-dark-decorative-01 text-light-primary dark:text-dark-primary flex-1 cursor-default rounded border border-gray-200 bg-gray-50 px-3 py-2 font-medium">
                       {currentTitle}
                     </div>
                     <button
