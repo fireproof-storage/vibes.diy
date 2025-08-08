@@ -1,4 +1,4 @@
-import { useCallback, useState, useEffect, useMemo } from 'react';
+import { useCallback, useState, useEffect } from 'react';
 import type {
   AiChatMessageDocument,
   UserChatMessageDocument,
@@ -88,56 +88,35 @@ export function useSession(routedSessionId?: string) {
     async (title: string) => {
       const encodedTitle = encodeTitle(title);
 
-      // Create a new object instead of mutating
-      const updatedDoc = {
-        ...vibeDoc,
-        title: title,
-        encodedTitle: encodedTitle,
-      };
+      vibeDoc.title = title;
+      vibeDoc.encodedTitle = encodedTitle;
 
-      // Call merge first to trigger immediate UI update
-      mergeVibeDoc(updatedDoc);
-
-      // Then persist to database
-      await sessionDatabase.put(updatedDoc);
+      await sessionDatabase.put(vibeDoc);
+      mergeVibeDoc(vibeDoc);
     },
-    [sessionDatabase, vibeDoc, mergeVibeDoc]
+    [sessionDatabase, vibeDoc]
   );
 
   // Update published URL using the vibe document
   const updatePublishedUrl = useCallback(
     async (publishedUrl: string) => {
-      // Create a new object instead of mutating
-      const updatedDoc = {
-        ...vibeDoc,
-        publishedUrl: publishedUrl,
-      };
+      vibeDoc.publishedUrl = publishedUrl;
 
-      // Call merge first to trigger immediate UI update
-      mergeVibeDoc(updatedDoc);
-
-      // Then persist to database
-      await sessionDatabase.put(updatedDoc);
+      await sessionDatabase.put(vibeDoc);
+      mergeVibeDoc(vibeDoc);
     },
-    [sessionDatabase, vibeDoc, mergeVibeDoc]
+    [sessionDatabase, vibeDoc]
   );
 
   // Update firehose shared state using the vibe document
   const updateFirehoseShared = useCallback(
     async (firehoseShared: boolean) => {
-      // Create a new object instead of mutating
-      const updatedDoc = {
-        ...vibeDoc,
-        firehoseShared: firehoseShared,
-      };
+      vibeDoc.firehoseShared = firehoseShared;
 
-      // Call merge first to trigger immediate UI update
-      mergeVibeDoc(updatedDoc);
-
-      // Then persist to database
-      await sessionDatabase.put(updatedDoc);
+      await sessionDatabase.put(vibeDoc);
+      mergeVibeDoc(vibeDoc);
     },
-    [sessionDatabase, vibeDoc, mergeVibeDoc]
+    [sessionDatabase, vibeDoc]
   );
 
   // Add a screenshot to the session (in session-specific database)
@@ -179,15 +158,12 @@ export function useSession(routedSessionId?: string) {
     firehoseShared?: boolean;
   }
 
-  const session: SessionView = useMemo(
-    () => ({
-      _id: sessionId,
-      title: vibeDoc.title,
-      publishedUrl: vibeDoc.publishedUrl,
-      firehoseShared: vibeDoc.firehoseShared,
-    }),
-    [sessionId, vibeDoc.title, vibeDoc.publishedUrl, vibeDoc.firehoseShared]
-  );
+  const session: SessionView = {
+    _id: sessionId,
+    title: vibeDoc.title,
+    publishedUrl: vibeDoc.publishedUrl,
+    firehoseShared: vibeDoc.firehoseShared,
+  };
 
   return {
     // Session information
