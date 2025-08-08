@@ -35,6 +35,7 @@ const ChatInputWrapper = ({
     setSelectedResponseId: () => {},
     immediateErrors: [],
     advisoryErrors: [],
+    addError: () => {},
   };
 
   return <ChatInput chatState={mockChatState} onSend={() => console.log('onSend called')} />;
@@ -143,6 +144,7 @@ export const WithRefActions: Story = {
       setSelectedResponseId: () => {},
       immediateErrors: [],
       advisoryErrors: [],
+      addError: () => {},
     };
 
     const handleFocus = () => {
