@@ -117,7 +117,7 @@ export const LongText: Story = {
 
 // Interactive example with ref
 export const WithRefActions: Story = {
-  render: (args) => {
+  render: (args: any) => {
     const inputRef = useRef<ChatInputRef>(null);
 
     const handleFocus = () => {

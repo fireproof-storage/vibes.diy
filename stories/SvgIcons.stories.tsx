@@ -112,7 +112,7 @@ const NavigationMeta = {
 
 export const HomeIcon_Story: StoryObj<typeof HomeIcon> = {
   ...NavigationMeta,
-  render: (args) => <HomeIcon {...args} />,
+  render: (args: any) => <HomeIcon {...args} />,
   args: {
     className: 'h-6 w-6',
   },
@@ -133,7 +133,7 @@ export const HomeIcon_Story: StoryObj<typeof HomeIcon> = {
 
 export const GearIcon_Story: StoryObj<typeof GearIcon> = {
   ...NavigationMeta,
-  render: (args) => <GearIcon {...args} />,
+  render: (args: any) => <GearIcon {...args} />,
   args: {
     className: 'h-6 w-6',
   },
@@ -154,7 +154,7 @@ export const GearIcon_Story: StoryObj<typeof GearIcon> = {
 
 export const BackArrowIcon_Story: StoryObj<typeof BackArrowIcon> = {
   ...NavigationMeta,
-  render: (args) => <BackArrowIcon {...args} />,
+  render: (args: any) => <BackArrowIcon {...args} />,
   args: {
     className: 'h-6 w-6',
   },
@@ -186,7 +186,7 @@ const ContentViewMeta = {
 
 export const PreviewIcon_Story: StoryObj<typeof PreviewIcon> = {
   ...ContentViewMeta,
-  render: (args) => <PreviewIcon {...args} />,
+  render: (args: any) => <PreviewIcon {...args} />,
   args: {
     className: 'h-6 w-6',
     isLoading: false,
@@ -217,7 +217,7 @@ export const PreviewIcon_Story: StoryObj<typeof PreviewIcon> = {
 
 export const CodeIcon_Story: StoryObj<typeof CodeIcon> = {
   ...ContentViewMeta,
-  render: (args) => <CodeIcon {...args} />,
+  render: (args: any) => <CodeIcon {...args} />,
   args: {
     className: 'h-6 w-6',
     isLoading: false,
@@ -248,7 +248,7 @@ export const CodeIcon_Story: StoryObj<typeof CodeIcon> = {
 
 export const DataIcon_Story: StoryObj<typeof DataIcon> = {
   ...ContentViewMeta,
-  render: (args) => <DataIcon {...args} />,
+  render: (args: any) => <DataIcon {...args} />,
   args: {
     className: 'h-6 w-6',
     title: 'Data icon',
@@ -285,7 +285,7 @@ const ActionMeta = {
 
 export const StarIcon_Story: StoryObj<typeof StarIcon> = {
   ...ActionMeta,
-  render: (args) => <StarIcon {...args} />,
+  render: (args: any) => <StarIcon {...args} />,
   args: {
     className: 'h-6 w-6',
     filled: false,
@@ -311,7 +311,7 @@ export const StarIcon_Story: StoryObj<typeof StarIcon> = {
 
 export const ShareIcon_Story: StoryObj<typeof ShareIcon> = {
   ...ActionMeta,
-  render: (args) => <ShareIcon {...args} />,
+  render: (args: any) => <ShareIcon {...args} />,
   args: {
     className: 'h-6 w-6',
     title: 'Share icon',
@@ -337,7 +337,7 @@ export const ShareIcon_Story: StoryObj<typeof ShareIcon> = {
 
 export const PublishIcon_Story: StoryObj<typeof PublishIcon> = {
   ...ActionMeta,
-  render: (args) => <PublishIcon {...args} />,
+  render: (args: any) => <PublishIcon {...args} />,
   args: {
     className: 'h-6 w-6',
   },
@@ -358,7 +358,7 @@ export const PublishIcon_Story: StoryObj<typeof PublishIcon> = {
 
 export const MinidiscIcon_Story: StoryObj<typeof MinidiscIcon> = {
   ...ActionMeta,
-  render: (args) => <MinidiscIcon {...args} />,
+  render: (args: any) => <MinidiscIcon {...args} />,
   args: {
     className: 'h-6 w-6',
     title: 'Save icon (minidisc)',
@@ -385,7 +385,7 @@ export const MinidiscIcon_Story: StoryObj<typeof MinidiscIcon> = {
 
 // User Status Icons
 export const UserIcon_Story: StoryObj<typeof UserIcon> = {
-  render: (args) => <UserIcon {...args} />,
+  render: (args: any) => <UserIcon {...args} />,
   args: {
     className: 'h-6 w-6',
     isVerifying: false,

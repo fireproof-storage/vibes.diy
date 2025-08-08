@@ -7,24 +7,6 @@ import { ShareButton } from '../app/components/ResultPreview/ShareButton';
 import { SaveButton } from '../app/components/ResultPreview/SaveButton';
 import { ShareModal } from '../app/components/ResultPreview/ShareModal';
 
-// Mock data
-const mockMessages: ChatMessageDocument[] = [
-  {
-    _id: '1',
-    session_id: 'test-session',
-    text: 'Create a todo app',
-    type: 'user',
-    created_at: Date.now() - 1000,
-  },
-  {
-    _id: '2',
-    session_id: 'test-session',
-    text: 'Here is a todo app with React...',
-    type: 'ai',
-    created_at: Date.now(),
-  },
-];
-
 // Context for managing mock state
 interface MockStateContextType {
   isPublishing: boolean;
@@ -197,7 +179,7 @@ interface MockedHeaderContentProps {
   onNavigateToView: (view: ViewType) => void;
   onCodeSave: () => void;
   onBackClick: () => void;
-  publishButtonRef: React.RefObject<HTMLButtonElement>;
+  publishButtonRef: React.RefObject<HTMLButtonElement | null>;
 }
 
 const MockedHeaderContent: React.FC<MockedHeaderContentProps> = ({
