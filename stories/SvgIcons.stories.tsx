@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react';
-import type { ReactNode, ComponentProps } from 'react';
+import type { ComponentProps, ReactNode } from 'react';
 import {
   HomeIcon,
   GearIcon,
