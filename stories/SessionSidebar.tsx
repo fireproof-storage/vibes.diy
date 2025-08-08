@@ -33,13 +33,15 @@ const StorybookSessionSidebar: React.FC<{
   onClose: () => void;
   isAuthenticated: boolean;
   isLoading: boolean;
-  isDarkMode: boolean;
   isPolling: boolean;
   pollError?: string;
-}> = ({ isVisible, onClose, isAuthenticated, isLoading, isDarkMode, isPolling, pollError }) => {
+}> = ({ isVisible, onClose, isAuthenticated, isLoading, isPolling, pollError }) => {
   const sidebarRef = useRef<HTMLDivElement>(null);
 
   const colorway = randomColorway();
+  // Use CSS-based dark mode detection like the rest of the UI
+  const isDarkMode =
+    typeof document !== 'undefined' ? document.documentElement.classList.contains('dark') : true; // Default to dark mode for SSR
   const rando = isDarkMode ? dark[colorway] : light[colorway];
 
   const mockInitiateLogin = async () => {
@@ -226,7 +228,6 @@ export const MockSessionSidebar: React.FC<{
   onClose: () => void;
   isAuthenticated?: boolean;
   isLoading?: boolean;
-  isDarkMode?: boolean;
   isPolling?: boolean;
   pollError?: string;
 }> = ({
@@ -234,7 +235,6 @@ export const MockSessionSidebar: React.FC<{
   onClose,
   isAuthenticated = false,
   isLoading = false,
-  isDarkMode = false,
   isPolling = false,
   pollError,
 }) => {
@@ -255,7 +255,6 @@ export const MockSessionSidebar: React.FC<{
         onClose={onClose}
         isAuthenticated={isAuthenticated}
         isLoading={isLoading}
-        isDarkMode={isDarkMode}
         isPolling={isPolling}
         pollError={pollError}
       />
@@ -276,9 +275,6 @@ export const MockSessionSidebar: React.FC<{
             </p>
             <p>
               <strong>isLoading:</strong> {isLoading.toString()}
-            </p>
-            <p>
-              <strong>isDarkMode:</strong> {isDarkMode.toString()}
             </p>
             <p>
               <strong>isPolling:</strong> {isPolling.toString()}

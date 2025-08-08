@@ -27,10 +27,6 @@ const meta = {
       description: 'Whether authentication is loading',
       control: 'boolean',
     },
-    isDarkMode: {
-      description: 'Whether dark mode is enabled',
-      control: 'boolean',
-    },
     isPolling: {
       description: 'Whether login polling is active',
       control: 'boolean',
@@ -55,7 +51,6 @@ export const Closed: Story = {
     isVisible: false,
     isAuthenticated: false,
     isLoading: false,
-    isDarkMode: false,
   },
 };
 
@@ -65,7 +60,6 @@ export const Open: Story = {
     isVisible: true,
     isAuthenticated: false,
     isLoading: false,
-    isDarkMode: false,
   },
 };
 
@@ -75,27 +69,6 @@ export const OpenAuthenticated: Story = {
     isVisible: true,
     isAuthenticated: true,
     isLoading: false,
-    isDarkMode: false,
-  },
-};
-
-// Open with dark mode
-export const OpenDarkMode: Story = {
-  args: {
-    isVisible: true,
-    isAuthenticated: false,
-    isLoading: false,
-    isDarkMode: true,
-  },
-};
-
-// Open with authenticated user in dark mode
-export const OpenAuthenticatedDarkMode: Story = {
-  args: {
-    isVisible: true,
-    isAuthenticated: true,
-    isLoading: false,
-    isDarkMode: true,
   },
 };
 
@@ -105,7 +78,6 @@ export const Loading: Story = {
     isVisible: true,
     isAuthenticated: false,
     isLoading: true,
-    isDarkMode: false,
   },
 };
 
@@ -115,7 +87,6 @@ export const LoginPolling: Story = {
     isVisible: true,
     isAuthenticated: false,
     isLoading: false,
-    isDarkMode: false,
     isPolling: true,
   },
 };
@@ -126,39 +97,7 @@ export const LoginPollingWithError: Story = {
     isVisible: true,
     isAuthenticated: false,
     isLoading: false,
-    isDarkMode: false,
     isPolling: false,
     pollError: 'Authentication flow could not be initiated.',
-  },
-};
-
-// All states combined for testing
-export const LoadingInDarkMode: Story = {
-  args: {
-    isVisible: true,
-    isAuthenticated: false,
-    isLoading: true,
-    isDarkMode: true,
-  },
-};
-
-export const PollingInDarkMode: Story = {
-  args: {
-    isVisible: true,
-    isAuthenticated: false,
-    isLoading: false,
-    isDarkMode: true,
-    isPolling: true,
-  },
-};
-
-export const ErrorInDarkMode: Story = {
-  args: {
-    isVisible: true,
-    isAuthenticated: false,
-    isLoading: false,
-    isDarkMode: true,
-    isPolling: false,
-    pollError: 'Login popup was blocked by browser.',
   },
 };
