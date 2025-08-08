@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react';
+import type { ReactNode, ComponentProps } from 'react';
 import {
   HomeIcon,
   GearIcon,
@@ -14,7 +15,7 @@ import {
 } from '../app/components/HeaderContent/SvgIcons';
 
 // Wrapper component for better story display
-const IconWrapper = ({ children, label }: { children: React.ReactNode; label: string }) => (
+const IconWrapper = ({ children, label }: { children: ReactNode; label: string }) => (
   <div className="flex flex-col items-center gap-2 rounded-lg border border-gray-200 p-4">
     <div className="text-gray-600">{children}</div>
     <span className="font-mono text-xs text-gray-500">{label}</span>
@@ -110,9 +111,9 @@ const NavigationMeta = {
   },
 };
 
-export const HomeIcon_Story: StoryObj<typeof HomeIcon> = {
+export const HomeIcon_Story: StoryObj<ComponentProps<typeof HomeIcon>> = {
   ...NavigationMeta,
-  render: (args: any) => <HomeIcon {...args} />,
+  render: (args) => <HomeIcon {...args} />,
   args: {
     className: 'h-6 w-6',
   },
@@ -131,9 +132,9 @@ export const HomeIcon_Story: StoryObj<typeof HomeIcon> = {
   },
 };
 
-export const GearIcon_Story: StoryObj<typeof GearIcon> = {
+export const GearIcon_Story: StoryObj<ComponentProps<typeof GearIcon>> = {
   ...NavigationMeta,
-  render: (args: any) => <GearIcon {...args} />,
+  render: (args) => <GearIcon {...args} />,
   args: {
     className: 'h-6 w-6',
   },
@@ -152,9 +153,9 @@ export const GearIcon_Story: StoryObj<typeof GearIcon> = {
   },
 };
 
-export const BackArrowIcon_Story: StoryObj<typeof BackArrowIcon> = {
+export const BackArrowIcon_Story: StoryObj<ComponentProps<typeof BackArrowIcon>> = {
   ...NavigationMeta,
-  render: (args: any) => <BackArrowIcon {...args} />,
+  render: (args) => <BackArrowIcon {...args} />,
   args: {
     className: 'h-6 w-6',
   },
@@ -184,9 +185,9 @@ const ContentViewMeta = {
   },
 };
 
-export const PreviewIcon_Story: StoryObj<typeof PreviewIcon> = {
+export const PreviewIcon_Story: StoryObj<ComponentProps<typeof PreviewIcon>> = {
   ...ContentViewMeta,
-  render: (args: any) => <PreviewIcon {...args} />,
+  render: (args) => <PreviewIcon {...args} />,
   args: {
     className: 'h-6 w-6',
     isLoading: false,
@@ -215,9 +216,9 @@ export const PreviewIcon_Story: StoryObj<typeof PreviewIcon> = {
   },
 };
 
-export const CodeIcon_Story: StoryObj<typeof CodeIcon> = {
+export const CodeIcon_Story: StoryObj<ComponentProps<typeof CodeIcon>> = {
   ...ContentViewMeta,
-  render: (args: any) => <CodeIcon {...args} />,
+  render: (args) => <CodeIcon {...args} />,
   args: {
     className: 'h-6 w-6',
     isLoading: false,
@@ -246,9 +247,9 @@ export const CodeIcon_Story: StoryObj<typeof CodeIcon> = {
   },
 };
 
-export const DataIcon_Story: StoryObj<typeof DataIcon> = {
+export const DataIcon_Story: StoryObj<ComponentProps<typeof DataIcon>> = {
   ...ContentViewMeta,
-  render: (args: any) => <DataIcon {...args} />,
+  render: (args) => <DataIcon {...args} />,
   args: {
     className: 'h-6 w-6',
     title: 'Data icon',
@@ -283,9 +284,9 @@ const ActionMeta = {
   },
 };
 
-export const StarIcon_Story: StoryObj<typeof StarIcon> = {
+export const StarIcon_Story: StoryObj<ComponentProps<typeof StarIcon>> = {
   ...ActionMeta,
-  render: (args: any) => <StarIcon {...args} />,
+  render: (args) => <StarIcon {...args} />,
   args: {
     className: 'h-6 w-6',
     filled: false,
@@ -309,9 +310,9 @@ export const StarIcon_Story: StoryObj<typeof StarIcon> = {
   },
 };
 
-export const ShareIcon_Story: StoryObj<typeof ShareIcon> = {
+export const ShareIcon_Story: StoryObj<ComponentProps<typeof ShareIcon>> = {
   ...ActionMeta,
-  render: (args: any) => <ShareIcon {...args} />,
+  render: (args) => <ShareIcon {...args} />,
   args: {
     className: 'h-6 w-6',
     title: 'Share icon',
@@ -335,9 +336,9 @@ export const ShareIcon_Story: StoryObj<typeof ShareIcon> = {
   },
 };
 
-export const PublishIcon_Story: StoryObj<typeof PublishIcon> = {
+export const PublishIcon_Story: StoryObj<ComponentProps<typeof PublishIcon>> = {
   ...ActionMeta,
-  render: (args: any) => <PublishIcon {...args} />,
+  render: (args) => <PublishIcon {...args} />,
   args: {
     className: 'h-6 w-6',
   },
@@ -356,9 +357,9 @@ export const PublishIcon_Story: StoryObj<typeof PublishIcon> = {
   },
 };
 
-export const MinidiscIcon_Story: StoryObj<typeof MinidiscIcon> = {
+export const MinidiscIcon_Story: StoryObj<ComponentProps<typeof MinidiscIcon>> = {
   ...ActionMeta,
-  render: (args: any) => <MinidiscIcon {...args} />,
+  render: (args) => <MinidiscIcon {...args} />,
   args: {
     className: 'h-6 w-6',
     title: 'Save icon (minidisc)',
@@ -384,8 +385,8 @@ export const MinidiscIcon_Story: StoryObj<typeof MinidiscIcon> = {
 };
 
 // User Status Icons
-export const UserIcon_Story: StoryObj<typeof UserIcon> = {
-  render: (args: any) => <UserIcon {...args} />,
+export const UserIcon_Story: StoryObj<ComponentProps<typeof UserIcon>> = {
+  render: (args) => <UserIcon {...args} />,
   args: {
     className: 'h-6 w-6',
     isVerifying: false,
