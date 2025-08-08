@@ -117,85 +117,89 @@ export const ManyErrors: Story = {
   },
 };
 
-// Responsive demonstration
-export const ResponsiveDemo: Story = {
+// Mobile viewport demonstration  
+export const MobileViewport: Story = {
   args: {
     hasChanges: true,
     syntaxErrorCount: 0,
   },
   parameters: {
     viewport: {
-      defaultViewport: 'mobile1',
+      defaultViewport: 'belowSm',
     },
     docs: {
       description: {
-        story: 'On mobile viewports, only the icon is shown. Switch between desktop and mobile viewports to see the responsive behavior.',
+        story: 'Shows the SaveButton at 639px viewport (below sm: breakpoint) to demonstrate the mobile icon-only version.',
       },
     },
   },
-  decorators: [
-    (Story) => (
-      <div className="p-4">
-        <p className="mb-4 text-sm text-gray-600">
-          Toggle between desktop and mobile viewports in the toolbar to see responsive behavior.
-        </p>
-        <Story />
-      </div>
-    ),
-  ],
 };
 
-// Interactive playground
-export const InteractivePlayground: Story = {
+// Smallest render demonstration
+export const SmallestRender: Story = {
+  args: {
+    hasChanges: true,
+    syntaxErrorCount: 0,  
+  },
+  parameters: {
+    viewport: {
+      defaultViewport: 'small',
+    },
+    docs: {
+      description: {
+        story: 'Shows the SaveButton at 440px viewport - the smallest practical render showing the 32×32px icon-only button.',
+      },
+    },
+  },
+};
+
+// Tiny viewport (iPhone SE size)
+export const TinyViewport: Story = {
   args: {
     hasChanges: true,
     syntaxErrorCount: 0,
   },
-  render: (args) => {
-    return (
-      <div className="space-y-6">
-        <div>
-          <h3 className="mb-2 font-semibold">Desktop View</h3>
-          <div className="flex items-center">
-            <SaveButton {...args} />
-          </div>
+  parameters: {
+    viewport: {
+      defaultViewport: 'tiny',
+    },
+    docs: {
+      description: {
+        story: 'Shows the SaveButton at 375px viewport (iPhone SE width) - ultra-compact mobile view.',
+      },
+    },
+  },
+};
+
+// Viewport testing instructions
+export const ViewportTesting: Story = {
+  args: {
+    hasChanges: true,
+    syntaxErrorCount: 0,
+  },
+  decorators: [
+    (Story) => (
+      <div className="space-y-4">
+        <div className="rounded-lg bg-blue-50 p-4 dark:bg-blue-900/20">
+          <h3 className="mb-2 font-semibold text-blue-800 dark:text-blue-200">How to Test Responsive Behavior</h3>
+          <ol className="list-decimal list-inside space-y-1 text-sm text-blue-700 dark:text-blue-300">
+            <li>Use the <strong>viewport selector</strong> in the Storybook toolbar</li>
+            <li>Try: "Below SM (639px)" for mobile version</li>
+            <li>Try: "Small Mobile (440px)" for smallest render</li>
+            <li>Try: "Tiny (375px)" for iPhone SE size</li>
+            <li>Desktop shows: icon + "Save" text</li>
+            <li>Mobile shows: 32×32px icon only</li>
+          </ol>
         </div>
-        
-        <div>
-          <h3 className="mb-2 font-semibold">Mobile View (forced)</h3>
-          <div className="flex items-center">
-            <div style={{ 
-              /* Force mobile button to show by hiding desktop version and showing mobile */
-            }} className="[&>*>button:first-child]:!hidden [&>*>button:last-child]:!flex">
-              <SaveButton {...args} />
-            </div>
-          </div>
-        </div>
-        
-        <div>
-          <h3 className="mb-2 font-semibold">440px Width Simulation</h3>
-          <div className="border-2 border-dashed border-gray-300 p-4" style={{width: '440px'}}>
-            <div className="mb-2 text-xs text-gray-500">Desktop version (forced):</div>
-            <div className="flex items-center [&>*>button:first-child]:!flex [&>*>button:last-child]:!hidden">
-              <SaveButton {...args} />
-            </div>
-            <div className="mt-4 mb-2 text-xs text-gray-500">Mobile version (forced - smallest render):</div>
-            <div className="flex items-center [&>*>button:first-child]:!hidden [&>*>button:last-child]:!flex">
-              <SaveButton {...args} />
-            </div>
-          </div>
-        </div>
-        
-        <div className="text-sm text-gray-600">
-          <p><strong>Usage Notes:</strong></p>
-          <ul className="list-disc list-inside space-y-1 mt-2">
-            <li>Button only appears when hasChanges is true</li>
-            <li>When syntaxErrorCount &gt; 0, button becomes red and disabled</li>
-            <li>On desktop: shows icon + text</li>
-            <li>On mobile: shows icon only with tooltip</li>
-          </ul>
-        </div>
+        <Story />
       </div>
-    );
+    ),
+  ],
+  parameters: {
+    docs: {
+      description: {
+        story: 'Use the viewport toolbar to switch between different screen sizes and see the responsive behavior. The mobile version (below 640px) shows only a 32×32px icon.',
+      },
+    },
   },
 };

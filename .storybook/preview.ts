@@ -1,6 +1,26 @@
 import type { Preview } from '@storybook/react-vite';
 import '../app/app.css';
 
+// Custom viewports for testing your app's breakpoints
+const customViewports = {
+  xs: {
+    name: 'XS - Custom (480px)',
+    styles: { width: '480px', height: '800px' },
+  },
+  belowSm: {
+    name: 'Below SM (639px)',
+    styles: { width: '639px', height: '800px' },
+  },
+  small: {
+    name: 'Small Mobile (440px)',
+    styles: { width: '440px', height: '800px' },
+  },
+  tiny: {
+    name: 'Tiny (375px)',
+    styles: { width: '375px', height: '800px' },
+  },
+};
+
 const preview: Preview = {
   parameters: {
     controls: {
@@ -27,6 +47,9 @@ const preview: Preview = {
           value: '#1a1a1a',
         },
       ],
+    },
+    viewport: {
+      viewports: customViewports,
     },
   },
   globalTypes: {
