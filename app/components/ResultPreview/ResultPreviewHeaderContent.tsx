@@ -1,14 +1,14 @@
 import { /*useEffect,*/ useRef } from 'react'; // useEffect no longer needed here
 import { useParams } from 'react-router';
 import { useSession } from '../../hooks/useSession';
-import type { ViewType, ViewControlsType } from '../../utils/ViewState';
+import type { ViewControlsType, ViewType } from '../../utils/ViewState';
 // import { useViewState } from '../../utils/ViewState'; // useViewState is now lifted to home.tsx
 import { BackButton } from './BackButton';
-import { ViewControls } from './ViewControls';
-import { ShareButton } from './ShareButton';
 import { SaveButton } from './SaveButton';
-import { usePublish } from './usePublish';
+import { ShareButton } from './ShareButton';
 import { ShareModal } from './ShareModal';
+import { usePublish } from './usePublish';
+import { ViewControls } from './ViewControls';
 
 interface ResultPreviewHeaderContentProps {
   // Props from useViewState (lifted to home.tsx)
@@ -124,7 +124,7 @@ const ResultPreviewHeaderContent: React.FC<ResultPreviewHeaderContentProps> = ({
             />
           )}
 
-          {showViewControls && previewReady && (
+          {showViewControls && (previewReady || displayView === 'settings') && (
             <ShareButton
               ref={publishButtonRef}
               onClick={toggleShareModal}

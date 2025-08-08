@@ -158,6 +158,14 @@ describe('ResultPreviewHeaderContent', () => {
       loading: false,
       navigateTo: vi.fn(),
     },
+    settings: {
+      id: 'settings',
+      label: 'Settings',
+      icon: 'settings',
+      enabled: true,
+      loading: false,
+      navigateTo: vi.fn(),
+    },
   };
 
   const mockViewControls = [

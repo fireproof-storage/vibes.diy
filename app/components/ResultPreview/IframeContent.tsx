@@ -12,7 +12,7 @@ import { transformImports } from './transformImports';
 import iframeTemplateRaw from './templates/iframe-template.html?raw';
 
 interface IframeContentProps {
-  activeView: 'preview' | 'code' | 'data' | 'chat';
+  activeView: 'preview' | 'code' | 'data' | 'chat' | 'settings';
   filesContent: IframeFiles;
   isStreaming: boolean;
   codeReady: boolean;
@@ -198,6 +198,7 @@ const IframeContent: React.FC<IframeContentProps> = ({
     if (path.endsWith('/data')) return 'data';
     if (path.endsWith('/app')) return 'preview';
     if (path.endsWith('/chat')) return 'preview'; // Show preview for chat view
+    if (path.endsWith('/settings')) return 'settings';
     return activeView; // Fall back to state if path doesn't have a suffix
   };
 
@@ -352,6 +353,19 @@ const IframeContent: React.FC<IframeContentProps> = ({
             sessionId={sessionId || 'default-session'}
           />
         </div>
+      </div>
+      <div
+        style={{
+          visibility: currentView === 'settings' ? 'visible' : 'hidden',
+          position: currentView === 'settings' ? 'static' : 'absolute',
+          zIndex: currentView === 'settings' ? 1 : 0,
+          height: '100%',
+          width: '100%',
+          top: 0,
+          left: 0,
+        }}
+      >
+        {/* Export view content is handled by ResultPreview component */}
       </div>
     </div>
   );

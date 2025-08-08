@@ -1,6 +1,6 @@
 import React from 'react';
 import type { ViewType } from '../../utils/ViewState';
-import { CodeIcon, DataIcon, PreviewIcon } from '../HeaderContent/SvgIcons';
+import { CodeIcon, DataIcon, PreviewIcon, SettingsIcon } from '../HeaderContent/SvgIcons';
 
 interface ViewControlsProps {
   viewControls: Record<
@@ -56,6 +56,7 @@ export const ViewControls: React.FC<ViewControlsProps> = ({
                 />
               )}
               {viewTypeKey === 'data' && <DataIcon className="h-3.5 w-3.5 sm:h-4 sm:w-4" />}
+              {viewTypeKey === 'settings' && <SettingsIcon className="h-4 w-4" />}
               <span className="hidden min-[480px]:inline">{control.label}</span>
             </button>
           );

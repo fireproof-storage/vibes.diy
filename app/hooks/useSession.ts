@@ -1,4 +1,4 @@
-import { useCallback, useState, useEffect } from 'react';
+import { useCallback, useState, useEffect, useMemo } from 'react';
 import type {
   AiChatMessageDocument,
   UserChatMessageDocument,
@@ -88,22 +88,36 @@ export function useSession(routedSessionId?: string) {
     async (title: string) => {
       const encodedTitle = encodeTitle(title);
 
-      vibeDoc.title = title;
-      vibeDoc.encodedTitle = encodedTitle;
+      // Create a new object instead of mutating
+      const updatedDoc = {
+        ...vibeDoc,
+        title: title,
+        encodedTitle: encodedTitle,
+      };
 
-      await sessionDatabase.put(vibeDoc);
-      mergeVibeDoc(vibeDoc);
+      // Call merge first to trigger immediate UI update
+      mergeVibeDoc(updatedDoc);
+
+      // Then persist to database
+      await sessionDatabase.put(updatedDoc);
     },
-    [sessionDatabase, vibeDoc]
+    [sessionDatabase, vibeDoc, mergeVibeDoc]
   );
 
   // Update published URL using the vibe document
   const updatePublishedUrl = useCallback(
     async (publishedUrl: string) => {
-      vibeDoc.publishedUrl = publishedUrl;
+      // Create a new object instead of mutating
+      const updatedDoc = {
+        ...vibeDoc,
+        publishedUrl: publishedUrl,
+      };
 
-      await sessionDatabase.put(vibeDoc);
-      mergeVibeDoc(vibeDoc);
+      // Call merge first to trigger immediate UI update
+      mergeVibeDoc(updatedDoc);
+
+      // Then persist to database
+      await sessionDatabase.put(updatedDoc);
     },
     [sessionDatabase, vibeDoc, mergeVibeDoc]
   );
@@ -111,10 +125,17 @@ export function useSession(routedSessionId?: string) {
   // Update firehose shared state using the vibe document
   const updateFirehoseShared = useCallback(
     async (firehoseShared: boolean) => {
-      vibeDoc.firehoseShared = firehoseShared;
+      // Create a new object instead of mutating
+      const updatedDoc = {
+        ...vibeDoc,
+        firehoseShared: firehoseShared,
+      };
 
-      await sessionDatabase.put(vibeDoc);
-      mergeVibeDoc(vibeDoc);
+      // Call merge first to trigger immediate UI update
+      mergeVibeDoc(updatedDoc);
+
+      // Then persist to database
+      await sessionDatabase.put(updatedDoc);
     },
     [sessionDatabase, vibeDoc, mergeVibeDoc]
   );
@@ -158,12 +179,15 @@ export function useSession(routedSessionId?: string) {
     firehoseShared?: boolean;
   }
 
-  const session: SessionView = {
-    _id: sessionId,
-    title: vibeDoc.title,
-    publishedUrl: vibeDoc.publishedUrl,
-    firehoseShared: vibeDoc.firehoseShared,
-  };
+  const session: SessionView = useMemo(
+    () => ({
+      _id: sessionId,
+      title: vibeDoc.title,
+      publishedUrl: vibeDoc.publishedUrl,
+      firehoseShared: vibeDoc.firehoseShared,
+    }),
+    [sessionId, vibeDoc.title, vibeDoc.publishedUrl, vibeDoc.firehoseShared]
+  );
 
   return {
     // Session information

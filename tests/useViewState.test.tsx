@@ -313,4 +313,20 @@ describe('useViewState', () => {
     // Should not navigate again since wasPreviewReadyRef is now true
     expect(mockNavigate).not.toHaveBeenCalled();
   });
+
+  test('should determine settings view from path', () => {
+    vi.mocked(useLocation).mockReturnValue({
+      pathname: `/chat/${mockSessionId}/${mockTitle}/settings`,
+    } as any);
+
+    const { result } = renderHook(() =>
+      useViewState({
+        code: 'const test = true;',
+        isStreaming: false,
+        previewReady: true,
+      })
+    );
+
+    expect(result.current.currentView).toBe('settings');
+  });
 });
