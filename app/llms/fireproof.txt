@@ -108,7 +108,7 @@ For form-based creation flows, use `submit`:
 <form onSubmit={submit}>
 ```
 
-ChatGPT note: Canvas sandboxes the form submit event, there you should use button click events instead:
+Note: In some sandboxed environments (e.g., embedded canvases), the form submit event may be blocked. Use a button click handler instead:
 ```js
 <button onClick={submit}>Save and Reset Fields</button>
 ```
