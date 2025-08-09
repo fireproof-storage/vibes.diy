@@ -1,24 +1,85 @@
 const llmsModules = import.meta.glob('./llms/*.json', { eager: true });
 const llmsList = Object.values(llmsModules).map(
-  (mod) => (mod as { default: { llmsTxtUrl: string; label: string } }).default
+  (mod) =>
+    (
+      mod as {
+        default: {
+          name: string;
+          label: string;
+          llmsTxtUrl: string;
+          module: string;
+          importModule: string;
+          importName: string;
+        };
+      }
+    ).default
 );
 
-// Cache for LLM text documents to prevent redundant fetches
+// Cache for LLM text documents to prevent redundant fetches/imports
 const llmsTextCache: Record<string, string> = {};
+
+// Lazily load and cache raw text for a single LLM by name using Vite raw imports
+async function loadLlmsTextByName(name: string): Promise<string | undefined> {
+  try {
+    const mod = (await import(/* @vite-ignore */ `./llms/${name}.txt?raw`)) as { default: string };
+    const text = mod?.default ?? '';
+    return text || undefined;
+  } catch (_err) {
+    // In dev or test, the .txt may be missing until script runs. Swallow and let caller decide.
+    console.warn('Failed to load raw LLM text for:', name, _err);
+    return undefined;
+  }
+}
+
+// Public: preload all llms text files (triggered on form focus)
+export async function preloadLlmsText(): Promise<void> {
+  await Promise.all(
+    llmsList.map(async (llm) => {
+      if (llmsTextCache[llm.name] || llmsTextCache[llm.llmsTxtUrl]) return;
+      const text = await loadLlmsTextByName(llm.name);
+      if (text) {
+        llmsTextCache[llm.name] = text;
+        llmsTextCache[llm.llmsTxtUrl] = text;
+      }
+    })
+  );
+}
+
+// Generate dynamic import statements from LLM configuration
+export function generateImportStatements(llms: typeof llmsList) {
+  const seen = new Set<string>();
+  return llms
+    .slice()
+    .sort((a, b) => a.importModule.localeCompare(b.importModule))
+    .filter((l) => l.importModule && l.importName)
+    .filter((l) => {
+      const key = `${l.importModule}:${l.importName}`;
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    })
+    .map((l) => `\nimport { ${l.importName} } from "${l.importModule}"`)
+    .join('');
+}
 
 // Base system prompt for the AI
 export async function makeBaseSystemPrompt(model: string, sessionDoc?: any) {
   let concatenatedLlmsTxt = '';
 
   for (const llm of llmsList) {
-    // Check if we already have this LLM text in cache
-    if (!llmsTextCache[llm.llmsTxtUrl]) {
-      llmsTextCache[llm.llmsTxtUrl] = await fetch(llm.llmsTxtUrl).then((res) => res.text());
+    // Prefer cached content (preloaded on focus). If missing, try dynamic raw import as a fallback.
+    let text = llmsTextCache[llm.name] || llmsTextCache[llm.llmsTxtUrl];
+    if (!text) {
+      text = (await loadLlmsTextByName(llm.name)) || '';
+      if (text) {
+        llmsTextCache[llm.name] = text;
+        llmsTextCache[llm.llmsTxtUrl] = text;
+      }
     }
 
     concatenatedLlmsTxt += `
 <${llm.label}-docs>
-${llmsTextCache[llm.llmsTxtUrl]}
+${text || ''}
 </${llm.label}-docs>
 `;
   }
@@ -73,13 +134,10 @@ ${
 
 Provide a title and brief explanation followed by the component code. The component should demonstrate proper Fireproof integration with real-time updates and proper data persistence. Follow it with a short description of the app's purpose and instructions how to use it (with occasional bold or italic for emphasis). Then suggest some additional features that could be added to the app.
 
-Begin the component with the import statements. Use react, use-fireproof, call-ai, and use-vibes:
+Begin the component with the import statements. Use react and the following libraries:
 
 \`\`\`js
-import React, { ... } from "react"
-import { useFireproof } from "use-fireproof"
-import { callAI } from "call-ai"
-import { ImgGen } from "use-vibes"
+import React, { ... } from "react"${generateImportStatements(llmsList)}
 
 // other imports only when requested
 \`\`\`

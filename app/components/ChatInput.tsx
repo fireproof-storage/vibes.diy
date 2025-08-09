@@ -1,6 +1,7 @@
 import type { ChangeEvent, KeyboardEvent } from 'react';
 import { useEffect, memo, useCallback, useRef, forwardRef, useImperativeHandle } from 'react';
 import type { ChatState } from '../types/chat';
+import { preloadLlmsText } from '../prompts';
 
 interface ChatInputProps {
   chatState: ChatState;
@@ -57,6 +58,10 @@ const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(({ chatState, onSend 
             if (chatState.setInput) {
               chatState.setInput(e.target.value);
             }
+          }}
+          onFocus={() => {
+            // Fire and forget: warm the LLMs text cache using raw imports
+            void preloadLlmsText();
           }}
           onKeyDown={(e: KeyboardEvent<HTMLTextAreaElement>) => {
             if (e.key === 'Enter' && !e.shiftKey && !chatState.isStreaming) {

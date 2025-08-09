@@ -3,5 +3,7 @@
   "label": "Image Generation",
   "llmsTxtUrl": "https://use-fireproof.com/imggen-llms.txt",
   "module": "OpenAi",
-  "description": "Generate and edit images"
+  "description": "Generate and edit images",
+  "importModule": "use-vibes",
+  "importName": "ImgGen"
 }
