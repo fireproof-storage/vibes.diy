@@ -3,6 +3,7 @@ export const mockResultPreviewProps = {
   // setActiveView: () => {}, // Removed
   onPreviewLoaded: () => {},
   setMobilePreviewShown: () => {},
+  sessionId: 'test-session-id',
 };
 
 export const mockChatStateProps = {

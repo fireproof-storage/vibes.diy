@@ -16,6 +16,17 @@ const mockObjectUrl = 'mock-blob-url';
 URL.createObjectURL = vi.fn().mockReturnValue(mockObjectUrl);
 URL.revokeObjectURL = vi.fn();
 
+// Mock useSession hook to prevent Fireproof initialization during tests
+vi.mock('../app/hooks/useSession', () => ({
+  useSession: vi.fn().mockReturnValue({
+    updateTitle: vi.fn(),
+    session: { title: 'Test Session' },
+    updatePublishedUrl: vi.fn(),
+    updateFirehoseShared: vi.fn(),
+    addScreenshot: vi.fn(),
+  }),
+}));
+
 // Mock SandpackProvider and related components
 vi.mock('@codesandbox/sandpack-react', () => ({
   SandpackProvider: ({ children }: { children: React.ReactNode }) => (
