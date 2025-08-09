@@ -1,6 +1,6 @@
 [build]
   publish = "build/client"
-  command = "pnpm run build"
+  command = "pnpm run build:all"
 
 [dev]
   command = "react-router dev --port 5174"
@@ -16,6 +16,19 @@
   function = "vibe-meta"
   path = "/firehose"
 
+# Storybook SPA routing - serve index.html for storybook routes
+[[redirects]]
+  from = "/storybook"
+  to = "/storybook/index.html"
+  status = 200
+
+# Storybook assets and sub-routes
+[[redirects]]
+  from = "/storybook/*"
+  to = "/storybook/:splat"
+  status = 200
+
+# Main app catch-all routing (must come after storybook redirects)
 [[redirects]]
   from = "/*"
   to = "/index.html"
@@ -64,6 +77,30 @@
 # Fonts - immutable and long cache
 [[headers]]
   for = "/assets/*.(woff|woff2|ttf|otf|eot)"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+# Storybook HTML files - revalidate but allow serving stale during revalidation
+[[headers]]
+  for = "/storybook/*.html"
+  [headers.values]
+    Cache-Control = "public, max-age=0, must-revalidate"
+
+# Storybook JavaScript files - immutable and long cache
+[[headers]]
+  for = "/storybook/static/js/*.js"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+# Storybook CSS files - immutable and long cache
+[[headers]]
+  for = "/storybook/static/css/*.css"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+# Storybook assets - immutable and long cache
+[[headers]]
+  for = "/storybook/static/media/*"
   [headers.values]
     Cache-Control = "public, max-age=31536000, immutable"
 
