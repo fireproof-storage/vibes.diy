@@ -25,11 +25,12 @@ export interface SendMessageContext {
   sessionDatabase: any;
   setPendingAiMessage: (doc: ChatMessageDocument | null) => void;
   setSelectedResponseId: (id: string) => void;
-  updateTitle: (title: string) => void;
+  updateTitle: (title: string, isManual?: boolean) => void;
   setInput: (text: string) => void;
   userId: string | undefined;
   titleModel: string;
   isAuthenticated: boolean;
+  vibeDoc: any;
 }
 
 export async function sendMessage(
@@ -59,6 +60,7 @@ export async function sendMessage(
     userId,
     titleModel,
     isAuthenticated,
+    vibeDoc,
   } = ctx;
 
   const promptText = typeof textOverride === 'string' ? textOverride : userMessage.text;
@@ -159,15 +161,17 @@ export async function sendMessage(
         setPendingAiMessage({ ...aiMessage, _id: id });
         setSelectedResponseId(id);
 
-        // Skip title generation if the response is an error
+        // Skip title generation if the response is an error or title was set manually
         const isErrorResponse =
           typeof finalContent === 'string' && finalContent.startsWith('Error:');
-        if (!isErrorResponse) {
+        const titleSetManually = vibeDoc?.titleSetManually === true;
+
+        if (!isErrorResponse && !titleSetManually) {
           const { segments } = parseContent(aiMessage?.text || '');
           try {
             const title = await generateTitle(segments, titleModel, currentApiKey);
             if (title) {
-              updateTitle(title);
+              updateTitle(title, false); // Mark as AI-generated
             }
           } catch (titleError) {
             console.warn('Failed to generate title:', titleError);

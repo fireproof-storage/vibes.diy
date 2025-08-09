@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 
 type AppSettingsViewProps = {
   title: string;
-  onUpdateTitle: (next: string) => Promise<void> | void;
+  onUpdateTitle: (next: string, isManual?: boolean) => Promise<void> | void;
   onDownloadHtml: () => void;
 };
 
@@ -30,7 +30,7 @@ const AppSettingsView: React.FC<AppSettingsViewProps> = ({
   const handleNameSave = useCallback(async () => {
     const trimmedName = editedName.trim();
     if (trimmedName && trimmedName !== title) {
-      await onUpdateTitle(trimmedName);
+      await onUpdateTitle(trimmedName, true); // Mark as manually set
     }
     setIsEditingName(false);
   }, [editedName, title, onUpdateTitle]);

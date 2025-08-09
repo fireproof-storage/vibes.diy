@@ -96,10 +96,15 @@ export function useSession(routedSessionId?: string) {
 
   // Update session title using the vibe document
   const updateTitle = useCallback(
-    async (title: string) => {
+    async (title: string, isManual: boolean = false) => {
       const base = vibeRef.current;
       const encodedTitle = encodeTitle(title);
-      const updatedDoc = { ...base, title, encodedTitle } as VibeDocument;
+      const updatedDoc = {
+        ...base,
+        title,
+        encodedTitle,
+        titleSetManually: isManual,
+      } as VibeDocument;
 
       // Merge first for immediate UI update, then persist
       mergeRef.current(updatedDoc);

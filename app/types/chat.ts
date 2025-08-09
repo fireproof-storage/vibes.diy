@@ -14,6 +14,7 @@ export interface VibeDocument {
   favorite?: boolean;
   publishedUrl?: string;
   firehoseShared?: boolean;
+  titleSetManually?: boolean;
 }
 
 // ===== Content Segment Types =====
