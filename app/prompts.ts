@@ -26,6 +26,7 @@ async function loadLlmsTextByName(name: string): Promise<string | undefined> {
     return text || undefined;
   } catch (_err) {
     // In dev or test, the .txt may be missing until script runs. Swallow and let caller decide.
+    console.warn('Failed to load raw LLM text for:', name, _err);
     return undefined;
   }
 }
