@@ -4,6 +4,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Common Commands
 
+Run `pnpm check` to format, typecheck, and test, before asking for feedback on work. Never delete a test to pass without asking.
+
 ### Development
 
 - `pnpm dev` - Start development server with Netlify functions (primary dev command)

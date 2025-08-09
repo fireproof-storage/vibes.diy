@@ -3,7 +3,6 @@ import { useEffect, useState } from 'react';
 import { useLocation } from 'react-router';
 import { GA_TRACKING_ID } from '../config/env';
 import { useCookieConsent } from '../contexts/CookieConsentContext';
-import { useTheme } from '../contexts/ThemeContext';
 import { initGA, pageview } from '../utils/analytics';
 
 // We'll use any type for dynamic imports to avoid TypeScript errors with the cookie consent component
@@ -12,7 +11,9 @@ export default function CookieBanner() {
   const location = useLocation();
   const [hasConsent, setHasConsent] = useState(false);
   const { messageHasBeenSent } = useCookieConsent();
-  const { isDarkMode } = useTheme();
+  // Use CSS-based dark mode detection like the rest of the UI
+  const isDarkMode =
+    typeof document !== 'undefined' ? document.documentElement.classList.contains('dark') : true; // Default to dark mode for SSR
 
   // Dynamic import for client-side only
   const [CookieConsent, setCookieConsent] = useState<any>(null);

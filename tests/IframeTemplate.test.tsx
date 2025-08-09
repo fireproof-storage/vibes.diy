@@ -30,6 +30,17 @@ vi.mock('../app/contexts/AuthContext', () => ({
   }),
 }));
 
+// Mock useSession hook to prevent Fireproof initialization during tests
+vi.mock('../app/hooks/useSession', () => ({
+  useSession: vi.fn().mockReturnValue({
+    updateTitle: vi.fn(),
+    session: { title: 'Test Session' },
+    updatePublishedUrl: vi.fn(),
+    updateFirehoseShared: vi.fn(),
+    addScreenshot: vi.fn(),
+  }),
+}));
+
 describe('Iframe Template', () => {
   it('contains proper APP_CODE placeholder format', () => {
     // Verify the template contains the correct APP_CODE placeholder pattern

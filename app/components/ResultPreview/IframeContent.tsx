@@ -12,7 +12,7 @@ import { transformImports } from './transformImports';
 import iframeTemplateRaw from './templates/iframe-template.html?raw';
 
 interface IframeContentProps {
-  activeView: 'preview' | 'code' | 'data' | 'chat';
+  activeView: 'preview' | 'code' | 'data' | 'chat' | 'settings';
   filesContent: IframeFiles;
   isStreaming: boolean;
   codeReady: boolean;
@@ -198,6 +198,7 @@ const IframeContent: React.FC<IframeContentProps> = ({
     if (path.endsWith('/data')) return 'data';
     if (path.endsWith('/app')) return 'preview';
     if (path.endsWith('/chat')) return 'preview'; // Show preview for chat view
+    if (path.endsWith('/settings')) return 'settings';
     return activeView; // Fall back to state if path doesn't have a suffix
   };
 
@@ -353,6 +354,11 @@ const IframeContent: React.FC<IframeContentProps> = ({
           />
         </div>
       </div>
+      {/**
+       * Settings view is rendered by the parent ResultPreview component, not inside
+       * the iframe. We intentionally do not render a placeholder slot here to avoid
+       * any chance of intercepting pointer events or impacting layout.
+       */}
     </div>
   );
 };

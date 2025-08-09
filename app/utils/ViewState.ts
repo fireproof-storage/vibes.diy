@@ -1,5 +1,5 @@
-import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import { useEffect, useRef } from 'react';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { encodeTitle } from '../components/SessionSidebar/utils';
 
 // Helper to detect mobile viewport
@@ -7,7 +7,7 @@ export const isMobileViewport = () => {
   return typeof window !== 'undefined' && window.innerWidth < 768;
 };
 
-export type ViewType = 'preview' | 'code' | 'data' | 'chat';
+export type ViewType = 'preview' | 'code' | 'data' | 'chat' | 'settings';
 
 export type ViewControlsType = {
   [key in Exclude<ViewType, 'chat'>]: {
@@ -46,6 +46,7 @@ export function useViewState(props: {
     if (location.pathname.endsWith('/code')) return 'code';
     if (location.pathname.endsWith('/data')) return 'data';
     if (location.pathname.endsWith('/chat')) return 'chat';
+    if (location.pathname.endsWith('/settings')) return 'settings';
     return 'preview'; // Default
   };
 
@@ -77,7 +78,7 @@ export function useViewState(props: {
 
       // Only if we're already at a specific view (app, code, data), should we navigate
       const path = location.pathname;
-      const basePath = path.replace(/\/(app|code|data)$/, '');
+      const basePath = path.replace(/\/(app|code|data|settings)$/, '');
 
       // If current path has a view suffix, remove it for auto-navigation to work
       if (path !== basePath) {
@@ -113,7 +114,10 @@ export function useViewState(props: {
   // Access control data
   const viewControls = {
     preview: {
-      enabled: props.previewReady,
+      enabled:
+        props.previewReady ||
+        !!(props.code && props.code.length > 0) ||
+        !!(sessionId && sessionId.length > 0),
       icon: 'app-icon',
       label: 'App',
       loading: props.isIframeFetching,
@@ -130,17 +134,18 @@ export function useViewState(props: {
       label: 'Data',
       loading: false,
     },
-    chat: {
-      enabled: false, // Chat view exists for routing but is not navigatable from UI
-      icon: 'chat-icon',
-      label: 'Chat',
+    settings: {
+      enabled: !props.isStreaming,
+      icon: 'export-icon',
+      label: 'Settings',
       loading: false,
     },
   };
 
   // Navigate to a view (explicit user action)
   const navigateToView = (view: ViewType) => {
-    if (!viewControls[view].enabled) return;
+    // Skip navigation for chat view or if control doesn't exist/isn't enabled
+    if (view === 'chat' || !viewControls[view as keyof typeof viewControls]?.enabled) return;
 
     if (sessionId && encodedTitle) {
       const suffix = view === 'preview' ? 'app' : view;
@@ -159,7 +164,8 @@ export function useViewState(props: {
   const hasExplicitViewInURL =
     location.pathname.endsWith('/app') ||
     location.pathname.endsWith('/code') ||
-    location.pathname.endsWith('/data');
+    location.pathname.endsWith('/data') ||
+    location.pathname.endsWith('/settings');
 
   const displayView = hasExplicitViewInURL
     ? currentView // Respect user's explicit view choice from URL

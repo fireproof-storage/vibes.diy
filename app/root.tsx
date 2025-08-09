@@ -1,5 +1,4 @@
 import React from 'react';
-import { ThemeProvider } from './contexts/ThemeContext';
 import type { MetaFunction } from 'react-router';
 import {
   Links,
@@ -53,38 +52,65 @@ export const meta: MetaFunction = () => {
 };
 
 export function Layout({ children }: { children: React.ReactNode }) {
+  // Handle dark mode detection and class management (replaces ThemeContext)
+  React.useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    // Initialize dark mode based on system preference or existing class
+    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+    const updateDarkMode = (isDarkMode: boolean) => {
+      if (isDarkMode) {
+        document.documentElement.classList.add('dark');
+        document.documentElement.dataset.theme = 'dark';
+      } else {
+        document.documentElement.classList.remove('dark');
+        document.documentElement.dataset.theme = 'light';
+      }
+    };
+
+    // Set initial state based on system preference
+    const initialIsDarkMode = mediaQuery.matches;
+    updateDarkMode(initialIsDarkMode);
+
+    // Listen for system preference changes
+    const handleChange = (e: MediaQueryListEvent) => {
+      updateDarkMode(e.matches);
+    };
+
+    mediaQuery.addEventListener('change', handleChange);
+    return () => mediaQuery.removeEventListener('change', handleChange);
+  }, []);
+
   return (
-    <ThemeProvider>
-      <html lang="en">
-        <head>
-          <meta charSet="utf-8" />
-          <meta name="viewport" content="width=device-width, initial-scale=1" />
-          <Meta data-testid="meta" />
-          <Links />
-        </head>
-        <body>
-          <AuthProvider>
-            <PostHogProvider
-              apiKey={POSTHOG_KEY}
-              options={{
-                api_host: POSTHOG_HOST,
-                opt_out_capturing_by_default: true,
-              }}
-            >
-              <CookieConsentProvider>
-                {children}
-                <ClientOnly>
-                  <CookieBanner />
-                  <NeedsLoginModal />
-                </ClientOnly>
-              </CookieConsentProvider>
-              <ScrollRestoration data-testid="scroll-restoration" />
-              <Scripts data-testid="scripts" />
-            </PostHogProvider>
-          </AuthProvider>
-        </body>
-      </html>
-    </ThemeProvider>
+    <html lang="en">
+      <head>
+        <meta charSet="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <Meta data-testid="meta" />
+        <Links />
+      </head>
+      <body>
+        <AuthProvider>
+          <PostHogProvider
+            apiKey={POSTHOG_KEY}
+            options={{
+              api_host: POSTHOG_HOST,
+              opt_out_capturing_by_default: true,
+            }}
+          >
+            <CookieConsentProvider>
+              {children}
+              <ClientOnly>
+                <CookieBanner />
+                <NeedsLoginModal />
+              </ClientOnly>
+            </CookieConsentProvider>
+            <ScrollRestoration data-testid="scroll-restoration" />
+            <Scripts data-testid="scripts" />
+          </PostHogProvider>
+        </AuthProvider>
+      </body>
+    </html>
   );
 }
 

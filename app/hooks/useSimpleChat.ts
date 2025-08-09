@@ -187,6 +187,7 @@ export function useSimpleChat(sessionId: string | undefined): ChatState {
         userId,
         titleModel: TITLE_MODEL,
         isAuthenticated,
+        vibeDoc,
       };
       return sendChatMessage(ctx, textOverride, skipSubmit);
     },
