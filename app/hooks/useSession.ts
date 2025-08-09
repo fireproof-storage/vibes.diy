@@ -1,4 +1,4 @@
-import { useCallback, useState, useEffect } from 'react';
+import { useCallback, useState, useEffect, useRef } from 'react';
 import type {
   AiChatMessageDocument,
   UserChatMessageDocument,
@@ -83,40 +83,56 @@ export function useSession(routedSessionId?: string) {
     docs: ChatMessageDocument[];
   };
 
+  // Stabilize merge function and vibe document with refs to avoid recreating callbacks
+  const mergeRef = useRef(mergeVibeDoc);
+  useEffect(() => {
+    mergeRef.current = mergeVibeDoc;
+  }, [mergeVibeDoc]);
+
+  const vibeRef = useRef(vibeDoc);
+  useEffect(() => {
+    vibeRef.current = vibeDoc;
+  }, [vibeDoc]);
+
   // Update session title using the vibe document
   const updateTitle = useCallback(
-    async (title: string) => {
+    async (title: string, isManual: boolean = false) => {
+      const base = vibeRef.current;
       const encodedTitle = encodeTitle(title);
+      const updatedDoc = {
+        ...base,
+        title,
+        encodedTitle,
+        titleSetManually: isManual,
+      } as VibeDocument;
 
-      vibeDoc.title = title;
-      vibeDoc.encodedTitle = encodedTitle;
-
-      await sessionDatabase.put(vibeDoc);
-      mergeVibeDoc(vibeDoc);
+      // Merge first for immediate UI update, then persist
+      mergeRef.current(updatedDoc);
+      await sessionDatabase.put(updatedDoc);
     },
-    [sessionDatabase, vibeDoc]
+    [sessionDatabase]
   );
 
   // Update published URL using the vibe document
   const updatePublishedUrl = useCallback(
     async (publishedUrl: string) => {
-      vibeDoc.publishedUrl = publishedUrl;
-
-      await sessionDatabase.put(vibeDoc);
-      mergeVibeDoc(vibeDoc);
+      const base = vibeRef.current;
+      const updatedDoc = { ...base, publishedUrl } as VibeDocument;
+      mergeRef.current(updatedDoc);
+      await sessionDatabase.put(updatedDoc);
     },
-    [sessionDatabase, vibeDoc, mergeVibeDoc]
+    [sessionDatabase]
   );
 
   // Update firehose shared state using the vibe document
   const updateFirehoseShared = useCallback(
     async (firehoseShared: boolean) => {
-      vibeDoc.firehoseShared = firehoseShared;
-
-      await sessionDatabase.put(vibeDoc);
-      mergeVibeDoc(vibeDoc);
+      const base = vibeRef.current;
+      const updatedDoc = { ...base, firehoseShared } as VibeDocument;
+      mergeRef.current(updatedDoc);
+      await sessionDatabase.put(updatedDoc);
     },
-    [sessionDatabase, vibeDoc, mergeVibeDoc]
+    [sessionDatabase]
   );
 
   // Add a screenshot to the session (in session-specific database)

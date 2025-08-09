@@ -180,6 +180,8 @@ export default function UnifiedSession() {
         suffix = '/data';
       } else if (currentPath.endsWith('/chat')) {
         suffix = '/chat';
+      } else if (currentPath.endsWith('/settings')) {
+        suffix = '/settings';
       } else if (currentPath.includes(`/chat/${chatState.sessionId}`)) {
         // If it's the base chat URL without suffix, default to /app
         // Unless there's a captured prompt that hasn't been sent yet
@@ -256,7 +258,8 @@ export default function UnifiedSession() {
       path.endsWith('/app') ||
       path.endsWith('/code') ||
       path.endsWith('/data') ||
-      path.endsWith('/chat');
+      path.endsWith('/chat') ||
+      path.endsWith('/settings');
     const encodedAppTitle = chatState.title ? encodeTitle(chatState.title) : '';
 
     // If there's a session and title, but no specific view suffix in the URL, navigate to the 'app' (preview) view.
@@ -317,6 +320,7 @@ export default function UnifiedSession() {
         }
         previewPanel={
           <ResultPreview
+            title={chatState.title || undefined}
             sessionId={chatState.sessionId || ''}
             code={chatState.selectedCode?.content || ''}
             isStreaming={chatState.isStreaming}

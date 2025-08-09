@@ -82,6 +82,7 @@ vi.mock('../../app/utils/streamHandler', () => ({
 // Mock the env module
 vi.mock('../../app/config/env', () => ({
   CALLAI_API_KEY: 'mock-callai-api-key-for-testing',
+  CALLAI_ENDPOINT: 'https://mock-callai-endpoint.com',
   SETTINGS_DBNAME: 'test-chat-history',
   GA_TRACKING_ID: 'mock-ga-tracking-id',
   APP_MODE: 'test', // Added mock APP_MODE
