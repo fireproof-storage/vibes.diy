@@ -45,7 +45,7 @@ export async function preloadLlmsText(): Promise<void> {
 }
 
 // Generate dynamic import statements from LLM configuration
-function generateImportStatements(llms: typeof llmsList) {
+export function generateImportStatements(llms: typeof llmsList) {
   const seen = new Set<string>();
   return llms
     .slice()
