@@ -354,19 +354,11 @@ const IframeContent: React.FC<IframeContentProps> = ({
           />
         </div>
       </div>
-      <div
-        style={{
-          visibility: currentView === 'settings' ? 'visible' : 'hidden',
-          position: currentView === 'settings' ? 'static' : 'absolute',
-          zIndex: currentView === 'settings' ? 1 : 0,
-          height: '100%',
-          width: '100%',
-          top: 0,
-          left: 0,
-        }}
-      >
-        {/* Export view content is handled by ResultPreview component */}
-      </div>
+      {/**
+       * Settings view is rendered by the parent ResultPreview component, not inside
+       * the iframe. We intentionally do not render a placeholder slot here to avoid
+       * any chance of intercepting pointer events or impacting layout.
+       */}
     </div>
   );
 };
