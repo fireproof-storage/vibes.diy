@@ -67,13 +67,14 @@ describe('exportHtml utilities', () => {
       appendSpy = vi.spyOn(document.body, 'appendChild');
 
       // Spy on document.createElement to return our prepared <a>
-      vi.spyOn(document, 'createElement').mockImplementation(
-        ((tagName: string, options?: ElementCreationOptions) => {
-          if (tagName.toLowerCase() === 'a') return anchorEl as HTMLAnchorElement;
-          // fallback to the real implementation for everything else
-          return (realCreateElement as any).call(document, tagName, options);
-        }) as typeof document.createElement
-      );
+      vi.spyOn(document, 'createElement').mockImplementation(((
+        tagName: string,
+        options?: ElementCreationOptions
+      ) => {
+        if (tagName.toLowerCase() === 'a') return anchorEl as HTMLAnchorElement;
+        // fallback to the real implementation for everything else
+        return (realCreateElement as any).call(document, tagName, options);
+      }) as typeof document.createElement);
     });
 
     afterEach(() => {
