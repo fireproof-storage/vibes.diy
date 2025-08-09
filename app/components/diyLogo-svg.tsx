@@ -4,10 +4,13 @@ type ColorwayName = keyof typeof dark;
 
 interface DIYLogoProps {
   colorway: ColorwayName;
-  isDarkMode?: boolean;
 }
 
-export default function DIYLogo({ colorway, isDarkMode = true }: DIYLogoProps) {
+export default function DIYLogo({ colorway }: DIYLogoProps) {
+  // Use CSS-based dark mode detection like the rest of the UI
+  const isDarkMode =
+    typeof document !== 'undefined' ? document.documentElement.classList.contains('dark') : true; // Default to dark mode for SSR
+
   const colors = isDarkMode ? dark[colorway] : light[colorway];
 
   // Define CSS variables using a style object

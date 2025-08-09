@@ -2,7 +2,6 @@ import { memo, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useAuthPopup } from '../hooks/useAuthPopup';
-import { useTheme } from '../contexts/ThemeContext';
 import type { SessionSidebarProps } from '../types/chat';
 import { GearIcon } from './SessionSidebar/GearIcon';
 import { HomeIcon } from './SessionSidebar/HomeIcon';
@@ -19,7 +18,9 @@ function SessionSidebar({ isVisible, onClose }: SessionSidebarProps) {
   const sidebarRef = useRef<HTMLDivElement>(null);
   const { isAuthenticated, isLoading } = useAuth();
   const { isPolling, pollError, initiateLogin } = useAuthPopup();
-  const { isDarkMode } = useTheme();
+  // Use CSS-based dark mode detection like the rest of the UI
+  const isDarkMode =
+    typeof document !== 'undefined' ? document.documentElement.classList.contains('dark') : true; // Default to dark mode for SSR
 
   const colorway = randomColorway();
   const rando = isDarkMode ? dark[colorway] : light[colorway];

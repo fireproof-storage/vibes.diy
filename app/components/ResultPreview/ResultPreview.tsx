@@ -1,5 +1,4 @@
 import React, { useEffect, useMemo } from 'react';
-import { useTheme } from '../../contexts/ThemeContext';
 import { animationStyles } from './ResultPreviewTemplates';
 import type { ResultPreviewProps, IframeFiles } from './ResultPreviewTypes';
 import type { RuntimeError } from '../../hooks/useRuntimeErrors';
@@ -24,8 +23,9 @@ function ResultPreview({
   onCodeChange,
   onSyntaxErrorChange,
 }: ResultPreviewProps & { children?: React.ReactNode }) {
-  // Use the theme context instead of local state
-  const { isDarkMode } = useTheme();
+  // Use CSS-based dark mode detection like the rest of the UI
+  const isDarkMode =
+    typeof document !== 'undefined' ? document.documentElement.classList.contains('dark') : true; // Default to dark mode for SSR
   const showWelcome = !isStreaming && (!code || code.length === 0);
 
   // Calculate filesContent directly based on code prop
