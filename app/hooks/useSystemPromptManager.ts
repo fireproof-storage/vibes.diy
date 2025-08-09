@@ -32,8 +32,6 @@ export function useSystemPromptManager(settingsDoc: UserSettings | undefined) {
       userPrompt?: string;
       history?: Array<{ role: 'user' | 'assistant' | 'system'; content: string }>;
     }) => {
-      if (systemPrompt) return systemPrompt;
-
       let newPrompt = '';
       if (APP_MODE === 'test') {
         newPrompt = 'Test system prompt';
@@ -47,7 +45,7 @@ export function useSystemPromptManager(settingsDoc: UserSettings | undefined) {
       setSystemPrompt(newPrompt);
       return newPrompt;
     },
-    [systemPrompt, settingsDoc]
+    [settingsDoc]
   );
 
   return { systemPrompt, setSystemPrompt, ensureSystemPrompt };
