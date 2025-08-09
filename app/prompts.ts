@@ -1,3 +1,8 @@
+// Import all LLM text files statically
+import callaiTxt from './llms/callai.txt?raw';
+import fireproofTxt from './llms/fireproof.txt?raw';
+import imageGenTxt from './llms/image-gen.txt?raw';
+
 const llmsModules = import.meta.glob('./llms/*.json', { eager: true });
 const llmsList = Object.values(llmsModules).map(
   (mod) =>
@@ -15,17 +20,22 @@ const llmsList = Object.values(llmsModules).map(
     ).default
 );
 
+// Static mapping of LLM text content
+const llmsTextContent: Record<string, string> = {
+  callai: callaiTxt,
+  fireproof: fireproofTxt,
+  'image-gen': imageGenTxt,
+};
+
 // Cache for LLM text documents to prevent redundant fetches/imports
 const llmsTextCache: Record<string, string> = {};
 
-// Lazily load and cache raw text for a single LLM by name using Vite raw imports
-async function loadLlmsTextByName(name: string): Promise<string | undefined> {
+// Load raw text for a single LLM by name using static imports
+function loadLlmsTextByName(name: string): string | undefined {
   try {
-    const mod = (await import(/* @vite-ignore */ `./llms/${name}.txt?raw`)) as { default: string };
-    const text = mod?.default ?? '';
+    const text = llmsTextContent[name] || '';
     return text || undefined;
   } catch (_err) {
-    // In dev or test, the .txt may be missing until script runs. Swallow and let caller decide.
     console.warn('Failed to load raw LLM text for:', name, _err);
     return undefined;
   }
@@ -33,16 +43,14 @@ async function loadLlmsTextByName(name: string): Promise<string | undefined> {
 
 // Public: preload all llms text files (triggered on form focus)
 export async function preloadLlmsText(): Promise<void> {
-  await Promise.all(
-    llmsList.map(async (llm) => {
-      if (llmsTextCache[llm.name] || llmsTextCache[llm.llmsTxtUrl]) return;
-      const text = await loadLlmsTextByName(llm.name);
-      if (text) {
-        llmsTextCache[llm.name] = text;
-        llmsTextCache[llm.llmsTxtUrl] = text;
-      }
-    })
-  );
+  llmsList.forEach((llm) => {
+    if (llmsTextCache[llm.name] || llmsTextCache[llm.llmsTxtUrl]) return;
+    const text = loadLlmsTextByName(llm.name);
+    if (text) {
+      llmsTextCache[llm.name] = text;
+      llmsTextCache[llm.llmsTxtUrl] = text;
+    }
+  });
 }
 
 // Generate dynamic import statements from LLM configuration
@@ -67,10 +75,10 @@ export async function makeBaseSystemPrompt(model: string, sessionDoc?: any) {
   let concatenatedLlmsTxt = '';
 
   for (const llm of llmsList) {
-    // Prefer cached content (preloaded on focus). If missing, try dynamic raw import as a fallback.
+    // Prefer cached content (preloaded on focus). If missing, try static import as a fallback.
     let text = llmsTextCache[llm.name] || llmsTextCache[llm.llmsTxtUrl];
     if (!text) {
-      text = (await loadLlmsTextByName(llm.name)) || '';
+      text = loadLlmsTextByName(llm.name) || '';
       if (text) {
         llmsTextCache[llm.name] = text;
         llmsTextCache[llm.llmsTxtUrl] = text;
