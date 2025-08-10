@@ -44,6 +44,10 @@ Create beautiful, interactive mini apps with zero setup. Your creations are auto
    - Add your AI account key from [OpenRouter](https://openrouter.ai/settings/keys)
    - Run `pnpm dev`
 
+## Developer previews on the main domain (no redirects)
+
+Opt into an experimental branch deploy on the primary site using Netlify Split Testing with a cookie. See [docs/split-testing.md](docs/split-testing.md) for usage and limitations.
+
 ## Your Work is Always Safe
 
 Every app you create is automatically saved, so you can:
