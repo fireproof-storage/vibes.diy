@@ -48,5 +48,35 @@
     "id": "moonshotai/kimi-k2",
     "name": "MoonshotAI: Kimi K2",
     "description": "Coding model"
+  },
+  {
+    "id": "openai/gpt-oss-120b",
+    "name": "GPT OSS 120B",
+    "description": "Large open-source model from OpenAI"
+  },
+  {
+    "id": "openai/gpt-oss-20b",
+    "name": "GPT OSS 20B",
+    "description": "Open-source model from OpenAI"
+  },
+  {
+    "id": "anthropic/claude-opus-4.1",
+    "name": "Claude Opus 4.1",
+    "description": "Advanced reasoning model from Anthropic"
+  },
+  {
+    "id": "openrouter/horizon-beta",
+    "name": "Horizon Beta",
+    "description": "¯\\_(ツ)_/¯"
+  },
+  {
+    "id": "qwen/qwen3-coder",
+    "name": "Qwen 3 Coder",
+    "description": "Latest Qwen code-specific model"
+  },
+  {
+    "id": "inception/mercury-coder",
+    "name": "Mercury Coder",
+    "description": "Experimental diffusion based coding assistant. It's fast but not that smart"
   }
 ]
