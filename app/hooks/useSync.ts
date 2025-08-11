@@ -33,6 +33,9 @@ export function useSync(userId: string, vibes: Array<LocalVibe>) {
     console.log('syncing vibes', vibes.length, 'key:', vibeKey);
 
     const sync = async () => {
+      // Wait 200ms to allow database to be fully initialized after page load
+      await new Promise((resolve) => setTimeout(resolve, 200));
+
       // First, get all already synced vibe IDs
       const allDocsResult = await database.allDocs();
       const syncedVibeIds = new Set(
