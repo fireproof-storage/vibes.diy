@@ -1,4 +1,6 @@
-import { useFireproof, toCloud } from 'use-fireproof';
+import { useFireproof, 
+  // toCloud
+ } from 'use-fireproof';
 import { useEffect } from 'react';
 import type { LocalVibe } from '../utils/vibeUtils';
 
@@ -33,12 +35,7 @@ export function useSync(userId: string, vibes: Array<LocalVibe>) {
   // };
 
   const { database, useAllDocs } = useFireproof(`vibesync-${userId}`, {
-    attach: toCloud({
-      // urls: { base: 'fpcloud://fireproof-v2-cloud-dev.jchris.workers.dev' },
-      // strategy: new rt.gw.cloud.SimpleTokenStrategy(getToken()),
-      // tenant: 'zGoxECs2hPjDM2bf4',
-      // ledger: 'z4mMTj7yRtstWBVNtg',
-    }),
+    // attach: toCloud({}),
   });
 
   // Get real-time count of synced vibes
@@ -50,12 +47,16 @@ export function useSync(userId: string, vibes: Array<LocalVibe>) {
 
   useEffect(() => {
     if (!vibes || vibes.length === 0) return;
+    console.log('syncing vibes', vibes.length);
     const sync = async () => {
       for (const vibe of vibes) {
         const docId = `sync-${vibe.id}`;
+        console.log('syncing vibe', docId, vibes.indexOf(vibe), vibes.length);
         try {
           await database.get(docId);
+          console.log('vibe already synced', docId);
         } catch {
+          console.log('vibe first sync', docId);
           await database.put({
             _id: docId,
             created: Date.now(),
@@ -67,7 +68,7 @@ export function useSync(userId: string, vibes: Array<LocalVibe>) {
         }
       }
       database.allDocs().then((result) => {
-        console.log('synced vibes', result);
+        console.log('saved vibes', result);
       });
     };
     sync();
