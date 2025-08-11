@@ -93,6 +93,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
          * The script must execute before the app mounts; keep it first in <head>.
          */}
         <script src="/nf-ab.cookie.js"></script>
+        {/* FIREPROOF-UPGRADE-BRANCH: Fireproof 0.23.0 */}
         <Meta data-testid="meta" />
         <Links />
       </head>
