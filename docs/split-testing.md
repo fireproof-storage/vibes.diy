@@ -38,6 +38,12 @@ This removes the cookie and reloads once. Without the cookie, Netlify serves the
 - When Split Testing is enabled for a site, Netlify does not execute Edge Functions for that site. If you rely on Edge Functions, enable Split Testing only when acceptable for your routes.
 - Storage schema compatibility: both branches share the same origin storage. If you change localStorage structure on one branch, ensure the other can tolerate or migrate it.
 
+#### Cookie scope (apex vs subdomains)
+
+By default, the `nf_ab` cookie is set without a `Domain` attribute. That means it is host‑scoped and will not be shared across hosts like `vibes.diy` and `www.vibes.diy`. If you need the same selection to apply across subdomains, consider setting a cookie `Domain` (for example, `Domain=.vibes.diy`). Doing so shares the bucket across all subdomains but also broadens the cookie’s reach. Evaluate privacy and collision trade‑offs before enabling.
+
+This repository ships the default host‑scoped behavior. If cross‑subdomain behavior is desired, we can add an option to include a `Domain` attribute in the cookie setter; please confirm the desired scope on the PR.
+
 ### Configuration required in Netlify
 
 Split Testing is configured at the site level in the Netlify UI. Include your production branch (e.g., `main`) and at least one experimental branch deploy. Do not add PR Deploy Previews. Traffic allocation can be 0/100 — the cookie opt‑in will still work.

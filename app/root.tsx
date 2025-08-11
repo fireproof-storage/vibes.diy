@@ -89,60 +89,10 @@ export function Layout({ children }: { children: React.ReactNode }) {
         {/**
          * Netlify Split Testing opt-in/out via query params (pre-mount)
          *
-         * Supports setting or clearing the `nf_ab` cookie before the app initializes
-         * so Netlify can route this request (and subsequent ones) to a specific
-         * branch deploy on the primary domain without redirecting. This preserves
-         * origin-scoped storage like localStorage.
-         *
-         * Usage examples (open on the main domain):
-         *   - Set to a branch:   ?nf_ab=my-experimental-branch
-         *   - Clear the cookie:  ?nf_ab=clear  (aliases: off, reset, none)
-         *   - Also accepts `ab=` as a synonym for `nf_ab=`
+         * Moved to a small static file to keep CSP strict (no 'unsafe-inline').
+         * The script must execute before the app mounts; keep it first in <head>.
          */}
-        <script
-          // Intentionally inline and first in <head> to run before framework mount
-          dangerouslySetInnerHTML={{
-            __html: `(() => {
-  try {
-    var u = new URL(window.location.href);
-    var sp = u.searchParams;
-    var hasNf = sp.has('nf_ab');
-    var hasAb = sp.has('ab');
-    if (!hasNf && !hasAb) return;
-
-    var value = hasNf ? sp.get('nf_ab') : sp.get('ab');
-    var clear = value && /^(clear|off|reset|none)$/i.test(value);
-
-    var secure = window.location.protocol === 'https:' ? '; Secure' : '';
-    var cookieBase = 'nf_ab=';
-
-    var currentMatch = document.cookie.match(/(?:^|; )nf_ab=([^;]+)/);
-    var current = currentMatch ? decodeURIComponent(currentMatch[1]) : null;
-
-    var changed = false;
-    if (clear) {
-      document.cookie = 'nf_ab=; Max-Age=0; Path=/; SameSite=Lax' + secure;
-      changed = true;
-    } else if (value && value !== current) {
-      // Long-ish expiration so the choice sticks for developers
-      var expires = new Date(Date.now() + 365*24*60*60*1000).toUTCString();
-      document.cookie = cookieBase + encodeURIComponent(value) + '; Expires=' + expires + '; Path=/; SameSite=Lax' + secure;
-      changed = true;
-    }
-
-    if (changed) {
-      // Remove our params to avoid reload loops and keep nice URLs
-      sp.delete('nf_ab');
-      sp.delete('ab');
-      var newUrl = u.origin + u.pathname + (sp.toString() ? ('?' + sp.toString()) : '') + u.hash;
-      window.location.replace(newUrl);
-    }
-  } catch (e) {
-    // Swallow errors to avoid blocking page load in edge cases
-  }
-})();`,
-          }}
-        />
+        <script src="/nf-ab.cookie.js"></script>
         <Meta data-testid="meta" />
         <Links />
       </head>

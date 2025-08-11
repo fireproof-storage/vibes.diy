@@ -46,7 +46,7 @@ Create beautiful, interactive mini apps with zero setup. Your creations are auto
 
 ## Developer previews on the main domain (no redirects)
 
-Opt into an experimental branch deploy on the primary site using Netlify Split Testing with a cookie. See [docs/split-testing.md](docs/split-testing.md) for usage and limitations.
+Opt into an experimental branch deploy on the primary site using Netlify Split Testing with a cookie. Note: the `nf_ab` cookie is host‑scoped by default (not shared between `www` and apex). See [docs/split-testing.md](docs/split-testing.md) for details, usage, and scope options.
 
 ## Your Work is Always Safe
 
