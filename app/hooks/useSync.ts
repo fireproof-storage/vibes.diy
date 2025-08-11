@@ -48,22 +48,21 @@ export function useSync(userId: string, vibes: Array<LocalVibe>) {
       const unsyncedVibes = vibes.filter((vibe) => !syncedVibeIds.has(vibe.id));
       console.log('unsynced vibes to sync:', unsyncedVibes.length, 'out of', vibes.length);
 
-      // Sync only the unsynced vibes
-      for (const vibe of unsyncedVibes) {
-        const docId = `sync-${vibe.id}`;
-        console.log('syncing new vibe', docId);
-        await database.put({
-          _id: docId,
-          created: Date.now(),
-          userId,
-          vibeId: vibe.id,
-          title: vibe.title,
-          url: vibe.publishedUrl,
-        });
-      }
+      // Prepare documents for bulk insert
+      const docsToSync = unsyncedVibes.map((vibe) => ({
+        _id: `sync-${vibe.id}`,
+        created: Date.now(),
+        userId,
+        vibeId: vibe.id,
+        title: vibe.title,
+        url: vibe.publishedUrl,
+      }));
 
-      if (unsyncedVibes.length > 0) {
-        console.log('synced', unsyncedVibes.length, 'new vibes');
+      // Bulk sync all unsynced vibes at once
+      if (docsToSync.length > 0) {
+        console.log('bulk syncing', docsToSync.length, 'new vibes');
+        await database.bulk(docsToSync);
+        console.log('synced', docsToSync.length, 'new vibes');
         // Log final state
         const finalResult = await database.allDocs();
         console.log('total synced vibes:', finalResult.rows.length);
