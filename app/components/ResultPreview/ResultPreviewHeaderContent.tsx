@@ -4,7 +4,7 @@ import { useSession } from '../../hooks/useSession';
 import type { ViewControlsType, ViewType } from '../../utils/ViewState';
 // import { useViewState } from '../../utils/ViewState'; // useViewState is now lifted to home.tsx
 import { BackButton } from './BackButton';
-import { NeobrutalistSaveButton } from './NeobrutalistSaveButton';
+import { SaveButton } from './SaveButton';
 import { ShareButton } from './ShareButton';
 import { ShareModal } from './ShareModal';
 import { usePublish } from './usePublish';
@@ -117,7 +117,7 @@ const ResultPreviewHeaderContent: React.FC<ResultPreviewHeaderContentProps> = ({
         <div className="flex items-center gap-2">
           {/* Save button - show when in code view and has changes */}
           {displayView === 'code' && hasCodeChanges && onCodeSave && (
-            <NeobrutalistSaveButton
+            <SaveButton
               onClick={onCodeSave}
               hasChanges={hasCodeChanges}
               syntaxErrorCount={syntaxErrorCount}

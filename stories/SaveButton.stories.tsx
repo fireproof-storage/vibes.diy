@@ -1,10 +1,10 @@
 import type { Meta, StoryObj } from '@storybook/react';
 import React from 'react';
-import { NeobrutalistSaveButton } from '../app/components/ResultPreview/NeobrutalistSaveButton';
+import { SaveButton } from '../app/components/ResultPreview/SaveButton';
 
 const meta = {
-  title: 'Components/NeobrutalistSaveButton',
-  component: NeobrutalistSaveButton,
+  title: 'Components/SaveButton',
+  component: SaveButton,
   parameters: {
     layout: 'padded',
     docs: {
@@ -50,7 +50,7 @@ const meta = {
   args: {
     onClick: () => console.log('Save clicked'),
   },
-} satisfies Meta<typeof NeobrutalistSaveButton>;
+} satisfies Meta<typeof SaveButton>;
 
 export default meta;
 type Story = StoryObj<typeof meta>;

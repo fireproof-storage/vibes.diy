@@ -1,5 +1,6 @@
 import React from 'react';
 import { MinidiscIcon } from '../HeaderContent/SvgIcons';
+import { cn } from '../../lib/utils';
 
 interface SaveButtonProps {
   onClick: () => void;
@@ -15,7 +16,17 @@ export const SaveButton: React.FC<SaveButtonProps> = ({
   if (!hasChanges) return null;
 
   const hasErrors = syntaxErrorCount > 0;
-  const buttonClass = hasErrors ? 'bg-red-500 hover:bg-red-600' : 'bg-blue-500 hover:bg-blue-600';
+
+  // Neobrutalism styling with classes
+  const baseClasses =
+    'inline-flex items-center justify-center whitespace-nowrap rounded-[5px] text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border-2 border-black';
+
+  const shadowClasses = 'shadow-[4px_4px_0px_0px_black]';
+  const activeClasses = 'active:translate-x-[4px] active:translate-y-[4px] active:shadow-none';
+
+  const variantClasses = hasErrors
+    ? 'bg-red-500 text-white hover:bg-red-600 cursor-not-allowed opacity-75'
+    : 'bg-blue-500 text-white hover:bg-blue-600';
 
   const buttonText = hasErrors
     ? `${syntaxErrorCount} Error${syntaxErrorCount !== 1 ? 's' : ''}`
@@ -27,7 +38,13 @@ export const SaveButton: React.FC<SaveButtonProps> = ({
       <button
         onClick={onClick}
         disabled={hasErrors}
-        className={`hidden items-center gap-2 rounded-md px-3 py-1.5 text-sm text-white transition-colors sm:flex ${buttonClass} ${hasErrors ? 'cursor-not-allowed opacity-75' : ''}`}
+        className={cn(
+          baseClasses,
+          shadowClasses,
+          activeClasses,
+          variantClasses,
+          'hidden gap-2 px-4 py-2 sm:flex'
+        )}
       >
         <MinidiscIcon className="h-4 w-4" />
         {buttonText}
@@ -37,7 +54,13 @@ export const SaveButton: React.FC<SaveButtonProps> = ({
       <button
         onClick={onClick}
         disabled={hasErrors}
-        className={`flex h-8 w-8 items-center justify-center rounded-md text-white transition-colors sm:hidden ${buttonClass} ${hasErrors ? 'cursor-not-allowed opacity-75' : ''}`}
+        className={cn(
+          baseClasses,
+          shadowClasses,
+          activeClasses,
+          variantClasses,
+          'flex h-10 w-10 sm:hidden'
+        )}
         title={
           hasErrors
             ? `${syntaxErrorCount} syntax error${syntaxErrorCount !== 1 ? 's' : ''}`
