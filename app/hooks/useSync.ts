@@ -2,7 +2,7 @@ import {
   useFireproof,
   // toCloud
 } from 'use-fireproof';
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 import type { LocalVibe } from '../utils/vibeUtils';
 
 export function useSync(userId: string, vibes: Array<LocalVibe>) {
@@ -45,10 +45,16 @@ export function useSync(userId: string, vibes: Array<LocalVibe>) {
     rows?: Array<{ id: string }>;
   };
   const count = allDocsResult?.rows?.length || 0;
+  
+  // Create a stable key based on vibe IDs to prevent unnecessary re-syncing
+  const vibeKey = useMemo(() => {
+    return vibes.map(v => v.id).sort().join(',');
+  }, [vibes]);
 
   useEffect(() => {
     if (!vibes || vibes.length === 0) return;
-    console.log('syncing vibes', vibes.length);
+    
+    console.log('syncing vibes', vibes.length, 'key:', vibeKey);
 
     const sync = async () => {
       // First, get all already synced vibe IDs
@@ -88,9 +94,10 @@ export function useSync(userId: string, vibes: Array<LocalVibe>) {
       }
     };
 
-    sync();
-    // No cleanup needed
-  }, [userId, vibes]);
+    sync().catch((error) => {
+      console.error('Sync failed:', error);
+    });
+  }, [userId, vibeKey, database]); // Use vibeKey instead of vibes array
 
   return { count };
 }
