@@ -38,6 +38,9 @@ export function useSync(userId: string, vibes: Array<LocalVibe>) {
 
       // First, get all already synced vibe IDs
       const allDocsResult = await database.allDocs();
+      console.log('allDocs length BEFORE sync:', allDocsResult.rows.length);
+      console.log('all doc keys:', allDocsResult.rows.map(row => row.key));
+      
       const syncedVibeIds = new Set(
         allDocsResult.rows
           .map((row) => row.key)
@@ -68,7 +71,8 @@ export function useSync(userId: string, vibes: Array<LocalVibe>) {
         console.log('synced', docsToSync.length, 'new vibes');
         // Log final state
         const finalResult = await database.allDocs();
-        console.log('total synced vibes:', finalResult.rows.length);
+        console.log('allDocs length AFTER sync:', finalResult.rows.length);
+        console.log('final doc keys:', finalResult.rows.map(row => row.key));
       }
     };
 
