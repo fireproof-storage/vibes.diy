@@ -1,0 +1,22 @@
+{
+  "name": "crud-onboarding",
+  "label": "CRUD Onboarding",
+  "version": "1",
+  "type": "guidance",
+  "description": "Optional instructional and demo-data guidance for plain CRUD apps.",
+  "slots": {
+    "instructionalText": "instructional-guidance",
+    "demoDataGuidance": "demo-data-guidance"
+  },
+  "ragResources": [
+    {
+      "id": "demo-examples",
+      "type": "examples",
+      "uri": "https://use-fireproof.com/crud-demo-examples.json",
+      "format": "json",
+      "embeddingProfile": "default",
+      "includeInPrompt": false,
+      "tags": ["crud", "demo", "onboarding"]
+    }
+  ]
+}

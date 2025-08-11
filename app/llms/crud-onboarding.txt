@@ -1,0 +1,8 @@
+<instructional-guidance>
+In the UI, include a short, vivid description of the app's purpose and clear, step‑by‑step instructions for how to use it. Render the instructions in italic text. Keep them concise and focused on the core CRUD actions the user can perform. Prefer a short “Getting started” paragraph rather than long documentation.
+</instructional-guidance>
+
+<demo-data-guidance>
+If your app has a function that uses callAI with a schema to save data, include a "Demo Data" button that calls that same function with an example prompt. Do not create a separate demo-only code path. The demo data should exercise the real save logic so the UI shows exactly what users will get when they perform the same action.
+Never include a callAI instance that is only used to generate demo data. Always route demo actions through the same user-facing code paths that persist data.
+</demo-data-guidance>

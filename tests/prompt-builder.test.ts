@@ -49,8 +49,9 @@ describe('prompt builder (real implementation)', () => {
     const importBlock = generateImportStatements(orderedLlms);
     const lines = importBlock.trim().split('\n').filter(Boolean);
 
-    // One import per JSON config
-    expect(lines.length).toBe(orderedLlms.length);
+    // One import per JSON config that declares an import (exclude guidance-only items)
+    const importableCount = orderedLlms.filter((l: any) => l.importModule && l.importName).length;
+    expect(lines.length).toBe(importableCount);
 
     // Deterministic sort: by importModule ascending
     const modulesSorted = [...orderedLlms]
@@ -67,7 +68,14 @@ describe('prompt builder (real implementation)', () => {
     const withDup = [...orderedLlms, orderedLlms[0]];
     const importBlockWithDup = generateImportStatements(withDup);
     const linesWithDup = importBlockWithDup.trim().split('\n').filter(Boolean);
-    expect(linesWithDup.length).toBe(orderedLlms.length);
+    const importableCountDup = withDup
+      .filter((l: any) => l.importModule && l.importName)
+      .reduce((acc, curr) => {
+        // Unique by importModule:importName
+        const key = `${curr.importModule}:${curr.importName}`;
+        return acc.includes(key) ? acc : [...acc, key];
+      }, [] as string[]).length;
+    expect(linesWithDup.length).toBe(importableCountDup);
 
     // Each line is an ES import line
     for (const line of lines) {
@@ -92,6 +100,7 @@ describe('prompt builder (real implementation)', () => {
 
     // Concatenated docs for each LLM in the same order
     const expectedDocs = orderedLlms
+      .filter((llm: any) => llm.importModule && llm.importName)
       .map((llm) => `\n<${llm.label}-docs>\n${textForName(llm.name) || ''}\n</${llm.label}-docs>\n`)
       .join('');
     expect(prompt).toContain(expectedDocs);

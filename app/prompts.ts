@@ -4,6 +4,7 @@ import { APP_MODE, CALLAI_ENDPOINT } from './config/env';
 import callaiTxt from './llms/callai.txt?raw';
 import fireproofTxt from './llms/fireproof.txt?raw';
 import imageGenTxt from './llms/image-gen.txt?raw';
+import crudOnboardingTxt from './llms/crud-onboarding.txt?raw';
 const llmsModules = import.meta.glob('./llms/*.json', { eager: true });
 const llmsList = Object.values(llmsModules).map(
   (mod) =>
@@ -27,6 +28,7 @@ const llmsTextContent: Record<string, string> = {
   callai: callaiTxt,
   fireproof: fireproofTxt,
   'image-gen': imageGenTxt,
+  'crud-onboarding': crudOnboardingTxt,
 };
 
 // Cache for LLM text documents to prevent redundant fetches/imports
@@ -65,6 +67,34 @@ const llmImportRegexes = llmsList
 
 type HistoryMessage = { role: 'user' | 'assistant' | 'system'; content: string };
 
+// Active retrieval configuration for stream calls (RAG-only)
+let activeRetrievalConfig: { use: 'auto' | 'on' | 'off'; members: Array<{ ref: string }> } = {
+  use: 'off',
+  members: [],
+};
+
+export function getActiveRetrievalConfig() {
+  return activeRetrievalConfig;
+}
+
+function setActiveRetrievalConfig(cfg: {
+  use?: 'auto' | 'on' | 'off';
+  members?: Array<{ ref: string }>;
+}) {
+  activeRetrievalConfig = {
+    use: cfg.use ?? 'off',
+    members: Array.isArray(cfg.members) ? cfg.members : [],
+  };
+}
+
+// Test-only helper
+export function __setActiveRetrievalConfigForTests(cfg: {
+  use?: 'auto' | 'on' | 'off';
+  members?: Array<{ ref: string }>;
+}) {
+  setActiveRetrievalConfig(cfg);
+}
+
 // Detect modules already referenced in history imports
 function detectModulesInHistory(history: HistoryMessage[]): Set<string> {
   const detected = new Set<string>();
@@ -87,7 +117,9 @@ async function selectLlmsModules(
 ): Promise<string[]> {
   if (APP_MODE === 'test') return llmsList.map((l) => l.name);
 
-  const catalog = llmsList.map((l) => ({ name: l.name, description: l.description || '' }));
+  // Exclude guidance-only items from the selection catalog
+  const selectable = llmsList.filter((l: any) => (l as any).type !== 'guidance');
+  const catalog = selectable.map((l) => ({ name: l.name, description: l.description || '' }));
   const payload = { catalog, userPrompt: userPrompt || '', history: history || [] };
 
   const messages: Message[] = [
@@ -138,13 +170,97 @@ export async function preloadLlmsText(): Promise<void> {
   });
 }
 
+// Decision tool: classify CRUD vs custom look & feel and inclusion booleans
+async function decideCrudLookFeel(
+  model: string,
+  input: { userPrompt?: string; stylePrompt?: string; history?: HistoryMessage[] }
+): Promise<{
+  appType: 'crud' | 'custom' | 'mixed' | 'unknown';
+  hasLookAndFeel: boolean;
+  includeInstructionalText: boolean;
+  includeDemoData: boolean;
+  confidence: number;
+}> {
+  if (APP_MODE === 'test') {
+    const hasStyle = !!(input.stylePrompt && input.stylePrompt.trim());
+    const crudSignals = /\bcrud\b|create|update|delete|table|list|records?/i.test(
+      input.userPrompt || ''
+    );
+    return {
+      appType: crudSignals && !hasStyle ? 'crud' : hasStyle ? 'custom' : 'unknown',
+      hasLookAndFeel: hasStyle,
+      includeInstructionalText: crudSignals && !hasStyle,
+      includeDemoData: crudSignals && !hasStyle,
+      confidence: 0.9,
+    };
+  }
+
+  const payload = {
+    userPrompt: input.userPrompt || '',
+    stylePrompt: input.stylePrompt || '',
+    history: input.history || [],
+  };
+
+  const messages: Message[] = [
+    {
+      role: 'system',
+      content:
+        'Classify whether this app is a plain CRUD app without specified look & feel. Return JSON only with keys: appType (crud|custom|mixed|unknown), hasLookAndFeel (boolean), includeInstructionalText (boolean), includeDemoData (boolean), confidence (0..1). Include=true only when clearly CRUD with no specified look & feel.',
+    },
+    { role: 'user', content: JSON.stringify(payload) },
+  ];
+
+  const options: CallAIOptions = {
+    chatUrl: CALLAI_ENDPOINT,
+    apiKey: 'sk-vibes-proxy-managed',
+    model,
+    schema: {
+      name: 'crud_lookfeel_decision',
+      properties: {
+        appType: { type: 'string' },
+        hasLookAndFeel: { type: 'boolean' },
+        includeInstructionalText: { type: 'boolean' },
+        includeDemoData: { type: 'boolean' },
+        confidence: { type: 'number' },
+      },
+    },
+    max_tokens: 1000,
+    headers: {
+      'HTTP-Referer': 'https://vibes.diy',
+      'X-Title': 'Vibes DIY',
+      'X-VIBES-Token': localStorage.getItem('auth_token') || '',
+    },
+  };
+
+  try {
+    const raw = (await callAI(messages, options)) as string;
+    const parsed = JSON.parse(raw);
+    return {
+      appType: (parsed?.appType as any) || 'unknown',
+      hasLookAndFeel: Boolean(parsed?.hasLookAndFeel),
+      includeInstructionalText: Boolean(parsed?.includeInstructionalText),
+      includeDemoData: Boolean(parsed?.includeDemoData),
+      confidence: typeof parsed?.confidence === 'number' ? parsed.confidence : 0,
+    };
+  } catch (err) {
+    console.warn('decideCrudLookFeel call failed:', err);
+    return {
+      appType: 'unknown',
+      hasLookAndFeel: false,
+      includeInstructionalText: false,
+      includeDemoData: false,
+      confidence: 0,
+    };
+  }
+}
+
 // Generate dynamic import statements from LLM configuration
 export function generateImportStatements(llms: typeof llmsList) {
   const seen = new Set<string>();
   return llms
     .slice()
-    .sort((a, b) => a.importModule.localeCompare(b.importModule))
     .filter((l) => l.importModule && l.importName)
+    .sort((a, b) => a.importModule.localeCompare(b.importModule))
     .filter((l) => {
       const key = `${l.importModule}:${l.importName}`;
       if (seen.has(key)) return false;
@@ -160,13 +276,19 @@ export async function makeBaseSystemPrompt(model: string, sessionDoc?: any) {
   // Inputs for module selection
   const userPrompt = sessionDoc?.userPrompt || '';
   const history: HistoryMessage[] = Array.isArray(sessionDoc?.history) ? sessionDoc.history : [];
-  // 1) Ask AI which modules to include
-  const aiSelected = await selectLlmsModules(model, userPrompt, history);
+  const stylePromptInput = sessionDoc?.stylePrompt;
+  // 1) Ask AI which modules to include and run decision tool in parallel
+  const [aiSelected, decision] = await Promise.all([
+    selectLlmsModules(model, userPrompt, history),
+    decideCrudLookFeel(model, { userPrompt, stylePrompt: stylePromptInput, history }),
+  ]);
 
   // 2) Ensure we retain any modules already used in history
   const detected = detectModulesInHistory(history);
   const finalNames = new Set<string>([...aiSelected, ...detected]);
-  const chosenLlms = llmsList.filter((l) => finalNames.has(l.name));
+  const chosenLlms = llmsList
+    .filter((l: any) => (l as any).type !== 'guidance')
+    .filter((l) => finalNames.has(l.name));
 
   // 3) Concatenate docs for chosen modules
   let concatenatedLlmsTxt = '';
@@ -191,7 +313,95 @@ ${text || ''}
   const defaultStylePrompt = `Create a UI theme inspired by the Memphis Group and Studio Alchimia from the 1980s. Incorporate bold, playful geometric shapes (squiggles, triangles, circles), vibrant primary colors (red, blue, yellow) with contrasting pastels (pink, mint, lavender), and asymmetrical layouts. Use quirky patterns like polka dots, zigzags, and terrazzo textures. Ensure a retro-futuristic vibe with a mix of matte and glossy finishes, evoking a whimsical yet functional design. Secretly name the theme 'Memphis Alchemy' to reflect its roots in Ettore Sotsass’s vision and global 1980s influences. Make sure the app background has some kind of charming patterned background using memphis styled dots or squiggly lines. Use thick "neo-brutalism" style borders for style to enhance legibility. Make sure to retain high contrast in your use of colors. Light background are better than dark ones. Use these colors: #70d6ff #ff70a6 #ff9770 #ffd670 #e9ff70 #242424 #ffffff Never use white text.`;
 
   // Get style prompt from session document if available
-  const stylePrompt = sessionDoc?.stylePrompt || defaultStylePrompt;
+  const stylePrompt = stylePromptInput || defaultStylePrompt;
+
+  // Resolve optional guidance slots and retrieval-only resources
+  type SlotConfig =
+    | { source: 'off' | undefined; inclusion?: 'auto' | 'include' | 'exclude' }
+    | { source: 'inline'; text?: string; inclusion?: 'auto' | 'include' | 'exclude' }
+    | {
+        source: 'catalog';
+        catalogRef?: string;
+        key?: string;
+        inclusion?: 'auto' | 'include' | 'exclude';
+      };
+
+  const slots = sessionDoc?.config?.prompt?.slots || {};
+  const retrieval = sessionDoc?.config?.prompt?.retrieval || {};
+  const DEFAULT_CATALOG_REF = 'crud-onboarding@1';
+
+  function shouldInclude(slot: SlotConfig | undefined, autoValue: boolean): boolean {
+    if (!slot || (slot as any).source === undefined || (slot as any).source === 'off') return false;
+    const incl = (slot as any).inclusion || 'auto';
+    if (incl === 'exclude') return false;
+    if (incl === 'include') return true;
+    return !!autoValue;
+  }
+
+  function extractTaggedSection(txt: string, tag: string): string | undefined {
+    const re = new RegExp(`<${tag}>\\n([\\s\\S]*?)\\n<\\/${tag}>`);
+    const m = txt.match(re);
+    return m ? m[1].trim() : undefined;
+  }
+
+  function resolveCatalogSlot(refOrUndefined: string | undefined, key: string | undefined) {
+    const ref = refOrUndefined || DEFAULT_CATALOG_REF; // name@version
+    const [name] = ref.split('@');
+    const text = llmsTextCache[name] || llmsTextContent[name];
+    if (!text) return undefined;
+    let tag = '';
+    if (name === 'crud-onboarding') {
+      tag = key === 'demoDataGuidance' ? 'demo-data-guidance' : 'instructional-guidance';
+    } else {
+      tag = key || '';
+    }
+    if (!tag) return undefined;
+    return extractTaggedSection(text, tag);
+  }
+
+  const autoInstruction = !!decision?.includeInstructionalText;
+  const autoDemo = !!decision?.includeDemoData;
+  const resolvedGuidelines: string[] = [];
+
+  const sInstruction: SlotConfig | undefined = (slots as any).instructionalText;
+  if (shouldInclude(sInstruction, autoInstruction)) {
+    let block: string | undefined;
+    if (sInstruction?.source === 'inline') block = (sInstruction as any).text || '';
+    else if (sInstruction?.source === 'catalog')
+      block = resolveCatalogSlot(
+        (sInstruction as any).catalogRef,
+        (sInstruction as any).key || 'instructionalText'
+      );
+    if (block && block.trim()) resolvedGuidelines.push(`- ${block.trim()}`);
+  }
+
+  const sDemo: SlotConfig | undefined = (slots as any).demoDataGuidance;
+  if (shouldInclude(sDemo, autoDemo)) {
+    let block: string | undefined;
+    if (sDemo?.source === 'inline') block = (sDemo as any).text || '';
+    else if (sDemo?.source === 'catalog')
+      block = resolveCatalogSlot(
+        (sDemo as any).catalogRef,
+        (sDemo as any).key || 'demoDataGuidance'
+      );
+    if (block && block.trim()) {
+      const lines = block
+        .split(/\n+/)
+        .map((l) => l.trim())
+        .filter(Boolean);
+      for (const line of lines) resolvedGuidelines.push(`- ${line}`);
+    }
+  }
+
+  // RAG-only retrieval config (not concatenated into text)
+  const retrievalUse = retrieval?.use || 'off';
+  const retrievalMembers = Array.isArray(retrieval?.members) ? retrieval.members : [];
+  setActiveRetrievalConfig({
+    use: retrievalUse === 'auto' ? (autoDemo ? 'on' : 'off') : retrievalUse,
+    members: retrievalMembers
+      .map((m: any) => ({ ref: (m as any).ref }))
+      .filter((m: { ref?: string }) => !!m.ref),
+  });
 
   return `
 You are an AI assistant tasked with creating React components. You should create components that:
@@ -215,9 +425,7 @@ You are an AI assistant tasked with creating React components. You should create
 - If you get missing block errors, change the database name to a new name
 - List data items on the main page of your app so users don't have to hunt for them
 - If you save data, make sure it is browseable in the app, eg lists should be clickable for more details
-- In the UI, include a vivid description of the app's purpose and detailed instructions how to use it, in italic text.
-- If your app has a function that uses callAI with a schema to save data, include a Demo Data button that calls that function with an example prompt. Don't write an extra function, use real app code so the data illustrates what it looks like to use the app.
-- Never have have an instance of callAI that is only used to generate demo data, always use the same calls that are triggered by user actions in the app.
+${resolvedGuidelines.join('\n')}
 
 ${concatenatedLlmsTxt}
 

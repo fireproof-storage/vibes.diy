@@ -4,6 +4,7 @@
 
 import { type CallAIOptions, type Message, callAI } from 'call-ai';
 import { CALLAI_ENDPOINT } from '../config/env';
+import { getActiveRetrievalConfig } from '../prompts';
 
 /**
  * Stream AI responses with accumulated content callback
@@ -52,6 +53,20 @@ export async function streamAI(
       'X-VIBES-Token': localStorage.getItem('auth_token') || '',
     },
   };
+
+  // Provide retrieval-only members to backend without concatenating to prompt text
+  try {
+    const rag = getActiveRetrievalConfig();
+    if (rag && Array.isArray(rag.members) && rag.members.length > 0) {
+      (options.headers as any)['X-RAG-Refs'] = encodeURIComponent(JSON.stringify(rag.members));
+    } else {
+      const ls =
+        typeof localStorage !== 'undefined' ? localStorage.getItem('vibes-rag-refs') : null;
+      if (ls) (options.headers as any)['X-RAG-Refs'] = encodeURIComponent(ls);
+    }
+  } catch (_err) {
+    // Non-fatal: retrieval config not available
+  }
 
   // Credit checking no longer needed - proxy handles it
 
