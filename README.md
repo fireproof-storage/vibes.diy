@@ -36,6 +36,8 @@ Create beautiful, interactive mini apps with zero setup. Your creations are auto
 
 ## Quick Start
 
+<!-- Test branch deploy trigger -->
+
 1. [Try the demo](https://vibes.diy/) - No setup required!
 2. Or set up your own:
    - Clone the repository
