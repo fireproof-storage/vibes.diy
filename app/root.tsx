@@ -86,6 +86,13 @@ export function Layout({ children }: { children: React.ReactNode }) {
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
+        {/**
+         * Netlify Split Testing opt-in/out via query params (pre-mount)
+         *
+         * Moved to a small static file to keep CSP strict (no 'unsafe-inline').
+         * The script must execute before the app mounts; keep it first in <head>.
+         */}
+        <script src="/nf-ab.cookie.js"></script>
         <Meta data-testid="meta" />
         <Links />
       </head>

@@ -44,6 +44,16 @@ Create beautiful, interactive mini apps with zero setup. Your creations are auto
    - Add your AI account key from [OpenRouter](https://openrouter.ai/settings/keys)
    - Run `pnpm dev`
 
+## Developer previews on the main domain (no redirects)
+
+Opt into an experimental branch deploy on the primary site using Netlify Split Testing with a cookie. Use `?ab=<branch>` on the main domain, for example:
+
+```
+https://vibes.diy/?ab=feature-new-ui
+```
+
+Note: the underlying Netlify cookie is named `nf_ab` and is host‑scoped by default (not shared between `www` and apex). See [docs/split-testing.md](docs/split-testing.md) for details and scope options.
+
 ## Your Work is Always Safe
 
 Every app you create is automatically saved, so you can:
