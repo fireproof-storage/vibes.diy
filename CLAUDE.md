@@ -6,6 +6,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Run `pnpm check` to format, typecheck, and test, before asking for feedback on work. Never delete a test to pass without asking.
 
+**IMPORTANT**: Always run `pnpm check` before committing any changes. This ensures code is properly formatted, type-safe, and all tests pass.
+
 ### Development
 
 - `pnpm dev` - Start development server with Netlify functions (primary dev command)

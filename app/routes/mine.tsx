@@ -8,7 +8,7 @@ import VibesDIYLogo from '../components/VibesDIYLogo';
 import { useAuth } from '../contexts/AuthContext';
 import { useSession } from '../hooks/useSession';
 import { useVibes } from '../hooks/useVibes';
-import { VibeSyncer } from '../hooks/VibeSyncer';
+// import { VibeSyncer } from '../hooks/VibeSyncer';
 
 export function meta() {
   return [
