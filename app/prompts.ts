@@ -48,6 +48,21 @@ function escapeRegExp(str: string): string {
   return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
+// Precompile import-detection regexes once per module entry
+const llmImportRegexes = llmsList
+  .filter((l) => l.importModule && l.importName)
+  .map((l) => {
+    const mod = escapeRegExp(l.importModule);
+    const name = escapeRegExp(l.importName);
+    return {
+      name: l.name,
+      // Matches: import { ..., <name>, ... } from '<module>'
+      named: new RegExp(`import\\s*\\{[^}]*\\b${name}\\b[^}]*\\}\\s*from\\s*['\\\"]${mod}['\\\"]`),
+      // Matches: import <name> from '<module>'
+      def: new RegExp(`import\\s+${name}\\s+from\\s*['\\\"]${mod}['\\\"]`),
+    } as const;
+  });
+
 type HistoryMessage = { role: 'user' | 'assistant' | 'system'; content: string };
 
 // Detect modules already referenced in history imports
@@ -57,15 +72,8 @@ function detectModulesInHistory(history: HistoryMessage[]): Set<string> {
   for (const msg of history) {
     const content = msg?.content || '';
     if (!content || typeof content !== 'string') continue;
-    for (const llm of llmsList) {
-      if (!llm.importModule || !llm.importName) continue;
-      const mod = escapeRegExp(llm.importModule);
-      const name = escapeRegExp(llm.importName);
-      const named = new RegExp(
-        `import\\s*\\{[^}]*\\b${name}\\b[^}]*\\}\\s*from\\s*['\\\"]${mod}['\\\"]`
-      );
-      const def = new RegExp(`import\\s+${name}\\s+from\\s*['\\\"]${mod}['\\\"]`);
-      if (named.test(content) || def.test(content)) detected.add(llm.name);
+    for (const { name, named, def } of llmImportRegexes) {
+      if (named.test(content) || def.test(content)) detected.add(name);
     }
   }
   return detected;
