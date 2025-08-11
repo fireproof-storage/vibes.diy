@@ -46,7 +46,13 @@ Create beautiful, interactive mini apps with zero setup. Your creations are auto
 
 ## Developer previews on the main domain (no redirects)
 
-Opt into an experimental branch deploy on the primary site using Netlify Split Testing with a cookie. Note: the `nf_ab` cookie is host‑scoped by default (not shared between `www` and apex). See [docs/split-testing.md](docs/split-testing.md) for details, usage, and scope options.
+Opt into an experimental branch deploy on the primary site using Netlify Split Testing with a cookie. Use `?ab=<branch>` on the main domain, for example:
+
+```
+https://vibes.diy/?ab=feature-new-ui
+```
+
+Note: the underlying Netlify cookie is named `nf_ab` and is host‑scoped by default (not shared between `www` and apex). See [docs/split-testing.md](docs/split-testing.md) for details and scope options.
 
 ## Your Work is Always Safe
 
