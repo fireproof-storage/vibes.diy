@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect, useRef } from 'react';
+import { useState, useCallback, useEffect, useMemo, useRef } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router';
 import { encodeTitle } from '~/components/SessionSidebar/utils';
 import AppLayout from '../components/AppLayout';
@@ -93,6 +93,39 @@ export default function UnifiedSession() {
     isIframeFetching: isIframeFetching,
     capturedPrompt: capturedPrompt,
   });
+
+  // Detect whether the streaming AI response is currently inside a code fence
+  // We consider "inside code" when there's an opening ``` (optionally with js/jsx/javascript)
+  // without a matching closing fence at the end of the current streaming text.
+  const isStreamingInCode = useMemo(() => {
+    if (!chatState.isStreaming) return false;
+    const text = chatState.selectedResponseDoc?.text || '';
+    // Count unpaired triple-backtick fences. If odd, we are inside a code block.
+    let count = 0;
+    let i = 0;
+    const fence = '```';
+    while (true) {
+      const idx = text.indexOf(fence, i);
+      if (idx === -1) break;
+      count++;
+      i = idx + fence.length;
+    }
+    return count % 2 === 1;
+  }, [chatState.isStreaming, chatState.selectedResponseDoc?.text]);
+
+  // Override the Code control's loading state to reflect when streaming is inside a code segment.
+  // This restores the original UX: the code indicator spins only while the stream is currently in code.
+  const adjustedViewControls = useMemo(() => {
+    // Only override the code control; keep others intact
+    const codeControl = viewControls.code || { enabled: true, icon: 'code-icon', label: 'Code' };
+    return {
+      ...viewControls,
+      code: {
+        ...codeControl,
+        loading: isStreamingInCode,
+      },
+    };
+  }, [viewControls, isStreamingInCode]);
 
   // Handle code save from the editor
   const handleCodeSave = useCallback(
@@ -294,7 +327,7 @@ export default function UnifiedSession() {
             <ResultPreviewHeaderContent
               displayView={displayView}
               navigateToView={navigateToView}
-              viewControls={viewControls}
+              viewControls={adjustedViewControls}
               showViewControls={!!showViewControls}
               setMobilePreviewShown={setMobilePreviewShown}
               setUserClickedBack={setUserClickedBack} // Keep this for BackButton logic
