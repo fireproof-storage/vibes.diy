@@ -57,7 +57,7 @@ export function useSync(userId: string, vibes: Array<LocalVibe>) {
       console.log('allDocs length BEFORE sync:', allDocsResult.rows.length);
       console.log('ALL DOCUMENTS in database (with content):');
       allDocsResult.rows.forEach((row, index) => {
-        console.log(`  ${index + 1}. Key: "${row.key}", Doc:`, JSON.stringify(row.doc, null, 2));
+        console.log(`  ${index + 1}. Key: "${row.key}", Doc:`, JSON.stringify(row.value, null, 2));
       });
       console.log(
         'all doc keys:',
@@ -97,7 +97,7 @@ export function useSync(userId: string, vibes: Array<LocalVibe>) {
         console.log('allDocs length AFTER sync:', finalResult.rows.length);
         console.log('ALL DOCUMENTS after sync (with content):');
         finalResult.rows.forEach((row, index) => {
-          console.log(`  ${index + 1}. Key: "${row.key}", Doc:`, JSON.stringify(row.doc, null, 2));
+          console.log(`  ${index + 1}. Key: "${row.key}", Doc:`, JSON.stringify(row.value, null, 2));
         });
         console.log(
           'final doc keys:',
