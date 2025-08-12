@@ -264,25 +264,36 @@ export const MinidiscIcon: React.FC<SvgIconProps> = ({ className = 'h-4 w-4', ti
   return (
     <svg viewBox="0 0 24 24" fill="currentColor" className={className}>
       <title>{title || 'Save icon (minidisc)'}</title>
+      {/* Rounded rectangle background - 20% bigger than circle */}
+      <rect
+        x="0.8"
+        y="0.8"
+        width="22.4"
+        height="22.4"
+        rx="3"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.4"
+      />
       {/* Minidisc outline */}
-      <circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" strokeWidth="1.5" />
+      <circle cx="12" cy="12" r="9.5" fill="none" stroke="currentColor" strokeWidth="1" />
       {/* Inner ring */}
-      <circle cx="12" cy="12" r="3" fill="none" stroke="currentColor" strokeWidth="1" />
+      <circle cx="12" cy="12" r="3.8" fill="none" stroke="currentColor" strokeWidth="1" />
       {/* Label area */}
       <rect
-        x="4"
-        y="8"
+        x="16"
+        y="9.5"
         width="6"
-        height="8"
+        height="5"
         rx="1"
         fill="none"
         stroke="currentColor"
-        strokeWidth="1"
+        strokeWidth=".8"
       />
       {/* Label lines */}
-      <line x1="5" y1="10" x2="9" y2="10" stroke="currentColor" strokeWidth="0.5" />
-      <line x1="5" y1="12" x2="8" y2="12" stroke="currentColor" strokeWidth="0.5" />
-      <line x1="5" y1="14" x2="9" y2="14" stroke="currentColor" strokeWidth="0.5" />
+      <line x1="17" y1="11" x2="21" y2="11" stroke="currentColor" strokeWidth="0.5" />
+      <line x1="17" y1="12" x2="20" y2="12" stroke="currentColor" strokeWidth="0.5" />
+      <line x1="17" y1="13" x2="21" y2="13" stroke="currentColor" strokeWidth="0.5" />
     </svg>
   );
 };
