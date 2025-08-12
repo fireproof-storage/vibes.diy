@@ -53,8 +53,12 @@ export function useSync(userId: string, vibes: Array<LocalVibe>) {
       console.log('Database object:', database);
 
       // First, get all already synced vibe IDs
-      const allDocsResult = await database.allDocs();
+      const allDocsResult = await database.allDocs({ include_docs: true });
       console.log('allDocs length BEFORE sync:', allDocsResult.rows.length);
+      console.log('ALL DOCUMENTS in database (with content):');
+      allDocsResult.rows.forEach((row, index) => {
+        console.log(`  ${index + 1}. Key: "${row.key}", Doc:`, JSON.stringify(row.doc, null, 2));
+      });
       console.log(
         'all doc keys:',
         allDocsResult.rows.map((row) => row.key)
@@ -89,8 +93,12 @@ export function useSync(userId: string, vibes: Array<LocalVibe>) {
         await database.bulk(docsToSync);
         console.log('synced', docsToSync.length, 'new vibes');
         // Log final state
-        const finalResult = await database.allDocs();
+        const finalResult = await database.allDocs({ include_docs: true });
         console.log('allDocs length AFTER sync:', finalResult.rows.length);
+        console.log('ALL DOCUMENTS after sync (with content):');
+        finalResult.rows.forEach((row, index) => {
+          console.log(`  ${index + 1}. Key: "${row.key}", Doc:`, JSON.stringify(row.doc, null, 2));
+        });
         console.log(
           'final doc keys:',
           finalResult.rows.map((row) => row.key)
