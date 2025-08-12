@@ -46,8 +46,8 @@ export function useSync(userId: string, vibes: Array<LocalVibe>) {
     syncInProgressRef.current = true;
 
     const sync = async () => {
-      // Wait 200ms to allow database to be fully initialized after page load
-      await new Promise((resolve) => setTimeout(resolve, 200));
+      // Wait 2000ms to allow database to be fully initialized after page load
+      await new Promise((resolve) => setTimeout(resolve, 2000));
 
       console.log('Starting sync for database:', dbName);
       console.log('Database object:', database);
