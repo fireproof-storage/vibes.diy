@@ -3,8 +3,6 @@ import DynamicTable from './DynamicTable';
 import { headersForDocs } from './dynamicTableHelpers';
 // Import Fireproof for database access
 import { useFireproof } from 'use-fireproof';
-// Import the monkey patch utility
-import { applyIndexedDBPatch } from './indexedDBMonkeyPatch';
 
 // Component for displaying database data
 const DatabaseData: React.FC<{ dbName: string; sessionId: string }> = ({ dbName, sessionId }) => {
@@ -12,7 +10,6 @@ const DatabaseData: React.FC<{ dbName: string; sessionId: string }> = ({ dbName,
     throw new Error('No valid database name provided');
   }
 
-  const namespacedDbName = `vx-${sessionId}-${dbName}`;
   const [availableDbs, setAvailableDbs] = useState<string[]>([]);
 
   // Function to list available databases with the current session ID
@@ -37,17 +34,11 @@ const DatabaseData: React.FC<{ dbName: string; sessionId: string }> = ({ dbName,
     }
   };
 
-  // Apply the IndexedDB monkey patch to ensure consistent namespacing with the iframe
   useEffect(() => {
-    // Apply the patch as soon as the component mounts
-    applyIndexedDBPatch(sessionId);
-
     // Load the initial database list
     listSessionDatabases();
   }, []);
 
-  // With the IndexedDB patch, we should now be able to use the original dbName
-  // and the patch will handle the namespacing at the IndexedDB.open level
   const { database } = useFireproof(dbName);
 
   const [docs, setDocs] = useState<any[]>([]);
@@ -100,9 +91,6 @@ const DatabaseData: React.FC<{ dbName: string; sessionId: string }> = ({ dbName,
           <strong>Session ID:</strong> {sessionId}
         </p>
         <p>
-          <strong>Namespaced DB Name:</strong> {namespacedDbName}
-        </p>
-        <p>
           <strong>Current DB Name:</strong> {database.name}
         </p>
         <div className="mt-1">
@@ -118,9 +106,7 @@ const DatabaseData: React.FC<{ dbName: string; sessionId: string }> = ({ dbName,
           <span className="text-accent-02 text-xs">(Filtered by session ID: {sessionId})</span>
           <ul className="mt-1 list-disc pl-4">
             {availableDbs.map((name, idx) => (
-              <li key={idx} className={name === namespacedDbName ? 'font-bold text-green-600' : ''}>
-                {name}
-              </li>
+              <li key={idx}>{name}</li>
             ))}
           </ul>
         </div>
