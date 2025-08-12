@@ -1,9 +1,15 @@
 import {
   useFireproof,
+  fireproof,
   // toCloud
 } from 'use-fireproof';
 import { useEffect, useMemo } from 'react';
 import type { LocalVibe } from '../utils/vibeUtils';
+
+// @ts-ignore
+globalThis[Symbol.for('FP_PRESET_ENV')] = {
+  FP_DEBUG: '*',
+};
 
 // Module-level singleton flags for better sync protection
 let syncInProgress = false;
@@ -75,7 +81,8 @@ export function useSync(userId: string, vibes: Array<LocalVibe>) {
       await new Promise((resolve) => setTimeout(resolve, 200));
 
       // redo alldocs for testing
-      const allDocsResult2 = await database.allDocs({ includeDocs: true });
+      const db2 = fireproof(dbName);
+      const allDocsResult2 = await db2.allDocs({ includeDocs: true });
       console.log('allDocs length BEFORE sync2:', allDocsResult2.rows.length);
       console.log('ALL DOCUMENTS in database (with content):');
       allDocsResult2.rows.forEach((row, index) => {
