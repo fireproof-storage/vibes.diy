@@ -2,13 +2,15 @@ import {
   useFireproof,
   // toCloud
 } from 'use-fireproof';
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 import type { LocalVibe } from '../utils/vibeUtils';
 
 export function useSync(userId: string, vibes: Array<LocalVibe>) {
   if (!userId) throw new Error('No user ID provided');
 
-  const { database, useAllDocs } = useFireproof(`vibesync-${userId}`, {
+  const dbName = `vibesync-${userId}`;
+  console.log('useSync database name:', dbName);
+  const { database, useAllDocs } = useFireproof(dbName, {
     // attach: toCloud(),
   });
 
@@ -27,14 +29,28 @@ export function useSync(userId: string, vibes: Array<LocalVibe>) {
       .join(',');
   }, [vibes]);
 
+  // Prevent double syncing in React StrictMode
+  const syncInProgressRef = useRef(false);
+  const lastSyncedKeyRef = useRef<string | null>(null);
+
   useEffect(() => {
     if (!vibes || vibes.length === 0) return;
 
+    // Prevent double syncing in StrictMode
+    if (syncInProgressRef.current || lastSyncedKeyRef.current === vibeKey) {
+      console.log('Skipping sync - already in progress or already synced this key:', vibeKey);
+      return;
+    }
+
     console.log('syncing vibes', vibes.length, 'key:', vibeKey);
+    syncInProgressRef.current = true;
 
     const sync = async () => {
       // Wait 200ms to allow database to be fully initialized after page load
       await new Promise((resolve) => setTimeout(resolve, 200));
+
+      console.log('Starting sync for database:', dbName);
+      console.log('Database object:', database);
 
       // First, get all already synced vibe IDs
       const allDocsResult = await database.allDocs();
@@ -80,10 +96,16 @@ export function useSync(userId: string, vibes: Array<LocalVibe>) {
           finalResult.rows.map((row) => row.key)
         );
       }
+
+      // Mark this key as synced and reset in-progress flag
+      lastSyncedKeyRef.current = vibeKey;
+      syncInProgressRef.current = false;
     };
 
     sync().catch((error) => {
       console.error('Sync failed:', error);
+      // Reset flags on error
+      syncInProgressRef.current = false;
     });
   }, [userId, vibeKey, database]); // Use vibeKey instead of vibes array
 
