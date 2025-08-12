@@ -218,11 +218,16 @@ const IframeContent: React.FC<IframeContentProps> = ({
           left: 0,
         }}
       >
+        {/*
+          The preview iframe runs with an isolated origin. Deliberately omit
+          `allow-same-origin` so the browser treats it as a unique opaque origin.
+          Storage inside the iframe is not shared with the host and resets on reload.
+        */}
         <iframe
           ref={iframeRef}
           className="h-full w-full border-0"
           title="Preview"
-          sandbox="allow-downloads allow-forms allow-modals allow-pointer-lock allow-popups-to-escape-sandbox allow-popups allow-presentation allow-same-origin allow-scripts allow-top-navigation-by-user-activation"
+          sandbox="allow-scripts allow-forms allow-popups allow-modals allow-pointer-lock allow-presentation"
           allow="accelerometer *; bluetooth *; camera *; encrypted-media *; display-capture *; geolocation *; gyroscope *; microphone *; midi *; clipboard-read *; clipboard-write *; web-share *; serial *; xr-spatial-tracking *"
           scrolling="auto"
           allowFullScreen={true}
