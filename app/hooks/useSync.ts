@@ -72,6 +72,20 @@ export function useSync(userId: string, vibes: Array<LocalVibe>) {
         allDocsResult.rows.map((row) => row.key)
       );
 
+      await new Promise((resolve) => setTimeout(resolve, 200));
+
+      // redo alldocs for testing
+      const allDocsResult2 = await database.allDocs({ includeDocs: true });
+      console.log('allDocs length BEFORE sync2:', allDocsResult2.rows.length);
+      console.log('ALL DOCUMENTS in database (with content):');
+      allDocsResult2.rows.forEach((row, index) => {
+        console.log(`  ${index + 1}. Key: "${row.key}", Doc:`, JSON.stringify(row.value, null, 2));
+      });
+      console.log(
+        'final doc keys:',
+        allDocsResult2.rows.map((row) => row.key)
+      );
+
       const syncedVibeIds = new Set(
         allDocsResult.rows
           .map((row) => row.key)
