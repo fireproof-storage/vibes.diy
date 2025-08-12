@@ -20,6 +20,11 @@ export interface VibeDocument {
    * These control which helper libraries and docs are injected into prompts.
    */
   dependencies?: string[];
+  /**
+   * When true, treat `dependencies` as a user override and bypass any
+   * automatic/catalog-based module selection.
+   */
+  dependenciesUserOverride?: boolean;
 }
 
 // ===== Content Segment Types =====

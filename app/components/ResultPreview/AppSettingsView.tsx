@@ -6,7 +6,8 @@ type AppSettingsViewProps = {
   onUpdateTitle: (next: string, isManual?: boolean) => Promise<void>;
   onDownloadHtml: () => void;
   selectedDependencies?: string[];
-  onUpdateDependencies: (deps: string[]) => Promise<void> | void;
+  // When saving a manual selection, we set `userOverride` true
+  onUpdateDependencies: (deps: string[], userOverride: boolean) => Promise<void> | void;
 };
 
 const AppSettingsView: React.FC<AppSettingsViewProps> = ({
@@ -89,7 +90,7 @@ const AppSettingsView: React.FC<AppSettingsViewProps> = ({
     setSaveDepsErr(null);
     try {
       const valid = deps.filter((n) => allowedNames.has(n));
-      await onUpdateDependencies(valid.length ? valid : DEFAULT_DEPENDENCIES);
+      await onUpdateDependencies(valid.length ? valid : DEFAULT_DEPENDENCIES, true);
       setHasUnsavedDeps(false);
       setSaveDepsOk(true);
       setTimeout(() => setSaveDepsOk(false), 2000);

@@ -14,7 +14,7 @@ beforeAll(async () => {
 });
 
 describe('makeBaseSystemPrompt dependency selection', () => {
-  it('uses default dependencies when none provided', async () => {
+  it('uses default dependencies when override is false/absent', async () => {
     await preloadLlmsText();
     const prompt = await makeBaseSystemPrompt('anthropic/claude-sonnet-4', {
       _id: 'user_settings',
@@ -27,16 +27,29 @@ describe('makeBaseSystemPrompt dependency selection', () => {
     expect(prompt).toMatch(/import\s+\{\s*callAI\s*\}\s+from\s+"call-ai"/);
   });
 
-  it('honors explicit dependencies from settings', async () => {
+  it('honors explicit dependencies only when override=true', async () => {
     await preloadLlmsText();
     const prompt = await makeBaseSystemPrompt('anthropic/claude-sonnet-4', {
       _id: 'user_settings',
       dependencies: ['fireproof'],
+      dependenciesUserOverride: true,
     });
     expect(prompt).toMatch(/<useFireproof-docs>/);
     expect(prompt).not.toMatch(/<callAI-docs>/);
     // Import statements reflect chosen modules only
     expect(prompt).toMatch(/import\s+\{\s*useFireproof\s*\}\s+from\s+"use-fireproof"/);
     expect(prompt).not.toMatch(/from\s+"call-ai"/);
+  });
+
+  it('ignores explicit dependencies when override=false', async () => {
+    await preloadLlmsText();
+    const prompt = await makeBaseSystemPrompt('anthropic/claude-sonnet-4', {
+      _id: 'user_settings',
+      dependencies: ['fireproof'],
+      dependenciesUserOverride: false,
+    });
+    // Default includes both core libs
+    expect(prompt).toMatch(/<useFireproof-docs>/);
+    expect(prompt).toMatch(/<callAI-docs>/);
   });
 });

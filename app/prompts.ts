@@ -2,7 +2,12 @@
 import callaiTxt from './llms/callai.txt?raw';
 import fireproofTxt from './llms/fireproof.txt?raw';
 import imageGenTxt from './llms/image-gen.txt?raw';
-import { DEFAULT_DEPENDENCIES, llmsCatalog, type LlmsCatalogEntry } from './llms/catalog';
+import {
+  DEFAULT_DEPENDENCIES,
+  llmsCatalog,
+  type LlmsCatalogEntry,
+  ALLOWED_DEPENDENCY_NAMES,
+} from './llms/catalog';
 
 // Static mapping of LLM text content
 const llmsTextContent: Record<string, string> = {
@@ -62,19 +67,22 @@ export function generateImportStatements(llms: LlmsCatalogEntry[]) {
 export async function makeBaseSystemPrompt(model: string, sessionDoc?: any) {
   // Inputs for module selection
   const userPrompt = sessionDoc?.userPrompt || '';
-  // Deterministic dependency selection
-  let selectedNames: string[] | undefined = undefined;
-  if (Array.isArray(sessionDoc?.dependencies)) {
-    // Validate against catalog
-    const allowed = new Set(llmsCatalog.map((l) => l.name));
+  // Deterministic dependency selection with user override gating
+  const useOverride = !!sessionDoc?.dependenciesUserOverride;
+  let selectedNames: string[] | undefined;
+  if (useOverride && Array.isArray(sessionDoc?.dependencies)) {
     selectedNames = (sessionDoc.dependencies as unknown[])
       .filter((v): v is string => typeof v === 'string')
-      .filter((name) => allowed.has(name));
+      .filter((name) => ALLOWED_DEPENDENCY_NAMES.has(name));
+    // Note: allow empty [] when override is true? Clarified in PR discussion; for now,
+    // we keep defaults for empty only when override is not set.
   }
-  // Apply clear default when not provided or empty
-  if (!selectedNames || selectedNames.length === 0) {
+  // Non-override path: use deterministic defaults (pending clarification on re-enabling picker)
+  if (!useOverride) {
     selectedNames = [...DEFAULT_DEPENDENCIES];
   }
+  // Final safety: ensure array is defined
+  if (!selectedNames) selectedNames = [...DEFAULT_DEPENDENCIES];
   const chosenLlms = llmsCatalog.filter((l) => selectedNames!.includes(l.name));
 
   // 3) Concatenate docs for chosen modules

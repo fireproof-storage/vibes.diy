@@ -123,4 +123,14 @@ describe('prompt builder (real implementation)', () => {
     // User prompt appears verbatim
     expect(prompt).toContain('hello');
   });
+
+  it('makeBaseSystemPrompt: honors explicit dependencies only when override=true', async () => {
+    await preloadLlmsText();
+    const prompt = await makeBaseSystemPrompt('test-model', {
+      dependencies: ['fireproof'],
+      dependenciesUserOverride: true,
+    });
+    expect(prompt).toContain('<useFireproof-docs>');
+    expect(prompt).not.toContain('<callAI-docs>');
+  });
 });

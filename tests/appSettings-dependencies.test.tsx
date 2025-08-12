@@ -53,7 +53,7 @@ describe('AppSettingsView Libraries (per‑vibe dependency chooser)', () => {
     expect(save).not.toBeDisabled();
 
     await act(async () => fireEvent.click(save));
-    expect(onUpdateDependencies).toHaveBeenCalledWith(['fireproof']);
+    expect(onUpdateDependencies).toHaveBeenCalledWith(['fireproof'], true);
 
     // After save, button should disable again briefly
     expect(save).toBeDisabled();
