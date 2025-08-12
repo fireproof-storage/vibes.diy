@@ -1,23 +1,46 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { DEFAULT_DEPENDENCIES, llmsCatalog } from '~/llms/catalog';
 
 type AppSettingsViewProps = {
   title: string;
   onUpdateTitle: (next: string, isManual?: boolean) => Promise<void>;
   onDownloadHtml: () => void;
+  selectedDependencies?: string[];
+  onUpdateDependencies: (deps: string[]) => Promise<void> | void;
 };
 
 const AppSettingsView: React.FC<AppSettingsViewProps> = ({
   title,
   onUpdateTitle,
   onDownloadHtml,
+  selectedDependencies,
+  onUpdateDependencies,
 }) => {
   const [isEditingName, setIsEditingName] = useState(false);
   const [editedName, setEditedName] = useState(title);
   const nameInputRef = useRef<HTMLInputElement>(null);
+  // Per‑vibe libraries selection state
+  const allowedNames = useMemo(() => new Set(llmsCatalog.map((m) => m.name)), []);
+  const initialDeps = useMemo(() => {
+    const input = Array.isArray(selectedDependencies) ? selectedDependencies : DEFAULT_DEPENDENCIES;
+    return input
+      .filter((n): n is string => typeof n === 'string')
+      .filter((n) => allowedNames.has(n));
+  }, [selectedDependencies, allowedNames]);
+  const [deps, setDeps] = useState<string[]>(initialDeps);
+  const [hasUnsavedDeps, setHasUnsavedDeps] = useState(false);
+  const [saveDepsOk, setSaveDepsOk] = useState(false);
+  const [saveDepsErr, setSaveDepsErr] = useState<string | null>(null);
 
   useEffect(() => {
     setEditedName(title);
   }, [title]);
+
+  useEffect(() => {
+    // Sync local selection when external changes land
+    setDeps(initialDeps);
+    setHasUnsavedDeps(false);
+  }, [initialDeps]);
 
   const handleEditNameStart = useCallback(() => {
     setIsEditingName(true);
@@ -50,6 +73,30 @@ const AppSettingsView: React.FC<AppSettingsViewProps> = ({
     },
     [handleNameSave, handleNameCancel]
   );
+
+  // Libraries handlers
+  const toggleDependency = useCallback((name: string, checked: boolean) => {
+    setDeps((prev) => {
+      const set = new Set(prev);
+      if (checked) set.add(name);
+      else set.delete(name);
+      return Array.from(set);
+    });
+    setHasUnsavedDeps(true);
+  }, []);
+
+  const handleSaveDeps = useCallback(async () => {
+    setSaveDepsErr(null);
+    try {
+      const valid = deps.filter((n) => allowedNames.has(n));
+      await onUpdateDependencies(valid.length ? valid : DEFAULT_DEPENDENCIES);
+      setHasUnsavedDeps(false);
+      setSaveDepsOk(true);
+      setTimeout(() => setSaveDepsOk(false), 2000);
+    } catch (e: any) {
+      setSaveDepsErr(e?.message || 'Failed to save libraries');
+    }
+  }, [deps, onUpdateDependencies, allowedNames]);
 
   return (
     <div className="flex h-full justify-center p-8 pt-16">
@@ -156,6 +203,71 @@ const AppSettingsView: React.FC<AppSettingsViewProps> = ({
                 </div>
               </div>
             </div>
+          </div>
+
+          <div className="bg-light-background-01 dark:bg-dark-background-01 border-light-decorative-01 dark:border-dark-decorative-01 rounded-lg border p-6">
+            <div className="mb-4 flex items-center justify-between">
+              <h3 className="text-light-primary dark:text-dark-primary text-lg font-medium">
+                Libraries
+              </h3>
+              <button
+                onClick={handleSaveDeps}
+                disabled={!hasUnsavedDeps}
+                className={`rounded px-4 py-2 text-sm text-white transition-colors focus:ring-2 focus:ring-offset-2 focus:outline-none ${
+                  hasUnsavedDeps
+                    ? 'bg-blue-500 hover:bg-blue-600 focus:ring-blue-500'
+                    : 'accent-01 dark:bg-dark-decorative-01 cursor-not-allowed'
+                }`}
+              >
+                Save
+              </button>
+            </div>
+            {saveDepsOk && (
+              <div className="mb-4 rounded border border-green-200 bg-green-50 px-3 py-2 text-sm text-green-800 dark:border-green-900/40 dark:bg-green-900/20 dark:text-green-300">
+                Libraries saved.
+              </div>
+            )}
+            {saveDepsErr && (
+              <div className="mb-4 rounded border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800 dark:border-red-900/40 dark:bg-red-900/20 dark:text-red-300">
+                {saveDepsErr}
+              </div>
+            )}
+            <p className="text-accent-01 dark:text-accent-01 mb-3 text-sm">
+              Choose which libraries to include in generated apps for this Vibe. This controls
+              imports and docs used in prompts.
+            </p>
+            {llmsCatalog.length === 0 ? (
+              <div className="text-accent-01 dark:text-dark-secondary text-sm">
+                No libraries available.
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                {llmsCatalog.map((mod) => {
+                  const checked = deps.includes(mod.name);
+                  return (
+                    <label
+                      key={mod.name}
+                      className="border-light-decorative-01 dark:border-dark-decorative-01 flex cursor-pointer items-start gap-2 rounded-md border p-2 text-sm"
+                    >
+                      <input
+                        type="checkbox"
+                        className="mt-0.5"
+                        checked={checked}
+                        onChange={(e) => toggleDependency(mod.name, e.target.checked)}
+                      />
+                      <span>
+                        <span className="font-medium">{mod.label}</span>
+                        {mod.description ? (
+                          <span className="text-accent-01 dark:text-dark-secondary block text-xs">
+                            {mod.description}
+                          </span>
+                        ) : null}
+                      </span>
+                    </label>
+                  );
+                })}
+              </div>
+            )}
           </div>
 
           <div className="bg-light-background-01 dark:bg-dark-background-01 border-light-decorative-01 dark:border-dark-decorative-01 rounded-lg border p-6">

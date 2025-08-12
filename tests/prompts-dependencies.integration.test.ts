@@ -16,7 +16,9 @@ beforeAll(async () => {
 describe('makeBaseSystemPrompt dependency selection', () => {
   it('uses default dependencies when none provided', async () => {
     await preloadLlmsText();
-    const prompt = await makeBaseSystemPrompt('anthropic/claude-sonnet-4', { _id: 'user_settings' });
+    const prompt = await makeBaseSystemPrompt('anthropic/claude-sonnet-4', {
+      _id: 'user_settings',
+    });
     // Default includes fireproof and callai per catalog labels
     expect(prompt).toMatch(/<useFireproof-docs>/);
     expect(prompt).toMatch(/<callAI-docs>/);

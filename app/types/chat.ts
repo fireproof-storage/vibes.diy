@@ -15,6 +15,11 @@ export interface VibeDocument {
   publishedUrl?: string;
   firehoseShared?: boolean;
   titleSetManually?: boolean;
+  /**
+   * Per‑vibe selected dependency modules (by catalog name).
+   * These control which helper libraries and docs are injected into prompts.
+   */
+  dependencies?: string[];
 }
 
 // ===== Content Segment Types =====

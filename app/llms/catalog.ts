@@ -3,7 +3,17 @@
 
 const modules = import.meta.glob('./*.json', { eager: true }) as Record<
   string,
-  { default: { name: string; label: string; llmsTxtUrl: string; module: string; description?: string; importModule: string; importName: string } }
+  {
+    default: {
+      name: string;
+      label: string;
+      llmsTxtUrl: string;
+      module: string;
+      description?: string;
+      importModule: string;
+      importName: string;
+    };
+  }
 >;
 
 export type LlmsCatalogEntry = (typeof modules)[string]['default'];

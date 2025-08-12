@@ -13,7 +13,4 @@ export interface UserSettings {
 
   /** AI model to use for code generation */
   model?: string;
-
-  /** Selected dependency modules (by catalog name) to include deterministically */
-  dependencies?: string[];
 }

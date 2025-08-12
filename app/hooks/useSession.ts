@@ -8,6 +8,7 @@ import type {
 import { getSessionDatabaseName } from '../utils/databaseManager';
 import { useLazyFireproof } from './useLazyFireproof';
 import { encodeTitle } from '../components/SessionSidebar/utils';
+import { llmsCatalog } from '../llms/catalog';
 
 export function useSession(routedSessionId?: string) {
   const [generatedSessionId] = useState(
@@ -135,6 +136,22 @@ export function useSession(routedSessionId?: string) {
     [sessionDatabase]
   );
 
+  // Update per‑vibe dependency selection using the vibe document
+  const updateDependencies = useCallback(
+    async (deps: string[]) => {
+      const allowed = new Set(llmsCatalog.map((l) => l.name));
+      const validDeps = (Array.isArray(deps) ? deps : [])
+        .filter((n): n is string => typeof n === 'string')
+        .filter((n) => allowed.has(n));
+
+      const base = vibeRef.current;
+      const updatedDoc = { ...base, dependencies: validDeps } as VibeDocument;
+      mergeRef.current(updatedDoc);
+      await sessionDatabase.put(updatedDoc);
+    },
+    [sessionDatabase]
+  );
+
   // Add a screenshot to the session (in session-specific database)
   const addScreenshot = useCallback(
     async (screenshotData: string | null) => {
@@ -205,5 +222,6 @@ export function useSession(routedSessionId?: string) {
     saveAiMessage,
     // Vibe document management
     vibeDoc,
+    updateDependencies,
   };
 }
