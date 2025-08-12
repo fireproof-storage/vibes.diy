@@ -1,26 +1,8 @@
-import { callAI, type Message, type CallAIOptions } from 'call-ai';
-import { APP_MODE, CALLAI_ENDPOINT } from './config/env';
 // Import all LLM text files statically
 import callaiTxt from './llms/callai.txt?raw';
 import fireproofTxt from './llms/fireproof.txt?raw';
 import imageGenTxt from './llms/image-gen.txt?raw';
-const llmsModules = import.meta.glob('./llms/*.json', { eager: true });
-const llmsList = Object.values(llmsModules).map(
-  (mod) =>
-    (
-      mod as {
-        default: {
-          name: string;
-          label: string;
-          llmsTxtUrl: string;
-          module: string;
-          importModule: string;
-          importName: string;
-          description?: string;
-        };
-      }
-    ).default
-);
+import { DEFAULT_DEPENDENCIES, llmsCatalog, type LlmsCatalogEntry } from './llms/catalog';
 
 // Static mapping of LLM text content
 const llmsTextContent: Record<string, string> = {
@@ -43,92 +25,13 @@ function loadLlmsTextByName(name: string): string | undefined {
   }
 }
 
-// Escape for RegExp construction
-function escapeRegExp(str: string): string {
-  return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-}
+// (no history-based detection required for deterministic selection)
 
-// Precompile import-detection regexes once per module entry
-const llmImportRegexes = llmsList
-  .filter((l) => l.importModule && l.importName)
-  .map((l) => {
-    const mod = escapeRegExp(l.importModule);
-    const name = escapeRegExp(l.importName);
-    return {
-      name: l.name,
-      // Matches: import { ..., <name>, ... } from '<module>'
-      named: new RegExp(`import\\s*\\{[^}]*\\b${name}\\b[^}]*\\}\\s*from\\s*['\\\"]${mod}['\\\"]`),
-      // Matches: import <name> from '<module>'
-      def: new RegExp(`import\\s+${name}\\s+from\\s*['\\\"]${mod}['\\\"]`),
-    } as const;
-  });
-
-type HistoryMessage = { role: 'user' | 'assistant' | 'system'; content: string };
-
-// Detect modules already referenced in history imports
-function detectModulesInHistory(history: HistoryMessage[]): Set<string> {
-  const detected = new Set<string>();
-  if (!Array.isArray(history)) return detected;
-  for (const msg of history) {
-    const content = msg?.content || '';
-    if (!content || typeof content !== 'string') continue;
-    for (const { name, named, def } of llmImportRegexes) {
-      if (named.test(content) || def.test(content)) detected.add(name);
-    }
-  }
-  return detected;
-}
-
-// Ask LLM which modules to include based on catalog + user prompt + history
-async function selectLlmsModules(
-  model: string,
-  userPrompt: string,
-  history: HistoryMessage[]
-): Promise<string[]> {
-  if (APP_MODE === 'test') return llmsList.map((l) => l.name);
-
-  const catalog = llmsList.map((l) => ({ name: l.name, description: l.description || '' }));
-  const payload = { catalog, userPrompt: userPrompt || '', history: history || [] };
-
-  const messages: Message[] = [
-    {
-      role: 'system',
-      content:
-        'You select which library modules from a catalog should be included. Read the JSON payload and return JSON with a single property "selected": an array of module identifiers using the catalog "name" values. Only choose from the catalog. Include any libraries already used in history. Respond with JSON only.',
-    },
-    { role: 'user', content: JSON.stringify(payload) },
-  ];
-
-  const options: CallAIOptions = {
-    chatUrl: CALLAI_ENDPOINT,
-    apiKey: 'sk-vibes-proxy-managed',
-    model,
-    schema: {
-      name: 'module_selection',
-      properties: { selected: { type: 'array', items: { type: 'string' } } },
-    },
-    max_tokens: 2000,
-    headers: {
-      'HTTP-Referer': 'https://vibes.diy',
-      'X-Title': 'Vibes DIY',
-      'X-VIBES-Token': localStorage.getItem('auth_token') || '',
-    },
-  };
-
-  try {
-    const raw = (await callAI(messages, options)) as string;
-    const parsed = JSON.parse(raw);
-    const arr = Array.isArray(parsed?.selected) ? parsed.selected : [];
-    return arr.filter((v: unknown) => typeof v === 'string');
-  } catch (err) {
-    console.warn('Module selection call failed:', err);
-    return [];
-  }
-}
+// (Legacy) AI-based selection code removed in favor of deterministic Settings-based selection.
 
 // Public: preload all llms text files (triggered on form focus)
 export async function preloadLlmsText(): Promise<void> {
-  llmsList.forEach((llm) => {
+  llmsCatalog.forEach((llm) => {
     if (llmsTextCache[llm.name] || llmsTextCache[llm.llmsTxtUrl]) return;
     const text = loadLlmsTextByName(llm.name);
     if (text) {
@@ -139,7 +42,7 @@ export async function preloadLlmsText(): Promise<void> {
 }
 
 // Generate dynamic import statements from LLM configuration
-export function generateImportStatements(llms: typeof llmsList) {
+export function generateImportStatements(llms: LlmsCatalogEntry[]) {
   const seen = new Set<string>();
   return llms
     .slice()
@@ -159,14 +62,20 @@ export function generateImportStatements(llms: typeof llmsList) {
 export async function makeBaseSystemPrompt(model: string, sessionDoc?: any) {
   // Inputs for module selection
   const userPrompt = sessionDoc?.userPrompt || '';
-  const history: HistoryMessage[] = Array.isArray(sessionDoc?.history) ? sessionDoc.history : [];
-  // 1) Ask AI which modules to include
-  const aiSelected = await selectLlmsModules(model, userPrompt, history);
-
-  // 2) Ensure we retain any modules already used in history
-  const detected = detectModulesInHistory(history);
-  const finalNames = new Set<string>([...aiSelected, ...detected]);
-  const chosenLlms = llmsList.filter((l) => finalNames.has(l.name));
+  // Deterministic dependency selection
+  let selectedNames: string[] | undefined = undefined;
+  if (Array.isArray(sessionDoc?.dependencies)) {
+    // Validate against catalog
+    const allowed = new Set(llmsCatalog.map((l) => l.name));
+    selectedNames = (sessionDoc.dependencies as unknown[])
+      .filter((v): v is string => typeof v === 'string')
+      .filter((name) => allowed.has(name));
+  }
+  // Apply clear default when not provided or empty
+  if (!selectedNames || selectedNames.length === 0) {
+    selectedNames = [...DEFAULT_DEPENDENCIES];
+  }
+  const chosenLlms = llmsCatalog.filter((l) => selectedNames!.includes(l.name));
 
   // 3) Concatenate docs for chosen modules
   let concatenatedLlmsTxt = '';

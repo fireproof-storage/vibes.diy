@@ -8,6 +8,7 @@ import { SETTINGS_DBNAME } from '../config/env';
 import { useAuth } from '../contexts/AuthContext';
 import modelsList from '../data/models.json';
 import type { UserSettings } from '../types/settings';
+import { DEFAULT_DEPENDENCIES, llmsCatalog } from '../llms/catalog';
 
 export function meta() {
   return [
@@ -31,10 +32,14 @@ export default function Settings() {
     stylePrompt: '',
     userPrompt: '',
     model: '',
+    // we will show defaults in UI if undefined; only persist on Save
+    dependencies: undefined,
   });
 
   // State to track unsaved changes
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
+  const [saveSuccess, setSaveSuccess] = useState(false);
 
   const stylePromptSuggestions = [
     { name: 'synthwave', description: '80s digital aesthetic' },
@@ -118,11 +123,39 @@ Secretly name this theme “Viridian Pulse”, capturing Sterling’s original p
     [mergeSettings]
   );
 
+  // Dependency selection
+  const effectiveSelectedDeps = (settings.dependencies && settings.dependencies.length
+    ? settings.dependencies
+    : DEFAULT_DEPENDENCIES) as string[];
+
+  const toggleDependency = useCallback(
+    (name: string, checked: boolean) => {
+      const set = new Set(effectiveSelectedDeps);
+      if (checked) set.add(name);
+      else set.delete(name);
+      mergeSettings({ dependencies: Array.from(set) });
+      setHasUnsavedChanges(true);
+    },
+    // effectiveSelectedDeps recomputes via settings.dependencies
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [mergeSettings, settings.dependencies]
+  );
+
   const handleSubmit = useCallback(async () => {
-    await saveSettings(settings);
-    setHasUnsavedChanges(false); // Reset after save
-    // navigate to /
-    navigate('/');
+    setSaveError(null);
+    setSaveSuccess(false);
+    const allowed = new Set(llmsCatalog.map((m) => m.name));
+    const deps = Array.isArray(settings.dependencies) ? settings.dependencies : DEFAULT_DEPENDENCIES;
+    const validDeps = deps.filter((n) => allowed.has(n));
+    try {
+      await saveSettings({ ...settings, dependencies: validDeps });
+      setHasUnsavedChanges(false);
+      setSaveSuccess(true);
+      setTimeout(() => setSaveSuccess(false), 2000);
+      navigate('/');
+    } catch (err: any) {
+      setSaveError(err?.message || 'Failed to save settings');
+    }
   }, [saveSettings, settings, navigate]);
 
   const handleLogout = useCallback(() => {
@@ -163,10 +196,56 @@ Secretly name this theme “Viridian Pulse”, capturing Sterling’s original p
               Save
             </button>
           </div>
+          {saveSuccess && (
+            <div className="mb-4 rounded border border-green-200 bg-green-50 px-3 py-2 text-sm text-green-800 dark:border-green-900/40 dark:bg-green-900/20 dark:text-green-300">
+              Settings saved.
+            </div>
+          )}
+          {saveError && (
+            <div className="mb-4 rounded border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800 dark:border-red-900/40 dark:bg-red-900/20 dark:text-red-300">
+              {saveError}
+            </div>
+          )}
           <p className="text-accent-01 dark:text-dark-secondary mb-4">
             Configure your application settings to customize the AI experience.
           </p>
           <div className="space-y-6">
+            {/* Libraries / Dependencies */}
+            <div className="border-light-decorative-01 dark:border-dark-decorative-01 rounded border p-4">
+              <h3 className="mb-2 text-lg font-medium">Libraries</h3>
+              <p className="text-accent-01 dark:text-accent-01 mb-3 text-sm">
+                Choose which libraries to include in generated apps for deterministic behavior.
+              </p>
+              {llmsCatalog.length === 0 ? (
+                <div className="text-sm text-accent-01 dark:text-dark-secondary">No libraries available.</div>
+              ) : (
+                <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                  {llmsCatalog.map((mod) => {
+                    const checked = effectiveSelectedDeps.includes(mod.name);
+                    return (
+                      <label
+                        key={mod.name}
+                        className="flex cursor-pointer items-start gap-2 rounded-md border border-light-decorative-01 p-2 text-sm dark:border-dark-decorative-01"
+                      >
+                        <input
+                          type="checkbox"
+                          className="mt-0.5"
+                          checked={checked}
+                          onChange={(e) => toggleDependency(mod.name, e.target.checked)}
+                        />
+                        <span>
+                          <span className="font-medium">{mod.label}</span>
+                          {mod.description ? (
+                            <span className="text-accent-01 dark:text-dark-secondary block text-xs">{mod.description}</span>
+                          ) : null}
+                        </span>
+                      </label>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+
             <div className="border-light-decorative-01 dark:border-dark-decorative-01 rounded border p-4">
               <div className="flex items-start justify-between">
                 <h3 className="mb-2 text-lg font-medium">AI Model</h3>

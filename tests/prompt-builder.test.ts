@@ -10,6 +10,7 @@ vi.resetModules();
 let generateImportStatements: (llms: Array<any>) => string;
 let makeBaseSystemPrompt: (model: string, sessionDoc?: any) => Promise<string>;
 let preloadLlmsText: () => Promise<void>;
+let DEFAULT_DEPENDENCIES: string[];
 
 // Load actual LLM configs and txt content from app/llms
 // Use eager glob so it's resolved at import time in Vitest/Vite environment
@@ -40,6 +41,7 @@ beforeAll(async () => {
   generateImportStatements = (mod as any).generateImportStatements;
   makeBaseSystemPrompt = mod.makeBaseSystemPrompt;
   preloadLlmsText = mod.preloadLlmsText;
+  ({ DEFAULT_DEPENDENCIES } = await import('../app/llms/catalog'));
 });
 
 describe('prompt builder (real implementation)', () => {
@@ -76,7 +78,7 @@ describe('prompt builder (real implementation)', () => {
     }
   });
 
-  it('makeBaseSystemPrompt: includes imports, llms docs (concatenated), default stylePrompt', async () => {
+  it('makeBaseSystemPrompt: includes imports for default dependencies and llms docs (concatenated), default stylePrompt', async () => {
     // Warm cache so docs are available via raw imports
     await preloadLlmsText();
 
@@ -86,12 +88,13 @@ describe('prompt builder (real implementation)', () => {
     });
 
     // Code fence and imports
-    const importBlock = generateImportStatements(orderedLlms);
+    const chosenLlms = orderedLlms.filter((l) => DEFAULT_DEPENDENCIES.includes(l.name));
+    const importBlock = generateImportStatements(chosenLlms);
     expect(prompt).toContain('```js');
     expect(prompt).toContain('import React, { ... } from "react"' + importBlock);
 
-    // Concatenated docs for each LLM in the same order
-    const expectedDocs = orderedLlms
+    // Concatenated docs for chosen LLMs in the same order
+    const expectedDocs = chosenLlms
       .map((llm) => `\n<${llm.label}-docs>\n${textForName(llm.name) || ''}\n</${llm.label}-docs>\n`)
       .join('');
     expect(prompt).toContain(expectedDocs);
@@ -109,7 +112,8 @@ describe('prompt builder (real implementation)', () => {
       userPrompt: 'hello',
     });
 
-    const importBlock = generateImportStatements(orderedLlms);
+    const chosenLlms = orderedLlms.filter((l) => DEFAULT_DEPENDENCIES.includes(l.name));
+    const importBlock = generateImportStatements(chosenLlms);
     expect(prompt).toContain('import React, { ... } from "react"' + importBlock);
 
     // Custom stylePrompt line replaces default
