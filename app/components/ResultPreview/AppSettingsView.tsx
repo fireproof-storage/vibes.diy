@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { DEFAULT_DEPENDENCIES, llmsCatalog } from '~/llms/catalog';
+import { DEFAULT_DEPENDENCIES, llmsCatalog, ALLOWED_DEPENDENCY_NAMES } from '~/llms/catalog';
 
 type AppSettingsViewProps = {
   title: string;
@@ -21,7 +21,7 @@ const AppSettingsView: React.FC<AppSettingsViewProps> = ({
   const [editedName, setEditedName] = useState(title);
   const nameInputRef = useRef<HTMLInputElement>(null);
   // Per‑vibe libraries selection state
-  const allowedNames = useMemo(() => new Set(llmsCatalog.map((m) => m.name)), []);
+  const allowedNames = useMemo(() => ALLOWED_DEPENDENCY_NAMES, []);
   const initialDeps = useMemo(() => {
     const input = Array.isArray(selectedDependencies) ? selectedDependencies : DEFAULT_DEPENDENCIES;
     return input
