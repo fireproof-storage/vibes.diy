@@ -1,6 +1,7 @@
 # Code Flicker Investigation Results
 
 ## Issue
+
 Code flickering during AI streaming responses was reported, suspected to be introduced by recent Monaco Editor changes.
 
 ## Investigation Summary
@@ -33,6 +34,7 @@ The commit added extensive real-time syntax error detection that conflicts with 
 ### Problem Analysis
 
 During AI streaming:
+
 - Content updates continuously via `onContent(content)` callbacks
 - Monaco Editor content changes rapidly
 - Each content change triggers syntax checking
@@ -59,4 +61,4 @@ The issue documents the specific technical details and suggests investigation ar
 
 ---
 
-*Investigation completed on 2025-08-13*
+_Investigation completed on 2025-08-13_
