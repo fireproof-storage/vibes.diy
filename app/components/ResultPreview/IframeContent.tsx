@@ -8,7 +8,6 @@ import { DatabaseListView } from './DataView';
 import { setupMonacoEditor } from './setupMonacoEditor';
 import { transformImports } from './transformImports';
 
-
 interface IframeContentProps {
   activeView: 'preview' | 'code' | 'data' | 'chat' | 'settings';
   filesContent: IframeFiles;
