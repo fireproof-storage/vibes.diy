@@ -233,9 +233,7 @@ const IframeContent: React.FC<IframeContentProps> = ({
           ref={iframeRef}
           className="h-full w-full border-0"
           title="Preview"
-          sandbox="allow-scripts allow-forms allow-popups allow-modals allow-pointer-lock allow-presentation"
           allow="accelerometer *; bluetooth *; camera *; encrypted-media *; display-capture *; geolocation *; gyroscope *; microphone *; midi *; clipboard-read *; clipboard-write *; web-share *; serial *; xr-spatial-tracking *"
-          scrolling="auto"
           allowFullScreen={true}
         />
       </div>
