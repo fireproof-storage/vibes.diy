@@ -4,7 +4,7 @@ import { render, screen, act } from '@testing-library/react';
 import '@testing-library/jest-dom';
 
 // Mock ImageOverlay component
-vi.mock('../src/components/ImgGenUtils/overlays/ImageOverlay', () => ({
+vi.mock('../pkg/components/ImgGenUtils/overlays/ImageOverlay', () => ({
   ImageOverlay: vi.fn(({ promptText, showControls }) => (
     <div
       data-testid="mock-image-overlay"
@@ -128,10 +128,6 @@ describe('ImgGenDisplayPlaceholder Component', () => {
   //---------------------------------------------------------------
   describe('Generating State (with prompt, no error)', () => {
     it('renders ImageOverlay with correct props when in generating state', () => {
-      // Use spyOn to track style changes directly rather than testing computed styles
-      const originalSetAttribute = Element.prototype.setAttribute;
-      const styleSpy = vi.spyOn(Element.prototype, 'setAttribute');
-
       render(
         <ImgGenDisplayPlaceholder
           prompt="Test prompt"
@@ -141,16 +137,16 @@ describe('ImgGenDisplayPlaceholder Component', () => {
         />
       );
 
-      // Check ImageOverlay props directly
+      // Check ImageOverlay exists (even if hidden) - use getAllByTestId since it's hidden
       const overlay = screen.getByTestId('mock-image-overlay');
       expect(overlay).toBeInTheDocument();
       expect(overlay).toHaveAttribute('data-prompt', 'Test prompt');
       expect(overlay).toHaveAttribute('data-show-controls', 'false');
       expect(overlay).toHaveAttribute('data-status', 'Generating...');
-
-      // Cleanup
-      styleSpy.mockRestore();
-      Element.prototype.setAttribute = originalSetAttribute;
+      
+      // Verify it's in a hidden container (the component intentionally hides the overlay)
+      const hiddenContainer = overlay.closest('div[style*="display: none"]');
+      expect(hiddenContainer).toBeInTheDocument();
     });
 
     it('enforces minimum progress value with Math.max', () => {

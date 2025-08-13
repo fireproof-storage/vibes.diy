@@ -16,7 +16,7 @@ const mockDocument = {
 const mockCalls: { prompt?: string; _id?: string; regenerate?: boolean }[] = [];
 
 // Mock for the useImageGen hook
-vi.mock('../src/hooks/image-gen/use-image-gen', () => {
+vi.mock('../pkg/hooks/image-gen/use-image-gen', () => {
   let versionCount = 1;
 
   return {
