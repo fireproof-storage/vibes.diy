@@ -6,7 +6,7 @@ import type {
   ChatMessageDocument,
 } from '../types/chat';
 import { getSessionDatabaseName } from '../utils/databaseManager';
-import { useFireproof, fireproof } from 'use-fireproof';
+import { useFireproof } from 'use-fireproof';
 import { encodeTitle } from '../components/SessionSidebar/utils';
 
 export function useSession(routedSessionId?: string) {
@@ -31,12 +31,12 @@ export function useSession(routedSessionId?: string) {
   const sessionId = effectiveSessionId;
   const sessionDbName = getSessionDatabaseName(sessionId);
   // Non-lazy initialization to make storage side effects observable
-  // Create the database immediately and pass it to useFireproof
+  // Initialize the database eagerly via useFireproof(sessionDbName)
   const {
     database: sessionDatabase,
     useDocument: useSessionDocument,
     useLiveQuery: useSessionLiveQuery,
-  } = useFireproof(fireproof(sessionDbName));
+  } = useFireproof(sessionDbName);
 
   // User message is stored in the session-specific database
   const {
