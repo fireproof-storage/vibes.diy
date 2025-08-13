@@ -83,8 +83,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   useEffect(() => {
     const handleMessage = async (event: MessageEvent) => {
       // Make async
+      // Only handle auth messages from same origin (popup auth flow)
+      // Silently ignore iframe messages from vibesbox.dev subdomains
       if (event.origin !== window.location.origin) {
-        console.warn('Received message from unexpected origin:', event.origin);
         return;
       }
       if (event.data?.type === 'authSuccess' && typeof event.data.token === 'string') {

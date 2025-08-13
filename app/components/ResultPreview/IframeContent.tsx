@@ -8,9 +8,6 @@ import { DatabaseListView } from './DataView';
 import { setupMonacoEditor } from './setupMonacoEditor';
 import { transformImports } from './transformImports';
 
-// Import the iframe template using Vite's ?raw import option
-import iframeTemplateRaw from './templates/iframe-template.html?raw';
-
 interface IframeContentProps {
   activeView: 'preview' | 'code' | 'data' | 'chat' | 'settings';
   filesContent: IframeFiles;
@@ -159,21 +156,32 @@ const IframeContent: React.FC<IframeContentProps> = ({
       // Use the extracted function to normalize component export patterns
       const normalizedCode = normalizeComponentExports(appCode);
 
-      // Create a session ID variable for the iframe template
+      // Create a session ID variable for the iframe
       const sessionIdValue = sessionId || 'default-session';
 
       const transformedCode = transformImports(normalizedCode);
 
-      // Use the template and replace placeholders
-      const htmlContent = iframeTemplateRaw
-        .replaceAll('{{API_KEY}}', 'sk-vibes-proxy-managed')
-        .replaceAll('{{CALLAI_ENDPOINT}}', CALLAI_ENDPOINT)
-        .replace('{{APP_CODE}}', transformedCode)
-        .replace('{{SESSION_ID}}', sessionIdValue);
+      // Use vibesbox.dev subdomain for origin isolation
+      const iframeUrl = `https://${sessionIdValue}.vibesbox.dev/`;
+      iframeRef.current.src = iframeUrl;
 
-      const blob = new Blob([htmlContent], { type: 'text/html' });
-      const url = URL.createObjectURL(blob);
-      iframeRef.current.src = url;
+      // Send code via postMessage after iframe loads
+      const handleIframeLoad = () => {
+        if (iframeRef.current?.contentWindow) {
+          iframeRef.current.contentWindow.postMessage(
+            {
+              type: 'execute-code',
+              code: transformedCode,
+              apiKey: 'sk-vibes-proxy-managed',
+              sessionId: sessionIdValue,
+              endpoint: CALLAI_ENDPOINT,
+            },
+            '*'
+          );
+        }
+      };
+
+      iframeRef.current.addEventListener('load', handleIframeLoad);
 
       // Setup message listener for preview ready signal
       const handleMessage = (event: MessageEvent) => {
@@ -185,7 +193,9 @@ const IframeContent: React.FC<IframeContentProps> = ({
       window.addEventListener('message', handleMessage);
 
       return () => {
-        URL.revokeObjectURL(url);
+        if (iframeRef.current) {
+          iframeRef.current.removeEventListener('load', handleIframeLoad);
+        }
         window.removeEventListener('message', handleMessage);
       };
     }
@@ -222,9 +232,7 @@ const IframeContent: React.FC<IframeContentProps> = ({
           ref={iframeRef}
           className="h-full w-full border-0"
           title="Preview"
-          sandbox="allow-downloads allow-forms allow-modals allow-pointer-lock allow-popups-to-escape-sandbox allow-popups allow-presentation allow-same-origin allow-scripts allow-top-navigation-by-user-activation"
           allow="accelerometer *; bluetooth *; camera *; encrypted-media *; display-capture *; geolocation *; gyroscope *; microphone *; midi *; clipboard-read *; clipboard-write *; web-share *; serial *; xr-spatial-tracking *"
-          scrolling="auto"
           allowFullScreen={true}
         />
       </div>
