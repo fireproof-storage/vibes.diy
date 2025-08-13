@@ -4,7 +4,12 @@ import { describe, it, expect, beforeAll, vi } from 'vitest';
 // Some tests and the global setup mock this module; undo that here before importing it.
 (vi as any).doUnmock?.('../app/prompts');
 vi.unmock('../app/prompts');
+// Reset the module registry and mock env before importing the module under test.
 vi.resetModules();
+vi.mock('../app/config/env', () => ({
+  APP_MODE: 'test',
+  CALLAI_ENDPOINT: 'http://localhost/test',
+}));
 
 // Will be assigned in beforeAll after we unmock and re-import the module
 let generateImportStatements: (llms: Array<any>) => string;
