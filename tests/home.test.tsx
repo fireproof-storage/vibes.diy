@@ -40,7 +40,7 @@ vi.mock('../app/hooks/useSession', () => ({
     loading: false,
     error: null,
     loadSession: vi.fn(),
-    updateTitle: vi.fn(),
+    updateTitle: vi.fn().mockResolvedValue(undefined),
     updateMetadata: vi.fn(),
     addScreenshot: vi.fn(),
     createSession: vi.fn().mockResolvedValue('new-session-id'),

@@ -33,7 +33,7 @@ vi.mock('../app/contexts/AuthContext', () => ({
 // Mock useSession hook to prevent Fireproof initialization during tests
 vi.mock('../app/hooks/useSession', () => ({
   useSession: vi.fn().mockReturnValue({
-    updateTitle: vi.fn(),
+    updateTitle: vi.fn().mockResolvedValue(undefined),
     session: { title: 'Test Session' },
     updatePublishedUrl: vi.fn(),
     updateFirehoseShared: vi.fn(),

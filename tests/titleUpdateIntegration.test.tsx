@@ -3,7 +3,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import AppSettingsView from '../app/components/ResultPreview/AppSettingsView';
 
 // Mock dependencies
-const mockUpdateTitle = vi.fn();
+const mockUpdateTitle = vi.fn().mockResolvedValue(undefined);
 const mockDownloadHtml = vi.fn();
 
 describe('Title Update Integration', () => {
