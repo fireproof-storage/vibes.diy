@@ -11,13 +11,14 @@ describe('AppSettingsView Libraries (per‑vibe dependency chooser)', () => {
     onDownloadHtml: vi.fn(),
   };
 
-  it('renders catalog checkboxes with default selection when none provided', async () => {
+  it('when not overridden, renders LLM-driven note and no preselection', async () => {
     const onUpdateDependencies = vi.fn();
     render(
       <AppSettingsView
         {...baseProps}
         onUpdateDependencies={onUpdateDependencies}
         selectedDependencies={undefined}
+        dependenciesUserOverride={false}
       />
     );
 
@@ -29,8 +30,16 @@ describe('AppSettingsView Libraries (per‑vibe dependency chooser)', () => {
       selector: 'input[type="checkbox"]',
     });
 
-    expect(fireproof).toBeChecked();
-    expect(callai).toBeChecked();
+    // No preselection in LLM-driven mode
+    expect(fireproof).not.toBeChecked();
+    expect(callai).not.toBeChecked();
+
+    // LLM-driven banner is visible
+    expect(
+      screen.getByText(
+        /Libraries, instructional text, and demo data are currently chosen by the LLM/i
+      )
+    ).toBeInTheDocument();
   });
 
   it('allows toggling and saves validated selection', async () => {
@@ -40,6 +49,7 @@ describe('AppSettingsView Libraries (per‑vibe dependency chooser)', () => {
         {...baseProps}
         onUpdateDependencies={onUpdateDependencies}
         selectedDependencies={['fireproof', 'callai']}
+        dependenciesUserOverride={true}
       />
     );
 

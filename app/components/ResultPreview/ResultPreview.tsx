@@ -121,6 +121,7 @@ function ResultPreview({
       onUpdateTitle={updateTitle}
       onDownloadHtml={handleDownloadHtml}
       selectedDependencies={vibeDoc?.dependencies}
+      dependenciesUserOverride={vibeDoc?.dependenciesUserOverride}
       onUpdateDependencies={updateDependencies}
     />
   ) : (

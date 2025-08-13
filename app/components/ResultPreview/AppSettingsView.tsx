@@ -6,6 +6,7 @@ type AppSettingsViewProps = {
   onUpdateTitle: (next: string, isManual?: boolean) => Promise<void>;
   onDownloadHtml: () => void;
   selectedDependencies?: string[];
+  dependenciesUserOverride?: boolean;
   // When saving a manual selection, we set `userOverride` true
   onUpdateDependencies: (deps: string[], userOverride: boolean) => Promise<void> | void;
 };
@@ -15,6 +16,7 @@ const AppSettingsView: React.FC<AppSettingsViewProps> = ({
   onUpdateTitle,
   onDownloadHtml,
   selectedDependencies,
+  dependenciesUserOverride,
   onUpdateDependencies,
 }) => {
   const [isEditingName, setIsEditingName] = useState(false);
@@ -23,11 +25,16 @@ const AppSettingsView: React.FC<AppSettingsViewProps> = ({
   // Per‑vibe libraries selection state
   const allowedNames = useMemo(() => ALLOWED_DEPENDENCY_NAMES, []);
   const initialDeps = useMemo(() => {
-    const input = Array.isArray(selectedDependencies) ? selectedDependencies : DEFAULT_DEPENDENCIES;
+    const useManual = !!dependenciesUserOverride;
+    const input = useManual
+      ? Array.isArray(selectedDependencies)
+        ? selectedDependencies
+        : []
+      : [];
     return input
       .filter((n): n is string => typeof n === 'string')
       .filter((n) => allowedNames.has(n));
-  }, [selectedDependencies, allowedNames]);
+  }, [selectedDependencies, dependenciesUserOverride, allowedNames]);
   const [deps, setDeps] = useState<string[]>(initialDeps);
   const [hasUnsavedDeps, setHasUnsavedDeps] = useState(false);
   const [saveDepsOk, setSaveDepsOk] = useState(false);
@@ -237,6 +244,12 @@ const AppSettingsView: React.FC<AppSettingsViewProps> = ({
               Choose which libraries to include in generated apps for this Vibe. This controls
               imports and docs used in prompts.
             </p>
+            {!dependenciesUserOverride && (
+              <div className="mb-4 rounded border border-blue-200 bg-blue-50 px-3 py-2 text-xs text-blue-800 dark:border-blue-900/40 dark:bg-blue-900/20 dark:text-blue-300">
+                Libraries, instructional text, and demo data are currently chosen by the LLM at
+                runtime. Select libraries and click Save to set a manual override for this vibe.
+              </div>
+            )}
             {llmsCatalog.length === 0 ? (
               <div className="text-accent-01 dark:text-dark-secondary text-sm">
                 No libraries available.

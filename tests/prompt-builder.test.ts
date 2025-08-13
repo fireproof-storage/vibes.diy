@@ -10,7 +10,7 @@ vi.resetModules();
 let generateImportStatements: (llms: Array<any>) => string;
 let makeBaseSystemPrompt: (model: string, sessionDoc?: any) => Promise<string>;
 let preloadLlmsText: () => Promise<void>;
-let DEFAULT_DEPENDENCIES: string[];
+// no-op vars (past defaults not needed with schema-based selection)
 
 // Load actual LLM configs and txt content from app/llms
 // Use eager glob so it's resolved at import time in Vitest/Vite environment
@@ -41,7 +41,8 @@ beforeAll(async () => {
   generateImportStatements = (mod as any).generateImportStatements;
   makeBaseSystemPrompt = mod.makeBaseSystemPrompt;
   preloadLlmsText = mod.preloadLlmsText;
-  ({ DEFAULT_DEPENDENCIES } = await import('../app/llms/catalog'));
+  // ensure catalog loads for glob ordering
+  await import('../app/llms/catalog');
 });
 
 describe('prompt builder (real implementation)', () => {
@@ -78,7 +79,7 @@ describe('prompt builder (real implementation)', () => {
     }
   });
 
-  it('makeBaseSystemPrompt: includes imports for default dependencies and llms docs (concatenated), default stylePrompt', async () => {
+  it('makeBaseSystemPrompt: in test mode, non-override path includes all catalog imports and docs; default stylePrompt', async () => {
     // Warm cache so docs are available via raw imports
     await preloadLlmsText();
 
@@ -87,8 +88,8 @@ describe('prompt builder (real implementation)', () => {
       userPrompt: undefined,
     });
 
-    // Code fence and imports
-    const chosenLlms = orderedLlms.filter((l) => DEFAULT_DEPENDENCIES.includes(l.name));
+    // In test mode, schema selector returns all modules
+    const chosenLlms = orderedLlms;
     const importBlock = generateImportStatements(chosenLlms);
     expect(prompt).toContain('```js');
     expect(prompt).toContain('import React, { ... } from "react"' + importBlock);
@@ -112,7 +113,7 @@ describe('prompt builder (real implementation)', () => {
       userPrompt: 'hello',
     });
 
-    const chosenLlms = orderedLlms.filter((l) => DEFAULT_DEPENDENCIES.includes(l.name));
+    const chosenLlms = orderedLlms; // test mode selects all
     const importBlock = generateImportStatements(chosenLlms);
     expect(prompt).toContain('import React, { ... } from "react"' + importBlock);
 
@@ -132,5 +133,16 @@ describe('prompt builder (real implementation)', () => {
     });
     expect(prompt).toContain('<useFireproof-docs>');
     expect(prompt).not.toContain('<callAI-docs>');
+  });
+
+  it('makeBaseSystemPrompt: includes instructional-text and demo-data guidance when selector enables them (test mode)', async () => {
+    await preloadLlmsText();
+    const prompt = await makeBaseSystemPrompt('test-model', {
+      stylePrompt: undefined,
+      userPrompt: undefined,
+      history: [],
+    });
+    expect(prompt).toMatch(/include a Demo Data button/i);
+    expect(prompt).toMatch(/include a vivid description of the app's purpose/i);
   });
 });

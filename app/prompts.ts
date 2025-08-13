@@ -1,3 +1,5 @@
+import { callAI, type Message, type CallAIOptions } from 'call-ai';
+import { APP_MODE, CALLAI_ENDPOINT } from './config/env';
 // Import all LLM text files statically
 import callaiTxt from './llms/callai.txt?raw';
 import fireproofTxt from './llms/fireproof.txt?raw';
@@ -30,9 +32,105 @@ function loadLlmsTextByName(name: string): string | undefined {
   }
 }
 
-// (no history-based detection required for deterministic selection)
+// Escape for RegExp construction
+function escapeRegExp(str: string): string {
+  return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
 
-// (Legacy) AI-based selection code removed in favor of deterministic Settings-based selection.
+type HistoryMessage = { role: 'user' | 'assistant' | 'system'; content: string };
+
+// Precompile import-detection regexes once per module entry
+const llmImportRegexes = llmsCatalog
+  .filter((l) => l.importModule && l.importName)
+  .map((l) => {
+    const mod = escapeRegExp(l.importModule);
+    const name = escapeRegExp(l.importName);
+    return {
+      name: l.name,
+      // Matches: import { ..., <name>, ... } from '<module>'
+      named: new RegExp(`import\\s*\\{[^}]*\\b${name}\\b[^}]*\\}\\s*from\\s*['\\\"]${mod}['\\\"]`),
+      // Matches: import <name> from '<module>'
+      def: new RegExp(`import\\s+${name}\\s+from\\s*['\\\"]${mod}['\\\"]`),
+    } as const;
+  });
+
+// Detect modules already referenced in history imports
+function detectModulesInHistory(history: HistoryMessage[]): Set<string> {
+  const detected = new Set<string>();
+  if (!Array.isArray(history)) return detected;
+  for (const msg of history) {
+    const content = msg?.content || '';
+    if (!content || typeof content !== 'string') continue;
+    for (const { name, named, def } of llmImportRegexes) {
+      if (named.test(content) || def.test(content)) detected.add(name);
+    }
+  }
+  return detected;
+}
+
+export type LlmSelectionDecisions = {
+  selected: string[]; // names from catalog
+  instructionalText: boolean; // whether to include usage instructions in prompt
+  demoData: boolean; // whether to instruct adding Demo Data button/flow
+};
+
+// Ask LLM which modules and options to include based on catalog + user prompt + history
+export async function selectLlmsAndOptions(
+  model: string,
+  userPrompt: string,
+  history: HistoryMessage[]
+): Promise<LlmSelectionDecisions> {
+  if (APP_MODE === 'test') {
+    return { selected: llmsCatalog.map((l) => l.name), instructionalText: true, demoData: true };
+  }
+
+  const catalog = llmsCatalog.map((l) => ({ name: l.name, description: l.description || '' }));
+  const payload = { catalog, userPrompt: userPrompt || '', history: history || [] };
+
+  const messages: Message[] = [
+    {
+      role: 'system',
+      content:
+        'You select which library modules from a catalog should be included AND whether to include instructional UI text and a demo-data button. Read the JSON payload and return JSON with properties: "selected" (array of catalog "name" strings), "instructionalText" (boolean), and "demoData" (boolean). Only choose modules from the catalog. Include any libraries already used in history. Respond with JSON only.',
+    },
+    { role: 'user', content: JSON.stringify(payload) },
+  ];
+
+  const options: CallAIOptions = {
+    chatUrl: CALLAI_ENDPOINT,
+    apiKey: 'sk-vibes-proxy-managed',
+    model,
+    schema: {
+      name: 'module_and_options_selection',
+      properties: {
+        selected: { type: 'array', items: { type: 'string' } },
+        instructionalText: { type: 'boolean' },
+        demoData: { type: 'boolean' },
+      },
+    },
+    max_tokens: 2000,
+    headers: {
+      'HTTP-Referer': 'https://vibes.diy',
+      'X-Title': 'Vibes DIY',
+      'X-VIBES-Token': localStorage.getItem('auth_token') || '',
+    },
+  };
+
+  try {
+    const raw = (await callAI(messages, options)) as string;
+    const parsed = JSON.parse(raw) ?? {};
+    const selected = Array.isArray(parsed?.selected)
+      ? parsed.selected.filter((v: unknown) => typeof v === 'string')
+      : [];
+    const instructionalText =
+      typeof parsed?.instructionalText === 'boolean' ? parsed.instructionalText : true;
+    const demoData = typeof parsed?.demoData === 'boolean' ? parsed.demoData : true;
+    return { selected, instructionalText, demoData };
+  } catch (err) {
+    console.warn('Module/options selection call failed:', err);
+    return { selected: [], instructionalText: true, demoData: true };
+  }
+}
 
 // Public: preload all llms text files (triggered on form focus)
 export async function preloadLlmsText(): Promise<void> {
@@ -67,23 +165,33 @@ export function generateImportStatements(llms: LlmsCatalogEntry[]) {
 export async function makeBaseSystemPrompt(model: string, sessionDoc?: any) {
   // Inputs for module selection
   const userPrompt = sessionDoc?.userPrompt || '';
-  // Deterministic dependency selection with user override gating
+  const history: HistoryMessage[] = Array.isArray(sessionDoc?.history) ? sessionDoc.history : [];
+  // Selection path with per‑vibe override preserved
   const useOverride = !!sessionDoc?.dependenciesUserOverride;
-  let selectedNames: string[] | undefined;
+
+  let selectedNames: string[] = [];
+  let includeInstructional = true;
+  let includeDemoData = true;
+
   if (useOverride && Array.isArray(sessionDoc?.dependencies)) {
     selectedNames = (sessionDoc.dependencies as unknown[])
       .filter((v): v is string => typeof v === 'string')
       .filter((name) => ALLOWED_DEPENDENCY_NAMES.has(name));
-    // Note: allow empty [] when override is true? Clarified in PR discussion; for now,
-    // we keep defaults for empty only when override is not set.
+  } else {
+    // Non‑override path: schema‑driven LLM selection (plus history retention)
+    const decisions = await selectLlmsAndOptions(model, userPrompt, history);
+    includeInstructional = decisions.instructionalText;
+    includeDemoData = decisions.demoData;
+
+    const detected = detectModulesInHistory(history);
+    const finalNames = new Set<string>([...decisions.selected, ...detected]);
+    selectedNames = Array.from(finalNames);
+
+    // Fallback if empty: use deterministic DEFAULT_DEPENDENCIES
+    if (selectedNames.length === 0) selectedNames = [...DEFAULT_DEPENDENCIES];
   }
-  // Non-override path: use deterministic defaults (pending clarification on re-enabling picker)
-  if (!useOverride) {
-    selectedNames = [...DEFAULT_DEPENDENCIES];
-  }
-  // Final safety: ensure array is defined
-  if (!selectedNames) selectedNames = [...DEFAULT_DEPENDENCIES];
-  const chosenLlms = llmsCatalog.filter((l) => selectedNames!.includes(l.name));
+
+  const chosenLlms = llmsCatalog.filter((l) => selectedNames.includes(l.name));
 
   // 3) Concatenate docs for chosen modules
   let concatenatedLlmsTxt = '';
@@ -110,6 +218,14 @@ ${text || ''}
   // Get style prompt from session document if available
   const stylePrompt = sessionDoc?.stylePrompt || defaultStylePrompt;
 
+  // Optionally include instructional/demo-data guidance based on decisions
+  const instructionalLine = includeInstructional
+    ? "- In the UI, include a vivid description of the app's purpose and detailed instructions how to use it, in italic text.\n"
+    : '';
+  const demoDataLines = includeDemoData
+    ? `- If your app has a function that uses callAI with a schema to save data, include a Demo Data button that calls that function with an example prompt. Don't write an extra function, use real app code so the data illustrates what it looks like to use the app.\n- Never have have an instance of callAI that is only used to generate demo data, always use the same calls that are triggered by user actions in the app.\n`
+    : '';
+
   return `
 You are an AI assistant tasked with creating React components. You should create components that:
 - Use modern React practices and follow the rules of hooks
@@ -132,9 +248,7 @@ You are an AI assistant tasked with creating React components. You should create
 - If you get missing block errors, change the database name to a new name
 - List data items on the main page of your app so users don't have to hunt for them
 - If you save data, make sure it is browseable in the app, eg lists should be clickable for more details
-- In the UI, include a vivid description of the app's purpose and detailed instructions how to use it, in italic text.
-- If your app has a function that uses callAI with a schema to save data, include a Demo Data button that calls that function with an example prompt. Don't write an extra function, use real app code so the data illustrates what it looks like to use the app.
-- Never have have an instance of callAI that is only used to generate demo data, always use the same calls that are triggered by user actions in the app.
+${instructionalLine}${demoDataLines}
 
 ${concatenatedLlmsTxt}
 
