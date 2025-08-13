@@ -83,7 +83,8 @@ export function ShareModal({
       >
         <div className="py-1" role="menu" aria-orientation="vertical" aria-labelledby="share-menu">
           <p className="mb-4 text-xs text-blue-700 italic dark:text-blue-200">
-            You are in <strong>dev mode</strong>. Data is temporary until you publish your app. Publishing allows anyone with the link to share and remix. Selected apps are featured in{' '}
+            You are in <strong>dev mode</strong>. Data is temporary until you publish your app.
+            Publishing allows anyone with the link to share and remix. Selected apps are featured in{' '}
             <a
               href="https://discord.gg/vnpWycj4Ta"
               target="_blank"

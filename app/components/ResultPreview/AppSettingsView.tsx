@@ -65,8 +65,12 @@ const AppSettingsView: React.FC<AppSettingsViewProps> = ({
             </h3>
             <div className="space-y-4">
               <div className="space-y-1">
-                <p className="text-light-primary dark:text-dark-primary opacity-60">You are in <strong>dev mode</strong>. Data is temporary until you publish your app with the share button at top right. You can set the name of your app here or continue to autogenerate names.</p>
-                <label className="text-light-primary dark:text-dark-primary block text-sm font-semibold pt-2">
+                <p className="text-light-primary dark:text-dark-primary opacity-60">
+                  You are in <strong>dev mode</strong>. Data is temporary until you publish your app
+                  with the share button at top right. You can set the name of your app here or
+                  continue to autogenerate names.
+                </p>
+                <label className="text-light-primary dark:text-dark-primary block pt-2 text-sm font-semibold">
                   App Name
                 </label>
                 {isEditingName ? (

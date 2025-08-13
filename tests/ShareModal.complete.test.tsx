@@ -105,7 +105,9 @@ describe('ShareModal', () => {
     expect(publishButton).toBeInTheDocument();
 
     // Should have the community message
-    expect(screen.getByText(/publish your app for anyone to share and remix/i)).toBeInTheDocument();
+    expect(
+      screen.getByText(/Publishing allows anyone with the link to share and remix/i)
+    ).toBeInTheDocument();
     expect(screen.getByText(/our community/i)).toBeInTheDocument();
   });
 
