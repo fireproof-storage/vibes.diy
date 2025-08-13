@@ -31,7 +31,7 @@ export function useSession(routedSessionId?: string) {
   const sessionId = effectiveSessionId;
   const sessionDbName = getSessionDatabaseName(sessionId);
   // Non-lazy initialization to make storage side effects observable
-  // Initialize the database eagerly via useFireproof(sessionDbName)
+  // Initialize via useFireproof(sessionDbName) to standardize eager init
   const {
     database: sessionDatabase,
     useDocument: useSessionDocument,
