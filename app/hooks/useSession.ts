@@ -8,7 +8,7 @@ import type {
 import { getSessionDatabaseName } from '../utils/databaseManager';
 import { useLazyFireproof } from './useLazyFireproof';
 import { encodeTitle } from '../components/SessionSidebar/utils';
-import { ALLOWED_DEPENDENCY_NAMES, llmsCatalog } from '../llms/catalog';
+import { CATALOG_DEPENDENCY_NAMES, llmsCatalog } from '../llms/catalog';
 
 export function useSession(routedSessionId?: string) {
   const [generatedSessionId] = useState(
@@ -142,8 +142,8 @@ export function useSession(routedSessionId?: string) {
       const input = Array.isArray(deps)
         ? deps.filter((n): n is string => typeof n === 'string')
         : [];
-      // Validate and de‑dupe by allowed names
-      const deduped = Array.from(new Set(input.filter((n) => ALLOWED_DEPENDENCY_NAMES.has(n))));
+      // Validate and de‑dupe by catalog names
+      const deduped = Array.from(new Set(input.filter((n) => CATALOG_DEPENDENCY_NAMES.has(n))));
       // Canonicalize order by catalog order
       const order = new Map(llmsCatalog.map((l, i) => [l.name, i] as const));
       const validDeps = deduped.sort((a, b) => order.get(a)! - order.get(b)!);

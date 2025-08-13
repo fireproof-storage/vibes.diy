@@ -8,7 +8,7 @@ import {
   DEFAULT_DEPENDENCIES,
   llmsCatalog,
   type LlmsCatalogEntry,
-  ALLOWED_DEPENDENCY_NAMES,
+  CATALOG_DEPENDENCY_NAMES,
 } from './llms/catalog';
 
 // Static mapping of LLM text content
@@ -176,7 +176,7 @@ export async function makeBaseSystemPrompt(model: string, sessionDoc?: any) {
   if (useOverride && Array.isArray(sessionDoc?.dependencies)) {
     selectedNames = (sessionDoc.dependencies as unknown[])
       .filter((v): v is string => typeof v === 'string')
-      .filter((name) => ALLOWED_DEPENDENCY_NAMES.has(name));
+      .filter((name) => CATALOG_DEPENDENCY_NAMES.has(name));
   } else {
     // Non‑override path: schema‑driven LLM selection (plus history retention)
     const decisions = await selectLlmsAndOptions(model, userPrompt, history);

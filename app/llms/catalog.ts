@@ -20,8 +20,8 @@ export type LlmsCatalogEntry = (typeof modules)[string]['default'];
 
 export const llmsCatalog: LlmsCatalogEntry[] = Object.values(modules).map((m) => m.default);
 
-// Allowed dependency names (stable identifiers)
-export const ALLOWED_DEPENDENCY_NAMES = new Set(llmsCatalog.map((m) => m.name));
+// Catalog dependency names (stable identifiers)
+export const CATALOG_DEPENDENCY_NAMES = new Set(llmsCatalog.map((m) => m.name));
 
 // Default deterministic selection when none is persisted
 // We pick the core libraries commonly used across the app

@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { DEFAULT_DEPENDENCIES, llmsCatalog, ALLOWED_DEPENDENCY_NAMES } from '~/llms/catalog';
+import { DEFAULT_DEPENDENCIES, llmsCatalog, CATALOG_DEPENDENCY_NAMES } from '~/llms/catalog';
 
 type AppSettingsViewProps = {
   title: string;
@@ -32,7 +32,7 @@ const AppSettingsView: React.FC<AppSettingsViewProps> = ({
   const [editedName, setEditedName] = useState(title);
   const nameInputRef = useRef<HTMLInputElement>(null);
   // Per‑vibe libraries selection state
-  const allowedNames = useMemo(() => ALLOWED_DEPENDENCY_NAMES, []);
+  const catalogNames = useMemo(() => CATALOG_DEPENDENCY_NAMES, []);
   const initialDeps = useMemo(() => {
     const useManual = !!dependenciesUserOverride;
     const input = useManual
@@ -42,8 +42,8 @@ const AppSettingsView: React.FC<AppSettingsViewProps> = ({
       : [];
     return input
       .filter((n): n is string => typeof n === 'string')
-      .filter((n) => allowedNames.has(n));
-  }, [selectedDependencies, dependenciesUserOverride, allowedNames]);
+      .filter((n) => catalogNames.has(n));
+  }, [selectedDependencies, dependenciesUserOverride, catalogNames]);
   const [deps, setDeps] = useState<string[]>(initialDeps);
   const [hasUnsavedDeps, setHasUnsavedDeps] = useState(false);
   const [saveDepsOk, setSaveDepsOk] = useState(false);
@@ -105,7 +105,7 @@ const AppSettingsView: React.FC<AppSettingsViewProps> = ({
   const handleSaveDeps = useCallback(async () => {
     setSaveDepsErr(null);
     try {
-      const valid = deps.filter((n) => allowedNames.has(n));
+      const valid = deps.filter((n) => catalogNames.has(n));
       await onUpdateDependencies(valid.length ? valid : DEFAULT_DEPENDENCIES, true);
       setHasUnsavedDeps(false);
       setSaveDepsOk(true);
@@ -113,7 +113,7 @@ const AppSettingsView: React.FC<AppSettingsViewProps> = ({
     } catch (e: any) {
       setSaveDepsErr(e?.message || 'Failed to save libraries');
     }
-  }, [deps, onUpdateDependencies, allowedNames]);
+  }, [deps, onUpdateDependencies, catalogNames]);
 
   // Instructional text and demo data handlers
   const handleInstructionalTextChange = useCallback(
