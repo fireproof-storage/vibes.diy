@@ -91,7 +91,7 @@ export async function selectLlmsAndOptions(
     {
       role: 'system',
       content:
-        'You select which library modules from a catalog should be included AND whether to include instructional UI text and a demo-data button. Read the JSON payload and return JSON with properties: "selected" (array of catalog "name" strings), "instructionalText" (boolean), and "demoData" (boolean). Only choose modules from the catalog. Include any libraries already used in history. Respond with JSON only.',
+        'You select which library modules from a catalog should be included AND whether to include instructional UI text and a demo-data button. First analyze if the user prompt describes specific look & feel requirements. For instructional text and demo data: include them only when the app is clearly a plain CRUD app without specified look & feel. Read the JSON payload and return JSON with properties: "selected" (array of catalog "name" strings), "instructionalText" (boolean), and "demoData" (boolean). Only choose modules from the catalog. Include any libraries already used in history. Respond with JSON only.',
     },
     { role: 'user', content: JSON.stringify(payload) },
   ];
