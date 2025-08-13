@@ -98,7 +98,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <Links />
       </head>
       <body>
-        <script>console.log("🔥 FIREPROOF UPGRADE BRANCH: v0.23.0 🔥");</script>
+        <script>console.log("🔥 FIREPROOF UPGRADE BRANCH iframe: v0.23.0 🔥");</script>
         <AuthProvider>
           <PostHogProvider
             apiKey={POSTHOG_KEY}
