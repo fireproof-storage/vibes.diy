@@ -1,8 +1,8 @@
 import { vi, describe, it, expect, beforeEach } from "vitest";
-import { makeBaseSystemPrompt, RESPONSE_FORMAT } from "../app/prompts";
+import { makeBaseSystemPrompt, RESPONSE_FORMAT } from "../pkg/app/prompts";
 
 // We need to mock the module properly, not test the real implementation yet
-vi.mock("../app/prompts", () => ({
+vi.mock("../pkg/app/prompts", () => ({
   makeBaseSystemPrompt: vi.fn().mockResolvedValue("mocked system prompt"),
   RESPONSE_FORMAT: {
     dependencies: {

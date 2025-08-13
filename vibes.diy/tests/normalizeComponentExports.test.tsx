@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { normalizeComponentExports } from "../app/utils/normalizeComponentExports";
+import { normalizeComponentExports } from "../pkg/app/utils/normalizeComponentExports";
 
 describe("normalizeComponentExports", () => {
   // Case 1: TaskTracker pattern - function declaration followed by export

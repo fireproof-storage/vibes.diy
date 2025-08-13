@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, afterEach, type Mock } from "vitest";
-import * as auth from "../app/utils/auth";
+import * as auth from "../pkg/app/utils/auth";
 
 // Mock the jose module
 vi.mock("jose", () => ({

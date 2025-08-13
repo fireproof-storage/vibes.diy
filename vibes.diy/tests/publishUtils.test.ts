@@ -7,17 +7,17 @@ import {
   vi,
   type Mock,
 } from "vitest";
-import { normalizeComponentExports } from "../app/utils/normalizeComponentExports";
-import { publishApp } from "../app/utils/publishUtils";
+import { normalizeComponentExports } from "../pkg/app/utils/normalizeComponentExports";
+import { publishApp } from "../pkg/app/utils/publishUtils";
 
 // Mock dependencies
 vi.mock("use-fireproof");
-vi.mock("../app/utils/databaseManager");
-vi.mock("../app/utils/normalizeComponentExports");
+vi.mock("../pkg/app/utils/databaseManager");
+vi.mock("../pkg/app/utils/normalizeComponentExports");
 
 // Import mocked modules
 import { fireproof } from "use-fireproof";
-import { getSessionDatabaseName } from "../app/utils/databaseManager";
+import { getSessionDatabaseName } from "../pkg/app/utils/databaseManager";
 
 // We need to mock the import.meta.env
 vi.stubGlobal("import", {
