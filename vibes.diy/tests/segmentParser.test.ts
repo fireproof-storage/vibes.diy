@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { parseContent } from "../app/utils/segmentParser";
+import { parseContent } from "../pkg/app/utils/segmentParser";
 import fs from "fs";
 import path from "path";
 

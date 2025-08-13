@@ -1,17 +1,17 @@
 import { describe, it, expect, vi } from "vitest";
-import { parseContent, parseDependencies } from "../app/utils/segmentParser";
-import type { ChatMessage, AiChatMessage } from "../app/types/chat";
+import { parseContent, parseDependencies } from "../pkg/app/utils/segmentParser";
+import type { ChatMessage, AiChatMessage } from "../pkg/app/types/chat";
 
 // Mock the prompts module
-vi.mock("../app/prompts", () => ({
+vi.mock("../pkg/app/prompts", () => ({
   makeBaseSystemPrompt: vi.fn().mockResolvedValue("Mocked system prompt"),
 }));
 
 // Mock the provisioning module
-vi.mock("../app/config/provisioning");
+vi.mock("../pkg/app/config/provisioning");
 
 // Mock the env module
-vi.mock("../app/config/env", () => ({
+vi.mock("../pkg/app/config/env", () => ({
   CALLAI_API_KEY: "mock-callai-api-key-for-testing",
   SETTINGS_DBNAME: "test-chat-history",
 }));
@@ -46,7 +46,7 @@ const mergeUserMessageImpl = (data: Partial<ChatMessage>) => {
 const mockMergeUserMessage = vi.fn(mergeUserMessageImpl);
 
 // Mock the useSession hook
-vi.mock("../app/hooks/useSession", () => {
+vi.mock("../pkg/app/hooks/useSession", () => {
   return {
     useSession: () => {
       // Don't reset here, reset is done in beforeEach
@@ -374,7 +374,7 @@ export default Timer;`,
 });
 
 // Mock the useSessionMessages hook
-vi.mock("../app/hooks/useSessionMessages", () => {
+vi.mock("../pkg/app/hooks/useSessionMessages", () => {
   // Track messages across test runs
   const messagesStore: Record<string, ChatMessage[]> = {};
 

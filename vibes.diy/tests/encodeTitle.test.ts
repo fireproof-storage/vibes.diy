@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { encodeTitle } from "../app/components/SessionSidebar/utils";
+import { encodeTitle } from "../pkg/app/components/SessionSidebar/utils";
 
 describe("encodeTitle", () => {
   it("converts spaces and special characters to hyphenated encoding", () => {
