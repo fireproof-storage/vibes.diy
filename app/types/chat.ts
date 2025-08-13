@@ -130,6 +130,7 @@ export interface ChatState {
   sendMessage: (text?: string) => Promise<void>;
   saveCodeAsAiMessage: (code: string, currentMessages: ChatMessageDocument[]) => Promise<string>;
   title: string;
+  updateTitle: (title: string, isManual?: boolean) => Promise<void>;
   addScreenshot: (screenshot: string | null) => Promise<void>;
   sessionId?: string | null;
   setSelectedResponseId: (id: string) => void;

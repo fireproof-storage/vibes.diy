@@ -7,6 +7,7 @@ export interface ResultPreviewProps {
   onScreenshotCaptured?: (screenshotData: string | null) => void;
   sessionId?: string;
   title?: string;
+  updateTitle: (title: string, isManual?: boolean) => Promise<void>;
   isStreaming?: boolean;
   codeReady?: boolean;
   displayView: ViewType; // Changed from activeView

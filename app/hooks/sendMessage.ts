@@ -28,7 +28,7 @@ export interface SendMessageContext {
   sessionDatabase: any;
   setPendingAiMessage: (doc: ChatMessageDocument | null) => void;
   setSelectedResponseId: (id: string) => void;
-  updateTitle: (title: string, isManual?: boolean) => void;
+  updateTitle: (title: string, isManual?: boolean) => Promise<void>;
   setInput: (text: string) => void;
   userId: string | undefined;
   titleModel: string;
@@ -178,7 +178,7 @@ export async function sendMessage(
           try {
             const title = await generateTitle(segments, titleModel, currentApiKey);
             if (title) {
-              updateTitle(title, false); // Mark as AI-generated
+              await updateTitle(title, false); // Mark as AI-generated
             }
           } catch (titleError) {
             console.warn('Failed to generate title:', titleError);

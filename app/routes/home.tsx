@@ -320,7 +320,8 @@ export default function UnifiedSession() {
         }
         previewPanel={
           <ResultPreview
-            title={chatState.title || undefined}
+            title={chatState.title}
+            updateTitle={chatState.updateTitle}
             sessionId={chatState.sessionId || ''}
             code={chatState.selectedCode?.content || ''}
             isStreaming={chatState.isStreaming}

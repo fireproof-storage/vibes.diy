@@ -39,7 +39,7 @@ vi.mock('../app/hooks/useSession', () => ({
       put: vi.fn().mockResolvedValue({ ok: true }),
     },
     openSessionDatabase: vi.fn().mockResolvedValue({}),
-    updateTitle: vi.fn().mockResolvedValue(true),
+    updateTitle: vi.fn().mockResolvedValue(undefined),
     updatePublishedUrl: vi.fn(),
     updateFirehoseShared: vi.fn(),
     addScreenshot: vi.fn(),

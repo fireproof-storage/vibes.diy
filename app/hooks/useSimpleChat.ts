@@ -317,6 +317,7 @@ ${code}
     saveCodeAsAiMessage,
     inputRef,
     title: vibeDoc?.title || '',
+    updateTitle,
     // Error tracking
     immediateErrors,
     advisoryErrors,
