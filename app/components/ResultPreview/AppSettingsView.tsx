@@ -8,12 +8,12 @@ type AppSettingsViewProps = {
   selectedDependencies?: string[];
   dependenciesUserOverride?: boolean;
   // When saving a manual selection, we set `userOverride` true
-  onUpdateDependencies: (deps: string[], userOverride: boolean) => Promise<void> | void;
+  onUpdateDependencies?: (deps: string[], userOverride: boolean) => Promise<void> | void;
   // Instructional text and demo data override settings
   instructionalTextOverride?: boolean;
   demoDataOverride?: boolean;
-  onUpdateInstructionalTextOverride: (override?: boolean) => Promise<void> | void;
-  onUpdateDemoDataOverride: (override?: boolean) => Promise<void> | void;
+  onUpdateInstructionalTextOverride?: (override?: boolean) => Promise<void> | void;
+  onUpdateDemoDataOverride?: (override?: boolean) => Promise<void> | void;
 };
 
 const AppSettingsView: React.FC<AppSettingsViewProps> = ({
@@ -106,7 +106,7 @@ const AppSettingsView: React.FC<AppSettingsViewProps> = ({
     setSaveDepsErr(null);
     try {
       const valid = deps.filter((n) => catalogNames.has(n));
-      await onUpdateDependencies(valid.length ? valid : DEFAULT_DEPENDENCIES, true);
+      await onUpdateDependencies?.(valid.length ? valid : DEFAULT_DEPENDENCIES, true);
       setHasUnsavedDeps(false);
       setSaveDepsOk(true);
       setTimeout(() => setSaveDepsOk(false), 2000);
@@ -119,7 +119,7 @@ const AppSettingsView: React.FC<AppSettingsViewProps> = ({
   const handleInstructionalTextChange = useCallback(
     (value: 'llm' | 'on' | 'off') => {
       const override = value === 'llm' ? undefined : value === 'on';
-      onUpdateInstructionalTextOverride(override);
+      onUpdateInstructionalTextOverride?.(override);
     },
     [onUpdateInstructionalTextOverride]
   );
@@ -127,7 +127,7 @@ const AppSettingsView: React.FC<AppSettingsViewProps> = ({
   const handleDemoDataChange = useCallback(
     (value: 'llm' | 'on' | 'off') => {
       const override = value === 'llm' ? undefined : value === 'on';
-      onUpdateDemoDataOverride(override);
+      onUpdateDemoDataOverride?.(override);
     },
     [onUpdateDemoDataOverride]
   );
