@@ -31,7 +31,13 @@ function ResultPreview({
   // Use CSS-based dark mode detection like the rest of the UI
   const isDarkMode =
     typeof document !== 'undefined' ? document.documentElement.classList.contains('dark') : true; // Default to dark mode for SSR
-  const { session, vibeDoc, updateDependencies } = useSession(sessionId);
+  const {
+    session,
+    vibeDoc,
+    updateDependencies,
+    updateInstructionalTextOverride,
+    updateDemoDataOverride,
+  } = useSession(sessionId);
   const showWelcome = !isStreaming && (!code || code.length === 0);
 
   // Use title from props directly
@@ -123,6 +129,10 @@ function ResultPreview({
       selectedDependencies={vibeDoc?.dependencies}
       dependenciesUserOverride={vibeDoc?.dependenciesUserOverride}
       onUpdateDependencies={updateDependencies}
+      instructionalTextOverride={vibeDoc?.instructionalTextOverride}
+      demoDataOverride={vibeDoc?.demoDataOverride}
+      onUpdateInstructionalTextOverride={updateInstructionalTextOverride}
+      onUpdateDemoDataOverride={updateDemoDataOverride}
     />
   ) : (
     <IframeContent

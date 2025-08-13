@@ -9,6 +9,11 @@ type AppSettingsViewProps = {
   dependenciesUserOverride?: boolean;
   // When saving a manual selection, we set `userOverride` true
   onUpdateDependencies: (deps: string[], userOverride: boolean) => Promise<void> | void;
+  // Instructional text and demo data override settings
+  instructionalTextOverride?: boolean;
+  demoDataOverride?: boolean;
+  onUpdateInstructionalTextOverride: (override?: boolean) => Promise<void> | void;
+  onUpdateDemoDataOverride: (override?: boolean) => Promise<void> | void;
 };
 
 const AppSettingsView: React.FC<AppSettingsViewProps> = ({
@@ -18,6 +23,10 @@ const AppSettingsView: React.FC<AppSettingsViewProps> = ({
   selectedDependencies,
   dependenciesUserOverride,
   onUpdateDependencies,
+  instructionalTextOverride,
+  demoDataOverride,
+  onUpdateInstructionalTextOverride,
+  onUpdateDemoDataOverride,
 }) => {
   const [isEditingName, setIsEditingName] = useState(false);
   const [editedName, setEditedName] = useState(title);
@@ -105,6 +114,23 @@ const AppSettingsView: React.FC<AppSettingsViewProps> = ({
       setSaveDepsErr(e?.message || 'Failed to save libraries');
     }
   }, [deps, onUpdateDependencies, allowedNames]);
+
+  // Instructional text and demo data handlers
+  const handleInstructionalTextChange = useCallback(
+    (value: 'llm' | 'on' | 'off') => {
+      const override = value === 'llm' ? undefined : value === 'on';
+      onUpdateInstructionalTextOverride(override);
+    },
+    [onUpdateInstructionalTextOverride]
+  );
+
+  const handleDemoDataChange = useCallback(
+    (value: 'llm' | 'on' | 'off') => {
+      const override = value === 'llm' ? undefined : value === 'on';
+      onUpdateDemoDataOverride(override);
+    },
+    [onUpdateDemoDataOverride]
+  );
 
   return (
     <div className="flex h-full justify-center p-8 pt-16">
@@ -282,6 +308,93 @@ const AppSettingsView: React.FC<AppSettingsViewProps> = ({
                 })}
               </div>
             )}
+          </div>
+
+          <div className="bg-light-background-01 dark:bg-dark-background-01 border-light-decorative-01 dark:border-dark-decorative-01 rounded-lg border p-6">
+            <h3 className="text-light-primary dark:text-dark-primary mb-4 text-lg font-medium">
+              Prompt Options
+            </h3>
+            <p className="text-accent-01 dark:text-accent-01 mb-4 text-sm">
+              Control how the AI generates code for this Vibe. You can let the LLM decide or override specific settings.
+            </p>
+            
+            <div className="space-y-4">
+              <div>
+                <label className="text-light-primary dark:text-dark-primary block text-sm font-semibold mb-2">
+                  Instructional Text
+                </label>
+                <div className="space-y-2">
+                  {(['llm', 'on', 'off'] as const).map((value) => {
+                    const currentValue = instructionalTextOverride === undefined 
+                      ? 'llm' 
+                      : instructionalTextOverride ? 'on' : 'off';
+                    const isChecked = currentValue === value;
+                    const labels = {
+                      llm: 'Let LLM decide',
+                      on: 'Always include instructional text',
+                      off: 'Never include instructional text'
+                    };
+                    
+                    return (
+                      <label
+                        key={value}
+                        className="border-light-decorative-01 dark:border-dark-decorative-01 flex cursor-pointer items-center gap-2 rounded-md border p-2 text-sm"
+                      >
+                        <input
+                          type="radio"
+                          name="instructionalText"
+                          value={value}
+                          checked={isChecked}
+                          onChange={() => handleInstructionalTextChange(value)}
+                          className="mt-0.5"
+                        />
+                        <span className="text-light-primary dark:text-dark-primary">
+                          {labels[value]}
+                        </span>
+                      </label>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <div>
+                <label className="text-light-primary dark:text-dark-primary block text-sm font-semibold mb-2">
+                  Demo Data
+                </label>
+                <div className="space-y-2">
+                  {(['llm', 'on', 'off'] as const).map((value) => {
+                    const currentValue = demoDataOverride === undefined 
+                      ? 'llm' 
+                      : demoDataOverride ? 'on' : 'off';
+                    const isChecked = currentValue === value;
+                    const labels = {
+                      llm: 'Let LLM decide',
+                      on: 'Always include demo data',
+                      off: 'Never include demo data'
+                    };
+                    
+                    return (
+                      <label
+                        key={value}
+                        className="border-light-decorative-01 dark:border-dark-decorative-01 flex cursor-pointer items-center gap-2 rounded-md border p-2 text-sm"
+                      >
+                        <input
+                          type="radio"
+                          name="demoData"
+                          value={value}
+                          checked={isChecked}
+                          onChange={() => handleDemoDataChange(value)}
+                          className="mt-0.5"
+                        />
+                        <span className="text-light-primary dark:text-dark-primary">
+                          {labels[value]}
+                        </span>
+                      </label>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
           </div>
 
           <div className="bg-light-background-01 dark:bg-dark-background-01 border-light-decorative-01 dark:border-dark-decorative-01 rounded-lg border p-6">

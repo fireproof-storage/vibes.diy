@@ -191,6 +191,14 @@ export async function makeBaseSystemPrompt(model: string, sessionDoc?: any) {
     if (selectedNames.length === 0) selectedNames = [...DEFAULT_DEPENDENCIES];
   }
 
+  // Apply per-vibe overrides for instructional text and demo data
+  if (sessionDoc?.instructionalTextOverride !== undefined) {
+    includeInstructional = sessionDoc.instructionalTextOverride;
+  }
+  if (sessionDoc?.demoDataOverride !== undefined) {
+    includeDemoData = sessionDoc.demoDataOverride;
+  }
+
   const chosenLlms = llmsCatalog.filter((l) => selectedNames.includes(l.name));
 
   // 3) Concatenate docs for chosen modules

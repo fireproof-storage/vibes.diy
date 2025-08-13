@@ -160,6 +160,34 @@ export function useSession(routedSessionId?: string) {
     [sessionDatabase]
   );
 
+  // Update per‑vibe instructional text override setting
+  const updateInstructionalTextOverride = useCallback(
+    async (override?: boolean) => {
+      const base = vibeRef.current;
+      const updatedDoc = {
+        ...base,
+        instructionalTextOverride: override,
+      } as VibeDocument;
+      mergeRef.current(updatedDoc);
+      await sessionDatabase.put(updatedDoc);
+    },
+    [sessionDatabase]
+  );
+
+  // Update per‑vibe demo data override setting
+  const updateDemoDataOverride = useCallback(
+    async (override?: boolean) => {
+      const base = vibeRef.current;
+      const updatedDoc = {
+        ...base,
+        demoDataOverride: override,
+      } as VibeDocument;
+      mergeRef.current(updatedDoc);
+      await sessionDatabase.put(updatedDoc);
+    },
+    [sessionDatabase]
+  );
+
   // Add a screenshot to the session (in session-specific database)
   const addScreenshot = useCallback(
     async (screenshotData: string | null) => {
@@ -231,5 +259,7 @@ export function useSession(routedSessionId?: string) {
     // Vibe document management
     vibeDoc,
     updateDependencies,
+    updateInstructionalTextOverride,
+    updateDemoDataOverride,
   };
 }

@@ -145,4 +145,67 @@ describe('prompt builder (real implementation)', () => {
     expect(prompt).toMatch(/include a Demo Data button/i);
     expect(prompt).toMatch(/include a vivid description of the app's purpose/i);
   });
+
+  it('makeBaseSystemPrompt: respects instructionalTextOverride=false to disable instructional text', async () => {
+    await preloadLlmsText();
+    const prompt = await makeBaseSystemPrompt('test-model', {
+      stylePrompt: undefined,
+      userPrompt: undefined,
+      history: [],
+      instructionalTextOverride: false,
+    });
+    expect(prompt).not.toMatch(/include a vivid description of the app's purpose/i);
+    // Demo data should still appear (not overridden)
+    expect(prompt).toMatch(/include a Demo Data button/i);
+  });
+
+  it('makeBaseSystemPrompt: respects instructionalTextOverride=true to force instructional text', async () => {
+    await preloadLlmsText();
+    const prompt = await makeBaseSystemPrompt('test-model', {
+      stylePrompt: undefined,
+      userPrompt: undefined,
+      history: [],
+      instructionalTextOverride: true,
+    });
+    expect(prompt).toMatch(/include a vivid description of the app's purpose/i);
+    expect(prompt).toMatch(/include a Demo Data button/i);
+  });
+
+  it('makeBaseSystemPrompt: respects demoDataOverride=false to disable demo data', async () => {
+    await preloadLlmsText();
+    const prompt = await makeBaseSystemPrompt('test-model', {
+      stylePrompt: undefined,
+      userPrompt: undefined,
+      history: [],
+      demoDataOverride: false,
+    });
+    expect(prompt).not.toMatch(/include a Demo Data button/i);
+    // Instructional text should still appear (not overridden)
+    expect(prompt).toMatch(/include a vivid description of the app's purpose/i);
+  });
+
+  it('makeBaseSystemPrompt: respects demoDataOverride=true to force demo data', async () => {
+    await preloadLlmsText();
+    const prompt = await makeBaseSystemPrompt('test-model', {
+      stylePrompt: undefined,
+      userPrompt: undefined,
+      history: [],
+      demoDataOverride: true,
+    });
+    expect(prompt).toMatch(/include a Demo Data button/i);
+    expect(prompt).toMatch(/include a vivid description of the app's purpose/i);
+  });
+
+  it('makeBaseSystemPrompt: respects both overrides simultaneously', async () => {
+    await preloadLlmsText();
+    const prompt = await makeBaseSystemPrompt('test-model', {
+      stylePrompt: undefined,
+      userPrompt: undefined,
+      history: [],
+      instructionalTextOverride: false,
+      demoDataOverride: false,
+    });
+    expect(prompt).not.toMatch(/include a vivid description of the app's purpose/i);
+    expect(prompt).not.toMatch(/include a Demo Data button/i);
+  });
 });
