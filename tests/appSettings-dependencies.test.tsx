@@ -77,7 +77,7 @@ describe('AppSettingsView Libraries (per‑vibe dependency chooser)', () => {
     it('renders instructional text and demo data controls with default LLM selection', async () => {
       const onUpdateInstructionalTextOverride = vi.fn();
       const onUpdateDemoDataOverride = vi.fn();
-      
+
       render(
         <AppSettingsView
           {...baseProps}
@@ -91,28 +91,33 @@ describe('AppSettingsView Libraries (per‑vibe dependency chooser)', () => {
 
       // Check that Prompt Options section exists
       expect(screen.getByText('Prompt Options')).toBeInTheDocument();
-      
+
       // Check instructional text controls
       expect(screen.getByText('Instructional Text')).toBeInTheDocument();
-      const llmDecideInstructional = screen.getByLabelText('Let LLM decide');
+      const instructionalTextInputs = screen.getAllByDisplayValue('llm');
+      const llmDecideInstructional = instructionalTextInputs.find(
+        (input) => (input as HTMLInputElement).name === 'instructionalText'
+      );
       const alwaysIncludeInstructional = screen.getByLabelText('Always include instructional text');
       const neverIncludeInstructional = screen.getByLabelText('Never include instructional text');
-      
+
       // Default should be "Let LLM decide"
-      expect(llmDecideInstructional).toBeChecked();
+      expect(llmDecideInstructional!).toBeChecked();
       expect(alwaysIncludeInstructional).not.toBeChecked();
       expect(neverIncludeInstructional).not.toBeChecked();
 
       // Check demo data controls
       expect(screen.getByText('Demo Data')).toBeInTheDocument();
-      const llmDecideDemoRadios = screen.getAllByLabelText('Let LLM decide');
-      const llmDecideDemo = llmDecideDemoRadios[1]; // Second one is for demo data
-      expect(llmDecideDemo).toBeChecked();
+      const llmDecideDemo = instructionalTextInputs.find(
+        (input) => (input as HTMLInputElement).name === 'demoData'
+      );
+
+      expect(llmDecideDemo!).toBeChecked();
     });
 
     it('allows changing instructional text override to always on', async () => {
       const onUpdateInstructionalTextOverride = vi.fn();
-      
+
       render(
         <AppSettingsView
           {...baseProps}
@@ -125,15 +130,15 @@ describe('AppSettingsView Libraries (per‑vibe dependency chooser)', () => {
       );
 
       const alwaysIncludeInstructional = screen.getByLabelText('Always include instructional text');
-      
+
       await act(async () => fireEvent.click(alwaysIncludeInstructional));
-      
+
       expect(onUpdateInstructionalTextOverride).toHaveBeenCalledWith(true);
     });
 
     it('allows changing instructional text override to always off', async () => {
       const onUpdateInstructionalTextOverride = vi.fn();
-      
+
       render(
         <AppSettingsView
           {...baseProps}
@@ -146,15 +151,15 @@ describe('AppSettingsView Libraries (per‑vibe dependency chooser)', () => {
       );
 
       const neverIncludeInstructional = screen.getByLabelText('Never include instructional text');
-      
+
       await act(async () => fireEvent.click(neverIncludeInstructional));
-      
+
       expect(onUpdateInstructionalTextOverride).toHaveBeenCalledWith(false);
     });
 
     it('allows changing back to LLM decision for instructional text', async () => {
       const onUpdateInstructionalTextOverride = vi.fn();
-      
+
       render(
         <AppSettingsView
           {...baseProps}
@@ -166,16 +171,19 @@ describe('AppSettingsView Libraries (per‑vibe dependency chooser)', () => {
         />
       );
 
-      const llmDecideInstructional = screen.getByLabelText('Let LLM decide');
-      
-      await act(async () => fireEvent.click(llmDecideInstructional));
-      
+      const instructionalTextInputs = screen.getAllByDisplayValue('llm');
+      const llmDecideInstructional = instructionalTextInputs.find(
+        (input) => (input as HTMLInputElement).name === 'instructionalText'
+      );
+
+      await act(async () => fireEvent.click(llmDecideInstructional!));
+
       expect(onUpdateInstructionalTextOverride).toHaveBeenCalledWith(undefined);
     });
 
     it('allows changing demo data override to always on', async () => {
       const onUpdateDemoDataOverride = vi.fn();
-      
+
       render(
         <AppSettingsView
           {...baseProps}
@@ -188,15 +196,15 @@ describe('AppSettingsView Libraries (per‑vibe dependency chooser)', () => {
       );
 
       const alwaysIncludeDemo = screen.getByLabelText('Always include demo data');
-      
+
       await act(async () => fireEvent.click(alwaysIncludeDemo));
-      
+
       expect(onUpdateDemoDataOverride).toHaveBeenCalledWith(true);
     });
 
     it('allows changing demo data override to always off', async () => {
       const onUpdateDemoDataOverride = vi.fn();
-      
+
       render(
         <AppSettingsView
           {...baseProps}
@@ -209,9 +217,9 @@ describe('AppSettingsView Libraries (per‑vibe dependency chooser)', () => {
       );
 
       const neverIncludeDemo = screen.getByLabelText('Never include demo data');
-      
+
       await act(async () => fireEvent.click(neverIncludeDemo));
-      
+
       expect(onUpdateDemoDataOverride).toHaveBeenCalledWith(false);
     });
 

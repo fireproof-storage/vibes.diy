@@ -315,26 +315,30 @@ const AppSettingsView: React.FC<AppSettingsViewProps> = ({
               Prompt Options
             </h3>
             <p className="text-accent-01 dark:text-accent-01 mb-4 text-sm">
-              Control how the AI generates code for this Vibe. You can let the LLM decide or override specific settings.
+              Control how the AI generates code for this Vibe. You can let the LLM decide or
+              override specific settings.
             </p>
-            
+
             <div className="space-y-4">
               <div>
-                <label className="text-light-primary dark:text-dark-primary block text-sm font-semibold mb-2">
+                <label className="text-light-primary dark:text-dark-primary mb-2 block text-sm font-semibold">
                   Instructional Text
                 </label>
                 <div className="space-y-2">
                   {(['llm', 'on', 'off'] as const).map((value) => {
-                    const currentValue = instructionalTextOverride === undefined 
-                      ? 'llm' 
-                      : instructionalTextOverride ? 'on' : 'off';
+                    const currentValue =
+                      instructionalTextOverride === undefined
+                        ? 'llm'
+                        : instructionalTextOverride
+                          ? 'on'
+                          : 'off';
                     const isChecked = currentValue === value;
                     const labels = {
                       llm: 'Let LLM decide',
                       on: 'Always include instructional text',
-                      off: 'Never include instructional text'
+                      off: 'Never include instructional text',
                     };
-                    
+
                     return (
                       <label
                         key={value}
@@ -358,21 +362,20 @@ const AppSettingsView: React.FC<AppSettingsViewProps> = ({
               </div>
 
               <div>
-                <label className="text-light-primary dark:text-dark-primary block text-sm font-semibold mb-2">
+                <label className="text-light-primary dark:text-dark-primary mb-2 block text-sm font-semibold">
                   Demo Data
                 </label>
                 <div className="space-y-2">
                   {(['llm', 'on', 'off'] as const).map((value) => {
-                    const currentValue = demoDataOverride === undefined 
-                      ? 'llm' 
-                      : demoDataOverride ? 'on' : 'off';
+                    const currentValue =
+                      demoDataOverride === undefined ? 'llm' : demoDataOverride ? 'on' : 'off';
                     const isChecked = currentValue === value;
                     const labels = {
                       llm: 'Let LLM decide',
                       on: 'Always include demo data',
-                      off: 'Never include demo data'
+                      off: 'Never include demo data',
                     };
-                    
+
                     return (
                       <label
                         key={value}
