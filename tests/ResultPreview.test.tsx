@@ -491,6 +491,7 @@ describe('ResultPreview', () => {
           // setActiveView={setActiveView} // Removed
           onPreviewLoaded={() => {}}
           setMobilePreviewShown={() => {}}
+          updateTitle={() => Promise.resolve()}
         />
       </MockThemeProvider>
     );

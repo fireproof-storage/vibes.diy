@@ -1,6 +1,5 @@
 import React, { useCallback, useEffect, useMemo } from 'react';
 import type { RuntimeError } from '../../hooks/useRuntimeErrors';
-import { useSession } from '../../hooks/useSession';
 import { animationStyles } from './ResultPreviewTemplates';
 import type { IframeFiles, ResultPreviewProps } from './ResultPreviewTypes';
 // import { encodeTitle } from '../SessionSidebar/utils';
@@ -15,6 +14,7 @@ function ResultPreview({
   onScreenshotCaptured,
   sessionId,
   title,
+  updateTitle,
   isStreaming = false,
   codeReady = false,
   displayView,
@@ -30,11 +30,10 @@ function ResultPreview({
   // Use CSS-based dark mode detection like the rest of the UI
   const isDarkMode =
     typeof document !== 'undefined' ? document.documentElement.classList.contains('dark') : true; // Default to dark mode for SSR
-  const { updateTitle, session } = useSession(sessionId);
   const showWelcome = !isStreaming && (!code || code.length === 0);
 
-  // Use session title if available, otherwise fall back to prop
-  const currentTitle = session?.title || title || 'Untitled App';
+  // Use title from props directly
+  const currentTitle = title || 'Untitled App';
 
   // Settings view callbacks handled in AppSettingsView
 

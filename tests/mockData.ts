@@ -4,6 +4,7 @@ export const mockResultPreviewProps = {
   onPreviewLoaded: () => {},
   setMobilePreviewShown: () => {},
   sessionId: 'test-session-id',
+  updateTitle: () => Promise.resolve(),
 };
 
 export const mockChatStateProps = {
@@ -12,6 +13,7 @@ export const mockChatStateProps = {
   setSelectedResponseId: () => {},
   setNeedsNewKey: () => {},
   saveCodeAsAiMessage: () => Promise.resolve('test-message-id'),
+  updateTitle: () => Promise.resolve(),
   // Error tracking properties
   immediateErrors: [],
   advisoryErrors: [],
@@ -33,6 +35,7 @@ export const createMockChatState = (overrides = {}) => ({
   saveCodeAsAiMessage: () => Promise.resolve('test-message-id'),
   isStreaming: false,
   title: 'Test Session',
+  updateTitle: () => Promise.resolve(),
   sessionId: 'test-session-id',
   selectedSegments: [],
   selectedCode: {

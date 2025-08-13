@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 
 type AppSettingsViewProps = {
   title: string;
-  onUpdateTitle: (next: string, isManual?: boolean) => Promise<void> | void;
+  onUpdateTitle: (next: string, isManual?: boolean) => Promise<void>;
   onDownloadHtml: () => void;
 };
 

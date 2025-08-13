@@ -220,6 +220,7 @@ describe('Iframe Template', () => {
             displayView="preview"
             onPreviewLoaded={onPreviewLoadedMock}
             setMobilePreviewShown={vi.fn()}
+            updateTitle={vi.fn().mockResolvedValue(undefined)}
           />
         </MockThemeProvider>
       );
