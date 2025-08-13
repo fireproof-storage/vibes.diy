@@ -1,8 +1,8 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
-import { makeBaseSystemPrompt } from "../app/prompts";
+import { makeBaseSystemPrompt } from "../pkg/app/prompts";
 
 // Mock the import.meta.glob function
-vi.mock("../app/prompts", async () => {
+vi.mock("../pkg/app/prompts", async () => {
   // Create a mock implementation that simulates the behavior of the original
   const llmsModules = {
     "./llms/module1.json": {

@@ -1,9 +1,10 @@
+import React from "react";
 import { describe, it, expect, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
-import About from "../app/routes/about";
+import About from "../pkg/app/routes/about";
 
 // Mock the SimpleAppLayout component
-vi.mock("../app/components/SimpleAppLayout", () => ({
+vi.mock("../pkg/app/components/SimpleAppLayout", () => ({
   default: ({
     headerLeft,
     children,

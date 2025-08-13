@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { renderHook } from "@testing-library/react";
-import { useMessageSelection } from "../app/hooks/useMessageSelection";
-import type { ChatMessageDocument } from "../app/types/chat";
+import { useMessageSelection } from "../pkg/app/hooks/useMessageSelection";
+import type { ChatMessageDocument } from "../pkg/app/types/chat";
 
 describe("useMessageSelection", () => {
   // Sample data for testing

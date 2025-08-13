@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import routes from "../app/routes";
+import routes from "../pkg/app/routes";
 
 describe("Routes", () => {
   it("defines the correct routes", () => {

@@ -1,26 +1,26 @@
 import { cleanup, renderHook, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { useSimpleChat } from "../app/hooks/useSimpleChat";
-import type { AiChatMessage, ChatMessage } from "../app/types/chat";
-import { parseContent, parseDependencies } from "../app/utils/segmentParser";
+import { useSimpleChat } from "../pkg/app/hooks/useSimpleChat";
+import type { AiChatMessage, ChatMessage } from "../pkg/app/types/chat";
+import { parseContent, parseDependencies } from "../pkg/app/utils/segmentParser";
 
 // Mock the prompts module
-vi.mock("../app/prompts", () => ({
+vi.mock("../pkg/app/prompts", () => ({
   makeBaseSystemPrompt: vi.fn().mockResolvedValue("Mocked system prompt"),
 }));
 
 // Mock the provisioning module
-vi.mock("../app/config/provisioning");
+vi.mock("../pkg/app/config/provisioning");
 
 // Import the mocked module
-import { getCredits } from "../app/config/provisioning";
-import { createOrUpdateKeyViaEdgeFunction } from "../app/services/apiKeyService";
+import { getCredits } from "../pkg/app/config/provisioning";
+import { createOrUpdateKeyViaEdgeFunction } from "../pkg/app/services/apiKeyService";
 
 // Mock the apiKeyService module
-vi.mock("../app/services/apiKeyService");
+vi.mock("../pkg/app/services/apiKeyService");
 
 // Mock the env module
-vi.mock("../app/config/env", () => ({
+vi.mock("../pkg/app/config/env", () => ({
   CALLAI_API_KEY: "mock-callai-api-key-for-testing",
   SETTINGS_DBNAME: "test-chat-history",
 }));
@@ -132,7 +132,7 @@ const mergeUserMessageImpl = (data: Record<string, unknown>) => {
 const mockMergeUserMessage = vi.fn(mergeUserMessageImpl);
 
 // Mock the useSession hook
-vi.mock("../app/hooks/useSession", () => {
+vi.mock("../pkg/app/hooks/useSession", () => {
   return {
     useSession: () => {
       // Don't reset here, reset is done in beforeEach
@@ -197,7 +197,7 @@ vi.mock("../app/hooks/useSession", () => {
 });
 
 // Mock the useSessionMessages hook
-vi.mock("../app/hooks/useSessionMessages", () => {
+vi.mock("../pkg/app/hooks/useSessionMessages", () => {
   // Track messages across test runs
   const messagesStore: Record<string, ChatMessage[]> = {};
 
@@ -520,7 +520,7 @@ Here's how to use React.
 });
 
 // Mock the AuthContext module
-vi.mock("../app/contexts/AuthContext", () => {
+vi.mock("../pkg/app/contexts/AuthContext", () => {
   // Create a mock AuthContext that will be used by useAuth inside the hook
   const mockAuthContext = {
     isAuthenticated: true,

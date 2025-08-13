@@ -13,7 +13,7 @@ const mockSubmitUserMessage = vi.fn().mockImplementation(() => {
 });
 
 // Mock all required dependencies
-vi.mock("../app/config/env", () => ({
+vi.mock("../pkg/app/config/env", () => ({
   SETTINGS_DBNAME: "test-chat-history",
 }));
 
@@ -27,7 +27,7 @@ vi.mock("use-fireproof", () => ({
   }),
 }));
 
-vi.mock("../app/hooks/useLazyFireproof", () => ({
+vi.mock("../pkg/app/hooks/useLazyFireproof", () => ({
   useLazyFireproof: () => ({
     useDocument: () => ({
       doc: { _id: "test-id", type: "user" },
@@ -41,7 +41,7 @@ vi.mock("../app/hooks/useLazyFireproof", () => ({
   }),
 }));
 
-vi.mock("../app/utils/databaseManager", () => ({
+vi.mock("../pkg/app/utils/databaseManager", () => ({
   getSessionDatabaseName: vi
     .fn()
     .mockImplementation((id) => `session-${id || "default"}`),

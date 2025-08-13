@@ -1,7 +1,8 @@
+import React from "react";
 import { describe, it, expect, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
 import { MemoryRouter, Routes, Route } from "react-router-dom";
-import VibeIframeContainer from "../app/routes/vibe";
+import VibeIframeContainer from "../pkg/app/routes/vibe";
 
 // Mock the useParams hook to return a vibeSlug
 vi.mock("react-router-dom", async () => {

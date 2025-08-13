@@ -1,9 +1,9 @@
 import { render, screen, fireEvent } from "@testing-library/react";
 import { describe, it, expect, vi } from "vitest";
-import { ViewControls } from "../app/components/ResultPreview/ViewControls";
+import { ViewControls } from "../pkg/app/components/ResultPreview/ViewControls";
 
 // Mock the SVG icons
-vi.mock("../app/components/HeaderContent/SvgIcons", () => ({
+vi.mock("../pkg/app/components/HeaderContent/SvgIcons", () => ({
   PreviewIcon: ({
     className,
   }: {

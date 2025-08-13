@@ -2,7 +2,7 @@ import { renderHook, act } from "@testing-library/react";
 import {
   useRuntimeErrors,
   type RuntimeError,
-} from "../app/hooks/useRuntimeErrors";
+} from "../pkg/app/hooks/useRuntimeErrors";
 import { vi, describe, test, expect, beforeEach } from "vitest";
 
 describe("useRuntimeErrors", () => {

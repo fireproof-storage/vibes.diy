@@ -1,7 +1,8 @@
+import React from "react";
 import { render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { mockUseAuth, resetMockAuthState } from "./__mocks__/useAuth";
-import { ErrorBoundary, Layout } from "../app/root";
+import { ErrorBoundary, Layout } from "../pkg/app/root";
 
 // Mock React Router components to avoid HTML validation errors
 vi.mock("react-router", () => ({

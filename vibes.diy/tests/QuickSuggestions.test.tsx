@@ -1,6 +1,6 @@
 import { vi, describe, it, expect } from "vitest";
 import { render, fireEvent } from "@testing-library/react";
-import QuickSuggestions from "../app/components/QuickSuggestions";
+import QuickSuggestions from "../pkg/app/components/QuickSuggestions";
 
 describe("QuickSuggestions", () => {
   it("renders multiple suggestion buttons", () => {
