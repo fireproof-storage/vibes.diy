@@ -6,7 +6,7 @@ import { describe, beforeEach, it, expect, vi } from "vitest";
 // Mock fetch to use our fixture files
 const global = globalThis;
 const globalFetch = vi.fn<typeof fetch>();
-// global.fetch = vi.fn();
+global.fetch = globalFetch as typeof fetch;
 
 describe("Llama3 Wire Protocol Tests", () => {
   // Read fixtures
