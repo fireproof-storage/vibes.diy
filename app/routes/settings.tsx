@@ -8,7 +8,6 @@ import { SETTINGS_DBNAME } from '../config/env';
 import { useAuth } from '../contexts/AuthContext';
 import modelsList from '../data/models.json';
 import type { UserSettings } from '../types/settings';
-// Dependency chooser moved to per‑vibe App Settings view
 
 export function meta() {
   return [
@@ -36,8 +35,6 @@ export default function Settings() {
 
   // State to track unsaved changes
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
-  const [saveError, setSaveError] = useState<string | null>(null);
-  const [saveSuccess, setSaveSuccess] = useState(false);
 
   const stylePromptSuggestions = [
     { name: 'synthwave', description: '80s digital aesthetic' },
@@ -122,17 +119,10 @@ Secretly name this theme “Viridian Pulse”, capturing Sterling’s original p
   );
 
   const handleSubmit = useCallback(async () => {
-    setSaveError(null);
-    setSaveSuccess(false);
-    try {
-      await saveSettings({ ...settings });
-      setHasUnsavedChanges(false);
-      setSaveSuccess(true);
-      setTimeout(() => setSaveSuccess(false), 2000);
-      navigate('/');
-    } catch (err: any) {
-      setSaveError(err?.message || 'Failed to save settings');
-    }
+    await saveSettings(settings);
+    setHasUnsavedChanges(false); // Reset after save
+    // navigate to /
+    navigate('/');
   }, [saveSettings, settings, navigate]);
 
   const handleLogout = useCallback(() => {
@@ -173,22 +163,10 @@ Secretly name this theme “Viridian Pulse”, capturing Sterling’s original p
               Save
             </button>
           </div>
-          {saveSuccess && (
-            <div className="mb-4 rounded border border-green-200 bg-green-50 px-3 py-2 text-sm text-green-800 dark:border-green-900/40 dark:bg-green-900/20 dark:text-green-300">
-              Settings saved.
-            </div>
-          )}
-          {saveError && (
-            <div className="mb-4 rounded border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800 dark:border-red-900/40 dark:bg-red-900/20 dark:text-red-300">
-              {saveError}
-            </div>
-          )}
           <p className="text-accent-01 dark:text-dark-secondary mb-4">
             Configure your application settings to customize the AI experience.
           </p>
           <div className="space-y-6">
-            {/* Libraries chooser moved to per‑vibe App Settings */}
-
             <div className="border-light-decorative-01 dark:border-dark-decorative-01 rounded border p-4">
               <div className="flex items-start justify-between">
                 <h3 className="mb-2 text-lg font-medium">AI Model</h3>

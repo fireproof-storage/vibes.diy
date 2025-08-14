@@ -107,7 +107,7 @@ export function useSimpleChat(sessionId: string | undefined): ChatState {
   );
 
   // Use our custom hooks
-  const ensureSystemPrompt = useSystemPromptManager(settingsDoc, vibeDoc);
+  const ensureSystemPrompt = useSystemPromptManager(settingsDoc);
 
   const { throttledMergeAiMessage, isProcessingRef } = useThrottledUpdates(mergeAiMessage);
 

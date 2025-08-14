@@ -8,7 +8,6 @@ import type {
 import { getSessionDatabaseName } from '../utils/databaseManager';
 import { useLazyFireproof } from './useLazyFireproof';
 import { encodeTitle } from '../components/SessionSidebar/utils';
-import { CATALOG_DEPENDENCY_NAMES, llmsCatalog } from '../llms/catalog';
 
 export function useSession(routedSessionId?: string) {
   const [generatedSessionId] = useState(
@@ -136,58 +135,6 @@ export function useSession(routedSessionId?: string) {
     [sessionDatabase]
   );
 
-  // Update per‑vibe dependency selection using the vibe document
-  const updateDependencies = useCallback(
-    async (deps: string[], userOverride: boolean = true) => {
-      const input = Array.isArray(deps)
-        ? deps.filter((n): n is string => typeof n === 'string')
-        : [];
-      // Validate and de‑dupe by catalog names
-      const deduped = Array.from(new Set(input.filter((n) => CATALOG_DEPENDENCY_NAMES.has(n))));
-      // Canonicalize order by catalog order
-      const order = new Map(llmsCatalog.map((l, i) => [l.name, i] as const));
-      const validDeps = deduped.sort((a, b) => order.get(a)! - order.get(b)!);
-
-      const base = vibeRef.current;
-      const updatedDoc = {
-        ...base,
-        dependencies: validDeps,
-        dependenciesUserOverride: !!userOverride,
-      } as VibeDocument;
-      mergeRef.current(updatedDoc);
-      await sessionDatabase.put(updatedDoc);
-    },
-    [sessionDatabase]
-  );
-
-  // Update per‑vibe instructional text override setting
-  const updateInstructionalTextOverride = useCallback(
-    async (override?: boolean) => {
-      const base = vibeRef.current;
-      const updatedDoc = {
-        ...base,
-        instructionalTextOverride: override,
-      } as VibeDocument;
-      mergeRef.current(updatedDoc);
-      await sessionDatabase.put(updatedDoc);
-    },
-    [sessionDatabase]
-  );
-
-  // Update per‑vibe demo data override setting
-  const updateDemoDataOverride = useCallback(
-    async (override?: boolean) => {
-      const base = vibeRef.current;
-      const updatedDoc = {
-        ...base,
-        demoDataOverride: override,
-      } as VibeDocument;
-      mergeRef.current(updatedDoc);
-      await sessionDatabase.put(updatedDoc);
-    },
-    [sessionDatabase]
-  );
-
   // Add a screenshot to the session (in session-specific database)
   const addScreenshot = useCallback(
     async (screenshotData: string | null) => {
@@ -258,8 +205,5 @@ export function useSession(routedSessionId?: string) {
     saveAiMessage,
     // Vibe document management
     vibeDoc,
-    updateDependencies,
-    updateInstructionalTextOverride,
-    updateDemoDataOverride,
   };
 }

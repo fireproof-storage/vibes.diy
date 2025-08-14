@@ -1,63 +1,23 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { DEFAULT_DEPENDENCIES, llmsCatalog, CATALOG_DEPENDENCY_NAMES } from '~/llms/catalog';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 
 type AppSettingsViewProps = {
   title: string;
   onUpdateTitle: (next: string, isManual?: boolean) => Promise<void>;
   onDownloadHtml: () => void;
-  selectedDependencies?: string[];
-  dependenciesUserOverride?: boolean;
-  // When saving a manual selection, we set `userOverride` true
-  onUpdateDependencies?: (deps: string[], userOverride: boolean) => Promise<void> | void;
-  // Instructional text and demo data override settings
-  instructionalTextOverride?: boolean;
-  demoDataOverride?: boolean;
-  onUpdateInstructionalTextOverride?: (override?: boolean) => Promise<void> | void;
-  onUpdateDemoDataOverride?: (override?: boolean) => Promise<void> | void;
 };
 
 const AppSettingsView: React.FC<AppSettingsViewProps> = ({
   title,
   onUpdateTitle,
   onDownloadHtml,
-  selectedDependencies,
-  dependenciesUserOverride,
-  onUpdateDependencies,
-  instructionalTextOverride,
-  demoDataOverride,
-  onUpdateInstructionalTextOverride,
-  onUpdateDemoDataOverride,
 }) => {
   const [isEditingName, setIsEditingName] = useState(false);
   const [editedName, setEditedName] = useState(title);
   const nameInputRef = useRef<HTMLInputElement>(null);
-  // Per‑vibe libraries selection state
-  const catalogNames = useMemo(() => CATALOG_DEPENDENCY_NAMES, []);
-  const initialDeps = useMemo(() => {
-    const useManual = !!dependenciesUserOverride;
-    const input = useManual
-      ? Array.isArray(selectedDependencies)
-        ? selectedDependencies
-        : []
-      : [];
-    return input
-      .filter((n): n is string => typeof n === 'string')
-      .filter((n) => catalogNames.has(n));
-  }, [selectedDependencies, dependenciesUserOverride, catalogNames]);
-  const [deps, setDeps] = useState<string[]>(initialDeps);
-  const [hasUnsavedDeps, setHasUnsavedDeps] = useState(false);
-  const [saveDepsOk, setSaveDepsOk] = useState(false);
-  const [saveDepsErr, setSaveDepsErr] = useState<string | null>(null);
 
   useEffect(() => {
     setEditedName(title);
   }, [title]);
-
-  useEffect(() => {
-    // Sync local selection when external changes land
-    setDeps(initialDeps);
-    setHasUnsavedDeps(false);
-  }, [initialDeps]);
 
   const handleEditNameStart = useCallback(() => {
     setIsEditingName(true);
@@ -89,47 +49,6 @@ const AppSettingsView: React.FC<AppSettingsViewProps> = ({
       }
     },
     [handleNameSave, handleNameCancel]
-  );
-
-  // Libraries handlers
-  const toggleDependency = useCallback((name: string, checked: boolean) => {
-    setDeps((prev) => {
-      const set = new Set(prev);
-      if (checked) set.add(name);
-      else set.delete(name);
-      return Array.from(set);
-    });
-    setHasUnsavedDeps(true);
-  }, []);
-
-  const handleSaveDeps = useCallback(async () => {
-    setSaveDepsErr(null);
-    try {
-      const valid = deps.filter((n) => catalogNames.has(n));
-      await onUpdateDependencies?.(valid.length ? valid : DEFAULT_DEPENDENCIES, true);
-      setHasUnsavedDeps(false);
-      setSaveDepsOk(true);
-      setTimeout(() => setSaveDepsOk(false), 2000);
-    } catch (e: any) {
-      setSaveDepsErr(e?.message || 'Failed to save libraries');
-    }
-  }, [deps, onUpdateDependencies, catalogNames]);
-
-  // Instructional text and demo data handlers
-  const handleInstructionalTextChange = useCallback(
-    (value: 'llm' | 'on' | 'off') => {
-      const override = value === 'llm' ? undefined : value === 'on';
-      onUpdateInstructionalTextOverride?.(override);
-    },
-    [onUpdateInstructionalTextOverride]
-  );
-
-  const handleDemoDataChange = useCallback(
-    (value: 'llm' | 'on' | 'off') => {
-      const override = value === 'llm' ? undefined : value === 'on';
-      onUpdateDemoDataOverride?.(override);
-    },
-    [onUpdateDemoDataOverride]
   );
 
   return (
@@ -234,167 +153,6 @@ const AppSettingsView: React.FC<AppSettingsViewProps> = ({
                   {title !== 'Untitled App'
                     ? `${title.toLowerCase().replace(/\s+/g, '-')}.vibesdiy.app`
                     : 'app-name.vibesdiy.app'}
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-light-background-01 dark:bg-dark-background-01 border-light-decorative-01 dark:border-dark-decorative-01 rounded-lg border p-6">
-            <div className="mb-4 flex items-center justify-between">
-              <h3 className="text-light-primary dark:text-dark-primary text-lg font-medium">
-                Libraries
-              </h3>
-              <button
-                onClick={handleSaveDeps}
-                disabled={!hasUnsavedDeps}
-                className={`rounded px-4 py-2 text-sm text-white transition-colors focus:ring-2 focus:ring-offset-2 focus:outline-none ${
-                  hasUnsavedDeps
-                    ? 'bg-blue-500 hover:bg-blue-600 focus:ring-blue-500'
-                    : 'accent-01 dark:bg-dark-decorative-01 cursor-not-allowed'
-                }`}
-              >
-                Save
-              </button>
-            </div>
-            {saveDepsOk && (
-              <div className="mb-4 rounded border border-green-200 bg-green-50 px-3 py-2 text-sm text-green-800 dark:border-green-900/40 dark:bg-green-900/20 dark:text-green-300">
-                Libraries saved.
-              </div>
-            )}
-            {saveDepsErr && (
-              <div className="mb-4 rounded border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800 dark:border-red-900/40 dark:bg-red-900/20 dark:text-red-300">
-                {saveDepsErr}
-              </div>
-            )}
-            <p className="text-accent-01 dark:text-accent-01 mb-3 text-sm">
-              Choose which libraries to include in generated apps for this Vibe. This controls
-              imports and docs used in prompts.
-            </p>
-            {!dependenciesUserOverride && (
-              <div className="mb-4 rounded border border-blue-200 bg-blue-50 px-3 py-2 text-xs text-blue-800 dark:border-blue-900/40 dark:bg-blue-900/20 dark:text-blue-300">
-                Libraries, instructional text, and demo data are currently chosen by the LLM at
-                runtime. Select libraries and click Save to set a manual override for this vibe.
-              </div>
-            )}
-            {llmsCatalog.length === 0 ? (
-              <div className="text-accent-01 dark:text-dark-secondary text-sm">
-                No libraries available.
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-                {llmsCatalog.map((mod) => {
-                  const checked = deps.includes(mod.name);
-                  return (
-                    <label
-                      key={mod.name}
-                      className="border-light-decorative-01 dark:border-dark-decorative-01 flex cursor-pointer items-start gap-2 rounded-md border p-2 text-sm"
-                    >
-                      <input
-                        type="checkbox"
-                        className="mt-0.5"
-                        checked={checked}
-                        onChange={(e) => toggleDependency(mod.name, e.target.checked)}
-                      />
-                      <span>
-                        <span className="font-medium">{mod.label}</span>
-                        {mod.description ? (
-                          <span className="text-accent-01 dark:text-dark-secondary block text-xs">
-                            {mod.description}
-                          </span>
-                        ) : null}
-                      </span>
-                    </label>
-                  );
-                })}
-              </div>
-            )}
-          </div>
-
-          <div className="bg-light-background-01 dark:bg-dark-background-01 border-light-decorative-01 dark:border-dark-decorative-01 rounded-lg border p-6">
-            <h3 className="text-light-primary dark:text-dark-primary mb-4 text-lg font-medium">
-              Prompt Options
-            </h3>
-            <p className="text-accent-01 dark:text-accent-01 mb-4 text-sm">
-              Control how the AI generates code for this Vibe. You can let the LLM decide or
-              override specific settings.
-            </p>
-
-            <div className="space-y-4">
-              <div>
-                <label className="text-light-primary dark:text-dark-primary mb-2 block text-sm font-semibold">
-                  Instructional Text
-                </label>
-                <div className="space-y-2">
-                  {(['llm', 'on', 'off'] as const).map((value) => {
-                    const currentValue =
-                      instructionalTextOverride === undefined
-                        ? 'llm'
-                        : instructionalTextOverride
-                          ? 'on'
-                          : 'off';
-                    const isChecked = currentValue === value;
-                    const labels = {
-                      llm: 'Let LLM decide',
-                      on: 'Always include instructional text',
-                      off: 'Never include instructional text',
-                    };
-
-                    return (
-                      <label
-                        key={value}
-                        className="border-light-decorative-01 dark:border-dark-decorative-01 flex cursor-pointer items-center gap-2 rounded-md border p-2 text-sm"
-                      >
-                        <input
-                          type="radio"
-                          name="instructionalText"
-                          value={value}
-                          checked={isChecked}
-                          onChange={() => handleInstructionalTextChange(value)}
-                          className="mt-0.5"
-                        />
-                        <span className="text-light-primary dark:text-dark-primary">
-                          {labels[value]}
-                        </span>
-                      </label>
-                    );
-                  })}
-                </div>
-              </div>
-
-              <div>
-                <label className="text-light-primary dark:text-dark-primary mb-2 block text-sm font-semibold">
-                  Demo Data
-                </label>
-                <div className="space-y-2">
-                  {(['llm', 'on', 'off'] as const).map((value) => {
-                    const currentValue =
-                      demoDataOverride === undefined ? 'llm' : demoDataOverride ? 'on' : 'off';
-                    const isChecked = currentValue === value;
-                    const labels = {
-                      llm: 'Let LLM decide',
-                      on: 'Always include demo data',
-                      off: 'Never include demo data',
-                    };
-
-                    return (
-                      <label
-                        key={value}
-                        className="border-light-decorative-01 dark:border-dark-decorative-01 flex cursor-pointer items-center gap-2 rounded-md border p-2 text-sm"
-                      >
-                        <input
-                          type="radio"
-                          name="demoData"
-                          value={value}
-                          checked={isChecked}
-                          onChange={() => handleDemoDataChange(value)}
-                          className="mt-0.5"
-                        />
-                        <span className="text-light-primary dark:text-dark-primary">
-                          {labels[value]}
-                        </span>
-                      </label>
-                    );
-                  })}
                 </div>
               </div>
             </div>

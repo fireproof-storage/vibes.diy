@@ -15,28 +15,6 @@ export interface VibeDocument {
   publishedUrl?: string;
   firehoseShared?: boolean;
   titleSetManually?: boolean;
-  /**
-   * Per‑vibe selected dependency modules (by catalog name).
-   * These control which helper libraries and docs are injected into prompts.
-   */
-  dependencies?: string[];
-  /**
-   * When true, treat `dependencies` as a user override and bypass any
-   * automatic/catalog-based module selection.
-   */
-  dependenciesUserOverride?: boolean;
-  /**
-   * When true, enable instructional text in prompts regardless of LLM decision.
-   * When false, disable instructional text regardless of LLM decision.
-   * When undefined, use LLM decision.
-   */
-  instructionalTextOverride?: boolean;
-  /**
-   * When true, enable demo data in prompts regardless of LLM decision.
-   * When false, disable demo data regardless of LLM decision.
-   * When undefined, use LLM decision.
-   */
-  demoDataOverride?: boolean;
 }
 
 // ===== Content Segment Types =====
