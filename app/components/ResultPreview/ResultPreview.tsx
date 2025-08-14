@@ -7,6 +7,7 @@ import type { IframeFiles, ResultPreviewProps } from './ResultPreviewTypes';
 import IframeContent from './IframeContent';
 import AppSettingsView from './AppSettingsView';
 import { downloadTextFile, generateStandaloneHtml } from '~/utils/exportHtml';
+import { useSession } from '~/hooks/useSession';
 
 function ResultPreview({
   code,
@@ -30,6 +31,8 @@ function ResultPreview({
   // Use CSS-based dark mode detection like the rest of the UI
   const isDarkMode =
     typeof document !== 'undefined' ? document.documentElement.classList.contains('dark') : true; // Default to dark mode for SSR
+  const { vibeDoc, updateDependencies, updateInstructionalTextOverride, updateDemoDataOverride } =
+    useSession(sessionId);
   const showWelcome = !isStreaming && (!code || code.length === 0);
 
   // Use title from props directly
@@ -118,6 +121,13 @@ function ResultPreview({
       title={currentTitle}
       onUpdateTitle={updateTitle}
       onDownloadHtml={handleDownloadHtml}
+      selectedDependencies={vibeDoc?.dependencies}
+      dependenciesUserOverride={vibeDoc?.dependenciesUserOverride}
+      onUpdateDependencies={updateDependencies}
+      instructionalTextOverride={vibeDoc?.instructionalTextOverride}
+      demoDataOverride={vibeDoc?.demoDataOverride}
+      onUpdateInstructionalTextOverride={updateInstructionalTextOverride}
+      onUpdateDemoDataOverride={updateDemoDataOverride}
     />
   ) : (
     <IframeContent
