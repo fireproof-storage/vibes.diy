@@ -12,6 +12,6 @@ describe("Export Aliases", () => {
     expect(typeof callAi.callAI).toBe("function");
 
     // They should be the same function
-    expect(callAi.callAi).toBe(exports.callAI);
+    expect(callAi.callAi).toBe(callAi.callAI);
   });
 });

@@ -32,6 +32,9 @@ describe("Claude JSON Property Splitting Test", () => {
     const mockResponse = {
       ok: true,
       status: 200,
+      clone: vi.fn().mockReturnValue({
+        text: vi.fn().mockResolvedValue("mock response text"),
+      }),
       headers: {
         forEach: vi.fn(),
       },
