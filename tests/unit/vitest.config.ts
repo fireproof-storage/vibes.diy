@@ -4,6 +4,7 @@ import { defineConfig } from "vitest/config";
 export default defineConfig({
   // plugins: [react()],
   test: {
+    name: 'call-ai-test-unit',
     //   environment: 'jsdom',
     globals: true,
     // setupFiles: ['./setup.ts'],
