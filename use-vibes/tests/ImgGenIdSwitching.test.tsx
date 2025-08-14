@@ -53,7 +53,7 @@ vi.mock('use-fireproof', () => {
 import type { UseImageGenOptions, UseImageGenResult } from 'use-vibes';
 
 // Mock the image generation hook
-vi.mock('../src/hooks/image-gen/use-image-gen', () => {
+vi.mock('../pkg/hooks/image-gen/use-image-gen', () => {
   let regenerationCompleted = false;
 
   return {
@@ -138,6 +138,9 @@ import { vi, describe, it, expect, beforeEach } from 'vitest';
 // Import the component to test
 import { ImgGen, useImageGen } from 'use-vibes';
 
+// Get the mocked version of useImageGen after imports
+const useImageGenMock = vi.mocked(useImageGen);
+
 describe('ImgGen ID Switching Behavior', () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -165,7 +168,6 @@ describe('ImgGen ID Switching Behavior', () => {
   });
 
   it('creates new instances when switching IDs', async () => {
-    const useImageGenMock = vi.mocked(useImageGen);
     useImageGenMock.mockClear();
 
     const { rerender } = render(<ImgGen _id="doc-1" />);
@@ -219,7 +221,6 @@ describe('ImgGen ID Switching Behavior', () => {
     });
 
     // Create a mock implementation for regeneration case
-    const useImageGenMock = vi.mocked(useImageGen);
     useImageGenMock.mockImplementationOnce((props) => ({
       document: {
         _id: props._id as string,
@@ -258,8 +259,6 @@ describe('ImgGen ID Switching Behavior', () => {
     // });
 
     // Setup the useImageGen mock with synchronous behavior
-    const useImageGenMock = vi.mocked(useImageGen);
-
     // First call - doc-1 initial render
     useImageGenMock.mockImplementationOnce((_props) => ({
       document: {

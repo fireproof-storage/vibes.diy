@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { render, screen, act } from '@testing-library/react';
+import { render, screen, act, fireEvent, waitFor } from '@testing-library/react';
 import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { ImgGen } from 'use-vibes';
 
@@ -98,11 +98,13 @@ describe('ImgGen Render Test', () => {
 
     // Change the prompt
     await act(async () => {
-      screen.getByTestId('change-prompt').click();
+      fireEvent.click(screen.getByTestId('change-prompt'));
     });
 
     // Wait for effects to run
-    await new Promise((r) => setTimeout(r, 100));
+    await waitFor(() => {
+      expect(mockImageGen.mock.calls.length).toBeGreaterThan(initialCalls);
+    }, { timeout: 1000 });
 
     // Should only have one additional call
     const finalCalls = mockImageGen.mock.calls.length;

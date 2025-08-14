@@ -1,6 +1,7 @@
 import React from 'react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, fireEvent, act, waitFor } from '@testing-library/react';
+import '@testing-library/jest-dom';
 import { ImgGen } from 'use-vibes';
 
 // Mock document that will be returned when ImgGen is used with a prompt
@@ -16,7 +17,7 @@ const mockDocument = {
 const mockCalls: { prompt?: string; _id?: string; regenerate?: boolean }[] = [];
 
 // Mock for the useImageGen hook
-vi.mock('../src/hooks/image-gen/use-image-gen', () => {
+vi.mock('../pkg/hooks/image-gen/use-image-gen', () => {
   let versionCount = 1;
 
   return {
@@ -69,14 +70,34 @@ vi.mock('../src/hooks/image-gen/use-image-gen', () => {
 });
 
 // Mock Fireproof to avoid actual database operations
-vi.mock('use-fireproof', () => ({
-  useFireproof: () => ({ database: {} }),
-  Database: class MockDatabase {
-    put() {
-      return Promise.resolve({ id: 'mock-id', ok: true });
-    }
-  },
-}));
+vi.mock('use-fireproof', () => {
+  const mockDb = {
+    get: vi.fn().mockImplementation((id: string) => {
+      if (id === 'test-document-id') {
+        return Promise.resolve(mockDocument);
+      }
+      return Promise.reject(new Error('Not found'));
+    }),
+    put: vi.fn().mockImplementation((doc: any) => {
+      return Promise.resolve({ id: doc._id, rev: 'new-rev' });
+    }),
+    remove: vi.fn(),
+    query: vi.fn(),
+    getAttachment: vi.fn(),
+    putAttachment: vi.fn(),
+  };
+
+  return {
+    useFireproof: vi.fn().mockReturnValue({ database: mockDb }),
+    ImgFile: vi.fn().mockImplementation((props) => {
+      return React.createElement('div', {
+        'data-testid': 'mock-img-file',
+        alt: 'test image',
+        ...props,
+      });
+    }),
+  };
+});
 
 // Expose the mocked useImageGen for assertions
 // import { useImageGen } from 'use-vibes'
@@ -128,6 +149,10 @@ describe('ImgGen Document ID Tracking', () => {
 
     // Wait for the initial render to complete
     await waitFor(() => {
+      // Debug: Check if we have calls to the hook
+      console.log('mockCalls:', mockCalls);
+      console.log('mockCalls.length:', mockCalls.length);
+      
       // Check if we have calls to the hook
       expect(mockCalls.length).toBeGreaterThan(0);
 
@@ -135,13 +160,13 @@ describe('ImgGen Document ID Tracking', () => {
       const initialCall = mockCalls[0];
       expect(initialCall.prompt).toBe('Test prompt');
       expect(initialCall._id).toBeUndefined();
-    });
+    }, { timeout: 2000 });
 
     // Get the initial count of calls
     const initialCallCount = mockCalls.length;
 
     // Simulate clicking the regenerate button
-    act(() => {
+    await act(async () => {
       fireEvent.click(getByTestId('regenerate-btn'));
     });
 
