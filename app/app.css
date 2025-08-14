@@ -315,6 +315,26 @@ a,
   @apply bg-accent-03-light dark:bg-accent-03-dark;
 }
 
+/* Global scrollbar styling */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(156, 163, 175, 0.5) transparent;
+}
+
+::-webkit-scrollbar {
+  width: 5px;
+  height: 40px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: hsl(var(--gray-300));
+  border-radius: 5px;
+}
+
+::-webkit-scrollbar-track {
+  background: 0 0;
+}
+
 .text-accent-00 {
   @apply text-accent-00-light dark:text-accent-00-dark;
 }
