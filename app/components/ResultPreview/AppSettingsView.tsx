@@ -133,7 +133,7 @@ const AppSettingsView: React.FC<AppSettingsViewProps> = ({
   );
 
   return (
-    <div className="flex h-full justify-center p-8 pt-16">
+    <div className="flex h-full justify-center p-8 pt-16 overflow-y-scroll">
       <div className="w-full max-w-2xl">
         <h2 className="text-light-primary dark:text-dark-primary mb-6 text-center text-2xl font-semibold">
           App Settings
