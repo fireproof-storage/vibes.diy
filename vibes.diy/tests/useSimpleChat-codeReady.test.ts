@@ -2,7 +2,10 @@ import { cleanup, renderHook, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { useSimpleChat } from "../pkg/app/hooks/useSimpleChat";
 import type { AiChatMessage, ChatMessage } from "../pkg/app/types/chat";
-import { parseContent, parseDependencies } from "../pkg/app/utils/segmentParser";
+import {
+  parseContent,
+  parseDependencies,
+} from "../pkg/app/utils/segmentParser";
 
 // Mock the prompts module
 vi.mock("../pkg/app/prompts", () => ({

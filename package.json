@@ -18,7 +18,11 @@
   "scripts": {
     "build": "core-cli tsc",
     "lint": "eslint .",
-    "test": "vitest --run",
+    "test": "pnpm --filter=vibes-diy-tests run test",
+    "test:stable": "pnpm --filter=vibes-diy-tests run test",
+    "test:failing": "vitest --run --config=vibes.diy/tests/vitest.failing.config.ts",
+    "test:all": "vitest --run",
+    "test:ci": "pnpm --filter=vibes-diy-tests run test",
     "format": "prettier .",
     "pack": "echo skip pack",
     "publish": "echo skip publish"

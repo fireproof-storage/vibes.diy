@@ -143,7 +143,7 @@ describe('ImgGenDisplayPlaceholder Component', () => {
       expect(overlay).toHaveAttribute('data-prompt', 'Test prompt');
       expect(overlay).toHaveAttribute('data-show-controls', 'false');
       expect(overlay).toHaveAttribute('data-status', 'Generating...');
-      
+
       // Verify it's in a hidden container (the component intentionally hides the overlay)
       const hiddenContainer = overlay.closest('div[style*="display: none"]');
       expect(hiddenContainer).toBeInTheDocument();

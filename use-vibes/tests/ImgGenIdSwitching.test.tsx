@@ -167,7 +167,7 @@ describe('ImgGen ID Switching Behavior', () => {
   it('creates new instances when switching IDs', async () => {
     // Reset the call counter
     imageGenCallCount.count = 0;
-    
+
     const { rerender } = render(<ImgGen _id="doc-1" />);
 
     // Verify the hook was called at least once for the first render

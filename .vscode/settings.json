@@ -20,9 +20,7 @@
   },
   "peacock.color": "#219",
   "deno.enable": true,
-  "deno.enablePaths": [
-    "netlify/edge-functions"
-  ],
+  "deno.enablePaths": ["netlify/edge-functions"],
   "deno.unstable": true,
   "deno.importMap": ".netlify/edge-functions-import-map.json"
 }

@@ -1,5 +1,8 @@
 import { describe, it, expect, vi } from "vitest";
-import { parseContent, parseDependencies } from "../pkg/app/utils/segmentParser";
+import {
+  parseContent,
+  parseDependencies,
+} from "../pkg/app/utils/segmentParser";
 import type { ChatMessage, AiChatMessage } from "../pkg/app/types/chat";
 
 // Mock the prompts module
