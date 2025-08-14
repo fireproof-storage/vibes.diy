@@ -1,5 +1,5 @@
 import { type ReactNode } from "react";
-import { ThemeContext } from "../../app/contexts/ThemeContext";
+import { ThemeContext } from "../../pkg/app/contexts/ThemeContext";
 
 interface MockThemeProviderProps {
   isDarkMode?: boolean;

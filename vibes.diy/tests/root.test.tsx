@@ -50,7 +50,7 @@ vi.mock("react-cookie-consent", () => ({
 }));
 
 // Mock the CookieConsentContext
-vi.mock("../app/contexts/CookieConsentContext", () => ({
+vi.mock("../pkg/app/contexts/CookieConsentContext", () => ({
   useCookieConsent: () => ({
     messageHasBeenSent: false,
     setMessageHasBeenSent: vi.fn(),
@@ -71,7 +71,7 @@ vi.mock("use-fireproof", () => ({
 }));
 
 // Mock the useSimpleChat hook
-vi.mock("../app/hooks/useSimpleChat", () => ({
+vi.mock("../pkg/app/hooks/useSimpleChat", () => ({
   useSimpleChat: () => ({
     needsLogin: false,
     docs: [],
@@ -91,7 +91,7 @@ vi.mock("../app/hooks/useSimpleChat", () => ({
 }));
 
 // Mock the useAuth hook
-vi.mock("../app/contexts/AuthContext", () => ({
+vi.mock("../pkg/app/contexts/AuthContext", () => ({
   useAuth: mockUseAuth,
   AuthProvider: ({ children }: { children: React.ReactNode }) => children,
 }));

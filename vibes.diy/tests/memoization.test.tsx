@@ -20,9 +20,9 @@ vi.mock("react-markdown", () => ({
 // Using the centralized mock from __mocks__/use-fireproof.ts
 
 // Now import components after mocks
-import ChatHeader from "../app/components/ChatHeaderContent";
-import MessageList from "../app/components/MessageList";
-import type { ChatMessageDocument } from "../app/types/chat";
+import ChatHeader from "../pkg/app/components/ChatHeaderContent";
+import MessageList from "../pkg/app/components/MessageList";
+import type { ChatMessageDocument } from "../pkg/app/types/chat";
 
 // Mock component that tracks renders
 function createRenderTracker(

@@ -1,7 +1,7 @@
 import { render, screen } from "@testing-library/react";
 import { describe, it, expect, vi } from "vitest";
 import { MemoryRouter } from "react-router-dom";
-import VibespaceComponent from "../app/components/VibespaceComponent";
+import VibespaceComponent from "../pkg/app/components/VibespaceComponent";
 
 // Mock the Fireproof hook
 vi.mock("use-fireproof", () => ({
@@ -11,25 +11,25 @@ vi.mock("use-fireproof", () => ({
 }));
 
 // Mock the vibespace theme components
-vi.mock("../app/components/vibespace/Basic", () => ({
+vi.mock("../pkg/app/components/vibespace/Basic", () => ({
   default: ({ userId }: { userId: string }) => (
     <div data-testid="basic-theme">Basic theme for {userId}</div>
   ),
 }));
 
-vi.mock("../app/components/vibespace/Wild", () => ({
+vi.mock("../pkg/app/components/vibespace/Wild", () => ({
   default: ({ userId }: { userId: string }) => (
     <div data-testid="wild-theme">Wild theme for {userId}</div>
   ),
 }));
 
-vi.mock("../app/components/vibespace/ExplodingBrain", () => ({
+vi.mock("../pkg/app/components/vibespace/ExplodingBrain", () => ({
   default: ({ userId }: { userId: string }) => (
     <div data-testid="brain-theme">Brain theme for {userId}</div>
   ),
 }));
 
-vi.mock("../app/components/vibespace/Cyberpunk", () => ({
+vi.mock("../pkg/app/components/vibespace/Cyberpunk", () => ({
   default: ({ userId }: { userId: string }) => (
     <div data-testid="cyberpunk-theme">Cyberpunk theme for {userId}</div>
   ),
@@ -60,7 +60,7 @@ Object.defineProperty(HTMLCanvasElement.prototype, "getContext", {
 });
 
 // Mock VibesDIYLogo
-vi.mock("../app/components/VibesDIYLogo", () => ({
+vi.mock("../pkg/app/components/VibesDIYLogo", () => ({
   default: ({ height }: { height: number }) => (
     <div data-testid="vibes-logo" style={{ height: `${height}px` }}>
       Vibes DIY Logo
@@ -69,7 +69,7 @@ vi.mock("../app/components/VibesDIYLogo", () => ({
 }));
 
 // Mock SimpleAppLayout
-vi.mock("../app/components/SimpleAppLayout", () => ({
+vi.mock("../pkg/app/components/SimpleAppLayout", () => ({
   default: ({
     children,
     headerLeft,

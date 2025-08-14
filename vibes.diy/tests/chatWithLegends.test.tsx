@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { normalizeComponentExports } from "../app/utils/normalizeComponentExports";
+import { normalizeComponentExports } from "../pkg/app/utils/normalizeComponentExports";
 
 describe("normalizeComponentExports BUG DEMONSTRATION", () => {
   it("CRITICAL BUG: the normalizer produces non-runnable code for variable components", () => {

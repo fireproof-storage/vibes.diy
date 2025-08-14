@@ -1,6 +1,6 @@
 import { vi, describe, it, expect, beforeEach, afterEach } from "vitest";
 import { render } from "@testing-library/react";
-import IframeScrollController from "../app/components/ResultPreview/IframeScrollController";
+import IframeScrollController from "../pkg/app/components/ResultPreview/IframeScrollController";
 
 // Mock ResizeObserver since it's not available in the test environment
 class MockResizeObserver {

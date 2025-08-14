@@ -2,10 +2,10 @@ import { render, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { AuthContext } from "~/contexts/AuthContext";
 import type { TokenPayload } from "~/utils/auth";
-import Remix from "../app/routes/remix";
+import Remix from "../pkg/app/routes/remix";
 
 // Mock the Session hooks
-vi.mock("../app/hooks/useSession", () => ({
+vi.mock("../pkg/app/hooks/useSession", () => ({
   useSession: () => ({
     session: { _id: "test-session-id" },
     sessionDatabase: {
@@ -55,7 +55,7 @@ const renderWithAuthContext = (
 };
 
 // Mock the API Key hook
-vi.mock("../app/hooks/useApiKey", () => ({
+vi.mock("../pkg/app/hooks/useApiKey", () => ({
   useApiKey: () => ({
     apiKey: "test-api-key",
   }),

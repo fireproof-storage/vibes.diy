@@ -1,5 +1,5 @@
 import { renderHook } from "@testing-library/react";
-import { useViewState, type ViewState } from "../app/utils/ViewState";
+import { useViewState, type ViewState } from "../pkg/app/utils/ViewState";
 import { vi, describe, test, expect, beforeEach } from "vitest";
 
 // Mock react-router-dom hooks
@@ -12,7 +12,7 @@ vi.mock("react-router-dom", () => {
 });
 
 // Mock encodeTitle from utils
-vi.mock("../app/components/SessionSidebar/utils", () => {
+vi.mock("../pkg/app/components/SessionSidebar/utils", () => {
   return {
     encodeTitle: vi.fn((title) => title), // Simple mock that returns the title unchanged
   };

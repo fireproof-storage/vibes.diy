@@ -25,8 +25,8 @@ vi.spyOn(ApiKeyModule, "useApiKey").mockImplementation(() => ({
 }));
 
 // Import the hook *after* mocks are set up
-import { useSimpleChat } from "../../app/hooks/useSimpleChat";
-import * as AuthModule from "../../app/contexts/AuthContext";
+import { useSimpleChat } from "../../pkg/app/hooks/useSimpleChat";
+import * as AuthModule from "../../pkg/app/contexts/AuthContext";
 
 // ---------------------------------------------------------------------------
 

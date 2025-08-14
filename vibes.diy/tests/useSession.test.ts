@@ -1,5 +1,5 @@
 import { renderHook } from "@testing-library/react";
-import { useSession } from "../app/hooks/useSession";
+import { useSession } from "../pkg/app/hooks/useSession";
 import { vi, describe, it, expect, beforeEach } from "vitest";
 
 // Mock the database opening function - this is what we need to track

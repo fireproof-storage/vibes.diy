@@ -1,11 +1,11 @@
 import { render, screen } from "@testing-library/react";
-import MessageList from "../app/components/MessageList";
+import MessageList from "../pkg/app/components/MessageList";
 import { vi, describe, test, expect, beforeEach } from "vitest";
 import type {
   UserChatMessage,
   AiChatMessage,
   ChatMessageDocument,
-} from "../app/types/chat";
+} from "../pkg/app/types/chat";
 import { MockThemeProvider } from "./utils/MockThemeProvider";
 
 beforeEach(() => {

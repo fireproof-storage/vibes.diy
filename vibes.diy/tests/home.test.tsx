@@ -1,12 +1,12 @@
 import { render, screen, waitFor } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { AuthContext } from "../app/contexts/AuthContext";
-import UnifiedSession from "../app/routes/home";
+import { AuthContext } from "../pkg/app/contexts/AuthContext";
+import UnifiedSession from "../pkg/app/routes/home";
 import { MockThemeProvider } from "./utils/MockThemeProvider";
 
 // Mock the CookieConsentContext
-vi.mock("../app/contexts/CookieConsentContext", () => ({
+vi.mock("../pkg/app/contexts/CookieConsentContext", () => ({
   useCookieConsent: () => ({
     messageHasBeenSent: false,
     setMessageHasBeenSent: vi.fn(),
@@ -17,7 +17,7 @@ vi.mock("../app/contexts/CookieConsentContext", () => ({
 }));
 
 // Mock dependencies
-vi.mock("../app/hooks/useSimpleChat", () => ({
+vi.mock("../pkg/app/hooks/useSimpleChat", () => ({
   useSimpleChat: () => ({
     docs: [],
     input: "",
@@ -36,7 +36,7 @@ vi.mock("../app/hooks/useSimpleChat", () => ({
 }));
 
 // Mock the useSession hook
-vi.mock("../app/hooks/useSession", () => ({
+vi.mock("../pkg/app/hooks/useSession", () => ({
   useSession: () => ({
     session: null,
     loading: false,
@@ -70,16 +70,16 @@ vi.mock("react-router-dom", async () => {
 });
 
 // Mock for the utility functions
-vi.mock("../app/utils/sharing", () => ({
+vi.mock("../pkg/app/utils/sharing", () => ({
   decodeStateFromUrl: () => ({ code: "", dependencies: {} }),
 }));
 
-vi.mock("../app/components/SessionSidebar/utils", () => ({
+vi.mock("../pkg/app/components/SessionSidebar/utils", () => ({
   encodeTitle: (title: string) => title,
 }));
 
 // Mock AppLayout component to make testing easier
-vi.mock("../app/components/AppLayout", () => {
+vi.mock("../pkg/app/components/AppLayout", () => {
   return {
     __esModule: true,
     default: ({
@@ -112,7 +112,7 @@ vi.mock("../app/components/AppLayout", () => {
 });
 
 // Mock our ChatInterface
-vi.mock("../app/components/ChatInterface", () => {
+vi.mock("../pkg/app/components/ChatInterface", () => {
   return {
     __esModule: true,
     default: (_props: unknown) => {
@@ -128,7 +128,7 @@ vi.mock("../app/components/ChatInterface", () => {
 });
 
 // Mock ResultPreview
-vi.mock("../app/components/ResultPreview/ResultPreview", () => {
+vi.mock("../pkg/app/components/ResultPreview/ResultPreview", () => {
   return {
     __esModule: true,
     default: (_props: unknown) => {

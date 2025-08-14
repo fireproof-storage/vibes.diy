@@ -1,10 +1,10 @@
 import React from "react";
 import { render, screen, fireEvent } from "@testing-library/react";
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { ShareButton } from "../app/components/ResultPreview/ShareButton";
+import { ShareButton } from "../pkg/app/components/ResultPreview/ShareButton";
 
 // Mock the SVG icon component
-vi.mock("../app/components/HeaderContent/SvgIcons", () => ({
+vi.mock("../pkg/app/components/HeaderContent/SvgIcons", () => ({
   PublishIcon: ({ className }: { className: string }) => (
     <svg data-testid="publish-icon" className={className} />
   ),

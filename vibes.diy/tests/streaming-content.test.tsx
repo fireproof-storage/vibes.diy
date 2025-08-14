@@ -1,7 +1,7 @@
 import { describe, test, expect } from "vitest";
 import { render, screen } from "@testing-library/react";
-import StructuredMessage from "../app/components/StructuredMessage";
-import type { Segment } from "../app/types/chat";
+import StructuredMessage from "../pkg/app/components/StructuredMessage";
+import type { Segment } from "../pkg/app/types/chat";
 import { MockThemeProvider } from "./utils/MockThemeProvider";
 
 describe("Streaming Content Tests", () => {

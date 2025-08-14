@@ -7,9 +7,9 @@ import {
 } from "@testing-library/react";
 import type { ReactNode } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import type { AuthContextType } from "../app/contexts/AuthContext";
-import { AuthContext } from "../app/contexts/AuthContext";
-import Settings from "../app/routes/settings";
+import type { AuthContextType } from "../pkg/app/contexts/AuthContext";
+import { AuthContext } from "../pkg/app/contexts/AuthContext";
+import Settings from "../pkg/app/routes/settings";
 
 // Create mock objects outside the mock function to access them in tests
 const mockMerge = vi.fn();
@@ -23,7 +23,7 @@ const mockSettings = {
 };
 
 // Mock the modules
-vi.mock("../app/hooks/useSession", () => ({
+vi.mock("../pkg/app/hooks/useSession", () => ({
   useSession: () => ({
     mainDatabase: { name: "test-db" },
   }),
@@ -59,7 +59,7 @@ vi.mock("react-router-dom", async () => {
 });
 
 // Mock SimpleAppLayout component
-vi.mock("../app/components/SimpleAppLayout", () => ({
+vi.mock("../pkg/app/components/SimpleAppLayout", () => ({
   default: ({
     headerLeft,
     children,
@@ -75,7 +75,7 @@ vi.mock("../app/components/SimpleAppLayout", () => ({
 }));
 
 // Mock HomeIcon component
-vi.mock("../app/components/SessionSidebar/HomeIcon", () => ({
+vi.mock("../pkg/app/components/SessionSidebar/HomeIcon", () => ({
   HomeIcon: () => <div data-testid="home-icon" />,
 }));
 

@@ -25,7 +25,7 @@ describe("ViewControls", () => {
   };
 
   // Mock the SVG icons
-  vi.mock("../app/components/HeaderContent/SvgIcons", () => ({
+  vi.mock("../pkg/app/components/HeaderContent/SvgIcons", () => ({
     PreviewIcon: ({
       className,
     }: {

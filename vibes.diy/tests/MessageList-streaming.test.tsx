@@ -1,7 +1,7 @@
 import { render, screen } from "@testing-library/react";
-import MessageList from "../app/components/MessageList";
+import MessageList from "../pkg/app/components/MessageList";
 import { vi, describe, test, expect, beforeEach } from "vitest";
-import type { ChatMessageDocument } from "../app/types/chat";
+import type { ChatMessageDocument } from "../pkg/app/types/chat";
 import { MockThemeProvider } from "./utils/MockThemeProvider";
 
 // Mock scrollIntoView
@@ -10,7 +10,7 @@ beforeEach(() => {
 });
 
 // Mock Message component to simplify testing
-vi.mock("../app/components/Message", () => ({
+vi.mock("../pkg/app/components/Message", () => ({
   default: ({
     message,
   }: {

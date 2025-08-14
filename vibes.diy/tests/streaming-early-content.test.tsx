@@ -1,7 +1,7 @@
 import { render, screen, cleanup } from "@testing-library/react";
 import { vi, describe, test, expect, afterEach } from "vitest";
-import StructuredMessage from "../app/components/StructuredMessage";
-import type { Segment } from "../app/types/chat";
+import StructuredMessage from "../pkg/app/components/StructuredMessage";
+import type { Segment } from "../pkg/app/types/chat";
 import { MockThemeProvider } from "./utils/MockThemeProvider";
 
 // Mock the window.location for any URL operations

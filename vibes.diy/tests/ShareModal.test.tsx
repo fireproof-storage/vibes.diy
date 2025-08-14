@@ -1,7 +1,7 @@
 import React from "react";
 import { render, screen, fireEvent, act } from "@testing-library/react";
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { ShareModal } from "../app/components/ResultPreview/ShareModal";
+import { ShareModal } from "../pkg/app/components/ResultPreview/ShareModal";
 
 // Mock react-dom's createPortal to render children directly
 vi.mock("react-dom", () => ({
@@ -9,7 +9,7 @@ vi.mock("react-dom", () => ({
 }));
 
 // Mock the analytics tracking function (not used in current tests)
-vi.mock("../app/utils/analytics", () => ({
+vi.mock("../pkg/app/utils/analytics", () => ({
   trackPublishClick: vi.fn(),
 }));
 

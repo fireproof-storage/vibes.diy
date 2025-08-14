@@ -1,10 +1,10 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import React from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { AuthContext } from "../app/contexts/AuthContext";
-import type { AuthContextType } from "../app/contexts/AuthContext";
-import * as SettingsModule from "../app/routes/settings";
-import type { TokenPayload } from "../app/utils/auth";
+import { AuthContext } from "../pkg/app/contexts/AuthContext";
+import type { AuthContextType } from "../pkg/app/contexts/AuthContext";
+import * as SettingsModule from "../pkg/app/routes/settings";
+import type { TokenPayload } from "../pkg/app/utils/auth";
 
 // Extract the Settings component directly since we can't import the default export in tests
 const Settings = SettingsModule.default;
@@ -14,13 +14,13 @@ vi.mock("react-router-dom", () => ({
   useNavigate: () => vi.fn(),
 }));
 
-vi.mock("../app/components/SimpleAppLayout", () => ({
+vi.mock("../pkg/app/components/SimpleAppLayout", () => ({
   default: ({ children }: { children: React.ReactNode }) => (
     <div>{children}</div>
   ),
 }));
 
-vi.mock("../app/hooks/useSession", () => ({
+vi.mock("../pkg/app/hooks/useSession", () => ({
   useSession: () => ({
     mainDatabase: { name: "test-db" },
   }),
@@ -65,11 +65,11 @@ vi.mock("react-router-dom", () => ({
 }));
 
 // Mock the auth utility functions
-vi.mock("../app/utils/auth", () => ({
+vi.mock("../pkg/app/utils/auth", () => ({
   initiateAuthFlow: vi.fn(),
 }));
 
-vi.mock("../app/utils/analytics", () => ({
+vi.mock("../pkg/app/utils/analytics", () => ({
   trackAuthClick: vi.fn(),
 }));
 

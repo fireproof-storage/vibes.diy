@@ -6,15 +6,15 @@ import {
   resetMockAuthState,
   setMockAuthState,
 } from "./__mocks__/useAuth";
-import ChatHeader from "../app/components/ChatHeaderContent";
-import MessageList from "../app/components/MessageList";
-import SessionSidebar from "../app/components/SessionSidebar";
-import type { AuthContextType } from "../app/contexts/AuthContext";
+import ChatHeader from "../pkg/app/components/ChatHeaderContent";
+import MessageList from "../pkg/app/components/MessageList";
+import SessionSidebar from "../pkg/app/components/SessionSidebar";
+import type { AuthContextType } from "../pkg/app/contexts/AuthContext";
 import type {
   AiChatMessage,
   ChatMessageDocument,
   UserChatMessage,
-} from "../app/types/chat";
+} from "../pkg/app/types/chat";
 import { mockSessionSidebarProps } from "./mockData";
 import { MockThemeProvider } from "./utils/MockThemeProvider";
 import React from "react";
@@ -37,13 +37,13 @@ vi.mock("react-markdown", () => {
 window.HTMLElement.prototype.scrollIntoView = vi.fn();
 
 // Mock the useAuth hook for SessionSidebar
-vi.mock("../app/contexts/AuthContext", () => ({
+vi.mock("../pkg/app/contexts/AuthContext", () => ({
   useAuth: mockUseAuth,
   AuthProvider: ({ children }: { children: React.ReactNode }) => children,
 }));
 
 // Mock the useSessionMessages hook for MessageList
-vi.mock("../app/hooks/useSessionMessages", () => {
+vi.mock("../pkg/app/hooks/useSessionMessages", () => {
   return {
     useSessionMessages: (sessionId: string | null) => {
       // Check the sessionId to determine what to return

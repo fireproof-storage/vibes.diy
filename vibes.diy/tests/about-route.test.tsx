@@ -20,7 +20,7 @@ vi.mock("../pkg/app/components/SimpleAppLayout", () => ({
 }));
 
 // Mock HomeIcon component
-vi.mock("../app/components/SessionSidebar/HomeIcon", () => ({
+vi.mock("../pkg/app/components/SessionSidebar/HomeIcon", () => ({
   HomeIcon: () => <div data-testid="home-icon" />,
 }));
 

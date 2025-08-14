@@ -1,27 +1,27 @@
 import React from "react";
 import { render, screen, fireEvent } from "@testing-library/react";
 import { describe, it, expect, vi, beforeEach, type Mock } from "vitest";
-import type { ChatMessageDocument } from "../app/types/chat";
+import type { ChatMessageDocument } from "../pkg/app/types/chat";
 
 // Mock all imports before importing the component to test
 vi.mock("react-router", () => ({
   useParams: vi.fn(),
 }));
 
-vi.mock("../app/hooks/useSession", () => ({
+vi.mock("../pkg/app/hooks/useSession", () => ({
   useSession: vi.fn(),
 }));
 
-vi.mock("../app/utils/ViewState", () => ({
+vi.mock("../pkg/app/utils/ViewState", () => ({
   useViewState: vi.fn(),
 }));
 
-vi.mock("../app/components/ResultPreview/usePublish", () => ({
+vi.mock("../pkg/app/components/ResultPreview/usePublish", () => ({
   usePublish: vi.fn(),
 }));
 
 // Mock child components
-vi.mock("../app/components/ResultPreview/BackButton", () => ({
+vi.mock("../pkg/app/components/ResultPreview/BackButton", () => ({
   BackButton: ({ onBackClick }: { onBackClick: () => void }) => (
     <button data-testid="back-button" onClick={onBackClick}>
       Back
@@ -29,7 +29,7 @@ vi.mock("../app/components/ResultPreview/BackButton", () => ({
   ),
 }));
 
-vi.mock("../app/components/ResultPreview/ViewControls", () => ({
+vi.mock("../pkg/app/components/ResultPreview/ViewControls", () => ({
   ViewControls: ({
     viewControls,
     currentView,
@@ -60,7 +60,7 @@ vi.mock("../app/components/ResultPreview/ViewControls", () => ({
   },
 }));
 
-vi.mock("../app/components/ResultPreview/ShareButton", () => ({
+vi.mock("../pkg/app/components/ResultPreview/ShareButton", () => ({
   ShareButton: vi
     .fn()
     .mockImplementation(
@@ -91,7 +91,7 @@ vi.mock("../app/components/ResultPreview/ShareButton", () => ({
     ),
 }));
 
-vi.mock("../app/components/ResultPreview/ShareModal", () => ({
+vi.mock("../pkg/app/components/ResultPreview/ShareModal", () => ({
   ShareModal: vi.fn().mockImplementation(
     ({
       isOpen,
@@ -125,15 +125,15 @@ vi.mock("../app/components/ResultPreview/ShareModal", () => ({
 }));
 
 // Import after all mocks are set up
-import ResultPreviewHeaderContent from "../app/components/ResultPreview/ResultPreviewHeaderContent";
+import ResultPreviewHeaderContent from "../pkg/app/components/ResultPreview/ResultPreviewHeaderContent";
 import { useParams } from "react-router";
-import { useSession } from "../app/hooks/useSession";
+import { useSession } from "../pkg/app/hooks/useSession";
 import {
   useViewState,
   type ViewState,
   type ViewTypeItem,
-} from "../app/utils/ViewState";
-import { usePublish } from "../app/components/ResultPreview/usePublish";
+} from "../pkg/app/utils/ViewState";
+import { usePublish } from "../pkg/app/components/ResultPreview/usePublish";
 
 describe("ResultPreviewHeaderContent", () => {
   // Common mocks and props

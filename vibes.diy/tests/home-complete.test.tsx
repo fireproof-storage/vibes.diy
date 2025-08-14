@@ -2,22 +2,22 @@ import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import type React from "react";
 import { MemoryRouter } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import type { AuthContextType } from "../app/contexts/AuthContext";
-import { AuthContext } from "../app/contexts/AuthContext";
-import * as useSimpleChatModule from "../app/hooks/useSimpleChat";
-import UnifiedSession from "../app/routes/home";
+import type { AuthContextType } from "../pkg/app/contexts/AuthContext";
+import { AuthContext } from "../pkg/app/contexts/AuthContext";
+import * as useSimpleChatModule from "../pkg/app/hooks/useSimpleChat";
+import UnifiedSession from "../pkg/app/routes/home";
 import type {
   AiChatMessage,
   ChatMessage,
   Segment,
   UserChatMessage,
-} from "../app/types/chat";
-import * as segmentParser from "../app/utils/segmentParser";
+} from "../pkg/app/types/chat";
+import * as segmentParser from "../pkg/app/utils/segmentParser";
 import { mockChatStateProps } from "./mockData";
 import { MockThemeProvider } from "./utils/MockThemeProvider";
 
 // Mock the CookieConsentContext
-vi.mock("../app/contexts/CookieConsentContext", () => ({
+vi.mock("../pkg/app/contexts/CookieConsentContext", () => ({
   useCookieConsent: () => ({
     messageHasBeenSent: false,
     setMessageHasBeenSent: vi.fn(),
@@ -122,7 +122,7 @@ Object.defineProperty(window, "location", {
 });
 
 // Mock components used in the Home component
-vi.mock("../app/components/ChatInterface", () => ({
+vi.mock("../pkg/app/components/ChatInterface", () => ({
   default: ({ onSessionCreated }: ChatInterfaceProps) => (
     <div data-testid="mock-chat-interface">
       <button
@@ -136,7 +136,7 @@ vi.mock("../app/components/ChatInterface", () => ({
   ),
 }));
 
-vi.mock("../app/components/ResultPreview/ResultPreview", () => ({
+vi.mock("../pkg/app/components/ResultPreview/ResultPreview", () => ({
   default: ({ code }: ResultPreviewProps) => (
     <div data-testid="mock-result-preview">
       <div data-testid="code-line-count">
@@ -158,7 +158,7 @@ vi.mock("../app/components/ResultPreview/ResultPreview", () => ({
   ),
 }));
 
-vi.mock("../app/components/AppLayout", () => ({
+vi.mock("../pkg/app/components/AppLayout", () => ({
   default: ({ chatPanel, previewPanel }: AppLayoutProps) => (
     <div data-testid="mock-app-layout">
       <div data-testid="chat-panel">{chatPanel}</div>

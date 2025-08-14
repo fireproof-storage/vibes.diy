@@ -1,6 +1,6 @@
 import { vi, describe, it, expect, beforeEach } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
-import ChatHeader from "../app/components/ChatHeaderContent";
+import ChatHeader from "../pkg/app/components/ChatHeaderContent";
 import { MockThemeProvider } from "./utils/MockThemeProvider";
 
 // Create mock functions we can control

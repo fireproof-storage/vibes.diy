@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { render, act } from "@testing-library/react";
-import iframeTemplateRaw from "../app/components/ResultPreview/templates/iframe-template.html?raw";
-import ResultPreview from "../app/components/ResultPreview/ResultPreview";
+import iframeTemplateRaw from "../pkg/app/components/ResultPreview/templates/iframe-template.html?raw";
+import ResultPreview from "../pkg/app/components/ResultPreview/ResultPreview";
 import { MockThemeProvider } from "./utils/MockThemeProvider";
 
 vi.mock("@remix-run/router", () => ({
@@ -9,7 +9,7 @@ vi.mock("@remix-run/router", () => ({
 }));
 
 // Mock the useApiKey hook
-vi.mock("../app/hooks/useApiKey", () => ({
+vi.mock("../pkg/app/hooks/useApiKey", () => ({
   useApiKey: () => ({
     apiKey: "test-api-key",
     apiKeyObject: { key: "test-api-key", hash: "test-hash" },
@@ -22,7 +22,7 @@ vi.mock("../app/hooks/useApiKey", () => ({
   }),
 }));
 
-vi.mock("../app/contexts/AuthContext", () => ({
+vi.mock("../pkg/app/contexts/AuthContext", () => ({
   useAuth: () => ({
     token: "test-auth-token",
     userPayload: { userId: "test-user-id" },

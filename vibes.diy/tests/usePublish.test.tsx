@@ -1,24 +1,24 @@
 import { act, renderHook, waitFor } from "@testing-library/react";
 import type { ReactNode } from "react";
 import { beforeEach, describe, expect, it, vi, type Mock } from "vitest";
-import { usePublish } from "../app/components/ResultPreview/usePublish";
-import type { AuthContextType } from "../app/contexts/AuthContext";
-import { AuthContext } from "../app/contexts/AuthContext";
+import { usePublish } from "../pkg/app/components/ResultPreview/usePublish";
+import type { AuthContextType } from "../pkg/app/contexts/AuthContext";
+import { AuthContext } from "../pkg/app/contexts/AuthContext";
 import type {
   AiChatMessage,
   ChatMessageDocument,
   UserChatMessage,
-} from "../app/types/chat";
-import { trackPublishClick } from "../app/utils/analytics";
-import type { TokenPayload } from "../app/utils/auth";
-import { publishApp } from "../app/utils/publishUtils";
+} from "../pkg/app/types/chat";
+import { trackPublishClick } from "../pkg/app/utils/analytics";
+import type { TokenPayload } from "../pkg/app/utils/auth";
+import { publishApp } from "../pkg/app/utils/publishUtils";
 
 // Mock dependencies
-vi.mock("../app/utils/publishUtils", () => ({
+vi.mock("../pkg/app/utils/publishUtils", () => ({
   publishApp: vi.fn(),
 }));
 
-vi.mock("../app/utils/analytics", () => ({
+vi.mock("../pkg/app/utils/analytics", () => ({
   trackPublishClick: vi.fn(),
 }));
 

@@ -11,7 +11,7 @@ vi.mock("call-ai", () => ({
     return callCount === 1 ? "Mock Title" : "Updated Mock Title";
   }),
 }));
-import { AuthProvider } from "../../app/contexts/AuthContext";
+import { AuthProvider } from "../../pkg/app/contexts/AuthContext";
 
 // Mock AuthContext to avoid state updates during tests
 vi.mock("../../app/contexts/AuthContext", () => {
@@ -29,8 +29,8 @@ vi.mock("../../app/contexts/AuthContext", () => {
     }),
   };
 });
-import type { AiChatMessage, ChatMessage } from "../../app/types/chat";
-import { parseContent } from "../../app/utils/segmentParser";
+import type { AiChatMessage, ChatMessage } from "../../pkg/app/types/chat";
+import { parseContent } from "../../pkg/app/utils/segmentParser";
 
 // Helper function to convert chunks into SSE format
 function formatAsSSE(chunks: string[]): string[] {
@@ -66,8 +66,8 @@ vi.mock("../../app/prompts", () => ({
 vi.mock("../../app/config/provisioning");
 
 // Import the mocked module
-import { getCredits } from "../../app/config/provisioning";
-import { createOrUpdateKeyViaEdgeFunction } from "../../app/services/apiKeyService";
+import { getCredits } from "../../pkg/app/config/provisioning";
+import { createOrUpdateKeyViaEdgeFunction } from "../../pkg/app/services/apiKeyService";
 import type { DocBase } from "use-fireproof";
 
 // Mock the apiKeyService module

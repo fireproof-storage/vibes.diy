@@ -131,12 +131,12 @@ vi.mock('call-ai', () => {
 
 // Import React and testing libraries
 import React from 'react';
-import { render, waitFor, screen } from '@testing-library/react';
+import { render, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { vi, describe, it, expect, beforeEach } from 'vitest';
 
 // Import the component to test
-import { ImgGen, useImageGen } from 'use-vibes';
+import { ImgGen } from 'use-vibes';
 
 describe('ImgGen ID Switching Behavior', () => {
   beforeEach(() => {
