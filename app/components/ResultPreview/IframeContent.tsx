@@ -352,7 +352,7 @@ const IframeContent: React.FC<IframeContentProps> = ({
           top: 0,
           left: 0,
           padding: '0px',
-          overflow: 'auto',
+          overflow: 'scroll',
         }}
       >
         <div className="data-container">

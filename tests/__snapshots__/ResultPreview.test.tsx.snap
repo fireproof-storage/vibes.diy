@@ -4,7 +4,7 @@ exports[`ResultPreview > renders empty state correctly 1`] = `
 <div>
   <div
     class="h-full"
-    style="overflow: hidden;"
+    style="overflow: hidden; position: relative;"
   >
     <style>
       
