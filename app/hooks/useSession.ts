@@ -188,6 +188,20 @@ export function useSession(routedSessionId?: string) {
     [sessionDatabase]
   );
 
+  // Update AI-selected dependencies (internal use for displaying in UI)
+  const updateAiSelectedDependencies = useCallback(
+    async (aiSelectedDependencies: string[]) => {
+      const base = vibeRef.current;
+      const updatedDoc = {
+        ...base,
+        aiSelectedDependencies,
+      } as VibeDocument;
+      mergeRef.current(updatedDoc);
+      await sessionDatabase.put(updatedDoc);
+    },
+    [sessionDatabase]
+  );
+
   // Add a screenshot to the session (in session-specific database)
   const addScreenshot = useCallback(
     async (screenshotData: string | null) => {
@@ -261,5 +275,6 @@ export function useSession(routedSessionId?: string) {
     updateDependencies,
     updateInstructionalTextOverride,
     updateDemoDataOverride,
+    updateAiSelectedDependencies,
   };
 }

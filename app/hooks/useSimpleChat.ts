@@ -54,6 +54,7 @@ export function useSimpleChat(sessionId: string | undefined): ChatState {
     sessionDatabase,
     aiMessage,
     vibeDoc,
+    updateAiSelectedDependencies,
   } = useSession(sessionId);
 
   // Get main database directly for settings document
@@ -106,8 +107,16 @@ export function useSimpleChat(sessionId: string | undefined): ChatState {
     [settingsDoc?.model]
   );
 
+  // Create callback to store AI-selected dependencies
+  const handleAiDecisions = useCallback(
+    (decisions: { selected: string[] }) => {
+      updateAiSelectedDependencies(decisions.selected);
+    },
+    [updateAiSelectedDependencies]
+  );
+
   // Use our custom hooks
-  const ensureSystemPrompt = useSystemPromptManager(settingsDoc, vibeDoc);
+  const ensureSystemPrompt = useSystemPromptManager(settingsDoc, vibeDoc, handleAiDecisions);
 
   const { throttledMergeAiMessage, isProcessingRef } = useThrottledUpdates(mergeAiMessage);
 

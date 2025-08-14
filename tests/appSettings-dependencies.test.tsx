@@ -40,9 +40,7 @@ describe('AppSettingsView Libraries (per‑vibe dependency chooser)', () => {
 
     // LLM-driven banner is visible
     expect(
-      screen.getByText(
-        /Libraries, instructional text, and demo data are currently chosen by the LLM/i
-      )
+      screen.getByText(/Libraries shown below were chosen by the AI based on your last prompt/i)
     ).toBeInTheDocument();
   });
 

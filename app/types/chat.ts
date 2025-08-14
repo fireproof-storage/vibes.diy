@@ -26,6 +26,11 @@ export interface VibeDocument {
    */
   dependenciesUserOverride?: boolean;
   /**
+   * AI-selected dependencies from last prompt analysis.
+   * These are displayed in the UI when user hasn't made an override.
+   */
+  aiSelectedDependencies?: string[];
+  /**
    * When true, enable instructional text in prompts regardless of LLM decision.
    * When false, disable instructional text regardless of LLM decision.
    * When undefined, use LLM decision.
