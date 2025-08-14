@@ -129,30 +129,31 @@ function ResultPreview({
         onCodeChange={onCodeChange}
         onSyntaxErrorChange={onSyntaxErrorChange}
       />
-      <div
-        style={{
-          visibility: displayView === 'settings' ? 'visible' : 'hidden',
-          position: 'absolute',
-          zIndex: displayView === 'settings' ? 1 : 0,
-          height: '100%',
-          width: '100%',
-          top: 0,
-          left: 0,
-        }}
-      >
-        <AppSettingsView
-          title={currentTitle}
-          onUpdateTitle={updateTitle}
-          onDownloadHtml={handleDownloadHtml}
-          selectedDependencies={vibeDoc?.dependencies}
-          dependenciesUserOverride={vibeDoc?.dependenciesUserOverride}
-          onUpdateDependencies={updateDependencies}
-          instructionalTextOverride={vibeDoc?.instructionalTextOverride}
-          demoDataOverride={vibeDoc?.demoDataOverride}
-          onUpdateInstructionalTextOverride={updateInstructionalTextOverride}
-          onUpdateDemoDataOverride={updateDemoDataOverride}
-        />
-      </div>
+      {displayView === 'settings' && (
+        <div
+          style={{
+            position: 'absolute',
+            zIndex: 1,
+            height: '100%',
+            width: '100%',
+            top: 0,
+            left: 0,
+          }}
+        >
+          <AppSettingsView
+            title={currentTitle}
+            onUpdateTitle={updateTitle}
+            onDownloadHtml={handleDownloadHtml}
+            selectedDependencies={vibeDoc?.dependencies}
+            dependenciesUserOverride={vibeDoc?.dependenciesUserOverride}
+            onUpdateDependencies={updateDependencies}
+            instructionalTextOverride={vibeDoc?.instructionalTextOverride}
+            demoDataOverride={vibeDoc?.demoDataOverride}
+            onUpdateInstructionalTextOverride={updateInstructionalTextOverride}
+            onUpdateDemoDataOverride={updateDemoDataOverride}
+          />
+        </div>
+      )}
     </>
   );
 
