@@ -6,7 +6,7 @@ import type {
   ChatMessageDocument,
 } from '../types/chat';
 import { getSessionDatabaseName } from '../utils/databaseManager';
-import { useLazyFireproof } from './useLazyFireproof';
+import { useFireproof } from 'use-fireproof';
 import { encodeTitle } from '../components/SessionSidebar/utils';
 import { CATALOG_DEPENDENCY_NAMES, llmsCatalog } from '../llms/catalog';
 
@@ -35,15 +35,7 @@ export function useSession(routedSessionId?: string) {
     database: sessionDatabase,
     useDocument: useSessionDocument,
     useLiveQuery: useSessionLiveQuery,
-    open: openSessionDatabase,
-  } = useLazyFireproof(sessionDbName, !!routedSessionId);
-
-  // Explicitly open the database when a sessionId is provided
-  useEffect(() => {
-    if (routedSessionId) {
-      openSessionDatabase();
-    }
-  }, [routedSessionId, openSessionDatabase]);
+  } = useFireproof(sessionDbName);
 
   // User message is stored in the session-specific database
   const {
@@ -255,7 +247,6 @@ export function useSession(routedSessionId?: string) {
 
     // Databases
     sessionDatabase,
-    openSessionDatabase,
 
     // Session management functions
     updateTitle,
