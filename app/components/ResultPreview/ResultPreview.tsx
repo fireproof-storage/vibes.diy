@@ -116,35 +116,49 @@ function ResultPreview({
 
   const previewArea = showWelcome ? (
     <div className="h-full">{/* empty div to prevent layout shift */}</div>
-  ) : displayView === 'settings' ? (
-    <AppSettingsView
-      title={currentTitle}
-      onUpdateTitle={updateTitle}
-      onDownloadHtml={handleDownloadHtml}
-      selectedDependencies={vibeDoc?.dependencies}
-      dependenciesUserOverride={vibeDoc?.dependenciesUserOverride}
-      onUpdateDependencies={updateDependencies}
-      instructionalTextOverride={vibeDoc?.instructionalTextOverride}
-      demoDataOverride={vibeDoc?.demoDataOverride}
-      onUpdateInstructionalTextOverride={updateInstructionalTextOverride}
-      onUpdateDemoDataOverride={updateDemoDataOverride}
-    />
   ) : (
-    <IframeContent
-      activeView={displayView}
-      filesContent={filesContent}
-      isStreaming={!codeReady}
-      codeReady={codeReady}
-      isDarkMode={isDarkMode}
-      sessionId={sessionId}
-      onCodeSave={onCodeSave}
-      onCodeChange={onCodeChange}
-      onSyntaxErrorChange={onSyntaxErrorChange}
-    />
+    <>
+      <IframeContent
+        activeView={displayView}
+        filesContent={filesContent}
+        isStreaming={!codeReady}
+        codeReady={codeReady}
+        isDarkMode={isDarkMode}
+        sessionId={sessionId}
+        onCodeSave={onCodeSave}
+        onCodeChange={onCodeChange}
+        onSyntaxErrorChange={onSyntaxErrorChange}
+      />
+      {displayView === 'settings' && (
+        <div
+          style={{
+            position: 'absolute',
+            zIndex: 1,
+            height: '100%',
+            width: '100%',
+            top: 0,
+            left: 0,
+          }}
+        >
+          <AppSettingsView
+            title={currentTitle}
+            onUpdateTitle={updateTitle}
+            onDownloadHtml={handleDownloadHtml}
+            selectedDependencies={vibeDoc?.dependencies}
+            dependenciesUserOverride={vibeDoc?.dependenciesUserOverride}
+            onUpdateDependencies={updateDependencies}
+            instructionalTextOverride={vibeDoc?.instructionalTextOverride}
+            demoDataOverride={vibeDoc?.demoDataOverride}
+            onUpdateInstructionalTextOverride={updateInstructionalTextOverride}
+            onUpdateDemoDataOverride={updateDemoDataOverride}
+          />
+        </div>
+      )}
+    </>
   );
 
   return (
-    <div className="h-full" style={{ overflow: 'hidden' }}>
+    <div className="h-full" style={{ overflow: 'hidden', position: 'relative' }}>
       <style>{animationStyles}</style>
       {previewArea}
       {children}

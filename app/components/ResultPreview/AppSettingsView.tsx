@@ -134,8 +134,8 @@ const AppSettingsView: React.FC<AppSettingsViewProps> = ({
 
   return (
     <div
-      className="flex h-full justify-center overflow-y-auto p-8"
-      style={{ position: 'relative', minHeight: '100%' }}
+      className="flex h-full justify-center overflow-y-scroll p-8"
+      style={{ position: 'relative' }}
     >
       <div className="w-full max-w-2xl">
         <h2 className="text-light-primary dark:text-dark-primary mb-6 text-center text-2xl font-semibold">
