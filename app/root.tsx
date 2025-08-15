@@ -15,7 +15,6 @@ import type { Route } from './+types/root';
 import './app.css';
 import ClientOnly from './components/ClientOnly';
 import CookieBanner from './components/CookieBanner';
-import { NeedsLoginModal } from './components/NeedsLoginModal';
 import { AuthProvider } from './contexts/AuthContext';
 import { CookieConsentProvider } from './contexts/CookieConsentContext';
 
@@ -111,7 +110,6 @@ export function Layout({ children }: { children: React.ReactNode }) {
               {children}
               <ClientOnly>
                 <CookieBanner />
-                <NeedsLoginModal />
               </ClientOnly>
             </CookieConsentProvider>
             <ScrollRestoration data-testid="scroll-restoration" />
