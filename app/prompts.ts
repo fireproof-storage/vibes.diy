@@ -162,7 +162,11 @@ export function generateImportStatements(llms: LlmsCatalogEntry[]) {
 }
 
 // Base system prompt for the AI
-export async function makeBaseSystemPrompt(model: string, sessionDoc?: any) {
+export async function makeBaseSystemPrompt(
+  model: string,
+  sessionDoc?: any,
+  onAiDecisions?: (decisions: { selected: string[] }) => void
+) {
   // Inputs for module selection
   const userPrompt = sessionDoc?.userPrompt || '';
   const history: HistoryMessage[] = Array.isArray(sessionDoc?.history) ? sessionDoc.history : [];
@@ -189,6 +193,9 @@ export async function makeBaseSystemPrompt(model: string, sessionDoc?: any) {
 
     // Fallback if empty: use deterministic DEFAULT_DEPENDENCIES
     if (selectedNames.length === 0) selectedNames = [...DEFAULT_DEPENDENCIES];
+
+    // Store AI decisions for UI display
+    onAiDecisions?.({ selected: selectedNames });
   }
 
   // Apply per-vibe overrides for instructional text and demo data

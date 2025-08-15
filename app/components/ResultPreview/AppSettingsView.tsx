@@ -7,6 +7,7 @@ type AppSettingsViewProps = {
   onDownloadHtml: () => void;
   selectedDependencies?: string[];
   dependenciesUserOverride?: boolean;
+  aiSelectedDependencies?: string[];
   // When saving a manual selection, we set `userOverride` true
   onUpdateDependencies?: (deps: string[], userOverride: boolean) => Promise<void> | void;
   // Instructional text and demo data override settings
@@ -22,6 +23,7 @@ const AppSettingsView: React.FC<AppSettingsViewProps> = ({
   onDownloadHtml,
   selectedDependencies,
   dependenciesUserOverride,
+  aiSelectedDependencies,
   onUpdateDependencies,
   instructionalTextOverride,
   demoDataOverride,
@@ -35,15 +37,20 @@ const AppSettingsView: React.FC<AppSettingsViewProps> = ({
   const catalogNames = useMemo(() => CATALOG_DEPENDENCY_NAMES, []);
   const initialDeps = useMemo(() => {
     const useManual = !!dependenciesUserOverride;
-    const input = useManual
-      ? Array.isArray(selectedDependencies)
-        ? selectedDependencies
-        : []
-      : [];
+    let input: string[];
+
+    if (useManual) {
+      // Use user-selected dependencies when there's an override
+      input = Array.isArray(selectedDependencies) ? selectedDependencies : [];
+    } else {
+      // Use AI-selected dependencies when no user override
+      input = Array.isArray(aiSelectedDependencies) ? aiSelectedDependencies : [];
+    }
+
     return input
       .filter((n): n is string => typeof n === 'string')
       .filter((n) => catalogNames.has(n));
-  }, [selectedDependencies, dependenciesUserOverride, catalogNames]);
+  }, [selectedDependencies, aiSelectedDependencies, dependenciesUserOverride, catalogNames]);
   const [deps, setDeps] = useState<string[]>(initialDeps);
   const [hasUnsavedDeps, setHasUnsavedDeps] = useState(false);
   const [saveDepsOk, setSaveDepsOk] = useState(false);
@@ -280,8 +287,9 @@ const AppSettingsView: React.FC<AppSettingsViewProps> = ({
             </p>
             {!dependenciesUserOverride && (
               <div className="mb-4 rounded border border-blue-200 bg-blue-50 px-3 py-2 text-xs text-blue-800 dark:border-blue-900/40 dark:bg-blue-900/20 dark:text-blue-300">
-                Libraries, instructional text, and demo data are currently chosen by the LLM at
-                runtime. Select libraries and click Save to set a manual override for this vibe.
+                Libraries shown below were chosen by the AI based on your last prompt. Instructional
+                text and demo data are also chosen by the LLM at runtime. Select different libraries
+                and click Save to set a manual override for this vibe.
               </div>
             )}
             {llmsCatalog.length === 0 ? (

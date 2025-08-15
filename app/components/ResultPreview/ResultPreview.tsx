@@ -146,6 +146,7 @@ function ResultPreview({
             onDownloadHtml={handleDownloadHtml}
             selectedDependencies={vibeDoc?.dependencies}
             dependenciesUserOverride={vibeDoc?.dependenciesUserOverride}
+            aiSelectedDependencies={vibeDoc?.aiSelectedDependencies}
             onUpdateDependencies={updateDependencies}
             instructionalTextOverride={vibeDoc?.instructionalTextOverride}
             demoDataOverride={vibeDoc?.demoDataOverride}
