@@ -9,6 +9,7 @@ import VibesDIYLogo from '../components/VibesDIYLogo';
 import { useAuth } from '../contexts/AuthContext';
 import { useSession } from '../hooks/useSession';
 import { useVibes } from '../hooks/useVibes';
+import { VibeCatalog } from '../hooks/VibeCatalog';
 
 export function meta() {
   return [
@@ -37,6 +38,14 @@ export default function MyVibesRoute(): ReactElement {
     }
     return vibes;
   }, [vibes, showOnlyFavorites]);
+
+  // Log a random loaded vibeDoc as used for render
+  useEffect(() => {
+    if (filteredVibes.length > 0) {
+      const randomVibe = filteredVibes[Math.floor(Math.random() * filteredVibes.length)];
+      console.log('Random loaded vibeDoc for render:', randomVibe);
+    }
+  }, [filteredVibes]);
 
   // Simple state for how many vibes to show
   const [itemsToShow, setItemsToShow] = useState(9);
@@ -96,6 +105,7 @@ export default function MyVibesRoute(): ReactElement {
           <div className="mb-6">
             <div className="flex items-center justify-between">
               <div>
+                <VibeCatalog userId={userId} vibes={vibes} />
                 <h2 className="mb-4 text-2xl font-bold">My Vibes</h2>
                 {userId && (
                   <p className="text-accent-01 dark:text-accent-01 mb-6">
