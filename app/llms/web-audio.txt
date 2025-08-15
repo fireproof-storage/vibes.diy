@@ -16,7 +16,12 @@ Examples
 ```js
 // 1) Context (user gesture required in many browsers)
 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-await audioCtx.resume();
+
+// Start/resume only in direct response to a user gesture (e.g., a Play button)
+document.querySelector('#start-audio')?.addEventListener('click', async () => {
+  if (audioCtx.state !== 'running') await audioCtx.resume();
+  // now safe to create/start nodes
+});
 
 // 2) Simple tone
 const osc = audioCtx.createOscillator();
@@ -98,8 +103,15 @@ Helper (load IR):
 
 ```js
 async function loadImpulseResponse(url) {
-  const ab = await fetch(url, { mode: 'cors' }).then(r => r.arrayBuffer());
-  return audioCtx.decodeAudioData(ab);
+  const res = await fetch(url, { mode: 'cors' });
+  if (!res.ok) throw new Error(`Failed to fetch IR ${url}: ${res.status} ${res.statusText}`);
+  const ab = await res.arrayBuffer();
+  try {
+    return await audioCtx.decodeAudioData(ab);
+  } catch (err) {
+    console.error('decodeAudioData failed for IR', url, err);
+    throw err; // Surface decoding/CORS-related failures clearly
+  }
 }
 ```
 
@@ -136,6 +148,11 @@ function scheduleClick(atTime, downbeat = false) {
   osc.connect(env).connect(metronomeGain);
   osc.start(atTime);
   osc.stop(atTime + 0.05);
+  // Cleanup to avoid accumulating nodes during long sessions
+  osc.onended = () => {
+    try { osc.disconnect(); } catch {}
+    try { env.disconnect(); } catch {}
+  };
 }
 
 function startMetronome({ bpm = 120, beatsPerBar = 4 } = {}) {
@@ -153,7 +170,7 @@ function startMetronome({ bpm = 120, beatsPerBar = 4 } = {}) {
 }
 ```
 
-Latency and safety: start/resume on user gesture; use headphones while monitoring; mobile devices have higher base latency.
+Latency and safety: start/resume on user gesture; clean up per-tick nodes after `ended` to prevent buildup in long-running metronomes; use headphones while monitoring; mobile devices have higher base latency.
 
 ## 4) Time Synchronization and Scheduling Model
 
