@@ -1,0 +1,2 @@
+patchedDependencies:
+  call-ai@0.10.2: patches/call-ai@0.10.2.patch

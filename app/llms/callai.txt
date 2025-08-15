@@ -49,6 +49,23 @@ const generator = await callAI("Write an epic poem", { stream: true });
 for await (const partialResponse of generator) {
   console.log(partialResponse); // Updates incrementally
 }
+
+// Latency-optimized provider routing (OpenRouter)
+// You can prioritize the fastest provider instances for streaming by
+// passing a provider object with sort: 'latency'. Supported values are:
+// 'throughput' | 'cost' | 'latency' | 'context_length'.
+const fastStream = await callAI("Write an epic poem", {
+  stream: true,
+  model: 'openai/gpt-4',
+  provider: { sort: 'latency' },
+});
+for await (const text of fastStream) {
+  // Render quickly as tokens arrive
+}
+
+// Tip: enable debug to see basic timing including TTFB in the console
+await callAI('test', { stream: true, model: 'openai/gpt-4', provider: { sort: 'latency' }, debug: true });
+// Console: [callAi:x.y.z] TTFB: 42ms
 ```
 
 ## JSON Schema Responses
@@ -180,7 +197,8 @@ const response = await callAI(
     model: "anthropic/claude-3-opus",
     temperature: 0.8,     // Higher for more creativity (0-1)
     max_tokens: 1000,     // Limit response length
-    top_p: 0.95           // Control randomness
+    top_p: 0.95,          // Control randomness
+    provider: { sort: 'latency' } // Prioritize low-latency providers (OpenRouter)
   }
 );
 

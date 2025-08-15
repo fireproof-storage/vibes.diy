@@ -1,0 +1,114 @@
+diff --git a/dist/api-core.js b/dist/api-core.js
+index a9b3b8e05d0e848c8883da47ce5fdc5cfa918d09..92aeb537aa89e78350900c5a2d6eca147daa8e2c 100644
+--- a/dist/api-core.js
++++ b/dist/api-core.js
+@@ -299,7 +299,10 @@ function prepareRequestParams(prompt, options = {}) {
+         }
+     }
+     // If provider-specific options are given, check for conflicts
+-    if (options.provider &&
++    // Only perform conflict detection when provider is a string. Object-form
++    // provider options (e.g., { sort: 'latency' }) are valid for OpenRouter
++    // provider routing and should be forwarded without triggering warnings.
++    if (typeof options.provider === "string" &&
+         options.provider !== "auto" &&
+         options.model &&
+         !options.model.startsWith(options.provider + "/")) {
+diff --git a/dist/api.js b/dist/api.js
+index de6b02fc832ed5ec43fbc49aa9ccaceaf557b761..bdc5cae3c0510cea9da87885ec9b70680280f5d6 100644
+--- a/dist/api.js
++++ b/dist/api.js
+@@ -356,6 +356,17 @@ function prepareRequestParams(prompt, options) {
+         // Apply schema-specific parameters using the selected strategy
+         Object.assign(requestParams, schemaStrategy.prepareRequest(schema, messages));
+     }
++    // Forward OpenRouter provider routing options when present
++    if (options.provider !== undefined) {
++        requestParams.provider = options.provider;
++        // Conflict detection only for string-form providers
++        if (typeof options.provider === "string" &&
++            options.provider !== "auto" &&
++            model &&
++            !model.startsWith(options.provider + "/")) {
++            console.warn(`[callAi:${PACKAGE_VERSION}] WARNING: Specified provider '${options.provider}' doesn't match model '${model}'. Using model as specified.`);
++        }
++    }
+     // HTTP headers for the request
+     const headers = {
+         Authorization: `Bearer ${apiKey}`,
+diff --git a/dist/streaming.js b/dist/streaming.js
+index 39c12681bbd97e947e6f9cd310a58ce7c138e9eb..bbb501ed579b3548715d6c0c6ef037a3fa7d0ccb 100644
+--- a/dist/streaming.js
++++ b/dist/streaming.js
+@@ -22,6 +22,7 @@ async function* createStreamingGenerator(response, options, schemaStrategy, mode
+         endpoint: options.endpoint || "https://openrouter.ai/api/v1",
+         timing: {
+             startTime: Date.now(),
++            firstByteTime: 0,
+             endTime: 0,
+             duration: 0,
+         },
+@@ -41,6 +42,8 @@ async function* createStreamingGenerator(response, options, schemaStrategy, mode
+         }
+         const textDecoder = new TextDecoder();
+         let buffer = ""; // Buffer to accumulate partial SSE messages
++        // Track first-byte timing (TTFB)
++        let sawFirstByte = false;
+         while (true) {
+             const { done, value } = await reader.read();
+             if (done) {
+@@ -49,6 +52,14 @@ async function* createStreamingGenerator(response, options, schemaStrategy, mode
+                 }
+                 break;
+             }
++            if (!sawFirstByte && value && value.byteLength > 0) {
++                meta.timing.firstByteTime = Date.now();
++                sawFirstByte = true;
++                if (options.debug || key_management_1.globalDebug) {
++                    const ttfb = meta.timing.firstByteTime - meta.timing.startTime;
++                    console.log(`[callAi:${non_streaming_1.PACKAGE_VERSION}] TTFB: ${ttfb}ms`);
++                }
++            }
+             // Convert bytes to text
+             const chunk = textDecoder.decode(value, { stream: true });
+             buffer += chunk;
+diff --git a/dist/types.d.ts b/dist/types.d.ts
+index eda63d467cf5ca6831fb70e6c2fcaa27f5223469..5abd8164790fa2594b1d75102496cd8d4242fe6c 100644
+--- a/dist/types.d.ts
++++ b/dist/types.d.ts
+@@ -32,6 +32,10 @@ export interface ResponseMeta {
+      */
+     timing?: {
+         startTime: number;
++        /**
++         * Time when the first byte of the streaming response was received (TTFB)
++         */
++        firstByteTime?: number;
+         endTime?: number;
+         duration?: number;
+     };
+@@ -154,6 +158,24 @@ export interface CallAIOptions {
+      * Enable raw response logging without any filtering or processing
+      */
+     debug?: boolean;
++    /**
++     * Provider routing options for OpenRouter. When provided, these are forwarded
++     * to the request body. Supports string forms (e.g., 'auto') for backward
++     * compatibility as well as object form for provider sorting.
++     */
++    provider?:
++        | string
++        | {
++              /**
++               * Sort providers by the specified metric. Supported by OpenRouter.
++               * - 'throughput': prefer higher throughput
++               * - 'cost': prefer lower cost
++               * - 'latency': prefer lower latency
++               * - 'context_length': prefer larger context windows
++               */
++              sort?: 'throughput' | 'cost' | 'latency' | 'context_length';
++              [key: string]: any;
++          };
+     /**
+      * Any additional options to pass to the API
+      */
