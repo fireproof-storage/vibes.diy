@@ -4,6 +4,7 @@ import { APP_MODE, CALLAI_ENDPOINT } from './config/env';
 import callaiTxt from './llms/callai.txt?raw';
 import fireproofTxt from './llms/fireproof.txt?raw';
 import imageGenTxt from './llms/image-gen.txt?raw';
+import webAudioTxt from './llms/web-audio.txt?raw';
 import {
   DEFAULT_DEPENDENCIES,
   llmsCatalog,
@@ -16,6 +17,7 @@ const llmsTextContent: Record<string, string> = {
   callai: callaiTxt,
   fireproof: fireproofTxt,
   'image-gen': imageGenTxt,
+  'web-audio': webAudioTxt,
 };
 
 // Cache for LLM text documents to prevent redundant fetches/imports
