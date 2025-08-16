@@ -1,4 +1,4 @@
-import { useCallback, useState, useEffect, useRef } from 'react';
+import { useCallback, useState, useEffect, useRef, useMemo } from 'react';
 import type {
   AiChatMessageDocument,
   UserChatMessageDocument,
@@ -9,6 +9,9 @@ import { getSessionDatabaseName } from '../utils/databaseManager';
 import { useFireproof } from 'use-fireproof';
 import { encodeTitle } from '../components/SessionSidebar/utils';
 import { CATALOG_DEPENDENCY_NAMES, llmsCatalog } from '../llms/catalog';
+import { resolveEffectiveModel, isValidModelId } from '../prompts';
+import { SETTINGS_DBNAME } from '../config/env';
+import type { UserSettings } from '../types/settings';
 
 export function useSession(routedSessionId?: string) {
   const [generatedSessionId] = useState(
@@ -193,6 +196,30 @@ export function useSession(routedSessionId?: string) {
     },
     [sessionDatabase]
   );
+  // --- Model selection management ---
+  const updateSelectedModel = useCallback(
+    async (modelId: string) => {
+      // Validate against centralized model list; no-op on invalid input
+      if (!isValidModelId(modelId)) return;
+      const base = vibeRef.current;
+      const updatedDoc = {
+        ...base,
+        selectedModel: modelId,
+      } as VibeDocument;
+      mergeRef.current(updatedDoc);
+      await sessionDatabase.put(updatedDoc);
+    },
+    [sessionDatabase]
+  );
+
+  // Access global settings to compute effective model fallback
+  const { useDocument: useSettingsDocument } = useFireproof(SETTINGS_DBNAME);
+  const { doc: settingsDoc } = useSettingsDocument<UserSettings>({ _id: 'user_settings' });
+
+  const effectiveModel = useMemo(
+    () => resolveEffectiveModel(settingsDoc, vibeDoc),
+    [settingsDoc?.model, vibeDoc?.selectedModel]
+  );
 
   // Add a screenshot to the session (in session-specific database)
   const addScreenshot = useCallback(
@@ -263,9 +290,12 @@ export function useSession(routedSessionId?: string) {
     saveAiMessage,
     // Vibe document management
     vibeDoc,
+    selectedModel: vibeDoc?.selectedModel,
+    effectiveModel,
     updateDependencies,
     updateInstructionalTextOverride,
     updateDemoDataOverride,
     updateAiSelectedDependencies,
+    updateSelectedModel,
   };
 }
